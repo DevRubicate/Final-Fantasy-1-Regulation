@@ -1,3 +1,7 @@
+.include "src/variables.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+
 
 .export EnterEndingScene, MusicPlay_L, EnterMiniGame, EnterBridgeScene_L, __Nasir_CRC_High_Byte
 .export lut_IntroStoryText
@@ -5,9 +9,7 @@
 .import DrawComplexString_L, DrawBox_L, UpdateJoy_L, DrawPalette_L
 .import WaitForVBlank_L, lut_RNG
 
-.include "src/variables.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
+
 
 BANK_THIS = $0D
 
