@@ -1946,7 +1946,7 @@ BattleTarget_Down:
     LDA btlcurs             ; see if the cursor is at our max
     CMP btlcurs_max
     BNE :+                  ; if it's at the max, replace with -1 (so we INC it to zero)
-      LDA #-1
+      LDA #<(-1)
       STA btlcurs
   : INC btlcurs             ; inc to next slot
   ; JMP BattleTarget_DownSub            ; <- flows into
@@ -2162,7 +2162,7 @@ MenuSelection_Magic:
     LDA btlcurs_x
     CMP #$02
     BNE :+              ; if in right column
-      LDA #-1           ; change to -1 (so we INC to zero)
+      LDA #<(-1)           ; change to -1 (so we INC to zero)
       STA btlcurs_x
   : INC btlcurs_x
     RTS
@@ -2352,7 +2352,7 @@ SetNaturalPose:
 
 CharWalkAnimationLeft:
     PHA         ; push char index
-    LDA #-2     ; negative directional value = move left
+    LDA #<(-2)     ; negative directional value = move left
     BNE :+      ;  <-- FLOW:  This label is in CharWalkAnimationRight
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2475,7 +2475,7 @@ WalkForwardAndStrike:
     STX btlattackspr_gfx        ; X = attack sprite graphic
     STY btlattackspr_wepmag     ; Y = 0,1 to choose between weapon/magic
     
-    LDA #-2
+    LDA #<(-2)
     STA $68AB                   ; walk the character to the left
     JSR CharacterWalkAnimation
     
@@ -2561,7 +2561,7 @@ __PrepAttackSprite_Magic_AFrame:
     
     LDA btl_drawflagsA                      ; turn on the magic drawflag bit, and turn off the weapon
     ORA #$40                                ; drawflag bit.
-    AND #~$20                               ; this will cause the BG color to flash.
+    AND #<(~$20)                            ; this will cause the BG color to flash.
     STA btl_drawflagsA
     RTS
     
@@ -3874,12 +3874,12 @@ Battle_PlayerTryWakeup:
     
   : LDY #btlch_ailments             ; remove sleep ailment from IB stats
     LDA (btl_ib_charstat_ptr), Y
-    AND #~AIL_SLEEP
+    AND #<(~AIL_SLEEP)
     STA (btl_ib_charstat_ptr), Y
     
     LDY #ch_ailments - ch_stats     ; and OB stats
     LDA (btl_ob_charstat_ptr), Y
-    AND #~AIL_SLEEP
+    AND #<(~AIL_SLEEP)
     STA (btl_ob_charstat_ptr), Y
     
     LDA #BTLMSG_WOKEUP              ; print "Woke up" message and exit
@@ -3910,12 +3910,12 @@ Battle_PlayerTryUnstun:
       
   : LDY #btlch_ailments                 ; remove Stun ailment from IB ailments
     LDA (btl_ib_charstat_ptr), Y
-    AND #~AIL_STUN
+    AND #<(~AIL_STUN)
     STA (btl_ib_charstat_ptr), Y
     
     LDY #ch_ailments - ch_stats         ; ... and also from OB ailments
     LDA (btl_ob_charstat_ptr), Y
-    AND #~AIL_STUN
+    AND #<(~AIL_STUN)
     STA (btl_ob_charstat_ptr), Y
     
     LDA #BTLMSG_CURED                   ; print "Cured!" message, and exit!
@@ -6702,7 +6702,7 @@ Battle_DoEnemyTurn:
     JSR BattleRNG_L         ; random number between [0,255]
     CMP #25                 ; if that number is less than 25 (less than 10% chance)
     BCS :+                  ; then the paralysis is cured:
-      LDA #~AIL_STUN
+      LDA #<(~AIL_STUN)
       JSR ApplyEnemyAilmentMask     ; remove STUN ailment mask
       LDA #ALTBTLMSG_CURED_2        ; display "Cured!" message and end their turn
       BNE @PrintAndEnd
@@ -6725,7 +6725,7 @@ Battle_DoEnemyTurn:
     JSR MathBuf_Sub
     LDA btl_mathbuf+1       ; Then check the high byte
     BMI :+                          ; if negative, keep sleeping.  Note again, this is IMPOSSIBLE because the value
-      LDA #~AIL_SLEEP               ;  MathBuf_Sub *CAPS THE DIFFERENCE AT ZERO* so it will NEVER result in a negative number.
+      LDA #<(~AIL_SLEEP)            ;  MathBuf_Sub *CAPS THE DIFFERENCE AT ZERO* so it will NEVER result in a negative number.
       JSR ApplyEnemyAilmentMask     ;  This is so broken.
       LDA #ALTBTLMSG_WOKEUP
       BNE @PrintAndEnd              ; Regardless, the end result is that an enemy will ALWAYS immediately wake up when asleep.
@@ -6744,7 +6744,7 @@ Battle_DoEnemyTurn:
     JSR BattleRNG_L                     ; random [0,$FF]
     CMP #$40
     BCS :+                              ; cured if < $40  (25% chance)
-      LDA #~AIL_CONF
+      LDA #<(~AIL_CONF)
       JSR ApplyEnemyAilmentMask
       JSR DrawCombatBox_Attacker
       LDA #ALTBTLMSG_CURED_1

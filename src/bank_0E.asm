@@ -767,7 +767,7 @@ SetGameEventFlag:
 
 ClearGameEventFlag:
     LDA game_flags, Y  ; get game flags
-    AND #~GMFLG_EVENT  ; clear event bit
+    AND #<(~GMFLG_EVENT) ; clear event bit
     STA game_flags, Y  ; write back
     RTS
 
@@ -804,7 +804,7 @@ IsObjectVisible:
 
 HideThisMapObject:
     LDA game_flags, Y        ; get the game flags using object ID as index
-    AND #~GMFLG_OBJVISIBLE   ; flip off the obj visibility flag (hide object)
+    AND #<(~GMFLG_OBJVISIBLE); flip off the obj visibility flag (hide object)
     STA game_flags, Y        ; write it back
 
     LDA #0                   ; kill the object on the map by removing it from the list of
@@ -961,7 +961,7 @@ lut_MapObjTalkJumpTbl:
 HideMapObject:
     STY tmp                   ; back up the object ID
     LDA game_flags, Y
-    AND #~GMFLG_OBJVISIBLE    ; clear the visibility flag for this object
+    AND #<(~GMFLG_OBJVISIBLE) ; clear the visibility flag for this object
     STA game_flags, Y
 
     LDY #0                ; zero Y for loop counter / mapobject indexing
@@ -3575,7 +3575,7 @@ EnterTitleScreen:
     LDA #1                  ; add +1 to rate if right
     BNE :+
        @Left:
-         LDA #-1            ; or -1 if left
+         LDA #<(-1)         ; or -1 if left
 :   CLC
     ADC respondrate         ; add/subtract 1 from respond rate
     AND #7                  ; mask to wrap it from 0<->7
