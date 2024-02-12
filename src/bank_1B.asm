@@ -2,9 +2,9 @@
 .include "src/macros.inc"
 .include "src/constants.inc"
 
-BANK_THIS = $0F
+BANK_THIS = $1B
 
-.segment "BANK_0F"
+.segment "BANK_1B"
 
 ;; unused bytes  [$BFF0 :: 0x3C000]
 
