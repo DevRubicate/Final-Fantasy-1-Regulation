@@ -3,7 +3,7 @@
 
 .include "src/constants.inc"
 .include "src/variables.inc"
-.include "ram-definitions.inc"
+.include "src/ram-definitions.inc"
 .segment "BANK_09"
 
  .INCBIN "bin/bank_09_data.bin"

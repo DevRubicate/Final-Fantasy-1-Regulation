@@ -9,7 +9,7 @@
 .include "src/macros.inc"
 .include "src/constants.inc"
 
-.include "ram-definitions.inc"
+.include "src/ram-definitions.inc"
 .segment "BANK_0B"
 
 BANK_THIS = $0B
