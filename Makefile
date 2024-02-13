@@ -17,7 +17,7 @@ clean:
 	${RM} ${obj} ${out}
 
 build/%.o: src/%.asm
-	${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst
+	${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst --list-bytes 0
 
 ${out}: nes.cfg ${obj}
 	${LD65} ${LD65FLAGS} -o $@ -C $^ 
