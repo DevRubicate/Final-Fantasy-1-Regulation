@@ -208,29 +208,36 @@ PrintCharStat:
       JMP PrintNumber_5Digit
 
 @Exp:
-    LDABRA <ch_exp, @Stat6Digit    ; put low byte of address of desired stat in A, then BRA to @Stat6Digit
-                                   ;  see macros.inc for this macro
+    LDA <ch_exp
+    JMP @Stat6Digit
 
 @CurHP:
-    LDABRA <ch_curhp, @Stat3Digit
+    LDA <ch_curhp
+    JMP @Stat3Digit
 
 @MaxHP:
-    LDABRA <ch_maxhp, @Stat3Digit
+    LDA <ch_maxhp
+    JMP @Stat3Digit
 
 @Str:
-    LDABRA <ch_str, @Stat2Digit
+    LDA <ch_str
+    JMP @Stat2Digit
 
 @Agil:
-    LDABRA <ch_agil, @Stat2Digit
+    LDA <ch_agil
+    JMP @Stat2Digit
 
 @Int:
-    LDABRA <ch_int, @Stat2Digit
+    LDA <ch_int
+    JMP @Stat2Digit
 
 @Vit:
-    LDABRA <ch_vit, @Stat2Digit
+    LDA <ch_vit
+    JMP @Stat2Digit
 
 @Luck:
-    LDABRA <ch_luck, @Stat2Digit
+    LDA <ch_luck
+    JMP @Stat2Digit
 
 @Stat1Digit:       ; same as below routines -- but 1 byte, 1 digit
     CLC            ;  I do not believe this 1Digit code is ever called
@@ -340,33 +347,39 @@ PrintNumber_1Digit:
     LDA tmp              ; no real formatting involved in 1-digit numbers
     ORA #$80             ; just OR the number with $80 to convert it to the tile ID
     STA format_buf-1     ; write it to output buffer
-    LDABRA <format_buf-1, PrintNumber_Exit
+    LDA <format_buf-1
+    JMP PrintNumber_Exit
                          ; A = start of string, then BNE (or BEQ) to exit
 
 PrintNumber_2Digit:
     JSR FormatNumber_2Digits   ; format the number
     JSR TrimZeros_2Digits      ; trim leading zeros
-    LDABRA <format_buf-2, PrintNumber_Exit      ; string start
+    LDA <format_buf-2
+    JMP PrintNumber_Exit      ; string start
 
 PrintNumber_3Digit:            ; more of same...
     JSR FormatNumber_3Digits
     JSR TrimZeros_3Digits
-    LDABRA <format_buf-3, PrintNumber_Exit
+    LDA <format_buf-3
+    JMP PrintNumber_Exit
 
 PrintNumber_4Digit:            ; more of same.
     JSR FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
     JSR TrimZeros_4Digits
-    LDABRA <format_buf-4, PrintNumber_Exit
+    LDA <format_buf-4
+    JMP PrintNumber_Exit
 
 PrintNumber_5Digit:
     JSR FormatNumber_5Digits
     JSR TrimZeros_5Digits
-    LDABRA <format_buf-5, PrintNumber_Exit
+    LDA <format_buf-5
+    JMP PrintNumber_Exit
 
 PrintNumber_6Digit:
     JSR FormatNumber_6Digits
     JSR TrimZeros_6Digits
-    LDABRA <format_buf-6, PrintNumber_Exit
+    LDA <format_buf-6
+    JMP PrintNumber_Exit
 
 PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
     STA text_ptr          ; of the pointer in A -- store that to text_ptr, our output pointer
@@ -3242,6 +3255,7 @@ PtyGen_DrawChars:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NameInput_DrawName:
+    
             @buf  = $5C     ; local - buffer to hold the name for printing
             
     LDX char_index          ; copy the character's name to our temp @buf

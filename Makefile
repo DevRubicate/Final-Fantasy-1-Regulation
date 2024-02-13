@@ -6,8 +6,8 @@ out ::= build/final_fantasy_1_regulation.nes
 
 CA65 ?= ca65
 LD65 ?= ld65
-CA65FLAGS ::= -I.
-LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg
+CA65FLAGS ::= -I. -g
+LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg -m build/final_fantasy_1_regulation.map
 
 .PHONY: all clean
 

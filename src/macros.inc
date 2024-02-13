@@ -3,8 +3,6 @@
 ;;
 ;;  macro for LDAing an immediate value, then always branching
 ;;
-
-
 .macro LDABRA v, lbl
         LDA #v
     .if v = 0
