@@ -1,21 +1,19 @@
 .macro RESERVE label, size
-    .ifndef _DEFINE_MEMORY
-        .global .ident(.string(label))
-    .else
+    .global .ident(.string(label))
+    .ifdef _MEMORY_DEFINE_MEMORY
         .ident(.string(label)): .res size
     .endif
 .endmacro
 
 .macro RESERVEZP label, size
-    .ifndef _DEFINE_MEMORY
-        .globalzp .ident(.string(label))
-    .else
+    .globalzp .ident(.string(label))
+    .ifdef _MEMORY_DEFINE_MEMORY
         .ident(.string(label)): .res size
     .endif
 .endmacro
 
-.ifndef _DEFINE_MEMORY
-.segment "ZEROPAGE": zeropage
+.ifdef _DEFINE_MEMORY
+    .segment "ZEROPAGE": zeropage
 .endif
     ; for sound channels (between Bx-Dx)
     ;  see constants.inc

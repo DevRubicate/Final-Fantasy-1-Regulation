@@ -7,6 +7,9 @@
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .export DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
+
+
+
 .export lut_RNG, SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L
 .export BattleWaitForVBlank_L, Battle_WritePPUData_L, Battle_ReadPPUData_L, CallMinimapDecompress
 .export DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
@@ -26,9 +29,9 @@
 .include "src/constants.inc"
 .include "src/variables.inc"
 .include "src/macros.inc"
-
-
 .include "ram-definitions.inc"
+
+
 .segment "BANK_FIXED"
 
 
