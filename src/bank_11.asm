@@ -1,12 +1,9 @@
 .include "src/variables.inc"
-.include "ram-definitions.inc"
 .include "src/macros.inc"
 .include "src/constants.inc"
-
-BANK_THIS = $11
-
+.include "ram-definitions.inc"
 .segment "BANK_11"
-
+BANK_THIS = $11
 ;; unused bytes  [$BFF0 :: 0x3C000]
 
   .BYTE   $66,$66,$66,$66,$66,$66,$66,$66,    $66,$66,$66,$66,$66,$66,$66,$66

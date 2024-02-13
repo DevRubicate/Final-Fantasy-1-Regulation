@@ -149,7 +149,7 @@ NTsoft2000              = $FD  ; same as soft2000, but used to track coarse NT s
 unk_FE                  = $FE
 soft2000                = $FF
 
-
+.segment "STACK"
 
 
 .segment "OAM"

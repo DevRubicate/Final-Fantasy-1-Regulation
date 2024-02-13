@@ -1,8 +1,3 @@
-.include "src/constants.inc"
-.include "src/variables.inc"
-.include "ram-definitions.inc"
-.include "src/macros.inc"
-
 .export GameStart_L
 
 .export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
@@ -17,8 +12,6 @@
 .export DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
 .export BattleCrossPageJump_L, ClearBattleMessageBuffer_L
 
-
-
 .import MinimapDecompress
 .import EnterMinimap
 .import data_EnemyNames, PrepBattleVarsAndEnterBattle_L, lut_BattleRates, lut_BattleFormations, data_BattleMessages
@@ -30,6 +23,12 @@
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
 
+.include "src/constants.inc"
+.include "src/variables.inc"
+.include "src/macros.inc"
+
+
+.include "ram-definitions.inc"
 .segment "BANK_FIXED"
 
 

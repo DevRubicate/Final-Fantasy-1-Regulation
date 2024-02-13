@@ -1,8 +1,3 @@
-.include "src/variables.inc"
-.include "ram-definitions.inc"
-.include "src/macros.inc"
-.include "src/constants.inc"
-
 .export lut_BattlePalettes, BankC_CrossBankJumpList
 
 .import GameStart_L
@@ -13,10 +8,12 @@
 .import BattleCrossPageJump_L, WaitForVBlank_L, ClearBattleMessageBuffer_L
 .import BattleOver_ProcessResult_L
 
-BANK_THIS = $0C
-
+.include "src/variables.inc"
+.include "src/macros.inc"
+.include "src/constants.inc"
+.include "ram-definitions.inc"
 .segment "BANK_0C"
-
+BANK_THIS = $0C
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Weapon data!  [$8000 :: 0x30010]

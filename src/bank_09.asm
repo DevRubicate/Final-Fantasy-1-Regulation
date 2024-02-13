@@ -1,11 +1,9 @@
+.export EnterMinimap
+.import CallMinimapDecompress, UpdateJoy_L, CallMusicPlay_L, DrawPalette_L, WaitForVBlank_L
+
 .include "src/constants.inc"
 .include "src/variables.inc"
 .include "ram-definitions.inc"
-
-.export EnterMinimap
-
-.import CallMinimapDecompress, UpdateJoy_L, CallMusicPlay_L, DrawPalette_L, WaitForVBlank_L
-
 .segment "BANK_09"
 
  .INCBIN "bin/bank_09_data.bin"

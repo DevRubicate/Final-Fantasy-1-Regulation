@@ -1,8 +1,3 @@
-.include "src/variables.inc"
-.include "ram-definitions.inc"
-.include "src/macros.inc"
-.include "src/constants.inc"
-
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .export EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
@@ -17,8 +12,11 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
 
+.include "src/variables.inc"
+.include "src/macros.inc"
+.include "src/constants.inc"
+.include "ram-definitions.inc"
 .segment "BANK_0E"
-
 
 BANK_THIS = $0E
 

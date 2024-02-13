@@ -1,7 +1,3 @@
-.include "src/variables.inc"
-.include "ram-definitions.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
 
 
 .export EnterEndingScene, MusicPlay_L, EnterMiniGame, EnterBridgeScene_L, __Nasir_CRC_High_Byte
@@ -11,11 +7,12 @@
 .import WaitForVBlank_L, lut_RNG
 
 
-
-BANK_THIS = $0D
-
-
+.include "src/variables.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "ram-definitions.inc"
 .segment "BANK_0D"
+BANK_THIS = $0D
 
 ;;
 ;; This bank seems to have a lot of unused space
