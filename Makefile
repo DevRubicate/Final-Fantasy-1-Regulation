@@ -6,7 +6,7 @@ out ::= build/final_fantasy_1_regulation.nes
 
 CA65 ?= ca65
 LD65 ?= ld65
-CA65FLAGS ::= -I. -g
+CA65FLAGS ::= -I.
 LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg
 
 .PHONY: all clean
@@ -17,7 +17,7 @@ clean:
 	${RM} ${obj} ${out}
 
 build/%.o: src/%.asm
-	${CA65} ${CA65FLAGS} $< -o $@
+	${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst
 
 ${out}: nes.cfg ${obj}
 	${LD65} ${LD65FLAGS} -o $@ -C $^ 

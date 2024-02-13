@@ -1,5 +1,6 @@
 .include "src/constants.inc"
 .include "src/variables.inc"
+.include "ram-definitions.inc"
 .include "src/macros.inc"
 
 .export GameStart_L
@@ -6551,6 +6552,7 @@ WaitAltarScanline:   ; JSR to routine = 6 cycles
 ;; unused NOPs
     NOP
     NOP
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

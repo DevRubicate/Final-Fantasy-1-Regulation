@@ -1,4 +1,5 @@
 .include "src/variables.inc"
+.include "ram-definitions.inc"
 .include "src/macros.inc"
 .include "src/constants.inc"
 

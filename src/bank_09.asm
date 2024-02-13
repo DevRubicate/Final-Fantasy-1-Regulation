@@ -1,6 +1,6 @@
 .include "src/constants.inc"
 .include "src/variables.inc"
-
+.include "ram-definitions.inc"
 
 .export EnterMinimap
 
