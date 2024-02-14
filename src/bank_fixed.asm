@@ -27,7 +27,6 @@
 
 
 .include "src/constants.inc"
-.include "src/variables.inc"
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
@@ -6464,7 +6463,8 @@ DoAltarEffect:
 
 
   @Done:                ; altar effect is complete
-    LDA unk_07D2        ; ???  useless and pretty random.
+    NOP
+    NOP
 
     LDA tmp+15          ; restore the desired X scroll (to undo the possible shaking)
     STA $2005

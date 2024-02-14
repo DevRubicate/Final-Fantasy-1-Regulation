@@ -12,7 +12,6 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
 
-.include "src/variables.inc"
 .include "src/macros.inc"
 .include "src/constants.inc"
 .include "src/ram-definitions.inc"

@@ -5,7 +5,6 @@
 .import Battle_ReadPPUData_L, Battle_WritePPUData_L, CallMusicPlay_L, WaitForVBlank_L, UndrawNBattleBlocks_L
 .import DrawCombatBox_L, BattleRNG_L, BattleCrossPageJump_L, BankC_CrossBankJumpList
 
-.include "src/variables.inc"
 .include "src/macros.inc"
 .include "src/constants.inc"
 

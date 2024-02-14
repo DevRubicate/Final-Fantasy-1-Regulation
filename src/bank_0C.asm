@@ -8,7 +8,6 @@
 .import BattleCrossPageJump_L, WaitForVBlank_L, ClearBattleMessageBuffer_L
 .import BattleOver_ProcessResult_L
 
-.include "src/variables.inc"
 .include "src/macros.inc"
 .include "src/constants.inc"
 .include "src/ram-definitions.inc"

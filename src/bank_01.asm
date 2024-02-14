@@ -1,5 +1,4 @@
 .include "src/constants.inc"
-.include "src/variables.inc"
 .include "src/ram-definitions.inc"
 
 .export MinimapDecompress

@@ -2,7 +2,6 @@
 .import CallMinimapDecompress, UpdateJoy_L, CallMusicPlay_L, DrawPalette_L, WaitForVBlank_L
 
 .include "src/constants.inc"
-.include "src/variables.inc"
 .include "src/ram-definitions.inc"
 .segment "BANK_09"
 

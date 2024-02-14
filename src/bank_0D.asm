@@ -7,7 +7,6 @@
 .import WaitForVBlank_L, lut_RNG
 
 
-.include "src/variables.inc"
 .include "src/constants.inc"
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
