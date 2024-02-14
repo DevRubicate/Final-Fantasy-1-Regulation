@@ -3255,22 +3255,19 @@ PtyGen_DrawChars:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NameInput_DrawName:
-    
-            @buf  = $5C     ; local - buffer to hold the name for printing
-            
     LDX char_index          ; copy the character's name to our temp @buf
     LDA ptygen_name, X
-    STA @buf
+    STA name_input_draw_buf
     LDA ptygen_name+1, X
-    STA @buf+1
+    STA name_input_draw_buf+1
     LDA ptygen_name+2, X
-    STA @buf+2
+    STA name_input_draw_buf+2
     LDA ptygen_name+3, X
-    STA @buf+3              ; The code assumes @buf+4 is 0
+    STA name_input_draw_buf+3              ; The code assumes name_input_draw_buf+4 is 0
     
-    LDA #>@buf              ; Set the text pointer
+    LDA #>name_input_draw_buf              ; Set the text pointer
     STA text_ptr+1
-    LDA #<@buf
+    LDA #<name_input_draw_buf
     STA text_ptr
     
     LDA #BANK_THIS          ; set cur/ret banks

@@ -1,20 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 tmp_hi          = $0110  ; 3? bytes
 
 oam             = $0200  ; 256 bytes -- must be on page bound

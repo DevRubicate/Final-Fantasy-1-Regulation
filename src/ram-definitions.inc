@@ -106,7 +106,9 @@
     RESERVEZP dlgflg_reentermap,       1 ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
     RESERVEZP cur_bank,                1 ; $57
     RESERVEZP ret_bank,                1 ; $58
-    GAP                                7
+    GAP                                3
+    RESERVEZP name_input_draw_buf,     1 ; $5C
+    GAP                                3
     RESERVEZP format_buf,              1 ; $60  ; 7 bytes (5A-60) -- must not cross page bound
     RESERVEZP shutter_a,               0 ; $61  ; shared
     RESERVEZP lu_cursor,               0 ; $61  ; shared
