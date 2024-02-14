@@ -23,16 +23,13 @@
 .endif
     ; for sound channels (between Bx-Dx)
     ;  see constants.inc
-    RESERVEZP ch_scoreptr,        1   ; $00
-    GAP                           1   ;
-    RESERVEZP ch_envptr,          1   ; $02 ptr to start of env data
-    GAP                           1
+    RESERVEZP ch_scoreptr,        2   ; $00
+    RESERVEZP ch_envptr,          2   ; $02 ptr to start of env data
     RESERVEZP ch_envpos,          1   ; $04 pos in env data (00-1F)
     RESERVEZP ch_lenctr,          1   ; $05 counter for score data (note length)
     RESERVEZP ch_frqtblptr,       1   ; $06 pointer to freq table (changes per octave)
     RESERVEZP story_dropinput,    1   ; $07
-    RESERVEZP ch_lentblptr,       1   ; $08 pointer to length table (changes per tempo)
-    GAP                           1
+    RESERVEZP ch_lentblptr,       2   ; $08 pointer to length table (changes per tempo)
     RESERVEZP ch_envrate,         1   ; $0A rate/speed of env table traversal
     RESERVEZP ch_envrem,          1   ; $0B remaining "fraction" of env data (3 bits of fraction)
     RESERVEZP ch_vol,             1   ; $0C output volume
