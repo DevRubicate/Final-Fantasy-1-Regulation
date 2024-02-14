@@ -658,8 +658,8 @@
     RESERVE btlmag_playerhitsfx,            1 ; $6DA7     ; sound effect to play when magic hits player
     GAP                                     8
     RESERVE btltmp_smallslotpos,            1 ; $6DB0
-    GAP                                     334
-    RESERVE mapobj,                         1 ; $6F00   ; $100 bytes -- page
+    GAP                                     335
+    RESERVE mapobj,                         0 ; $6F00   ; $100 bytes -- page
     RESERVE mapobj_id,                      1 ; $6F00  ; rearranging these is ill advised
     RESERVE mapobj_flgs,                    1 ; $6F01  ;  because the loader is pretty rigid
     RESERVE mapobj_physX,                   1 ; $6F02  ;  flags:  $80=inroom $40=don't move
