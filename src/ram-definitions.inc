@@ -289,62 +289,63 @@
     sram_assert_55  = sram + $FE
     sram_assert_AA  = sram + $FF
 
-    RESERVE ship_vis,           1 ; $00
-    RESERVE ship_x,             1 ; $01
-    RESERVE ship_y,             1 ; $02
+    RESERVE ship_vis,           1 ; $6000
+    RESERVE ship_x,             1 ; $6001
+    RESERVE ship_y,             1 ; $6002
     GAP                         1
-    RESERVE airship_vis,        1 ; $04
-    RESERVE airship_x,          1 ; $05
-    RESERVE airship_y,          1 ; $06
+    RESERVE airship_vis,        1 ; $6004
+    RESERVE airship_x,          1 ; $6005
+    RESERVE airship_y,          1 ; $6006
     GAP                         1
-    RESERVE bridge_vis,         1 ; $08
-    RESERVE bridge_x,           1 ; $09
-    RESERVE bridge_y,           1 ; $0A
+    RESERVE bridge_vis,         1 ; $6008
+    RESERVE bridge_x,           1 ; $6009
+    RESERVE bridge_y,           1 ; $600A
     GAP                         1
-    RESERVE canal_vis,          1 ; $0C
-    RESERVE canal_x,            1 ; $0D
-    RESERVE canal_y,            1 ; $0E
+    RESERVE canal_vis,          1 ; $600C
+    RESERVE canal_x,            1 ; $600D
+    RESERVE canal_y,            1 ; $600E
     GAP                         1
-    RESERVE unsram_ow_scroll_x, 1 ; $10
-    RESERVE unsram_ow_scroll_y, 1 ; $11
-    RESERVE has_canoe,          1 ; $12 ; (not to be confused with item_canoe)
-    RESERVE unsram_vehicle,     1 ; $14
+    RESERVE unsram_ow_scroll_x, 1 ; $6010
+    RESERVE unsram_ow_scroll_y, 1 ; $6011
+    RESERVE has_canoe,          1 ; $6012 ; (not to be confused with item_canoe)
     GAP                         1
-    RESERVE bridgescene,        1 ; $16  ; 00=hasn't happened yet. 01=happens when move is complete, 80=already has happened
+    RESERVE unsram_vehicle,     1 ; $6014
+    GAP                         1
+    RESERVE bridgescene,        1 ; $6016  ; 00=hasn't happened yet. 01=happens when move is complete, 80=already has happened
     GAP                         5
-    RESERVE gold,               3 ; $1C   ; 3 bytes
-    items           = unsram + $20
-
-    item_lute       = items + $01
-    item_crown      = items + $02
-    item_crystal    = items + $03
-    item_herb       = items + $04
-    item_mystickey  = items + $05
-    item_tnt        = items + $06
-    item_adamant    = items + $07
-    item_slab       = items + $08
-    item_ruby       = items + $09
-    item_rod        = items + $0A
-    item_floater    = items + $0B
-    item_chime      = items + $0C
-    item_tail       = items + $0D
-    item_cube       = items + $0E
-    item_bottle     = items + $0F
-    item_oxyale     = items + $10
-    item_canoe      = items + $11
-    item_orb_start  = items + $12
-      orb_fire        = item_orb_start + 0
-      orb_water       = item_orb_start + 1
-      orb_air         = item_orb_start + 2
-      orb_earth       = item_orb_start + 3
-    item_qty_start  = item_orb_start + 4
-      item_tent       = item_qty_start + 0
-      item_cabin      = item_qty_start + 1
-      item_house      = item_qty_start + 2
-      item_heal       = item_qty_start + 3
-      item_pure       = item_qty_start + 4
-      item_soft       = item_qty_start + 5
-    item_stop       = item_qty_start + 6
+    RESERVE gold,               3 ; $601C   ; 3 bytes
+    GAP                         1
+    RESERVE items,              0 ; $6020
+    RESERVE item_lute,          1 ; $6020
+    RESERVE item_crown,         1 ; $6021
+    RESERVE item_crystal,       1 ; $6022
+    RESERVE item_herb,          1 ; $6023
+    RESERVE item_mystickey,     1 ; $6024
+    RESERVE item_tnt,           1 ; $6025
+    RESERVE item_adamant,       1 ; $6026
+    RESERVE item_slab,          1 ; $6027
+    RESERVE item_ruby,          1 ; $6028
+    RESERVE item_rod,           1 ; $6029
+    RESERVE item_floater,       1 ; $602A
+    RESERVE item_chime,         1 ; $602B
+    RESERVE item_tail,          1 ; $602C
+    RESERVE item_cube,          1 ; $602D
+    RESERVE item_bottle,        1 ; $602E
+    RESERVE item_oxyale,        1 ; $602F
+    RESERVE item_canoe,         1 ; $6030
+    RESERVE item_orb_start,     0 ; $6031
+    RESERVE orb_fire,           1 ; $6032
+    RESERVE orb_water,          1 ; $6032
+    RESERVE orb_air,            1 ; $6033
+    RESERVE orb_earth,          1 ; $6034
+    RESERVE item_qty_start,     0 ; $6035
+    RESERVE item_tent,          1 ; $6036
+    RESERVE item_cabin,         1 ; $6036
+    RESERVE item_house,         1 ; $6037
+    RESERVE item_heal,          1 ; $6038
+    RESERVE item_pure,          1 ; $6039
+    RESERVE item_soft,          1 ; $603A
+    RESERVE item_stop,          1 ; $603B
 
     ch_stats        = unsram + $0100  ; MUST be on page bound.  Each character allowed $40 bytes, so use 00,40,80,C0 to index ch_stats
 
