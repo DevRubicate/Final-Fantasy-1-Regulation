@@ -111,7 +111,7 @@ MiniGame_ShufflePuzzle:
       BNE @LegalMove    ;  otherwise (column nonzero), moving left is legal  (always branches)
 
   @CheckRight:
-    CPY #<(-1)          ; see if we're trying to slide right (from the left)
+    CPY #-1             ; see if we're trying to slide right (from the left)
     BNE @LegalMove      ;  if not, move is legal, so jump ahead to do it
 
       AND #$03          ; otherwise check the column
@@ -131,7 +131,7 @@ MiniGame_ShufflePuzzle:
     JMP @MainLoop       ; and continue looping
 
   @lut_Direction:
-    .BYTE 1, <(-1), 4, <(-4)
+    .BYTE 1, -1, 4, -4
 
 
 
@@ -1101,8 +1101,8 @@ MiniGameLoop:
 ;;  every frame given the desired direction.  Directions are range 0-3 where
 ;;  0=right, 1=left, 2=down, 3=up
 
-lut_MGDirection_Y:   .BYTE  0,  0,      1,  <(-1)
-lut_MGDirection_X:   .BYTE  1,  <(-1),  0,  0
+lut_MGDirection_Y:   .BYTE  0,  0,   1,  -1
+lut_MGDirection_X:   .BYTE  1,  -1,  0,  0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1252,7 +1252,7 @@ MiniGame_ProcessInput:
     CMP #$01          ; compare the buttons pressed to see if they are pressing Right
     BEQ @Move         ; if they are... move
 
-    LDX #<(-1)        ; otherwise, they're moving left... so make a change of -1 instead
+    LDX #-1           ; otherwise, they're moving left... so make a change of -1 instead
     BNE @Move         ; (always branches)
 
   @Vertical:
@@ -1260,7 +1260,7 @@ MiniGame_ProcessInput:
     CMP #$04          ; see if they pressed Down
     BEQ @Move         ; if they did... move
 
-    LDX #<(-4)        ; otherwise, they're moving Up.  So change = -4
+    LDX #-4           ; otherwise, they're moving Up.  So change = -4
 
   @Move:
     TXA               ; put change in A

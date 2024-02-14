@@ -4003,7 +4003,7 @@ StartMapMove:
     AND #$3F
     STA sm_player_y
 
-    LDA #<(-1)           ; we want to subtract 1 from mapdraw_y
+    LDA #-1              ; we want to subtract 1 from mapdraw_y
     STA tmp              ;  which is the same as adding -1  ($FF)
 
     LDA mapdraw_nty
@@ -4023,7 +4023,7 @@ StartMapMove:
     STA mapdraw_y        ; write back
 
     LDA mapflags         ; turn off the 'draw column' map flag
-    AND #<(~$02)         ; to indicate we want to draw a row
+    AND #~$02            ; to indicate we want to draw a row
     STA mapflags
 
     JSR LoadOWMapRow     ; need to decompress a new row when moving vertically on the OW map
@@ -9000,7 +9000,7 @@ MapObjectMove:
     LDA tmp+5
     STA mapobj_physY, X
     STA mapobj_gfxY, X       ; update the graphic position immediately because it's a negative move
-    LDA #<(-1)
+    LDA #-1
     STA mapobj_spdY, X
     LDA #$0F
     STA mapobj_ctrY, X       ; set the Y counter to max right away -- this has to do with how
@@ -9042,7 +9042,7 @@ MapObjectMove:
     LDA tmp+4
     STA mapobj_gfxX, X    ; update graphic position immediately (again, seems unnecessary)
     STA mapobj_physX, X
-    LDA #<(-1)
+    LDA #-1
     STA mapobj_spdX, X
     LDA #$0F
     STA mapobj_ctrX, X    ; set counter to max for same reason we did when moving up (negative move)
@@ -14044,7 +14044,7 @@ Dialogue_CoverSprites_VBl:
       ORA #$20         ; for BG prio, set the priority attribute bit in the attribute byte
       BNE @SetPrio     ; and jump ahead (always branches)
    @FGPrio:
-      AND #<(~$20)        ; for FG prio, clear priority bit
+      AND #~$20        ; for FG prio, clear priority bit
 
   @SetPrio:
     STA oam_a, X       ; record priority bit

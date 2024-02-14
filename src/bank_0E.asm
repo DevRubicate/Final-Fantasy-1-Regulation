@@ -208,35 +208,35 @@ PrintCharStat:
       JMP PrintNumber_5Digit
 
 @Exp:
-    LDA <ch_exp
+    LDA #<ch_exp
     JMP @Stat6Digit
 
 @CurHP:
-    LDA <ch_curhp
+    LDA #<ch_curhp
     JMP @Stat3Digit
 
 @MaxHP:
-    LDA <ch_maxhp
+    LDA #<ch_maxhp
     JMP @Stat3Digit
 
 @Str:
-    LDA <ch_str
+    LDA #<ch_str
     JMP @Stat2Digit
 
 @Agil:
-    LDA <ch_agil
+    LDA #<ch_agil
     JMP @Stat2Digit
 
 @Int:
-    LDA <ch_int
+    LDA #<ch_int
     JMP @Stat2Digit
 
 @Vit:
-    LDA <ch_vit
+    LDA #<ch_vit
     JMP @Stat2Digit
 
 @Luck:
-    LDA <ch_luck
+    LDA #<ch_luck
     JMP @Stat2Digit
 
 @Stat1Digit:       ; same as below routines -- but 1 byte, 1 digit
@@ -347,38 +347,38 @@ PrintNumber_1Digit:
     LDA tmp              ; no real formatting involved in 1-digit numbers
     ORA #$80             ; just OR the number with $80 to convert it to the tile ID
     STA format_buf-1     ; write it to output buffer
-    LDA <format_buf-1
+    LDA #<format_buf-1
     JMP PrintNumber_Exit
                          ; A = start of string, then BNE (or BEQ) to exit
 
 PrintNumber_2Digit:
     JSR FormatNumber_2Digits   ; format the number
     JSR TrimZeros_2Digits      ; trim leading zeros
-    LDA <format_buf-2
+    LDA #<format_buf-2
     JMP PrintNumber_Exit      ; string start
 
 PrintNumber_3Digit:            ; more of same...
     JSR FormatNumber_3Digits
     JSR TrimZeros_3Digits
-    LDA <format_buf-3
+    LDA #<format_buf-3
     JMP PrintNumber_Exit
 
 PrintNumber_4Digit:            ; more of same.
     JSR FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
     JSR TrimZeros_4Digits
-    LDA <format_buf-4
+    LDA #<format_buf-4
     JMP PrintNumber_Exit
 
 PrintNumber_5Digit:
     JSR FormatNumber_5Digits
     JSR TrimZeros_5Digits
-    LDA <format_buf-5
+    LDA #<format_buf-5
     JMP PrintNumber_Exit
 
 PrintNumber_6Digit:
     JSR FormatNumber_6Digits
     JSR TrimZeros_6Digits
-    LDA <format_buf-6
+    LDA #<format_buf-6
     JMP PrintNumber_Exit
 
 PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
@@ -779,7 +779,7 @@ SetGameEventFlag:
 
 ClearGameEventFlag:
     LDA game_flags, Y  ; get game flags
-    AND #<(~GMFLG_EVENT) ; clear event bit
+    AND #~GMFLG_EVENT  ; clear event bit
     STA game_flags, Y  ; write back
     RTS
 
@@ -816,7 +816,7 @@ IsObjectVisible:
 
 HideThisMapObject:
     LDA game_flags, Y        ; get the game flags using object ID as index
-    AND #<(~GMFLG_OBJVISIBLE); flip off the obj visibility flag (hide object)
+    AND #~GMFLG_OBJVISIBLE   ; flip off the obj visibility flag (hide object)
     STA game_flags, Y        ; write it back
 
     LDA #0                   ; kill the object on the map by removing it from the list of
@@ -973,7 +973,7 @@ lut_MapObjTalkJumpTbl:
 HideMapObject:
     STY tmp                   ; back up the object ID
     LDA game_flags, Y
-    AND #<(~GMFLG_OBJVISIBLE) ; clear the visibility flag for this object
+    AND #~GMFLG_OBJVISIBLE ; clear the visibility flag for this object
     STA game_flags, Y
 
     LDY #0                ; zero Y for loop counter / mapobject indexing
@@ -3588,7 +3588,7 @@ EnterTitleScreen:
     LDA #1                  ; add +1 to rate if right
     BNE :+
        @Left:
-         LDA #<(-1)         ; or -1 if left
+         LDA #-1            ; or -1 if left
 :   CLC
     ADC respondrate         ; add/subtract 1 from respond rate
     AND #7                  ; mask to wrap it from 0<->7
