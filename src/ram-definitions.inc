@@ -36,7 +36,9 @@
     RESERVEZP ch_envrate,         1   ; $0A rate/speed of env table traversal
     RESERVEZP ch_envrem,          1   ; $0B remaining "fraction" of env data (3 bits of fraction)
     RESERVEZP ch_vol,             1   ; $0C output volume
+    RESERVEZP inroom,             0   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
     RESERVEZP ch_loopctr,         1   ; $0D remaining loop counter
+    RESERVEZP doorppuaddr,        0   ; $0E 2 bytes, PPU address of door drawing work
     RESERVEZP ch_freq,            1   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
     GAP                           1
     RESERVEZP tmp,                     16 ; 16 bytes
@@ -157,19 +159,53 @@
     RESERVEZP lvlup_curexp,            0 ; $80       ; 2 byte pointer to character's current EXP
     RESERVEZP btlptr,                  2 ; $80
     RESERVEZP lvlup_exptoadv,          0 ; $82       ; 2 byte pointer to EXP needed to advance
-    RESERVEZP btl_ob_charstat_ptr,     1 ; $82
+    RESERVEZP btl_ob_charstat_ptr,     2 ; $82
+    RESERVEZP lvlup_chmagic,           2 ; $84       ; 2 byte pointer to character's magic data
+    RESERVEZP lvlup_chstats,           2 ; $86       ; 2 byte pointer to character's OB stats
+    RESERVEZP battlereward,            3 ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly
+                                    ;  if rewards ever exceed the 2-byte boundary, since the game assumes you
+                                    ;  will never receive more than 65535 XP/GP in any one battle.
     GAP                                1
-    RESERVEZP lvlup_chmagic,           1 ; $84       ; 2 byte pointer to character's magic data
+    RESERVEZP btldraw_blockptrstart,   2 ;  $8C
+    RESERVEZP btldraw_blockptrend,     2 ;  $8E
+
+    RESERVEZP btl_entityptr_ibram,     0 ;  $90
+    RESERVEZP btldraw_src,             0 ;  $90   ; source data
+    RESERVEZP btlsfx_frontseat,        0 ;  $90   ; where battle sfx data is stored in zero page
+    RESERVEZP btltmp,                  2 ;  $90  ; 16 bytes ?
+    RESERVEZP btl_entityptr_obrom,     0 ;  $92
+    RESERVEZP btldraw_dst,             2 ;  $92   ; destination pointer
+    RESERVEZP btlsfx_framectr,         0 ;  $94   ; The total frame counter for the entire sound effect
+    RESERVEZP btldraw_subsrc,          2 ;  $94   ; source pointer of substring
+    GAP                                2
+    RESERVEZP btlsfxsq2_len,           0 ;  $98
+    RESERVEZP btl_magdataptr,          1 ;  $98
+    RESERVEZP btlsfxnse_len,           1 ;  $99
+    RESERVEZP btlsfxsq2_framectr,      1 ;  $9A
+    RESERVEZP btlsfxnse_framectr,      1 ;  $9B
+    RESERVEZP btlsfxsq2_ptr,           2 ;  $9C
+    RESERVEZP btlsfxnse_ptr,           1 ;  $9E
+    RESERVEZP btldraw_max,             1 ;  $9F   ; maximum characters to draw
     GAP                                1
-    RESERVEZP lvlup_chstats,           1 ; $86       ; 2 byte pointer to character's OB stats
+    RESERVEZP actual_bank,             1 ;  $A1
+    GAP                                78
+    RESERVEZP framecounter,            2 ;  $F0  ; 2 bytes!
+    GAP                                2
+    RESERVEZP npcdir_seed,             1 ;  $F4  ; RNG seed for determining direction for NPCs to walk
+    RESERVEZP battlestep,              1 ;  $F5
+    RESERVEZP battlestep_sign,         1 ;  $F6
+    RESERVEZP battlecounter,           1 ;  $F7
+    RESERVEZP battlerate,              1 ;  $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
+    RESERVEZP startintrocheck,         1 ;  $F9
+    RESERVEZP respondrate,             1 ;  $FA
+    GAP                                2
+    RESERVEZP NTsoft2000,              1 ;  $FD  ; same as soft2000, but used to track coarse NT scroll
+    RESERVEZP unk_FE,                  1 ;  $FE
+    RESERVEZP soft2000,                0 ;  $FF
 
 .ifdef _DEFINE_MEMORY
     .segment "BSS"
 .endif
-
-    GAP                           12
-    RESERVE inroom,               1   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
-    RESERVE doorppuaddr,          1   ; $0E 2 bytes, PPU address of door drawing work
 
 
 

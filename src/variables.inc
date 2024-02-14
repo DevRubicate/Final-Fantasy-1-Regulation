@@ -1,38 +1,5 @@
 
 
-battlereward            = $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly
-                                ;  if rewards ever exceed the 2-byte boundary, since the game assumes you
-                                ;  will never receive more than 65535 XP/GP in any one battle.
-btldraw_blockptrstart   = $8C
-btldraw_blockptrend     = $8E
-btltmp                  = $90  ; 16 bytes ?
-btl_entityptr_ibram     = $90
-btldraw_src             = $90   ; source data
-btlsfx_frontseat        = $90   ; where battle sfx data is stored in zero page
-btl_entityptr_obrom     = $92
-btldraw_dst             = $92   ; destination pointer
-btldraw_subsrc          = $94   ; source pointer of substring
-btl_magdataptr          = $98
-btldraw_max             = $9F   ; maximum characters to draw
-btlsfx_framectr         = $94   ; The total frame counter for the entire sound effect
-btlsfxsq2_len           = $98
-btlsfxnse_len           = $99
-btlsfxsq2_framectr      = $9A
-btlsfxnse_framectr      = $9B
-btlsfxsq2_ptr           = $9C
-btlsfxnse_ptr           = $9E
-actual_bank             = $A1
-framecounter            = $F0  ; 2 bytes!
-npcdir_seed             = $F4  ; RNG seed for determining direction for NPCs to walk
-battlestep              = $F5
-battlestep_sign         = $F6
-battlecounter           = $F7
-battlerate              = $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
-startintrocheck         = $F9
-respondrate             = $FA
-NTsoft2000              = $FD  ; same as soft2000, but used to track coarse NT scroll
-unk_FE                  = $FE
-soft2000                = $FF
 
 
 
