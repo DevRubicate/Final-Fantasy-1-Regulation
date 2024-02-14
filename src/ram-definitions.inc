@@ -443,86 +443,121 @@
         math_critchance     = btl_mathbuf + (MATHBUF_CRITCHANCE*2)  ; $6862
         math_ailmentchance  = btl_mathbuf + (MATHBUF_AILMENTCHANCE*2);$6864
         
-    eob_gp_reward               = $6876
-    eob_exp_reward              = $6878
-        
+    GAP                                     2080
+    RESERVE btlmag_spellconnected,          1 ; $685C
+    GAP                                     9
+    RESERVE battle_ailmentrandchance,       1 ; $6866
+    GAP                                     3
+    RESERVE battle_hitsconnected,           1 ; $686A     ; number of hits actually connected
+    RESERVE battle_critsconnected,          1 ; $686B
+    RESERVE btlmag_attacker_unk686C,        0 ; $686C ; Enemy:  ailments              Player:  ailments
+    RESERVE btl_attacker_strength,          1 ; $686C
+    RESERVE btlmag_defender_ailments,       0 ; $686D
+    RESERVE btl_attacker_category,          1 ; $686D
+    RESERVE btlmag_effect,                  0 ; $686E
+    RESERVE btl_attacker_element,           1 ; $686E
+    RESERVE btl_attacker_hitrate,           1 ; $686F
+    RESERVE btlmag_hitrate,                 0 ; $6870
+    RESERVE btl_attacker_numhitsmult,       1 ; $6870
+    RESERVE btl_attacker_numhits,           1 ; $6871
+    RESERVE btlmag_defender_magdef,         0 ; $6872
+    RESERVE btl_attacker_critrate,          1 ; $6872
+    RESERVE btlmag_defender_unknownRawInit0,0 ; $6873
+    RESERVE btl_attacker_attackailment,     1 ; $6873
+    RESERVE btlmag_effectivity,             1 ; $6874
+    RESERVE btlmag_attacker_unk6875,        1 ; $6875 ; Enemy:  ai                    Player:  damage
+    RESERVE btlmag_defender_elemweakness,   0 ; $6876
+    RESERVE eob_gp_reward,                  0 ; $6876
+    RESERVE btl_defender_category,          1 ; $6876
+    RESERVE btlmag_defender_elemresist,     0 ; $6877
+    RESERVE btl_defender_elemweakness,      1 ; $6877
+    RESERVE btlmag_element,                 0 ; $6878
+    RESERVE btl_defender_evade,             0 ; $6878
+    RESERVE eob_exp_reward,                 1 ; $6878
+    RESERVE btlmag_attacker_unk6879,        0 ; $6879 ; Enemy:  high byte of GP       Player:  class
+    RESERVE btl_defender_absorb,            1 ; $6879
+    RESERVE btl_defender_magdef,            1 ; $687A
+    RESERVE btl_defender_elemresist,        1 ; $687B
+    GAP                                     1
+    RESERVE btlmag_defender_numhitsmult,    1 ; $687D
+    RESERVE btlmag_defender_morale,         1 ; $687E
+    RESERVE btlmag_defender_absorb,         1 ; $687F
+    RESERVE btl_attacker_graphic,           1 ; $6880     ; the graphic used for an attack
+    RESERVE btl_attacker_varplt,            1 ; $6881     ; The variable palette color used for an attack
+    RESERVE btlmag_defender_strength,       1 ; $6882
+    RESERVE btlmag_attacker_unk6883,        1 ; $6883 ; Enemy:  0                     Player:  level
+    RESERVE battle_attacker_index,          0 ; $6884 ; ?? redundant??  why not just use btl_attacker?
+    RESERVE btlmag_attacker_unk6884,        1 ; $6884 ; Enemy:  damage                Player:  hit rate
+    RESERVE battle_defender_index,          0 ; $6885 ; same... but this is necessary for output!  See Battle_DoTurn in bank C!!
+    RESERVE btlmag_defender_evade,          1 ; $6885  ; shared with battle_defender_index?  Is that not used for btlmag ?
+    RESERVE btlmag_defender_category,       1 ; $6886
+    RESERVE battle_defenderisplayer,        1 ; $6887 ; nonzero if player is defending, zero if enemy is defending 
+    RESERVE btl_attacker_ailments,          1 ; $6888 ;   important for output!  See Battle_DoTurn in bank C
+    RESERVE btl_defender_ailments,          1 ; $6889 ; important for output!
+    RESERVE btl_rngstate,                   1 ; $688A    ; State of RNG used for in-battle
+    RESERVE btltmp_divLo,                   1 ; $688B
+    RESERVE btltmp_divHi,                   1 ; $688C
+    RESERVE btltmp_divV,                    1 ; $688D
+    RESERVE btl_curturn,                    1 ; $688E         ; current turn (index for btl_turnorder)
+    GAP                                     16
+    RESERVE char_order_buf,                 1 ; $689F
+    GAP                                     15
+    RESERVE btl8x8spr_x,                    2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
+    RESERVE btl8x8spr_y,                    2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
+    RESERVE btl_tmpindex,                   0 ; $68B3 ; temporary holder for a current index
+    RESERVE btltmp_multA,                   0 ; $68B3 ; shared
+    RESERVE btltmp_boxleft,                 0 ; $68B3
+    RESERVE btl_input,                      0 ; $68B3
+    RESERVE btl8x8spr_a,                    1 ; $68B3 ; attribute
+    RESERVE btltmp_multB,                   0 ; $68B4    ; shared
+    RESERVE btl_tmpchar,                    0 ; $68B4 ; temporary holder for a 0-based character index
+    RESERVE btltmp_boxcenter,               0 ; $68B4
+    RESERVE btl8x8spr_t,                    1 ; $68B4 ; tile ID
+    RESERVE btl8x8spr_i,                    0 ; $68B5 ; slot to draw to (00-3F)
+    RESERVE btltmp_boxright,                0 ; $68B5
+    RESERVE btltmp_multC,                   1 ; $68B5
+    GAP                                     1
+    RESERVE btl_soft2000,                   1 ; $68B7    ; soft copy of $2000 used in battles
+    RESERVE btl_soft2001,                   1 ; $68B8    ; soft copy of $2001 used in battles
+    GAP                                     1
+    RESERVE btlbox_blockdata,               1 ; $68BA
+    GAP                                     99
+    RESERVE btl_msgbuffer,                  384 ; $691E   ; $180 bytes  ($0C rows * $20 bytes per row); this buffer contains on-screen tiles to be drawn to ppu$2240; (note only $19 bytes are actually drawn, the remaining 7 bytes are padding)
+    RESERVE btl_msgdraw_hdr,                1 ; $6A9E
+    RESERVE btl_msgdraw_x,                  1 ; $6A9F
+    RESERVE btl_msgdraw_y,                  1 ; $6AA0
+    RESERVE btl_msgdraw_srcptr,             0 ; $6AA1  ; shared ; 2 bytes
+    RESERVE btl_msgdraw_width,              1 ; $6AA1
+    RESERVE btl_msgdraw_height,             1 ; $6AA2
+    RESERVE btl_msgdraw_blockcount,         1 ; $6AA3      ; the number of blocks drawn
+    GAP                                     2
+    RESERVE btlinput_prevstate,             0 ; $6AA6 ; prev state for input
+    RESERVE eobbox_slotid,                  1 ; $6AA6
+    RESERVE inputdelaycounter,              0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
+    RESERVE eobbox_textid,                  1 ; $6AA7
+    GAP                                     1
+    RESERVE btl_animatingchar,              1 ; $6AA9     ; the character currently being animated (0-3)
+    RESERVE btlcurs,                        0 ; $6AAA
+    RESERVE btlcurs_x,                      1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
+    RESERVE btlcurs_max,                    0 ; $6AAB     ; highest value for the cursor
+    RESERVE btlcurs_y,                      1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
+    RESERVE btlcurs_positions,              1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
+    GAP                                     36
+    RESERVE btl_drawflagsA,                 1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead
+                            ; bit    4 = set to draw battle cursor
+                            ; bit    5 = set to draw weapon attack graphic
+                            ; bit    6 = set to draw magic graphic & flash BG.
 
-    battle_ailmentrandchance    = $6866
 
-    battle_hitsconnected        = $686A     ; number of hits actually connected
-    battle_critsconnected       = $686B
-    btl_attacker_strength       = $686C
-    btl_attacker_category       = $686D
-    btl_attacker_element        = $686E
-    btl_attacker_hitrate        = $686F
-    btl_attacker_numhitsmult    = $6870
-    btl_attacker_numhits        = $6871
-    btl_attacker_critrate       = $6872
-    btl_attacker_attackailment  = $6873
+    GAP                                     1286
+    RESERVE btlmag_fakeout_defindex,        1 ; $6D95 ; See Battle_DoTurn in bank C for a description of
+    RESERVE btlmag_fakeout_ailments,        1 ; $6D94 ;   what these 'fakeout' vars are and how/why they're used
+    RESERVE btlmag_fakeout_defplayer,       1 ; $6D96
 
-    btl_defender_category       = $6876
-    btl_defender_elemweakness   = $6877
-    btl_defender_evade          = $6878
-    btl_defender_absorb         = $6879
-    btl_defender_magdef         = $687A
-    btl_defender_elemresist     = $687B
     btl_defender_hp             = btl_mathbuf + (MATHBUF_DEFENDERHP*2)  ; $687C -- treated as part of math buffer by some code
-
-    btl_attacker_graphic        = $6880     ; the graphic used for an attack
-    btl_attacker_varplt         = $6881     ; The variable palette color used for an attack
-
     battle_totaldamage          = btl_mathbuf + (MATHBUF_TOTALDAMAGE*2)  ; $6882 -- treated as part of math buffer by some code
-
-    ;; Battle stuff for magical attacks
-
-    btlmag_spellconnected       = $685C
-    btlmag_defender_ailments    = $686D
-    btlmag_effect               = $686E
-    btlmag_hitrate              = $6870
-    btlmag_defender_magdef               = $6872
-    btlmag_defender_unknownRawInit0      = $6873
-    btlmag_effectivity          = $6874
-    btlmag_defender_elemweakness         = $6876
-    btlmag_defender_elemresist           = $6877
-    btlmag_element              = $6878
-
-    btlmag_attacker_unk686C     = $686C ; Enemy:  ailments              Player:  ailments
-    btlmag_attacker_unk6875     = $6875 ; Enemy:  ai                    Player:  damage
-    btlmag_attacker_unk6879     = $6879 ; Enemy:  high byte of GP       Player:  class
-    btlmag_attacker_unk6883     = $6883 ; Enemy:  0                     Player:  level
-    btlmag_attacker_unk6884     = $6884 ; Enemy:  damage                Player:  hit rate
-
-    btlmag_defender_hp          = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
-    btlmag_defender_numhitsmult = $687D
-    btlmag_defender_morale      = $687E
-    btlmag_defender_absorb      = $687F
-    btlmag_defender_hpmax       = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
-    btlmag_defender_strength    = $6882
-
-    btlmag_defender_evade       = $6885  ; shared with battle_defender_index?  Is that not used for btlmag ?
-    btlmag_defender_category    = $6886
-
-    btlmag_fakeout_defindex     = $6D95 ; See Battle_DoTurn in bank C for a description of
-    btlmag_fakeout_ailments     = $6D94 ;   what these 'fakeout' vars are and how/why they're used
-    btlmag_fakeout_defplayer    = $6D96
-                                
-                                        ; These two are kind of redundant
-    battle_attacker_index       = $6884 ; ?? redundant??  why not just use btl_attacker?
-    battle_defender_index       = $6885 ; same... but this is necessary for output!  See Battle_DoTurn in bank C!!
-
-    battle_defenderisplayer     = $6887 ; nonzero if player is defending, zero if enemy is defending 
-                                        ;   important for output!  See Battle_DoTurn in bank C
-
-    btl_attacker_ailments       = $6888
-    btl_defender_ailments       = $6889 ; important for output!
-
-    btl_rngstate = $688A    ; State of RNG used for in-battle
-
-    btltmp_divLo = $688B
-    btltmp_divHi = $688C
-    btltmp_divV  = $688D
-
-    btl_curturn         = $688E         ; current turn (index for btl_turnorder)
+    btlmag_defender_hp                      = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
+    btlmag_defender_hpmax                   = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
 
     ;  Buffers to hold character commands for battle.  These must be contiguious in memory
     ;  due to the way memory is cleared.  These buffers also contain a bit of redundant data.
@@ -557,71 +592,8 @@
     btl_charcmdconsumetype  = btl_charcmditem+4         ; $68A3
     btl_charcmdconsumeid    = btl_charcmdconsumetype+4  ; $68A7
 
-    char_order_buf          = $689F
-
-    ; These next 5 vars are all in temp memory, and are mostly just used for 
-    ;  passing into BattleDraw8x8Sprite
-    btl8x8spr_x = $68AF ; X coord
-                        ;  +1 used in drawing code as original position
-    btl8x8spr_y = $68B1 ; Y coord
-                        ;  +1 used in drawing code as original position
-    btl8x8spr_a = $68B3 ; attribute
-    btl8x8spr_t = $68B4 ; tile ID
-    btl8x8spr_i = $68B5 ; slot to draw to (00-3F)
-      
-    btl_tmpindex = $68B3    ; temporary holder for a current index
-    btl_tmpchar =  $68B4    ; temporary holder for a 0-based character index
-
-    btltmp_multA = $68B3    ; shared
-    btltmp_multB = $68B4    ; shared
-    btltmp_multC = $68B5
 
 
-    btltmp_boxleft   = $68B3
-    btltmp_boxcenter = $68B4
-    btltmp_boxright  = $68B5
-
-    btl_input        = $68B3
-
-    btl_soft2000 = $68B7    ; soft copy of $2000 used in battles
-    btl_soft2001 = $68B8    ; soft copy of $2001 used in battles
-
-    btlbox_blockdata    = $68BA
-                        ; $68CF   ???
-
-    btl_msgbuffer = $691E   ; $180 bytes  ($0C rows * $20 bytes per row)
-                            ; this buffer contains on-screen tiles to be drawn to ppu$2240
-                            ; (note only $19 bytes are actually drawn, the remaining 7 bytes are padding)
-
-    btl_msgdraw_hdr     = $6A9E
-    btl_msgdraw_x       = $6A9F
-    btl_msgdraw_y       = $6AA0
-    btl_msgdraw_width   = $6AA1
-    btl_msgdraw_height  = $6AA2
-    btl_msgdraw_srcptr  = $6AA1  ; shared
-                        ; $6AA2    above +1
-
-    btl_msgdraw_blockcount = $6AA3      ; the number of blocks drawn
-
-    eobbox_slotid       = $6AA6
-    eobbox_textid       = $6AA7
-
-    btlinput_prevstate  = $6AA6     ; prev state for input
-    inputdelaycounter   = $6AA7     ; counter to delay multiple-input processing when holding a direction
-
-    btl_animatingchar   = $6AA9     ; the character currently being animated (0-3)
-
-    btlcurs_x           = $6AAA     ; battle cursor X position (menu position, not pixel position)
-    btlcurs_y           = $6AAB     ; battle cursor Y position (menu position, not pixel position)
-    btlcurs             = $6AAA
-    btlcurs_max         = $6AAB     ; highest value for the cursor
-    btlcurs_positions   = $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the
-                                    ;   cursor should be drawn when its item is selected.
-
-    btl_drawflagsA = $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead
-                            ; bit    4 = set to draw battle cursor
-                            ; bit    5 = set to draw weapon attack graphic
-                            ; bit    6 = set to draw magic graphic & flash BG.
 
     btl_drawflagsB = $6AD2  ; bits 0-4 = set to indicate character should be drawn as stone
 
