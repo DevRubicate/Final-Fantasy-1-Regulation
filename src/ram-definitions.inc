@@ -442,6 +442,12 @@
         math_dmgcalc        = btl_mathbuf + (MATHBUF_DMGCALC*2)     ; $6860
         math_critchance     = btl_mathbuf + (MATHBUF_CRITCHANCE*2)  ; $6862
         math_ailmentchance  = btl_mathbuf + (MATHBUF_AILMENTCHANCE*2);$6864
+        ;btl_defender_hp             = btl_mathbuf + (MATHBUF_DEFENDERHP*2)  ; $687C -- treated as part of math buffer by some code
+        ;battle_totaldamage          = btl_mathbuf + (MATHBUF_TOTALDAMAGE*2)  ; $6882 -- treated as part of math buffer by some code
+        ;btlmag_defender_hp                      = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
+        ;btlmag_defender_hpmax                   = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
+
+    theend_drawbuf  = $6800     ; $700 bytes!
         
     GAP                                     2080
     RESERVE btlmag_spellconnected,          1 ; $685C
@@ -476,14 +482,17 @@
     RESERVE eob_exp_reward,                 1 ; $6878
     RESERVE btlmag_attacker_unk6879,        0 ; $6879 ; Enemy:  high byte of GP       Player:  class
     RESERVE btl_defender_absorb,            1 ; $6879
+    RESERVE btlmag_defender_hp,             0 ; $687A
     RESERVE btl_defender_magdef,            1 ; $687A
     RESERVE btl_defender_elemresist,        1 ; $687B
-    GAP                                     1
+    RESERVE btl_defender_hp,                1 ; $687C
     RESERVE btlmag_defender_numhitsmult,    1 ; $687D
     RESERVE btlmag_defender_morale,         1 ; $687E
     RESERVE btlmag_defender_absorb,         1 ; $687F
+    RESERVE btlmag_defender_hpmax,          0 ; $6880
     RESERVE btl_attacker_graphic,           1 ; $6880     ; the graphic used for an attack
     RESERVE btl_attacker_varplt,            1 ; $6881     ; The variable palette color used for an attack
+    RESERVE battle_totaldamage,             0 ; $6882
     RESERVE btlmag_defender_strength,       1 ; $6882
     RESERVE btlmag_attacker_unk6883,        1 ; $6883 ; Enemy:  0                     Player:  level
     RESERVE battle_attacker_index,          0 ; $6884 ; ?? redundant??  why not just use btl_attacker?
@@ -499,9 +508,14 @@
     RESERVE btltmp_divHi,                   1 ; $688C
     RESERVE btltmp_divV,                    1 ; $688D
     RESERVE btl_curturn,                    1 ; $688E         ; current turn (index for btl_turnorder)
-    GAP                                     16
-    RESERVE char_order_buf,                 1 ; $689F
-    GAP                                     15
+    RESERVE btl_charcmdbuf,                 16 ; $688F
+    RESERVE char_order_buf,                 0 ; $689F
+    RESERVE btl_charcmditem,                1 ; $689F
+    GAP                                     3
+    RESERVE btl_charcmdconsumetype,         1 ; $68A3
+    GAP                                     3
+    RESERVE btl_charcmdconsumeid,           1 ; $68A7
+    GAP                                     7
     RESERVE btl8x8spr_x,                    2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
     RESERVE btl8x8spr_y,                    2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
     RESERVE btl_tmpindex,                   0 ; $68B3 ; temporary holder for a current index
@@ -543,21 +557,135 @@
     RESERVE btlcurs_y,                      1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
     RESERVE btlcurs_positions,              1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
     GAP                                     36
-    RESERVE btl_drawflagsA,                 1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead
-                            ; bit    4 = set to draw battle cursor
-                            ; bit    5 = set to draw weapon attack graphic
-                            ; bit    6 = set to draw magic graphic & flash BG.
-
-
-    GAP                                     1286
-    RESERVE btlmag_fakeout_defindex,        1 ; $6D95 ; See Battle_DoTurn in bank C for a description of
+    RESERVE btl_drawflagsA,                 1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead ; bit    4 = set to draw battle cursor ; bit    5 = set to draw weapon attack graphic ; bit    6 = set to draw magic graphic & flash BG.
+    RESERVE btl_drawflagsB,                 1 ; $6AD2  ; bits 0-4 = set to indicate character should be drawn as stone
+    RESERVE btl_chardrawinfo,               0 ; $6AD3        ;$10 bytes, 4 bytes for each character
+    RESERVE btl_chardraw_x,                 1 ; $6AD3
+    RESERVE btl_chardraw_y,                 1 ; $6AD4
+    RESERVE btl_chardraw_gfxset,            1 ; $6AD5
+    RESERVE btl_chardraw_pose,              1 ; $6AD6
+    GAP                                     12
+    RESERVE btlcursspr_x,                   1 ; $6AE3
+    RESERVE btlcursspr_y,                   1 ; $6AE4
+    RESERVE btlattackspr_x,                 1 ; $6AE5
+    RESERVE btlattackspr_y,                 1 ; $6AE6
+    RESERVE btlattackspr_t,                 1 ; $6AE7     ; indicate which tile to draw for the weapon graphic
+    RESERVE btlattackspr_pose,              1 ; $6AE8     ; for weapons, 0 or 8 to indicate whether or not to flip it for magic, 0 or ?4? to indicate which frame to draw
+    RESERVE btlattackspr_gfx,               1 ; $6AE9     ; copied to 't' prior to drawing.  Indicates which graphic to use
+    RESERVE btlattackspr_wepmag,            1 ; $6AEA     ; 0 for drawing the weapon, 1 for drawing the magic
+    GAP                                     2
+    RESERVE btlattackspr_hidell,            1 ; $6AED     ; nonzero to hide the lower-left tile of the attack graphic, this is done for the "behind the back" frame of weapon swing animation.
+    RESERVE btlattackspr_nodraw,            1 ; $6AEE     ; nonzero to hide the weapon/magic sprite entirely. This is used when a non-BB player attacks without any weapon equipped Also used when using ITEMs to supress the magic flashing effect.
+    RESERVE btltmp_targetlist,              9 ; $6AEF     ; temporary buffer (9 entries) containing possible targets
+    RESERVE btl_combatboxcount,             1 ; $6AF8     ; the number of combat boxes that have been drawn
+    GAP                                     1
+    RESERVE btl_unfmtcbtbox_buffer,         128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
+    RESERVE btlcmd_curchar,                 1 ; $6B7A     ; the current character inputting battle commands (0-3)
+    RESERVE btlcmd_target,                  1 ; $6B7B     ; the current enemy slot that is being targetted
+    GAP                                     2
+    RESERVE btlcmd_magicgfx,                8 ; $6B7E     ; 2 bytes per character.  [0] = graphic to draw, [1] = palette to use
+    RESERVE btl_result,                     1 ; $6B86 ;   0 = keep battling ;   1 = party defeated ;   2 = all enemies defeated ;   3 = party ran ; $FF = wait for 2 seconds after fadeout before exiting (chaos defeated?)
+    RESERVE btl_usepalette,                 32; $6B87 ; $20 bytes - the palette that is actually displayed (after fade effects)
+    RESERVE btl_followupmusic,              1 ; $6BA7 ; song to play in battle after current song finishes.  Moved to music_track once music_track has its high bit set  (does this ever happen?)
+    RESERVE btl_charattrib,                 4 ; $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
+    RESERVE btl_responddelay,               1 ; $6BAC
+    GAP                                     1
+    RESERVE btl_strikingfirst,              1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
+    RESERVE btl_potion_heal,                1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
+    RESERVE btl_potion_pure,                1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)
+    RESERVE battle_bank,                    1 ; $6BB1  ; The bank to jump back to for setting up battles
+    RESERVE btl_smallslots,                 1 ; $6BB2             ; Number of small enemy slots available
+    RESERVE btl_largeslots,                 1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
+    GAP                                     2
+    RESERVE btl_enemyeffect,                1 ; $6BB6     ; 0 to draw expolosion graphics as the effect nonzero to erase the enemy as the effect
+    RESERVE btl_enemyIDs,                   9 ; $6BB7  ; 9 entries of enemy IDs
+    RESERVE btl_enemygfxplt,                9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
+    RESERVE btl_enemyroster,                4 ; $6BC9  ; 4 bytes of enemy IDs printed in the main battle menu, showing enemies in the fight
+    RESERVE btl_attacker_alt,               1 ; $6BCD ; An EXTREMELY redundant and stupid copy of btl_attacker
+    GAP                                     1
+    RESERVE btl_randomplayer,               1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
+    GAP                                     3
+    RESERVE btl_enemystats,                 1 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
+    GAP                                     44
+    RESERVE bigstr_buf,                     0 ; $6C00   ; $81 bytes?
+    RESERVE lutmp_ch_stats,                 1 ; $6C00 ; temporary space used by the lineup menu
+    GAP                                     135
+    RESERVE btl_tmppltassign,               1 ; $6C88    ; temporary value to assign palette to enemies in a formation
+    RESERVE btl_attacker,                   1 ; $6C89
+    RESERVE btl_defender,                   1 ; $6C8A
+    RESERVE btl_combatboxcount_alt,         1 ; $6C8B ; ANOTHER combatbox counter... this is totally redundant
+    RESERVE btl_attackid,                   1 ; $6C8C ; >= $42 for enemy attacks
+    GAP                                     2
+    RESERVE btlmag_magicsource,             1 ; $6C8F ; 0=magic, 1=drink, 2=item
+    RESERVE btlmag_ailment_orig,            1 ; $6C90 ; A backup of 
+    GAP                                     1
+    RESERVE btl_battletype,                 1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
+    RESERVE btl_enemycount,                 1 ; $6C93     ; count of the number of enemies being generated for a battle
+    RESERVE btltmp_attr,                    40 ; $6C94     ; $40 bytes of attribute data for the battle setup
+    GAP                                     24
+    RESERVE btl_stringoutputbuf,            1 ; $6CD4 ; output buffer where decoded strings are printed
+    GAP                                     43
+    RESERVE lutmp_ch_magic,                 1 ; $6D00
+    GAP                                     19
+    RESERVE loop_counter,                   0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
+    RESERVE explode_min_x,                  1 ; $6D14
+    RESERVE explode_min_y,                  1 ; $6D15
+    RESERVE explode_max_x,                  1 ; $6D16
+    RESERVE explode_max_y,                  1 ; $6D17
+    RESERVE explode_count,                  1 ; $6D18
+    RESERVE btltmp_altmsgbuffer,            1 ; $6D19
+    GAP                                     18
+    RESERVE btltmp_attackerbuffer,          1 ; $6D2C
+    GAP                                     7
+    RESERVE btl_palettes,                   1 ; $6D34   ; $20 bytes
+    GAP                                     31
+    RESERVE btl_stringbuf,                  1 ; $6D54   ; $20 byte buffer to contain string data for printing
+    GAP                                     31
+    RESERVE btltmp_backseat,                1 ; $6D74   ; $10 byte buffer -- backup of btltmp
+    GAP                                     15
+    RESERVE btlform_type,                   0 ; $6D84   ; battle type (high 4 bits) -- low 4 bits are pattern table
+    RESERVE btl_formdata,                   1 ; $6D84   ; $10 bytes (formation data as appears in ROM)
+    RESERVE btlform_engfx,                  1 ; $6D85   ; graphic assignment (2 bits per enemy)
+    RESERVE btlform_enids,                  4 ; $6D86   ; enemy IDs (4 bytes)
+    RESERVE btlform_enqty,                  4 ; $6D8A   ; enemy quantities (4 bytes)
+    RESERVE btlform_plts,                   2 ; $6D8E   ; palettes for this battle (2 bytes)
+    RESERVE btlform_surprise,               1 ; $6D90   ; surprise rate
+    RESERVE btlform_enplt,                  0 ; $6D91   ; enemy palette assign (in high 4 bits)
+    RESERVE btlform_norun,                  1 ; $6D91   ; no run flag (in low bit)
+    RESERVE btlform_enqtyB,                 2 ; $6D92   ; enemy quantities for B formation (2 bytes)
     RESERVE btlmag_fakeout_ailments,        1 ; $6D94 ;   what these 'fakeout' vars are and how/why they're used
+    RESERVE btlmag_fakeout_defindex,        1 ; $6D95 ; See Battle_DoTurn in bank C for a description of
     RESERVE btlmag_fakeout_defplayer,       1 ; $6D96
+    RESERVE btlsfx_backseat,                1 ; $6D97 ; where it is stored when not in zero page (it swaps between the two)
+    GAP                                     15
+    RESERVE btlmag_playerhitsfx,            1 ; $6DA7     ; sound effect to play when magic hits player
+    GAP                                     8
+    RESERVE btltmp_smallslotpos,            1 ; $6DB0
+    GAP                                     334
+    RESERVE mapobj,                         1 ; $6F00   ; $100 bytes -- page
+    RESERVE mapobj_id,                      1 ; $6F00  ; rearranging these is ill advised
+    RESERVE mapobj_flgs,                    1 ; $6F01  ;  because the loader is pretty rigid
+    RESERVE mapobj_physX,                   1 ; $6F02  ;  flags:  $80=inroom $40=don't move
+    RESERVE mapobj_physY,                   1 ; $6F03
+    RESERVE mapobj_gfxX,                    1 ; $6F04
+    RESERVE mapobj_gfxY,                    1 ; $6F05
+    RESERVE mapobj_ctrX,                    1 ; $6F06
+    RESERVE mapobj_ctrY,                    1 ; $6F07
+    RESERVE mapobj_spdX,                    1 ; $6F08
+    RESERVE mapobj_spdY,                    1 ; $6F09
+    RESERVE mapobj_rawid,                   1 ; $6F0A
+    RESERVE mapobj_movectr,                 1 ; $6F0B
+    RESERVE mapobj_face,                    1 ; $6F0C
+    RESERVE mapobj_pl,                      1 ; $6F0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
+    RESERVE mapobj_tsaptr,                  1 ; $6F0E
+    GAP                                     241
+    RESERVE mapdata,                        1 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
+    RESERVE mm_decorchr,                    1 ; $7000   ; $300 bytes -- should be on page bound, shared
+    GAP                                     766
+    RESERVE mm_titlechr,                    1 ; $7300   ; $280 bytes -- should be on page bound, shared
 
-    btl_defender_hp             = btl_mathbuf + (MATHBUF_DEFENDERHP*2)  ; $687C -- treated as part of math buffer by some code
-    battle_totaldamage          = btl_mathbuf + (MATHBUF_TOTALDAMAGE*2)  ; $6882 -- treated as part of math buffer by some code
-    btlmag_defender_hp                      = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
-    btlmag_defender_hpmax                   = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
+
+
 
     ;  Buffers to hold character commands for battle.  These must be contiguious in memory
     ;  due to the way memory is cleared.  These buffers also contain a bit of redundant data.
@@ -587,191 +715,9 @@
     ;  btl_charcmdconsumeid contains 1 byte per character.  If will be the potion index
     ;       for drink, or the spell level for magic
 
-    btl_charcmdbuf          = $688F
-    btl_charcmditem         = btl_charcmdbuf+$10        ; $689F
-    btl_charcmdconsumetype  = btl_charcmditem+4         ; $68A3
-    btl_charcmdconsumeid    = btl_charcmdconsumetype+4  ; $68A7
-
-
-
-
-    btl_drawflagsB = $6AD2  ; bits 0-4 = set to indicate character should be drawn as stone
-
-    btl_chardrawinfo = $6AD3        ;$10 bytes, 4 bytes for each character
-        btl_chardraw_x      = btl_chardrawinfo+0
-        btl_chardraw_y      = btl_chardrawinfo+1
-        btl_chardraw_gfxset = btl_chardrawinfo+2
-        btl_chardraw_pose   = btl_chardrawinfo+3
-        
-    btlcursspr_x        = $6AE3
-    btlcursspr_y        = $6AE4
-    btlattackspr_x      = $6AE5
-    btlattackspr_y      = $6AE6
-
-    btlattackspr_t      = $6AE7     ; indicate which tile to draw for the weapon graphic
-    btlattackspr_pose   = $6AE8     ; for weapons, 0 or 8 to indicate whether or not to flip it
-                                    ; for magic, 0 or ?4? to indicate which frame to draw
-    btlattackspr_gfx    = $6AE9     ; copied to 't' prior to drawing.  Indicates which graphic to use
-    btlattackspr_wepmag = $6AEA     ; 0 for drawing the weapon, 1 for drawing the magic
-
-    btlattackspr_hidell = $6AED     ; nonzero to hide the lower-left tile of the attack graphic
-                                    ;   This is done for the "behind the back" frame of weapon swing animation.
-    btlattackspr_nodraw = $6AEE     ; nonzero to hide the weapon/magic sprite entirely.  This is
-                                    ;   Used when a non-BB player attacks without any weapon equipped
-                                    ;   Also used when using ITEMs to supress the magic flashing effect.
-
-    btltmp_targetlist   = $6AEF     ; temporary buffer (9 entries) containing possible targets
-
-    btl_combatboxcount  = $6AF8     ; the number of combat boxes that have been drawn
-
-    btl_unfmtcbtbox_buffer = $6AFA  ; $80 bytes total, $10 bytes for each combat box.
-                                    ; houses the unformatted text for each combat box.
-                                    ; Additional bytes are used for other areas
-                                    
-    btlcmd_curchar      = $6B7A     ; the current character inputting battle commands (0-3)
-    btlcmd_target       = $6B7B     ; the current enemy slot that is being targetted
-
-    btlcmd_magicgfx     = $6B7E     ; 2 bytes per character.  [0] = graphic to draw, [1] = palette to use
-
-    btl_result          = $6B86 ;   0 = keep battling
-                                ;   1 = party defeated
-                                ;   2 = all enemies defeated
-                                ;   3 = party ran
-                                ; $FF = wait for 2 seconds after fadeout before exiting (chaos defeated?)
-
-    btl_usepalette      = $6B87 ; $20 bytes - the palette that is actually displayed (after fade effects)
-
-    btl_followupmusic   = $6BA7 ; song to play in battle after current song finishes.  Moved to music_track
-                                ;    once music_track has its high bit set  (does this ever happen?)
-
-    btl_charattrib      = $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
-
-    btl_responddelay    = $6BAC
-
-    btl_strikingfirst   = $6BAE ; nonzero if players are striking first.  Zero otherwise
-
-    btl_potion_heal     = $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
-    btl_potion_pure     = $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying
-                                ;  to use one dies, for example)
-
-    battle_bank     = $6BB1  ; The bank to jump back to for setting up battles
-    btl_smallslots  = $6BB2             ; Number of small enemy slots available
-    btl_largeslots  = btl_smallslots+1  ; Number of large slots available.  Must immediately follow smallslots
-
-    btl_enemyeffect = $6BB6     ; 0 to draw expolosion graphics as the effect
-                                ;   nonzero to erase the enemy as the effect
-
-    btl_enemyIDs =    $6BB7  ; 9 entries of enemy IDs
-    btl_enemygfxplt = $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
-
-    btl_enemyroster = $6BC9  ; 4 bytes of enemy IDs printed in the main battle menu, showing enemies in the fight
-
-    btl_attacker_alt    = $6BCD ; An EXTREMELY redundant and stupid copy of btl_attacker
-
-    btl_randomplayer    = $6BCF ; set by GetRandomPlayerTarget  (0-3)
-
-    btl_enemystats =  $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
-        en_romptr       = $00  ; 2 bytes - pointer to enemy stats in ROM
-        en_hp           = $02  ; 2 bytes
-        en_defense      = $04
-        en_numhitsmult  = $05
-        en_ailments     = $06
-        en_aimagpos     = $07
-        en_aiatkpos     = $08
-        en_morale       = $09
-        en_evade        = $0A
-        en_strength     = $0B
-        en_ai           = $0C
-        en_exp          = $0D  ; 2 bytes
-        en_gp           = $0F  ; 2 bytes
-        en_enemyid      = $11
-        en_unknown12    = $12  ; low byte of HP max
-        en_unknown13    = $13  ; not initialized?  probably suppoed to be high byte of HP max
-
-    btl_tmppltassign = $6C88    ; temporary value to assign palette to enemies in a formation
-
-    btl_attacker            = $6C89
-    btl_defender            = $6C8A
-    btl_combatboxcount_alt  = $6C8B ; ANOTHER combatbox counter... this is totally redundant
-    btl_attackid            = $6C8C ; >= $42 for enemy attacks
-
-    btlmag_magicsource      = $6C8F ; 0=magic, 1=drink, 2=item
-    btlmag_ailment_orig     = $6C90 ; A backup of 
-    btl_battletype  = $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
-    btl_enemycount  = $6C93     ; count of the number of enemies being generated for a battle
-    btltmp_attr     = $6C94     ; $40 bytes of attribute data for the battle setup
-
-    ; temporary space used by the lineup menu
-    lutmp_ch_stats  = $6C00
-    lutmp_ch_magic  = $6D00
-
-
-    bigstr_buf      = $6C00   ; $81 bytes?
-
-    btl_stringoutputbuf = $6CD4 ; output buffer where decoded strings are printed
-
-    explode_min_x   = $6D14
-    explode_min_y   = $6D15
-    explode_max_x   = $6D16
-    explode_max_y   = $6D17
-    explode_count   = $6D18
-
-    btltmp_altmsgbuffer     = $6D19
-    btltmp_attackerbuffer   = $6D2C
-
-    ; ????          = $6D14   ; action buffer?  $20 bytes?  contents for combat boxes are placed here?
-
-    btl_palettes    = $6D34   ; $20 bytes
-
-    btl_stringbuf   = $6D54   ; $20 byte buffer to contain string data for printing
-
-    btltmp_backseat = $6D74   ; $10 byte buffer -- backup of btltmp
-
-
-    btl_formdata    = $6D84   ; $10 bytes (formation data as appears in ROM)
-        btlform_type    = btl_formdata+$0   ; battle type (high 4 bits) -- low 4 bits are pattern table
-        btlform_engfx   = btl_formdata+$1   ; graphic assignment (2 bits per enemy)
-        btlform_enids   = btl_formdata+$2   ; enemy IDs (4 bytes)
-        btlform_enqty   = btl_formdata+$6   ; enemy quantities (4 bytes)
-        btlform_plts    = btl_formdata+$A   ; palettes for this battle (2 bytes)
-        btlform_surprise= btl_formdata+$C   ; surprise rate
-        btlform_enplt   = btl_formdata+$D   ; enemy palette assign (in high 4 bits)
-        btlform_norun   = btlform_enplt     ; no run flag (in low bit)
-        btlform_enqtyB  = btl_formdata+$E   ; enemy quantities for B formation (2 bytes)
-
-
-    ; btlsfx_backseat   = $6D97
-
-    btlmag_playerhitsfx = $6DA7     ; sound effect to play when magic hits player
-    btltmp_smallslotpos = $6DB0
-
-    mapobj          = $6F00   ; $100 bytes -- page
-     mapobj_id      = mapobj + $00  ; rearranging these is ill advised
-     mapobj_flgs    = mapobj + $01  ;  because the loader is pretty rigid
-     mapobj_physX   = mapobj + $02  ;  flags:  $80=inroom $40=don't move
-     mapobj_physY   = mapobj + $03
-     mapobj_gfxX    = mapobj + $04
-     mapobj_gfxY    = mapobj + $05
-     mapobj_ctrX    = mapobj + $06
-     mapobj_ctrY    = mapobj + $07
-     mapobj_spdX    = mapobj + $08
-     mapobj_spdY    = mapobj + $09
-     mapobj_rawid   = mapobj + $0A
-     mapobj_movectr = mapobj + $0B
-     mapobj_face    = mapobj + $0C
-     mapobj_pl      = mapobj + $0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
-     mapobj_tsaptr  = mapobj + $0E
-
-    mapdata         = $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
-
-    mm_decorchr     = $7000   ; $300 bytes -- should be on page bound, shared
-    mm_titlechr     = $7300   ; $280 bytes -- should be on page bound, shared
-
-
-
-
-    theend_drawbuf  = $6800     ; $700 bytes!
-
-    btlsfx_backseat     = $6D97 ; where it is stored when not in zero page (it swaps between the two)
+    ;btl_charcmdbuf          = $688F
+    ;btl_charcmditem         = btl_charcmdbuf+$10        ; $689F
+    ;btl_charcmdconsumetype  = btl_charcmditem+4         ; $68A3
+    ;btl_charcmdconsumeid    = btl_charcmdconsumetype+4  ; $68A7
 
 

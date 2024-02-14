@@ -11798,7 +11798,7 @@ lut_BtlAttrTbl:
 
 BattleScreenShake:
     LDA #$06
-    STA $6D14           ; loop down counter.  6*2 = 12 frames  (2 frames per loop)
+    STA loop_counter           ; loop down counter.  6*2 = 12 frames  (2 frames per loop)
   @Loop:
       JSR @Stall2Frames ; wait 2 frames
       
@@ -11809,7 +11809,7 @@ BattleScreenShake:
       AND #$03          ; another random number
       STA $2005         ; for Y scroll
       
-      DEC $6D14
+      DEC loop_counter
       BNE @Loop
     
     JMP Battle_UpdatePPU_UpdateAudio_FixedBank  ; 1 more frame (with reset scroll)
@@ -13151,7 +13151,7 @@ lut_EnemyRosterStrings:
 
 FormatBattleString:
     LDA #$00
-    STA $6D14               ;  ????  no idea what this does
+    STA loop_counter               ;  ????  no idea what this does
     
     JSR SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
     

@@ -492,3 +492,22 @@ lut_InitUnsramFirstPage = $B000 ; BANK_STARTUPINFO
 
 
 lut_ClassStartingStats  = $B040 ; BANK_STARTINGSTATS
+
+
+; These are used as offsets for btl_enemystats
+en_romptr       = $00  ; 2 bytes - pointer to enemy stats in ROM
+en_hp           = $02  ; 2 bytes
+en_defense      = $04
+en_numhitsmult  = $05
+en_ailments     = $06
+en_aimagpos     = $07
+en_aiatkpos     = $08
+en_morale       = $09
+en_evade        = $0A
+en_strength     = $0B
+en_ai           = $0C
+en_exp          = $0D  ; 2 bytes
+en_gp           = $0F  ; 2 bytes
+en_enemyid      = $11
+en_unknown12    = $12  ; low byte of HP max
+en_unknown13    = $13  ; not initialized?  probably suppoed to be high byte of HP max

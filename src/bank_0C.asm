@@ -9179,7 +9179,7 @@ DrawEnemyEffect:
                             ;  dissolve effect
     
     LDA #$0C
-    STA $6D14               ; row counter / loop counter
+    STA loop_counter               ; row counter / loop counter
     
     LDA #<$20C2             ; $6D15,6 = target PPU address
     STA $6D15
@@ -9206,7 +9206,7 @@ DrawEnemyEffect:
       BCC :+
         INC $6D16
     : JSR BattleUpdateAudio         ; update audio for the frame
-      DEC $6D14
+      DEC loop_counter
       BNE @EraseLoop
       
   @Exit:
