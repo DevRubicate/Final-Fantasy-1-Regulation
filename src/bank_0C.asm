@@ -1,17 +1,20 @@
-.export lut_BattlePalettes, BankC_CrossBankJumpList
+.segment "BANK_0C"
+
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
 
 .import GameStart_L
-
 .import CallMusicPlay_L
 .import SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L, BattleWaitForVBlank_L
 .import DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
 .import BattleCrossPageJump_L, WaitForVBlank_L, ClearBattleMessageBuffer_L
 .import BattleOver_ProcessResult_L
 
-.include "src/macros.inc"
-.include "src/constants.inc"
-.include "src/ram-definitions.inc"
-.segment "BANK_0C"
+.export lut_BattlePalettes, BankC_CrossBankJumpList
+
+
 BANK_THIS = $0C
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

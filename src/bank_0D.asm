@@ -1,4 +1,9 @@
+.segment "BANK_0D"
 
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
 
 .export EnterEndingScene, MusicPlay_L, EnterMiniGame, EnterBridgeScene_L, __Nasir_CRC_High_Byte
 .export lut_IntroStoryText
@@ -6,11 +11,6 @@
 .import DrawComplexString_L, DrawBox_L, UpdateJoy_L, DrawPalette_L
 .import WaitForVBlank_L, lut_RNG
 
-
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
-.segment "BANK_0D"
 BANK_THIS = $0D
 
 ;;
@@ -2491,7 +2491,7 @@ Story_CloseShutters:
     SBC #1
     BNE @ShutterLoop
 
-  PAGECHECK @ShutterLoop
+    PAGECHECK @ShutterLoop
 
   ;; here, timing sensitive code is complete
 

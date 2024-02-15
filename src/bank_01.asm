@@ -1,9 +1,10 @@
-.include "src/constants.inc"
+.segment "BANK_01"
+
+.include "src/registers.inc"
 .include "src/ram-definitions.inc"
+.include "src/constants.inc"
 
 .export MinimapDecompress
-
-.segment "BANK_01"
 
 .INCBIN "bin/bank_01_data.bin"
 

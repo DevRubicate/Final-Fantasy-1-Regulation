@@ -1,11 +1,14 @@
+.segment "BANK_09"
+
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
+
 .export EnterMinimap
 .import CallMinimapDecompress, UpdateJoy_L, CallMusicPlay_L, DrawPalette_L, WaitForVBlank_L
 
-.include "src/constants.inc"
-.include "src/ram-definitions.inc"
-.segment "BANK_09"
-
- .INCBIN "bin/bank_09_data.bin"
+.INCBIN "bin/bank_09_data.bin"
 
 
 BANK_THIS = $09

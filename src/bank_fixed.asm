@@ -1,19 +1,9 @@
-.export GameStart_L
+.segment "BANK_FIXED"
 
-.export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
-.export ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
-.export DrawBox_L, UpdateJoy_L, DrawPalette_L, CallMusicPlay_L, DrawComplexString_L
-
-.export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
-.export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
-.export DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
-
-
-
-.export lut_RNG, SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L
-.export BattleWaitForVBlank_L, Battle_WritePPUData_L, Battle_ReadPPUData_L, CallMinimapDecompress
-.export DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
-.export BattleCrossPageJump_L, ClearBattleMessageBuffer_L
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
 
 .import MinimapDecompress
 .import EnterMinimap
@@ -25,14 +15,17 @@
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
-
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
-
-
-.segment "BANK_FIXED"
-
+.export GameStart_L
+.export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
+.export ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
+.export DrawBox_L, UpdateJoy_L, DrawPalette_L, CallMusicPlay_L, DrawComplexString_L
+.export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
+.export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
+.export DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
+.export lut_RNG, SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L
+.export BattleWaitForVBlank_L, Battle_WritePPUData_L, Battle_ReadPPUData_L, CallMinimapDecompress
+.export DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
+.export BattleCrossPageJump_L, ClearBattleMessageBuffer_L
 
 ;;;;
 ;;

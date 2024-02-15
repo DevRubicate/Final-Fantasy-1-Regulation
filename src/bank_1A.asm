@@ -1,11 +1,8 @@
-.include "src/macros.inc"
-.include "src/constants.inc"
-
-BANK_THIS = $1A
-
 .segment "BANK_1A"
 
-;; unused bytes  [$BFF0 :: 0x3C000]
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
 
-  .BYTE   $66,$66,$66,$66,$66,$66,$66,$66,    $66,$66,$66,$66,$66,$66,$66,$66
-
+BANK_THIS = $1A

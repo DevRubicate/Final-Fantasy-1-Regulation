@@ -1,15 +1,16 @@
+.segment "BANK_0B"
+
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
+
 .export data_EnemyNames, PrepBattleVarsAndEnterBattle_L, lut_BattleRates, lut_BattleFormations, data_BattleMessages
 .export BattleOver_ProcessResult_L
 .export data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
 .import Battle_ReadPPUData_L, Battle_WritePPUData_L, CallMusicPlay_L, WaitForVBlank_L, UndrawNBattleBlocks_L
 .import DrawCombatBox_L, BattleRNG_L, BattleCrossPageJump_L, BankC_CrossBankJumpList
-
-.include "src/macros.inc"
-.include "src/constants.inc"
-
-.include "src/ram-definitions.inc"
-.segment "BANK_0B"
 
 BANK_THIS = $0B
 

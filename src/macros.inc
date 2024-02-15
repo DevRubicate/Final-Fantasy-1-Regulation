@@ -1,5 +1,3 @@
-
-
 ;;
 ;;  macro for LDAing an immediate value, then always branching
 ;;

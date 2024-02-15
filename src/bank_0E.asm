@@ -1,21 +1,23 @@
-.export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
-.export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
-.export EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
+.segment "BANK_0E"
+
+.include "src/registers.inc"
+.include "src/constants.inc"
+.include "src/macros.inc"
+.include "src/ram-definitions.inc"
 
 .import GameStart_L
 .import lut_IntroStoryText
-
 .import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
-
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
 
-.include "src/macros.inc"
-.include "src/constants.inc"
-.include "src/ram-definitions.inc"
-.segment "BANK_0E"
+.export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
+.export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
+.export EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
+
+
 
 BANK_THIS = $0E
 
