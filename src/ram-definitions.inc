@@ -456,7 +456,7 @@
     RESERVE btltmp_divLo,                       1 ; $688B
     RESERVE btltmp_divHi,                       1 ; $688C
     RESERVE btltmp_divV,                        1 ; $688D
-    RESERVE levelup_classid,                    1 ; $688E ; local, stores class ID
+    RESERVE levelup_classid,                    0 ; $688E ; local, stores class ID
     RESERVE btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
     RESERVE btl_charcmdbuf,                     16 ; $688F
     RESERVE char_order_buf,                     0 ; $689F
