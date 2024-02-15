@@ -380,7 +380,9 @@
     RESERVE theend_drawbuf,                     0 ; $6800    ; $700 bytes!
     GAP                                         72
     RESERVE btl_turnorder,                      13 ; $6848         ; $D entries (9 enemies + 4 characters)
+    RESERVE btl_hp_text_buf,                    0 ; $6855   ; 8 bytes?
     GAP                                         1
+    RESERVE btl_drink_selection,                0 ; $6856
     RESERVE levelup_loop,                       0 ; $6856
     RESERVE btl_mathbuf,                        0 ; $6856     ; $14 bytes?, 2 byte pairs, used as buffers for mathematical routines
     RESERVE math_hitchance,                     2 ; $6856

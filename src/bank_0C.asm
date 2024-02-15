@@ -636,10 +636,10 @@ Battle_MainMenu_APressed:
     ASL A
     TAY
     LDA lut_BattleSubMenu, Y
-    STA $88
+    STA btl_jumptableptr
     LDA lut_BattleSubMenu+1, Y
-    STA $89
-    JMP ($0088)                 ; then jump to the appropriate sub menu logic
+    STA btl_jumptableptr+1
+    JMP (btl_jumptableptr)                 ; then jump to the appropriate sub menu logic
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -854,7 +854,7 @@ BattleSubMenu_Drink:
       
   : LDA btlcurs_y               ; see if they selected Heal or Pure potion
     AND #$01
-    STA $6B7D                   ; stick it in temp mem (0=Heal, 1=Pure)
+    STA btl_drink_selection     ; stick it in temp mem (0=Heal, 1=Pure)
     BNE @PureSelected           ; see which they selected?  If heal....
       LDA btl_potion_heal       ;   ... make sure they have at least 1 heal potion
       BNE @HealOK               ; if they don't
@@ -868,11 +868,11 @@ BattleSubMenu_Drink:
       JMP CancelBattleAction
       
   : LDA #$01
-    STA $6856                   ; store menu selection for pure potion in temp mem $6856
+    STA btl_drink_selection                   ; store menu selection for pure potion in temp mem btl_drink_selection
     JMP @GetTarget              ;  (this means both 6856 AND 6B7D both contain the item being used -- why both?)
   @HealOK:
     LDA #$00                    ; for heal potion
-    STA $6856
+    STA btl_drink_selection
 
   @GetTarget:
     LDA btlcmd_curchar          ; get input for SelectPlayerTarget
@@ -884,10 +884,10 @@ BattleSubMenu_Drink:
   : LDY btlcmd_curchar
     LDA #$02
     STA btl_charcmdconsumetype, Y   ; store 02 as the consumable type (to indicate DRINK)
-    LDA $6856
+    LDA btl_drink_selection
     STA btl_charcmdconsumeid, Y     ; store menu selection as consumed ID -- to indicate which potion  (00/01 for Heal/Pure potion)
     
-    LDX $6856               ; get menu selection
+    LDX btl_drink_selection               ; get menu selection
     DEC btl_potion_heal, X  ; remove the item from the qty
     
     LDA btlcurs_y           ; get target
@@ -895,7 +895,7 @@ BattleSubMenu_Drink:
     ORA #$80                ; OR with 80 to indicate it's a player target
     TAY                     ; put in Y (for SetCharacterBattleCommand)
     
-    LDA $6B7D               ; get the menu selection
+    LDA btl_drink_selection               ; get the menu selection
     CLC
     ADC #$40                ; + $40.
     TAX                     ; X=40 for heal / 41 for pure
@@ -1720,10 +1720,10 @@ SelectEnemyTarget:
     ASL A
     TAY
     LDA lut_EnemyTargetMenuJumpTbl, Y
-    STA $88
+    STA btl_jumptableptr
     LDA lut_EnemyTargetMenuJumpTbl+1, Y
-    STA $89
-    JMP ($0088)                 ; jump to appropriate target menu code
+    STA btl_jumptableptr+1
+    JMP (btl_jumptableptr)      ; jump to appropriate target menu code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4525,7 +4525,7 @@ DoPhysicalAttack:
     LDY #MATHBUF_DMGCALC
     JSR MathBuf_Add16               ; total damage += dmgcalc
     
-    LDA $6887
+    LDA battle_defenderisplayer
     BEQ @NextHitIteration           ; we're done if player is attacking
     LDA btl_attacker_attackailment
     BEQ @NextHitIteration           ; we're done if no ailment to apply
@@ -4541,8 +4541,6 @@ DoPhysicalAttack:
     STA math_ailmentchance          ; base chance of connecting ailment = 100
     LDA btl_defender_elemresist
     AND btl_attacker_element
-    STA $6868                       ; ?pointless sta/lda
-    LDA $6868
     BEQ :+                          ; if defender resists attacker's element
       LDA #$00                      ; chance to connect with ailment is zero  (later will be changed to 1)
       STA math_ailmentchance
@@ -4662,7 +4660,7 @@ DoPhysicalAttack:
     
     LDA #AIL_DEAD                       ; otherwise (HP == 0)
     STA btl_defender_ailments           ; add the 'Dead' ailment
-    LDA $6887
+    LDA battle_defenderisplayer
     BEQ :+                              ; if this is a player
       LDA #BTLMSG_SLAIN                 ;  print "Slain" battle message
       BNE @DeathMsg
@@ -4851,22 +4849,22 @@ YXDivideA:
 
 FormatHPForText:
     LDA #$FF
-    STA $6856           ; start with a space
+    STA btl_hp_text_buf+1           ; start with a space
     
     LDA #100
     JSR YXDivideA       ; get the 100s digit
     ORA #$80            ; convert to tile
-    STA $6858           ; print 100s digit
+    STA btl_hp_text_buf+3        ; print 100s digit
     
     LDY #$00
     LDA #10
     JSR YXDivideA       ; divide to get 10s and 1s
     
     ORA #$80
-    STA $685A           ; print 10s
+    STA btl_hp_text_buf+5          ; print 10s
     TXA
     ORA #$80
-    STA $685C           ; 1s
+    STA btl_hp_text_buf+7           ; 1s
     
     RTS
     
@@ -4959,7 +4957,7 @@ DrawCharacterStatus:
     
     ; Interleaved HP string is stored at $6856
     LDY #$08
-    : LDA $6856-1, Y                ; copy 8 bytes of that HP string to
+    : LDA btl_hp_text_buf, Y                ; copy 8 bytes of that HP string to
       STA btl_stringoutputbuf-1, Y  ; the string output buffer
       DEY                           ;  (-1 because Y is 1-based)
       BNE :-
@@ -6083,7 +6081,7 @@ MathBuf_NZ:
     LDA btl_mathbuf+1, Y    ; get high byte of value
     BNE @Exit               ; if nonzero, just use it as our NZ settings and exit
     
-      LDA $6856, Y          ; if zero, get the low byte, to use its Z flag setting
+      LDA btl_mathbuf, Y          ; if zero, get the low byte, to use its Z flag setting
       PHP
       PLA                   ; move status flags to A
       AND #$7F              ; clear the N flag (value is not negative if high byte was zero)
@@ -8634,11 +8632,11 @@ BtlMag_Effect_Fast:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_AttackUp2:
-    LDA $6884                       ; BUGGED - this is *probably* supposed to be using the spell hit-rate value
+    LDA btlmag_attacker_unk6884     ; BUGGED - this is *probably* supposed to be using the spell hit-rate value
     ADC btlmag_hitrate              ;   as a HIT bonus and then the effectivity as a DAMAGE bonus, but defender's
     BCC :+                          ;   hit rate is not loaded into memory, so this end up adding it to
       LDA #$FF                      ;   some other part of mem.  Note that this doesn't matter in the original
-  : STA $6884                       ;   game, as TMPR and SABR both have 0 for the spell's hit rate.
+  : STA btlmag_attacker_unk6884     ;   game, as TMPR and SABR both have 0 for the spell's hit rate.
   
             ; Code here is a duplicate of BtlMag_Effect_AttackUp.  You could just JMP there and save
             ;   all this space.

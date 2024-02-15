@@ -8046,7 +8046,7 @@ MoveMagicMenuCursor:
     LDA cursor       ; get the cursor
     ORA tmp          ; add the char index to it
     TAX              ; put in X to index
-    LDA $6300, X     ; and fetch the spell at current cursor
+    LDA ch_magicdata, X     ; and fetch the spell at current cursor
     RTS              ; then exit.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

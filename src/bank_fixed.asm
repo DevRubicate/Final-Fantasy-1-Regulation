@@ -981,10 +981,10 @@ ClearOAM:
     LDA #$F8       ; we'll be clearing to $F8
 
   @Loop:
-      STA $0200, X ; clear 4 bytes of OAM
-      STA $0240, X
-      STA $0280, X
-      STA $02C0, X
+      STA oam, X ; clear 4 bytes of OAM
+      STA oam + $40, X
+      STA oam + $80, X
+      STA oam + $C0, X
       DEX          ; and continue looping until X expires
       BPL @Loop
 
