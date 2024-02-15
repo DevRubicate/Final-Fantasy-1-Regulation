@@ -852,15 +852,8 @@ LvlUp_LevelUp:
     LDY #ch_level - ch_stats        ; check to see if they're are the max level
     LDA (lvlup_chstats), Y          ; level 50 is max (-1 because OB level is stored 0-based
     CMP #50 - 1                     ;   so it'd actually be stored as 49)
-    BEQ LvlUp_AwardExp_RTS          ; if at max level, branch to a nearby RTS
-
-    
-            @levindex = $6BAD       ; local, stores the index to level up stats
-            @lvlupptr = $82         ; local, pointer to level up data
-            @classid  = $688E       ; local, stores class ID
-            
-    STA @levindex                   ; record old level
-    
+    BEQ LvlUp_AwardExp_RTS          ; if at max level, branch to a nearby RTS        
+    STA levelup_levindex            ; record old level
     CLC                             ; add 1
     ADC #1
     STA (lvlup_chstats), Y          ; change actual player stat
@@ -873,15 +866,15 @@ LvlUp_LevelUp:
     ASL A
     TAY                             ; put 2* class ID in Y (to use as index)
     
-    ASL @levindex                   ; double level index (2 bytes of data per level per class)
+    ASL levelup_levindex                   ; double level index (2 bytes of data per level per class)
     
     LDA lut_LevelUpDataPtrs, Y      ; calc the pointer to the level up data for this level for
     CLC                             ;   this class.
-    ADC @levindex
-    STA @lvlupptr
+    ADC levelup_levindex
+    STA levelup_lvlupptr
     LDA lut_LevelUpDataPtrs+1, Y
     ADC #$00
-    STA @lvlupptr+1                 ; @lvlupptr now points to the 2-byte level up data to use
+    STA levelup_lvlupptr+1                 ; levelup_lvlupptr now points to the 2-byte level up data to use
     
     LDA #$00
     STA eobtext_print_level+1       ; clear high-byte of print level
@@ -889,7 +882,7 @@ LvlUp_LevelUp:
     
     LDX #$00
     LDA (lvlup_chstats, X)          ; get the first byte of chstats (happens to be class ID)
-    STA @classid                    ; store class ID 
+    STA levelup_classid                    ; store class ID 
     TAX                             ; and throw it in X to use as index
     
     ;;---- start assigning bonuses
@@ -908,13 +901,13 @@ LvlUp_LevelUp:
     STA (lvlup_chstats), Y
     
     ;;---- increase spell charges!
-    LDA @classid
+    LDA levelup_classid
     BEQ @SkipMPGain                 ; skip MP increase for Fighters (class 0)
     CMP #CLS_TH                     ; and thieves.  This is necessary because
     BEQ @SkipMPGain                 ; Knights/Ninjas get magic, and they share the same data.
     
     LDY #$01
-    LDA (@lvlupptr), Y              ; get leveldata[1] byte (MP gains)
+    LDA (levelup_lvlupptr), Y              ; get leveldata[1] byte (MP gains)
     LDY #ch_maxmp - ch_magicdata    ; set Y to index map MP
   @MagicUpLoop:
       LSR A                         ; shift out low bit
@@ -930,7 +923,7 @@ LvlUp_LevelUp:
       BNE @MagicUpLoop
     
     ;;---- Cap spell charges at a maximum
-    LDA @classid            ; check the class
+    LDA levelup_classid            ; check the class
     CMP #CLS_KN
     BEQ :+
     CMP #CLS_NJ
@@ -959,7 +952,7 @@ LvlUp_LevelUp:
     ;;---- Record stat byte
                 @statbyte = $688E   ; local, the stat gains byte from the level up data
     LDY #$00
-    LDA (@lvlupptr), Y              ; get leveldata[0] byte (other stat gains)
+    LDA (levelup_lvlupptr), Y              ; get leveldata[0] byte (other stat gains)
     STA @statbyte                   ; record it!
     
     ;;---- HP gain
@@ -1000,18 +993,14 @@ LvlUp_LevelUp:
     JSR GiveHpBonusToChar   ; Finally, apply the HP bonus!
     
     ;;---- other stat gains (str/vit/etc)
-                @loopctr = $6856
-                @statidx = $6858
-                @statupbuffer = $6AAC       ; 5 bytes indicating which stats have been incrased
-                
     ASL @statbyte               ; drop the high 3 bits of the stat byte, other bits
     ASL @statbyte               ;   will be shifted out the high end
     ASL @statbyte
     
     LDA #$00                    ; zero our loop counter
-    STA @loopctr
+    STA levelup_loop
     LDA #ch_str - ch_stats      ; and initialize our stat index 
-    STA @statidx
+    STA levelup_statsindex
     
     ; Loop 5 times, possibly increasing each of the base stats
   @StatUpLoop:
@@ -1029,25 +1018,25 @@ LvlUp_LevelUp:
       LDA #$00                  ; otherwise, no increase (or rather, increase by 0)
     
     @ApplyStatBonus:
-      LDY @loopctr              ; record stat increase in this statup buffer
-      STA @statupbuffer, Y      ;   so that this can be reported back to the user later
+      LDY levelup_loop              ; record stat increase in this statup buffer
+      STA levelup_statupbuffer, Y      ;   so that this can be reported back to the user later
       
-      LDY @statidx
+      LDY levelup_statsindex
       CLC
       ADC (lvlup_chstats), Y    ; add bonus to stat
       CMP #100
       BEQ :+                    ; but only apply it if < 100
         STA (lvlup_chstats), Y
         
-    : INC @statidx              ; move to next stat
+    : INC levelup_statsindex              ; move to next stat
     
-      INC @loopctr              ; and loop until all 5 stats processed
-      LDA @loopctr
+      INC levelup_loop              ; and loop until all 5 stats processed
+      LDA levelup_loop
       CMP #$05
       BNE @StatUpLoop
     
     ; The above is slightly BUGGED -- if the stat was maxed out, it will not be increased, but
-    ;  @statupbuffer will be set indicating it was, so misinformation will be reported to the player
+    ;  levelup_statupbuffer will be set indicating it was, so misinformation will be reported to the player
     ;  when statupbuffer is printed below.
     
     ;;---- substat changes  (damage/absorb/etc)
@@ -1057,7 +1046,7 @@ LvlUp_LevelUp:
     ; This is undoubtedly BUGGED for edge cases, but I'm not going to point them all out.
     
     LDY #ch_str - ch_stats      ; damage goes up 1 pt for each 2pts of strength
-    LDA @statupbuffer+0         ; so check to see if strength has gone up
+    LDA levelup_statupbuffer+0         ; so check to see if strength has gone up
     BEQ :+                      ; if yes...
       LDA (lvlup_chstats), Y
       LSR A
@@ -1071,7 +1060,7 @@ LvlUp_LevelUp:
         STA (lvlup_chstats), Y
       
   : LDY #ch_evade - ch_stats    ; evade goes up 1 if agility went up
-    LDA @statupbuffer+1
+    LDA levelup_statupbuffer+1
     BEQ :+                      ; did agility go up?
       LDA (lvlup_chstats), Y
       CLC
@@ -1104,7 +1093,7 @@ LvlUp_LevelUp:
     
   @DisplayLoop:
     LDY @displayloopctr
-    LDA @statupbuffer, Y            ; check to see if the stat increased
+    LDA levelup_statupbuffer, Y            ; check to see if the stat increased
     
     BEQ @DisplayLoop_Next           ; if it didn't, skip ahead.  Otherwise...
     
@@ -1708,7 +1697,7 @@ Battle_FlipAllChars:
       
       JSR WaitForVBlank_L       ; wait for a frame
       LDA #>oam                 ;  so we can update OAM
-      STA $4014
+      STA OAMDMA
       JSR MusicPlay             ; update music (since we waited a frame)
       
       LDA #15
@@ -1961,21 +1950,21 @@ ChaosDeath:
         LDA #$00
         JSR @SetPpuAddr         ; set ppu addr to low bitplane
         LDA #$00
-        STA $2007               ; erase it
+        STA PPUDATA               ; erase it
         
         LDA #$01
         JSR @SetPpuAddr         ; set ppu addr to high bitplane
         LDA #$00
-        STA $2007               ; erase it
+        STA PPUDATA               ; erase it
         
         LDA @rvalprev           ; load *another* random value
         AND #$03
-        STA $2005               ; use it as X scroll to shake the screen
+        STA PPUSCROLL               ; use it as X scroll to shake the screen
         
         LDA @rval               ; use tile ID as random number for Y scroll
         STA @rvalprev           ;  (and use it as X scroll next iteration)
         AND #$03
-        STA $2005
+        STA PPUSCROLL
         
         DEC @innerctr           ; loop 256 times!
         BNE @InnerLoop
@@ -2023,12 +2012,12 @@ ChaosDeath:
     ASL A
     CLC
     ADC @ppuaddr    ; Add to ppu addr
-    PHA             ; (push low byte, since $2006 needs high byte written first)
+    PHA             ; (push low byte, since PPUADDR needs high byte written first)
     LDA #$00
     ADC @ppuaddr+1  ; Resume addition to high byte
-    STA $2006       ; write high byte
+    STA PPUADDR       ; write high byte
     PLA             ; then pull and write low byte
-    STA $2006
+    STA PPUADDR
     
     RTS
     
@@ -3381,9 +3370,9 @@ DrawSmallEnemy:
 
 SetPpuAddr_BtlTmp:
     LDA btltmp+1
-    STA $2006
+    STA PPUADDR
     LDA btltmp+0
-    STA $2006
+    STA PPUADDR
     RTS
     
     
@@ -3465,19 +3454,19 @@ DrawLargeEnemy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 Draw6TilesFromX:
-    STX $2007
+    STX PPUDATA
     INX
-    STX $2007
+    STX PPUDATA
     INX
     
 Draw4TilesFromX:
-    STX $2007
+    STX PPUDATA
     INX
-    STX $2007
+    STX PPUDATA
     INX
-    STX $2007
+    STX PPUDATA
     INX
-    STX $2007
+    STX PPUDATA
     INX
     RTS
     

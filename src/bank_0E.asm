@@ -46,7 +46,7 @@ lut_ShopData:
 
 TitleScreen_Copyright:
     JSR IntroTitlePrepare    ; clear NT, start music, etc
-    BIT $2002                ;  reset PPU toggle
+    BIT PPUSTATUS                ;  reset PPU toggle
 
     LDX #0
     JSR @DrawString         ; JSR to the @DrawString to draw the first one
@@ -54,16 +54,16 @@ TitleScreen_Copyright:
 
   @DrawString:
     LDA @lut_Copyright+1, X ; get the Target PPU address from the LUT
-    STA $2006
+    STA PPUADDR
     LDA @lut_Copyright, X
-    STA $2006
+    STA PPUADDR
     INX                     ; move X past the address we just read
     INX
 
   @Loop:
     LDA @lut_Copyright, X   ; get the next character in the string
     BEQ @Exit               ;  if it's zero, exit (null terminator
-    STA $2007               ; otherwise, draw the character
+    STA PPUDATA               ; otherwise, draw the character
     INX                     ; INX to move to next character
     BNE @Loop               ; and keep looping (always branches)
 
@@ -1843,7 +1843,7 @@ lut_MapObjTalkData:
 
 EnterLineupMenu:
     LDA #0
-    STA $2001             ; turn off the PPU
+    STA PPUMASK             ; turn off the PPU
     STA $4015             ; silence APU
     LDA #$08
     STA soft2000          ; reset soft2000 to typical setup
@@ -1904,10 +1904,10 @@ EnterLineupMenu:
     STA music_track             ; switch to music track $55  (crystal theme)
 
     LDA soft2000
-    STA $2000                   ; reset scroll
+    STA PPUCTRL                   ; reset scroll
     LDA #0
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     JSR ClearOAM                ; clear OAM
 
@@ -1930,16 +1930,16 @@ EnterLineupMenu:
     JSR WaitForVBlank_L         ; wait for VBlank
 
     LDA #>oam
-    STA $4014                   ; do sprite DMA
+    STA OAMDMA                   ; do sprite DMA
 
     LDA soft2000
-    STA $2000
+    STA PPUCTRL
     LDA #$1E
-    STA $2001                   ; set PPU state (and turn PPU on)
+    STA PPUMASK                   ; set PPU state (and turn PPU on)
 
     LDA #0                      ; reset scroll
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     LDA #BANK_THIS
     STA cur_bank
@@ -2508,31 +2508,31 @@ LineupMenu_Finalize:
 ;;
 ;;  Clear Nametable  [$9C02 :: 0x39C12]
 ;;
-;;    This clears the full nametable (ppu$2000) to 00, as well as filling
+;;    This clears the full nametable (ppuPPUCTRL) to 00, as well as filling
 ;;   the attribute table with FF.  This provides a "clean slate" on which
 ;;   menu boxes and stuff can be drawn to.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ClearNT:
-    LDA $2002     ; reset PPU toggle
+    LDA PPUSTATUS     ; reset PPU toggle
     LDA #$20
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006     ; set PPU addr to $2000 (start of NT)
+    STA PPUADDR     ; set PPU addr to PPUCTRL (start of NT)
     LDY #$00      ; zero out A and Y
     TYA           ;   Y will be the low byte of our counter
     LDX #$03      ; X=3 -- this is the high byte of our counter (loop $0300 times)
 
 @Loop:            ; first loop clears the first $0300 bytes of the NT
-      STA $2007
+      STA PPUDATA
       INY
       BNE @Loop      ; once Y wraps
         DEX          ;  decrement X
         BNE @Loop    ;  and stop looping once X expires (total $0300 iterations)
 
 @Loop2:           ; next loop clears the next $00C0 (up to the attribute table)
-      STA $2007
+      STA PPUDATA
       INY
       CPY #$C0       ; loop until Y reaches #$C0
       BCC @Loop2
@@ -2540,7 +2540,7 @@ ClearNT:
 
     LDA #$FF      ; A=FF (this is what we will fill attribute table with
 @Loop3:           ;  3rd and final loop fills the last $40 bytes (attribute table) with FF
-      STA $2007
+      STA PPUDATA
       INY
       BNE @Loop3
 
@@ -2593,7 +2593,7 @@ DrawCharacterName:
 
 NewGamePartyGeneration:
     LDA #$00                ; turn off the PPU
-    STA $2001
+    STA PPUMASK
     LDA #$0F                ; turn ON the audio (it should already be on, though
     STA $4015               ;  so this is kind of pointless)
     
@@ -2645,7 +2645,7 @@ NewGamePartyGeneration:
     JSR PtyGen_DrawChars        ; Redraw char sprites
     JSR WaitForVBlank_L         ; Do a frame
     LDA #>oam                   ;   with a proper OAM update
-    STA $4014
+    STA OAMDMA
     
     JSR MenuWaitForBtn_SFX      ; Wait for the user to press A (or B) again, to
     LDA joy                     ;  confirm their party decisions.
@@ -2654,7 +2654,7 @@ NewGamePartyGeneration:
     
     ;;  Otherwise, they've pressed A!  Party confirmed!
     LDA #$00
-    STA $2001                   ; shut the PPU off
+    STA PPUMASK                   ; shut the PPU off
     
     LDX #$00                    ; Move class and name selection
     JSR @RecordClassAndName     ;  out of the ptygen buffer and into the actual character stats
@@ -2697,7 +2697,7 @@ PtyGen_DrawScreen:
     LDA #$08
     STA soft2000          ; set BG/Spr pattern table assignments
     LDA #0
-    STA $2001             ; turn off PPU
+    STA PPUMASK             ; turn off PPU
     STA joy_a             ;  clear various joypad catchers
     STA joy_b
     STA joy
@@ -2778,7 +2778,7 @@ DoPartyGen_OnCharacter:
 
 DoNameInput:
     LDA #$00                ; Turn off the PPU (for drawing)
-    STA $2001
+    STA PPUMASK
     
     STA menustall           ; zero a bunch of misc vars being used here
     STA joy_a
@@ -2950,7 +2950,7 @@ PtyGen_Frame:
 
     JSR WaitForVBlank_L    ; VBlank and DMA
     LDA #>oam
-    STA $4014
+    STA OAMDMA
 
     LDA #BANK_THIS         ; then keep playing music
     STA cur_bank
@@ -2973,13 +2973,13 @@ CharName_Frame:
 
     JSR WaitForVBlank_L    ; VBlank and DMA
     LDA #>oam
-    STA $4014
+    STA OAMDMA
 
     LDA soft2000           ; reset the scroll to zero.
-    STA $2000
+    STA PPUCTRL
     LDA #0
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     LDA #BANK_THIS         ; keep playing music
     STA cur_bank
@@ -3296,16 +3296,16 @@ NameInput_DrawName:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawNameInputScreen:
-    LDA $2002               ; clear PPU toggle
+    LDA PPUSTATUS               ; clear PPU toggle
     
     LDA #>$23C0             ; set PPU addr to the attribute table
-    STA $2006
+    STA PPUADDR
     LDA #<$23C0
-    STA $2006
+    STA PPUADDR
     
     LDA #$00                ; set $10 bytes of the attribute table to use palette 0
     LDX #$10                ;  $10 bytes = 8 rows of tiles (32 pixels)
-    : STA $2007             ; This makes the top box the orangish color instead of the normal blue
+    : STA PPUDATA             ; This makes the top box the orangish color instead of the normal blue
       DEX
       BNE :-
 
@@ -3404,26 +3404,26 @@ lut_PtyGenBuf:
 EnterIntroStory:
     JSR IntroTitlePrepare      ; load CHR, start music, other prepwork
 
-    LDA $2002           ; reset PPU toggle and set PPU address to $2000
-    LDA #>$2000         ;   (start of nametable)
-    STA $2006
-    LDA #<$2000
-    STA $2006
+    LDA PPUSTATUS           ; reset PPU toggle and set PPU address to PPUCTRL
+    LDA #>PPUCTRL         ;   (start of nametable)
+    STA PPUADDR
+    LDA #<PPUCTRL
+    STA PPUADDR
 
     LDX #($03C0 / 4)    ; Fill the nametable with tile $FF (blank space)
     LDA #$FF            ;  this loop does a full $03C0 writes
   @NTLoop:
-      STA $2007
-      STA $2007
-      STA $2007
-      STA $2007
+      STA PPUDATA
+      STA PPUDATA
+      STA PPUDATA
+      STA PPUDATA
       DEX
       BNE @NTLoop
 
     LDX #$40            ; Next, fill the attribute table so that all tiles use
     LDA #%01010101      ;  palette %01.  This palette will be used for fully
   @AttrLoop:            ;  faded-out text (ie:  text using this palette is
-      STA $2007         ;  invisible)
+      STA PPUDATA         ;  invisible)
       DEX
       BNE @AttrLoop
 
@@ -3550,7 +3550,7 @@ EnterTitleScreen:
 
     JSR WaitForVBlank_L     ; Wait for VBlank
     LDA #>oam               ;  and do Sprite DMA
-    STA $4014               ; Then redraw the respond rate
+    STA OAMDMA               ; Then redraw the respond rate
     JSR TitleScreen_DrawRespondRate
 
     JSR UpdateJoy           ; update joypad data
@@ -3612,7 +3612,7 @@ IntroTitlePrepare:
     LDA #$08               ; set soft2000 so that sprites use right pattern
     STA soft2000           ;   table while BG uses left
     LDA #0
-    STA $2001              ; turn off the PPU
+    STA PPUMASK              ; turn off the PPU
 
     JSR LoadMenuCHRPal     ; Load necessary CHR and palettes
 
@@ -3640,18 +3640,18 @@ IntroTitlePrepare:
 
 TitleScreen_DrawRespondRate:
     LDA #>$22D6        ; Respond rate is drawn at address $22D6
-    STA $2006
+    STA PPUADDR
     LDA #<$22D6
-    STA $2006
+    STA PPUADDR
 
     LDA respondrate    ; get the current respond rate (which is zero based)
     CLC                ;  add $80+1 to it.  $80 to convert it to the coresponding tile
     ADC #$80+1         ;  for the desired digit to print, and +1 to convert it from zero
-    STA $2007          ;  based to 1 based (so it's printed as 1-8 instead of 0-7)
+    STA PPUDATA          ;  based to 1 based (so it's printed as 1-8 instead of 0-7)
 
     LDA #0             ; then reset the scroll.
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3837,17 +3837,17 @@ IntroStory_AnimateRow:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IntroStory_WriteAttr:
-    LDA $2002            ; reset PPU toggle
+    LDA PPUSTATUS            ; reset PPU toggle
 
     LDA #$23             ; set PPU addr to $23xx (where xx is intro_ataddr)
-    STA $2006
+    STA PPUADDR
     LDA intro_ataddr
-    STA $2006
+    STA PPUADDR
 
     LDX #$08
     LDA intro_atbyte     ; write intro_atbyte 8 times
   @Loop:
-      STA $2007
+      STA PPUDATA
       DEX
       BNE @Loop
 
@@ -3879,10 +3879,10 @@ IntroStory_Frame:
     JSR DrawPalette            ; and draw the animating palette
 
     LDA soft2000
-    STA $2000
+    STA PPUCTRL
     LDA #0
-    STA $2005
-    STA $2005                  ; then reset the scroll to zero
+    STA PPUSCROLL
+    STA PPUSCROLL                  ; then reset the scroll to zero
 
     STA joy_a                  ; clear A and B button catchers
     STA joy_b
@@ -3929,7 +3929,7 @@ lut_ShopEntryJump:
 
 EnterShop:
     LDA #0
-    STA $2001              ; turn off PPU
+    STA PPUMASK              ; turn off PPU
     STA $4015              ; silence audio
     STA joy_b              ; erase joypad A and B buttons
     STA joy_a
@@ -4337,7 +4337,7 @@ EnterShop_Inn:
     JSR DrawShopPartySprites    ; draw the party
     JSR WaitForVBlank_L         ; then wait for VBlank before
     LDA #>oam                   ;   performing sprite DMA
-    STA $4014                   ; all of this is to remove the cursor graphic without doing a real frame
+    STA OAMDMA                   ; all of this is to remove the cursor graphic without doing a real frame
 
     JSR FadeOutBatSprPalettes   ; and fade the party out
 
@@ -4756,7 +4756,7 @@ ShopFrame:
     JSR WaitForVBlank_L        ; the wait for VBlank
 
     LDA #>oam
-    STA $4014                  ; do sprite DMA
+    STA OAMDMA                  ; do sprite DMA
 
     LDA #BANK_THIS
     STA cur_bank
@@ -4771,7 +4771,7 @@ ShopFrameNoCursor:
     JSR DrawShopPartySprites   ;  only do not draw the cursor
     JSR WaitForVBlank_L
     LDA #>oam
-    STA $4014
+    STA OAMDMA
     LDA #BANK_THIS
     STA cur_bank
     JSR CallMusicPlay          ; after we call MusicPlay, proceed to check the buttons
@@ -4819,16 +4819,16 @@ DrawShop:
     JSR ClearNT                ; clear the nametable
 
               ; Fill attribute tables
-    LDA $2002                  ; reset the PPU toggle
+    LDA PPUSTATUS                  ; reset the PPU toggle
     LDA #>$2300                ; set the ppu addr to $23C0  (attribute tables)
-    STA $2006
+    STA PPUADDR
     LDA #<$23C0
-    STA $2006
+    STA PPUADDR
 
     LDX #$00                     ; loop $40 time to copy our attribute LUT to the on-screen attribute tables
   @AttribLoop:
       LDA lut_ShopAttributes, X  ; fetch a byte from the lut
-      STA $2007                  ; draw it
+      STA PPUDATA                  ; draw it
       INX
       CPX #$40                   ; repeat until X=$40
       BCC @AttribLoop
@@ -6171,7 +6171,7 @@ EnterMainMenu:
     STA music_track     ; set music track $51 (menu music)
 
     LDA #0
-    STA $2001           ; turn off the PPU (we need to do some drawing)     
+    STA PPUMASK           ; turn off the PPU (we need to do some drawing)     
     STA $4015           ; and silence the APU.  Music sill start next time MusicPlay is called.
 
     JSR LoadMenuCHRPal        ; load menu related CHR and palettes
@@ -6188,7 +6188,7 @@ EnterMainMenu:
 
 ResumeMainMenu:
     LDA #0
-    STA $2001                       ; turn off the PPU
+    STA PPUMASK                       ; turn off the PPU
     LDA #0
     STA menustall                   ; and disable menu stalling
 
@@ -6220,7 +6220,7 @@ MainMenuLoop:
 
   @B_Pressed:
     LDA #0            ; turn PPU off
-    STA $2001
+    STA PPUMASK
     STA joy_a         ; flush A, B, and Start joypad recordings
     STA joy_b
     STA joy_start
@@ -6354,7 +6354,7 @@ MainMenuSubTarget:
 
 EnterMagicMenu:
     LDA #0
-    STA $2001                      ; turn off PPU
+    STA PPUMASK                      ; turn off PPU
     STA menustall                  ; clear menustall
     STA descboxopen                ; and mark description box as closed
 
@@ -6735,7 +6735,7 @@ UseMagic_WARP:
     TXS                  ;                    JSR to Main Menu
                          ;                and JSR to Standard Map loop
     LDA #0               ; turn off PPU and APU
-    STA $2001
+    STA PPUMASK
     STA $4015
 
     RTS                  ; and RTS.  See notes below
@@ -6818,7 +6818,7 @@ UseMagic_GetRequiredMP:
 
 EnterItemMenu:
     LDA #0
-    STA $2001           ; turn the PPU off
+    STA PPUMASK           ; turn the PPU off
     STA menustall       ; zero menustall (don't want to stall for drawing the screen for the first time)
     STA descboxopen     ; indicate that the descbox is closed
     JSR ClearNT         ; wipe the NT clean
@@ -7389,7 +7389,7 @@ DrawItemTargetCursor:
 
 DrawItemTargetMenu:
     LDA #0
-    STA $2001            ; turn the PPU off
+    STA PPUMASK            ; turn the PPU off
     STA menustall        ; and disable menu stalling
     JSR ClearNT          ; wipe the NT clean
 
@@ -7484,7 +7484,7 @@ DrawItemTargetMenu:
 
 EnterStatusMenu:
     LDA #0
-    STA $2001               ; turn off the PPU
+    STA PPUMASK               ; turn off the PPU
     LDA #0
     STA menustall           ; disable menu stalling
     JSR ClearNT             ; clear the NT
@@ -7827,13 +7827,13 @@ DrawMainMenuCharSprites:
 MenuFrame:
     JSR WaitForVBlank_L    ; wait for VBlank
     LDA #>oam              ; Do sprite DMA (update the 'real' OAM)
-    STA $4014
+    STA OAMDMA
 
     LDA soft2000           ; reset scroll and PPU data
-    STA $2000
+    STA PPUCTRL
     LDA #0
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     LDA music_track        ; if no music track is playing...
     BPL :+
@@ -8102,18 +8102,18 @@ TurnMenuScreenOn_ClearOAM:
 TurnMenuScreenOn:
     JSR WaitForVBlank_L      ; wait for VBlank (don't want to turn the screen on midway through the frame)
     LDA #>oam                ; do Sprite DMA
-    STA $4014
+    STA OAMDMA
     JSR DrawPalette          ; draw/apply the current palette
 
     LDA #$08
-    STA soft2000             ; set $2000 and soft2000 appropriately
-    STA $2000                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
+    STA soft2000             ; set PPUCTRL and soft2000 appropriately
+    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
     LDA #$1E
-    STA $2001                ; enable BG and sprite rendering
+    STA PPUMASK                ; enable BG and sprite rendering
     LDA #0
-    STA $2005
-    STA $2005                ; reset scroll
+    STA PPUSCROLL
+    STA PPUSCROLL                ; reset scroll
 
     LDA #BANK_THIS           ; record current bank and CallMusicPlay
     STA cur_bank
@@ -8329,13 +8329,13 @@ DrawOrbBox:
     JSR @DrawOrb
 
       ; Attributes for all orbs
-    LDA $2002    ; reset PPU toggle
+    LDA PPUSTATUS    ; reset PPU toggle
     LDA #>$23C9
-    STA $2006
+    STA PPUADDR
     LDA #<$23C9
-    STA $2006    ; attribute byte at $23C9
+    STA PPUADDR    ; attribute byte at $23C9
     LDA tmp+7    ; load computed attribute byte
-    STA $2007    ;   and draw it
+    STA PPUDATA    ;   and draw it
     RTS
 
    ; DrawOrb local subroutine
@@ -8354,26 +8354,26 @@ DrawOrbBox:
       ORA tmp+7   ;  unlit orbs use palette 3
       STA tmp+7   ;  lit orbs use palette 0 -- so this changes attributes accordingly
 
-:   LDA $2002     ; reset PPU toggle
+:   LDA PPUSTATUS     ; reset PPU toggle
     LDA #$20
-    STA $2006     ; set high byte of ppu addr to $20
-    STX $2006     ; and low byte to our desired address
+    STA PPUADDR     ; set high byte of ppu addr to $20
+    STX PPUADDR     ; and low byte to our desired address
 
-    STY $2007     ;  draw the first tile
+    STY PPUDATA     ;  draw the first tile
     INY
-    STY $2007     ;  then the second
+    STY PPUDATA     ;  then the second
     INY
 
     LDA #$20      ; Set PPU address to look 1 row below what we just drew
-    STA $2006     ;  high byte is still $20
+    STA PPUADDR     ;  high byte is still $20
     TXA           ;  but take the low byte
     CLC
     ADC #$20      ;  and add #$20 so that it is the next row
-    STA $2006
+    STA PPUADDR
 
-    STY $2007     ;  draw the 3rd tile
+    STY PPUDATA     ;  draw the 3rd tile
     INY
-    STY $2007     ;  and lastly the 4th
+    STY PPUDATA     ;  and lastly the 4th
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8838,7 +8838,7 @@ EnterEquipMenu:
     STA equipoffset       ; record the equipoffset to indicate weapon or armor menu
 
     LDA #0
-    STA $2001             ; turn off the PPU
+    STA PPUMASK             ; turn off the PPU
     STA joy_a             ; clear joy_a and joy_b counters
     STA joy_b
     STA menustall         ; and turn off menu stalling (since the PPU is off)
@@ -9247,14 +9247,14 @@ lut_ArmorTypes:
 EquipMenuFrame:
     JSR WaitForVBlank_L     ; wait for VBlank
     LDA #>oam
-    STA $4014               ; do sprite DMA
+    STA OAMDMA               ; do sprite DMA
     JSR UpdateEquipMenuModeAttrib   ; update mode attributes (useless, see this routine for why)
 
     LDA soft2000          ; reset scroll
-    STA $2000
+    STA PPUCTRL
     LDA #$00
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     LDA #BANK_THIS
     STA cur_bank          ; set cur_bank to this bank
@@ -9524,9 +9524,9 @@ DrawEquipMenu:
     LDA #$C0
     JSR SetPPUAddrTo_23aa       ; PPU Address = $23C0  (start of attribute tables)
     LDA #$7F                    ; some useless attribute changes...
-    STA $2007                   ;  this sets a paticular square to use palette 1 instead of the normal palette 3
+    STA PPUDATA                   ;  this sets a paticular square to use palette 1 instead of the normal palette 3
     LDA #$DF                    ; and this sets another square to use palette 1
-    STA $2007                   ;  but palettes 1 and 3 are identical for this menu!
+    STA PPUDATA                   ;  but palettes 1 and 3 are identical for this menu!
                                 ;  These attributes changes *almost* change the palette used for the title text
                                 ;  .. the problem is that they only change the palettes for the first 4 tiles
                                 ;  leaving the "N" in weapon and the "R" in armor using palette 3.  My guess is this
@@ -9664,17 +9664,17 @@ UpdateEquipMenuModeAttrib:
     JSR SetPPUAddrTo_23aa     ; Set PPU address to $23C3 (relevent attribute bytes)
 
     LDA @lut_Attr, X          ; copy over 4 bytes of attribute
-    STA $2007
+    STA PPUDATA
     LDA @lut_Attr+1, X
-    STA $2007
+    STA PPUDATA
     LDA @lut_Attr+2, X
-    STA $2007
+    STA PPUDATA
     LDA @lut_Attr+3, X
-    STA $2007
+    STA PPUDATA
 
     LDA #$00                  ; then reset the PPU address
-    STA $2006
-    STA $2006
+    STA PPUADDR
+    STA PPUADDR
 
     RTS                       ; and exit
 
@@ -9697,10 +9697,10 @@ UpdateEquipMenuModeAttrib:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddrTo_23aa:
-    BIT $2002       ; clear PPU toggle
+    BIT PPUSTATUS       ; clear PPU toggle
     LDY #$23
-    STY $2006       ; set PPU address
-    STA $2006
+    STY PPUADDR       ; set PPU address
+    STA PPUADDR
     RTS             ; and exit
 
 
@@ -9722,10 +9722,10 @@ SetPPUAddrTo_23aa:
     .BYTE           %10111111,%11101111,%11111111
     .BYTE %11111111,%11111111,%11111111,%10101111
 
-    BIT $2002
+    BIT PPUSTATUS
     LDY #$23
-    STY $2006
-    STA $2006
+    STY PPUADDR
+    STA PPUADDR
     RTS
 
 ; this is just more unused junk

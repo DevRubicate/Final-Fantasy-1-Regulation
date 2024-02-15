@@ -515,13 +515,13 @@ BacktrackBattleCommand:
     ASL A
     TAY
     LDA @JumpTable, Y
-    STA $88
+    STA btl_jumptableptr
     LDA @JumpTable+1, Y
-    STA $89                     ; $88,89 is where to jump back to
+    STA btl_jumptableptr+1      ; $88,89 is where to jump back to
     
     PLA                         ; but first, pull and discard the old return address
     PLA
-    JMP ($0088)
+    JMP (btl_jumptableptr)
     
   @JumpTable:
   .WORD __GetCharacterBattleCommand_Backtrack_0     ; character 0 can't backtrack, so do char 0 again
@@ -1114,10 +1114,10 @@ SetAllNaturalPose:
 
 BattleUpdatePPU:
     LDA btl_soft2001
-    STA $2001               ; copy over soft2001
+    STA PPUMASK               ; copy over soft2001
     LDA #$00
-    STA $2005               ; reset scroll
-    STA $2005
+    STA PPUSCROLL               ; reset scroll
+    STA PPUSCROLL
     RTS
     
     
@@ -1132,9 +1132,9 @@ BattleUpdatePPU:
 
 BattleFrame:
     JSR BattleWaitForVBlank_L   ; Wait for VBlank 
-    LDA $2002
+    LDA PPUSTATUS
     LDA #>oam
-    STA $4014                   ; Do OAM DMA
+    STA OAMDMA                   ; Do OAM DMA
     JMP BattleUpdateAudio       ; Update audio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4945,7 +4945,7 @@ DrawCharacterStatus:
     STA $89                     ; put the target PPU address at $88,89
     
     JSR WaitForVBlank_L         ; since we're about to do some drawing, wait for VBlank
-    LDA $2002                   ; clear toggle
+    LDA PPUSTATUS                   ; clear toggle
     
             ; remember at this point, btl_stringoutputbuf contains our "<name><ailment>" string
     LDY #$00                    ; draw top row of char's name (all blank spaces)
@@ -5013,14 +5013,14 @@ DrawCharacterStatus:
 
 DrawStatusRow:
     LDA $89         ; set PPU addr
-    STA $2006
+    STA PPUADDR
     LDA $88
-    STA $2006
+    STA PPUADDR
     
     LDX #$04        ; draw 4 tiles from the btl_stringoutputbuf
   @Loop:
       LDA btl_stringoutputbuf, Y    ; (using Y to index)
-      STA $2007
+      STA PPUDATA
       INY                           ; draw every other source character (rows are interleaved)
       INY
       DEX
@@ -5116,24 +5116,24 @@ DoFrame_UpdatePalette:
     JSR BattleWaitForVBlank_L       ; wait for VBlank
     
     LDA #$3F            ; set PPU addr to point to palettes
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
+    STA PPUADDR
     
     LDY #$00                ; draw the usepalette to the PPU
   @Loop:
       LDA btl_usepalette, Y
-      STA $2007
+      STA PPUDATA
       INY
       CPY #$20
       BNE @Loop
       
     LDA #$3F                ; reset PPU address
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
-    STA $2006
-    STA $2006
+    STA PPUADDR
+    STA PPUADDR
+    STA PPUADDR
     
     JSR BattleUpdatePPU     ; reset scroll & apply soft2001
     JMP BattleUpdateAudio   ; update audio and exit
@@ -5169,13 +5169,13 @@ BattleFadeIn:
     JSR BattleClearOAM          ; Clear OAM
     LDA #$00
     STA a:soft2000              ; clear other PPU settings
-    STA $2001                   ; including disabling rendering, though since btl_soft2001 has
+    STA PPUMASK                   ; including disabling rendering, though since btl_soft2001 has
                                 ;   rendering enabled, rendering will be re-enabled when palettes are updated
     
     JSR WaitForVBlank_L         ; wait for VBlank
-    LDA $2002
+    LDA PPUSTATUS
     LDA #>oam
-    STA $4014                   ; Do DMA (clearing actual PPU OAM)
+    STA OAMDMA                   ; Do DMA (clearing actual PPU OAM)
     LDA #$04
     STA $68B4                   ; loop downcounter.  Looping 4 times -- once for each shade
     JSR BattleUpdateAudio       ; since we just did a frame, keep audio updated
@@ -9192,9 +9192,9 @@ DrawEnemyEffect:
   @EraseLoop:
       JSR WaitForVBlank_L           ; Vblank
       LDA $6D16                     ; Set PPU Addr
-      STA $2006
+      STA PPUADDR
       LDA $6D15
-      STA $2006
+      STA PPUADDR
       
       LDA #$00
       JSR WriteAToPPU6Times         ; clear 12 tiles in this row
@@ -9229,9 +9229,9 @@ VBlank_SetPPUAddr:
     PHA                         ; backup A
     JSR WaitForVBlank_L         ; VBlank
     LDA btltmp+$B               ; set ppu addr
-    STA $2006
+    STA PPUADDR
     LDA btltmp+$A
-    STA $2006
+    STA PPUADDR
     PLA                         ; restore A
     RTS
     
@@ -9359,8 +9359,8 @@ WriteAToPPU4Times:
     JSR WriteAToPPU2Times
     
 WriteAToPPU2Times:
-    STA $2007
-    STA $2007
+    STA PPUDATA
+    STA PPUDATA
     RTS
     
 
@@ -9596,7 +9596,7 @@ DrawExplosions:
       
     JSR WaitForVBlank_L     ; Do one more frame
     LDA #>oam               ; so we can update sprite data in the PPU
-    STA $4014
+    STA OAMDMA
     JMP BattleUpdateAudio   ; update audio since we did a frame
     
     
@@ -9654,7 +9654,7 @@ DrawExplosion_Frame:
       
     JSR WaitForVBlank_L         ; do a frame
     LDA #>oam                   ; where OAM is updated
-    STA $4014
+    STA OAMDMA
     JMP BattleUpdateAudio       ; update music/sfx during this frame as well
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

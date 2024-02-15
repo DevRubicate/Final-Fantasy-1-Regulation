@@ -6,4 +6,4 @@ OAMDATA     := $2004 ;   dddd dddd   OAM data read/write
 PPUSCROLL   := $2005 ;   xxxx xxxx   fine scroll position (two writes: X scroll, Y scroll)
 PPUADDR     := $2006 ;   aaaa aaaa   PPU read/write address (two writes: most significant byte, least significant byte)
 PPUDATA     := $2007 ;   dddd dddd   PPU data read/write
-OAMDMA      := $4014 ;   aaaa aaaa   OAM DMA high address 
+OAMDMA      := $4014 ;   aaaa aaaa   OAM DMA high address

@@ -216,19 +216,19 @@ DrawFancyTheEndGraphic:
         JSR WaitForVBlank_L     ; wait for VBlank
         
         LDA @ppuaddr+1          ; set ppu addr
-        STA $2006
+        STA PPUADDR
         LDA @ppuaddr
-        STA $2006
+        STA PPUADDR
         
         LDX #$80                ; clear $80 bytes
         LDA #$00
-        : STA $2007
+        : STA PPUDATA
           DEX
           BNE :-
 
         LDA #$00                ; reset PPU addr (unnecessary, as we reset the scroll in a bit)
-        STA $2006
-        STA $2006
+        STA PPUADDR
+        STA PPUADDR
         
         JSR TheEnd_EndVblank    ; reset scroll, play music
         
@@ -269,20 +269,20 @@ DrawFancyTheEndGraphic:
         JSR WaitForVBlank_L         ; vblank
 
         LDA @ppuaddr+1              ; ppu addr
-        STA $2006
+        STA PPUADDR
         LDA @ppuaddr
-        STA $2006
+        STA PPUADDR
         
         LDX #10
         : LDA @drawtile             ; draw 10 tiles
-          STA $2007
+          STA PPUDATA
           INC @drawtile             ; (incrementing the tile each time so they're all unique)
           DEX
           BNE :-
           
         LDA #$00                    ; unneccesary ppu addr reset
-        STA $2006
-        STA $2006
+        STA PPUADDR
+        STA PPUADDR
         
         JSR TheEnd_EndVblank        ; scroll reset + music
         
@@ -306,13 +306,13 @@ DrawFancyTheEndGraphic:
     JSR WaitForVBlank_L
     
     LDA #>$23CA                 ; attributes written to $23CA
-    STA $2006
+    STA PPUADDR
     LDA #<$23CA
-    STA $2006
+    STA PPUADDR
     
     LDX #$00
     : LDA lut_TheEnd_AttrTable, X
-      STA $2007
+      STA PPUDATA
       INX
       CPX #$13                  ; $13 bytes of data
       BCC :-
@@ -492,10 +492,10 @@ DrawFancyTheEndGraphic:
     STA (@fillram), Y
     
     LDX @fillppu+1                  ; set pixel in PPU
-    STX $2006
+    STX PPUADDR
     LDX @fillppu
-    STX $2006
-    STA $2007
+    STX PPUADDR
+    STA PPUDATA
     
     JSR TheEnd_EndVblank            ; end VBlank (set scroll, update music)
     JMP @FillInnerLoop              ; keep looping until fill for this row is complete
@@ -546,10 +546,10 @@ TheEnd_MoveAndSet:
 
 TheEnd_EndVblank:
     LDA soft2000
-    STA $2000
+    STA PPUCTRL
     LDA #$00
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
     JMP MusicPlay_L
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -664,13 +664,13 @@ TheEnd_SetPixel:
     STA (@bufaddr), Y
     
     ; Draw it to the actual PPU
-    LDX $2002
+    LDX PPUSTATUS
     
     LDX @ppuaddr+1
-    STX $2006
+    STX PPUADDR
     LDX @ppuaddr
-    STX $2006
-    STA $2007
+    STX PPUADDR
+    STA PPUDATA
     
     RTS
     
@@ -844,7 +844,7 @@ lut_Ending_LastPage:  .BYTE  $19  ; ending scene uses story pages $04-$18
 EnterMiniGame:
     LDA #0
     STA menustall         ; disable stalling
-    STA $2001             ; turn off PPU
+    STA PPUMASK             ; turn off PPU
     STA $4015             ; and APU
 
     LDA #$08              ; clear NT scroll
@@ -881,12 +881,12 @@ EnterMiniGame:
     STA tmp+1               ; load up high byte of source pointers
     STA tmp+3
 
-    LDA $2002            ; reset PPU toggle
+    LDA PPUSTATUS            ; reset PPU toggle
 
     LDA #$10             ; set PPU addr to $1000 (start of sprite pattern tables)
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
+    STA PPUADDR
 
     STA tmp              ; set the low byte of the low bitplane pointer
 
@@ -894,7 +894,7 @@ EnterMiniGame:
      LDY #0              ; Y will be our inner loop counter and index.  Zero it
      @LoBitplaneLoop:
        LDA (tmp), Y
-       STA $2007              ; draw low bitplane data
+       STA PPUDATA              ; draw low bitplane data
        INY
        CPY #8                 ; loop until 8 bytes drawn (entire low bitplane)
        BCC @LoBitplaneLoop
@@ -908,7 +908,7 @@ EnterMiniGame:
      LDY #0                   ; do allt he same stuff, but draw the high bitplane
      @HiBitplaneLoop:
        LDA (tmp+2), Y
-       STA $2007
+       STA PPUDATA
        INY
        CPY #8
        BCC @HiBitplaneLoop    ; loop until 8 bytes drawn
@@ -967,16 +967,16 @@ EnterMiniGame:
     JSR ClearOAM_BankD       ; clear OAM
     JSR WaitForVBlank_L      ; then once in VBlank...
     LDA #>oam
-    STA $4014                ; do sprite DMA
+    STA OAMDMA                ; do sprite DMA
     JSR DrawPalette_L        ; and load up the palette
 
     LDA soft2000             ; the load up soft2000 (resets NT scroll)
-    STA $2000
+    STA PPUCTRL
     LDA #$1E
-    STA $2001                ; turn on the PPU
+    STA PPUMASK                ; turn on the PPU
     LDA #0                   ; and set the scroll to zero
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
 
     STA joy_a                ; lastly, zero out joypad data so we start with a clean slate
     STA joy_b
@@ -1005,7 +1005,7 @@ MiniGameLoop:
     INC framecounter              ; increment the frame counter to keep animations working
     JSR WaitForVBlank_L           ; wait for vblank
     LDA #>oam
-    STA $4014                     ; do sprite DMA
+    STA OAMDMA                     ; do sprite DMA
     JSR MusicPlay_L               ; keep music playing
     JSR DrawAllPuzzlePieces       ; draw all the puzzle pieces
     JSR MiniGame_ProcessInput     ; and refresh and process input!
@@ -1160,13 +1160,13 @@ MiniGame_CheckVictory:
   @Loop:
     JSR WaitForVBlank_L     ; Wait for VBlank
     LDA #>oam
-    STA $4014               ; do sprite DMA
+    STA OAMDMA               ; do sprite DMA
     JSR DrawPalette_L       ; update the palette
     JSR MusicPlay_L         ; call the music play routine (Probably shouldn't be done until after scroll set -- but doesn't matter)
 
     LDA #0                  ; THEN set scroll.  Note that if the music routine takes too long, this could theoretically
-    STA $2005               ; cause the screen to bork... however DrawPalette resets the scroll to zero anyway due to
-    STA $2005               ;  it doing double writes of 0 to $2006.  If DrawPalette didn't do that, however, this could
+    STA PPUSCROLL               ; cause the screen to bork... however DrawPalette resets the scroll to zero anyway due to
+    STA PPUSCROLL               ;  it doing double writes of 0 to PPUADDR.  If DrawPalette didn't do that, however, this could
                             ;  be a serious problem
 
     INC framecounter        ; increment the frame counter
@@ -2265,7 +2265,7 @@ EnterBridgeScene:
 
     LDA #$01              ; then move the PPU over to the "closed" NT (even though it should be there
     STA soft2000          ;  already!)
-    STA $2000
+    STA PPUCTRL
 
     RTS                   ; and exit
 
@@ -2275,7 +2275,7 @@ EnterBridgeScene:
 ;;
 ;;    This fills the top half of the secondary NT's ($2400) attribute table.
 ;;  Essentially, this makes the story box on the $2400 NT a blue color, but makes
-;;  the story box on the $2000 NT a black color.  The game will then
+;;  the story box on the PPUCTRL NT a black color.  The game will then
 ;;  toggle between these NTs every few scanlines to do that shutter effect seen
 ;;  in the Story screens (Bridge and Ending scenes).
 ;;
@@ -2283,29 +2283,29 @@ EnterBridgeScene:
 
 Story_FillSecAttrib:
     LDA #0
-    STA $2001             ; turn off PPU
+    STA PPUMASK             ; turn off PPU
 
     LDA #0
     STA story_page        ; reset story page to zero (totally unnecessary here)
 
     LDX #0                ; zero X for upcoming loop
 
-    LDA $2002             ; reset PPU toggle
+    LDA PPUSTATUS             ; reset PPU toggle
     LDA #$27
-    STA $2006             ; set PPU Address to $27C0  (attribute table for nt@$2400)
+    STA PPUADDR             ; set PPU Address to $27C0  (attribute table for nt@$2400)
     LDA #$C0
-    STA $2006
+    STA PPUADDR
 
   @Loop:
       LDA lut_StorySecondaryAttrib, X   ; copy byte from our attribute LUT
-      STA $2007                         ; to the actual attribute table
+      STA PPUDATA                         ; to the actual attribute table
       INX
       CPX #$20
       BCC @Loop           ; loop until $20 bytes copied (top half of attribute table)
 
     LDA #0             ; reset NT scroll to zero (seems weird to do here)
     STA soft2000
-    STA $2000
+    STA PPUCTRL
 
     RTS                ; then exit
 
@@ -2342,10 +2342,10 @@ Bridge_StartPPU:
     JSR DrawPalette_L      ; draw the palette
 
     LDA #$0A
-    STA $2001              ; turn on BG rendering (but leave sprites disabled)
+    STA PPUMASK              ; turn on BG rendering (but leave sprites disabled)
     LDA #0
-    STA $2005
-    STA $2005              ; reset X and Y scroll
+    STA PPUSCROLL
+    STA PPUSCROLL              ; reset X and Y scroll
     RTS                    ; and exit
 
 
@@ -2366,7 +2366,7 @@ Bridge_StartPPU:
 Story_DoPage:
     LDA #$01             ; switch to "closed" NT (shutters closed)
     STA soft2000
-    STA $2000
+    STA PPUCTRL
 
     STA menustall        ; enable menu stalling (drawing is going to be done while PPU on)
 
@@ -2475,7 +2475,7 @@ Story_CloseShutters:
       BNE @ClosedLoop
 
     LDA #$00            ; then switch to open NT
-    STA $2000
+    STA PPUCTRL
 
     LDX shutter_a
    @OpenLoop:           ; wait for number of open scanlines
@@ -2484,7 +2484,7 @@ Story_CloseShutters:
       BNE @OpenLoop
 
     LDA #$01            ; then switch to closed NT
-    STA $2000
+    STA PPUCTRL
 
     PLA
     SEC
@@ -2507,7 +2507,7 @@ Story_CloseShutters:
     BNE @Frame
 
     LDA #$01        ; once complete, switch to closed NT
-    STA $2000       ;  so shutters remain closed.
+    STA PPUCTRL       ;  so shutters remain closed.
     STA soft2000
 
     RTS
@@ -2548,7 +2548,7 @@ Story_OpenShutters:
 
   ;;
   ;;  This is the loop which animates the shutters.  This animation is performed by having two
-  ;;   NTs which are identical except for the text box:  The $2000 NT has the text and a black BG,
+  ;;   NTs which are identical except for the text box:  The PPUCTRL NT has the text and a black BG,
   ;;   so it's the "open" NT.  The $2400 NT has no text and a blue BG, so it's the "closed" BG.
   ;;  The game will split the screen multiple times during the frame to have the PPU switch between
   ;;   these nametables at different scanlines -- thus appearing to make the shutters gradually
@@ -2591,7 +2591,7 @@ Story_OpenShutters:
       BNE @ClosedLoop   ; (each loop iteration = 105 cycles)
 
     LDA #$00         ; then switch the PPU over to the "open" NT
-    STA $2000
+    STA PPUCTRL
 
     LDX shutter_b       ; load number of not-quite-scanlines shutters are to be opened
    @OpenLoop:           ; and wait that long
@@ -2600,7 +2600,7 @@ Story_OpenShutters:
       BNE @OpenLoop
 
     LDA #$01         ; then close the shutters again by switching
-    STA $2000        ;  the PPU over to the "closed" NT
+    STA PPUCTRL        ;  the PPU over to the "closed" NT
 
     PLA              ; pull the loop counter from the stack
     SEC
@@ -2631,7 +2631,7 @@ Story_OpenShutters:
   ;;  and shutters are fully opened.
 
     LDA #0             ; set the PPU to use the "open" NT
-    STA $2000
+    STA PPUCTRL
     STA soft2000
 
     RTS                ; and exit!
@@ -2681,8 +2681,8 @@ Wait100Cycs:
 
 WaitForShutterStart:
     LDA #0         ; +2
-    STA $2005      ; +4    reset scroll
-    STA $2005      ; +4
+    STA PPUSCROLL      ; +4    reset scroll
+    STA PPUSCROLL      ; +4
 
     LDX #30        ; +2
   @Loop:
@@ -2797,14 +2797,14 @@ Story_DrawText:
 
   @StartSimpleString:
     JSR Story_EndFrame   ; end the frame (keeps music playing, and ensures we're in VBlank)
-    LDA $2002            ; reset PPU toggle
+    LDA PPUSTATUS            ; reset PPU toggle
 
     LDY #1               ; Y=1 because we're to load the high byte of the address first
     LDA (text_ptr), Y
-    STA $2006            ; set high byte of PPU address
+    STA PPUADDR            ; set high byte of PPU address
     DEY                  ; then load and set low byte
     LDA (text_ptr), Y    ;  This is funky because the address is stored low-byte first, but
-    STA $2006            ;  $2006 must be written to high-byte first.
+    STA PPUADDR            ;  PPUADDR must be written to high-byte first.
 
     LDA text_ptr         ; add 2 to our text pointer
     CLC
@@ -2826,13 +2826,13 @@ Story_DrawText:
 :   CMP #$01
     BEQ @StartSimpleString   ; if this byte was $01, start a new simple string
 
-    STA $2007              ; otherwise (normal byte), draw it
+    STA PPUDATA              ; otherwise (normal byte), draw it
     JMP @SimpleStringLoop  ; and continue looping
 
   @EndCreditsPage:
     LDA #0
-    STA $2005            ; reset scroll (but not NT scroll -- screen still scrolled to $2400)
-    STA $2005
+    STA PPUSCROLL            ; reset scroll (but not NT scroll -- screen still scrolled to $2400)
+    STA PPUSCROLL
     RTS                  ; and exit
 
  ;;
@@ -2868,8 +2868,8 @@ __Nasir_CRC_High_Byte = @NasirCRCHighByte+2   ; unimportant to this routine -- h
 
 Story_EndFrame:
     LDA #0
-    STA $2005             ; reset scroll
-    STA $2005
+    STA PPUSCROLL             ; reset scroll
+    STA PPUSCROLL
 
     JSR MusicPlay_L       ; play the music
     JSR WaitForVBlank_L   ; and wait for VBlank
@@ -2881,7 +2881,7 @@ Story_EndFrame:
 ;;
 ;;    This is the top half of the attribute table for the secondary nametable ($2400)
 ;;  for the story screens (Bridge and Ending scenes).  All of it is the same as
-;;  the normal attribute table ($2000) except for the box to contain the story, which uses
+;;  the normal attribute table (PPUCTRL) except for the box to contain the story, which uses
 ;;  palette set 0 instead of set 3.  This makes the empty box have a black body
 ;;  on the primary NT, and a blue body on the secondary NT.
 
@@ -3156,7 +3156,7 @@ MiniGame_AnimateSlide:
     PHA                    ; back up loop counter
     JSR WaitForVBlank_L    ; wait for VBlank
     LDA #>oam              ; do sprite DMA
-    STA $4014
+    STA OAMDMA
     JSR MusicPlay_L        ; and play the music
 
     LDA mg_slidespr        ; then slide the sprites of each tile being moved 1 pixel

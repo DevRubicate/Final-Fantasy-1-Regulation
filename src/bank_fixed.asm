@@ -60,8 +60,8 @@ DrawPalette_L:        JMP DrawPalette
 
 GameStart:
     LDA #0                      ; Turn off the PPU
-    STA $2000
-    STA $2001
+    STA PPUCTRL
+    STA PPUMASK
     
     STA unk_FE                  ; ?? I don't think this is ever used
     
@@ -206,7 +206,7 @@ EnterOverworldLoop:
   @Loop:  
     JSR WaitForVBlank_L        ; wait for VBlank
     LDA #>oam                  ; and do sprite DMA
-    STA $4014
+    STA OAMDMA
 
     JSR OverworldMovement      ; do any pending movement animations and whatnot
                                ;   also does any required map drawing and updates
@@ -370,7 +370,7 @@ DoOWTransitions:
     JSR BattleTransition   ; Do the flashy transition effect
 
     LDA #$00
-    STA $2001              ; turn off the PPU
+    STA PPUMASK              ; turn off the PPU
     STA $4015              ; and APU
 
     JSR LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
@@ -703,14 +703,14 @@ OverworldMovement:
 
 SetOWScroll_PPUOn:
     LDA #$1E
-    STA $2001           ; turn the PPU on!
+    STA PPUMASK           ; turn the PPU on!
 
 SetOWScroll:
     LDA NTsoft2000      ; get the NT scroll bits
     STA soft2000        ; and record them in both soft2000
-    STA $2000           ; and the actual $2000
+    STA PPUCTRL           ; and the actual PPUCTRL
 
-    LDA $2002           ; reset PPU toggle
+    LDA PPUSTATUS           ; reset PPU toggle
 
     LDA ow_scroll_x     ; get the overworld scroll position (use this as a scroll_x,
     ASL A               ;    since there is no scroll_x)
@@ -718,7 +718,7 @@ SetOWScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels wide)
     ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA $2005           ; write this as our X scroll
+    STA PPUSCROLL           ; write this as our X scroll
 
     LDA scroll_y        ; get scroll_y
     ASL A
@@ -726,7 +726,7 @@ SetOWScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels tall)
     ORA move_ctr_y      ; OR with move counter
-    STA $2005           ; and set as Y scroll
+    STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
 
@@ -766,7 +766,7 @@ OWMove_Right:
     ADC #$01
     STA ow_scroll_x
 
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@$2000)
+    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPUCTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -797,7 +797,7 @@ OWMove_Left:
     SBC #$01
     STA ow_scroll_x
 
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@$2000)
+    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPUCTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -1722,8 +1722,8 @@ LandAirship:
 
 PrepOverworld:
     LDA #0
-    STA $2000           ; disable NMIs
-    STA $2001           ; turn off PPU
+    STA PPUCTRL           ; disable NMIs
+    STA PPUMASK           ; turn off PPU
     STA $4015           ; silence APU
 
     STA scroll_y        ; zero a whole bunch of other things:
@@ -1756,7 +1756,7 @@ PrepOverworld:
     JSR DrawMapPalette        ; before drawing the palette
     JSR SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
     LDA #0                    ;  .. but then immediately turn PPU off!
-    STA $2001                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
+    STA PPUMASK                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
 
     LDX vehicle
     LDA @lut_VehicleMusic, X  ; use the current vehicle as an index
@@ -1890,7 +1890,7 @@ MapTileDamage:
     LDA framecounter      ; get the frame counter
     AND #$01              ; isolate low bit and use as a quick monochrome toggle
     ORA #$1E              ; OR with typical PPU flags
-    STA $2001             ; and write to PPU reg.  This results in a rapid toggle between
+    STA PPUMASK             ; and write to PPU reg.  This results in a rapid toggle between
                           ;  normal/monochrome mode (toggles every frame).  This produces the flashy effect
 
     LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
@@ -2117,7 +2117,7 @@ DoStandardMap:
 StandardMapLoop:
     JSR WaitForVBlank_L        ; wait for VBlank
     LDA #>oam                  ; and do Sprite DMA
-    STA $4014
+    STA OAMDMA
     JSR StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
                                ;   this also sets the scroll
     LDA framecounter
@@ -2185,7 +2185,7 @@ StandardMapLoop:
     JSR BattleTransition    ; do the battle transition effect
 
     LDA #0                  ; then kill PPU, APU
-    STA $2001
+    STA PPUMASK
     STA $4015
 
     JSR LoadBattleCHRPal    ; Load CHR and palettes for the battle
@@ -2352,10 +2352,10 @@ ProcessSMInput:
 
       JSR WaitForVBlank_L       ; wait a frame
       LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
-      STA $4014
+      STA OAMDMA
       JSR SetSMScroll
       LDA #$1E
-      STA $2001
+      STA PPUMASK
       JSR CallMusicPlay_NoSwap
 
       JSR ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
@@ -2977,11 +2977,11 @@ Copy256:
 
 StandardMapMovement:
     LDA #$1E
-    STA $2001             ; turn the PPU on
+    STA PPUMASK             ; turn the PPU on
 
     JSR RedrawDoor        ; redraw an opening/closing door if necessary
 
-    LDA $2002             ; reset PPU toggle (seems unnecessary, here)
+    LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
 
     LDA move_speed        ; see if the player is moving
     BEQ SetSMScroll       ; if not, just skip ahead and set the scroll
@@ -3010,7 +3010,7 @@ StandardMapMovement:
 SetSMScroll:
     LDA NTsoft2000      ; get the NT scroll bits
     STA soft2000        ; and record them in both soft2000
-    STA $2000           ; and the actual $2000
+    STA PPUCTRL           ; and the actual PPUCTRL
 
     LDA sm_scroll_x     ; get the standard map scroll position
     ASL A
@@ -3018,7 +3018,7 @@ SetSMScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels wide)
     ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA $2005           ; write this as our X scroll
+    STA PPUSCROLL           ; write this as our X scroll
 
     LDA scroll_y        ; get scroll_y
     ASL A
@@ -3026,7 +3026,7 @@ SetSMScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels tall)
     ORA move_ctr_y      ; OR with move counter
-    STA $2005           ; and set as Y scroll
+    STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
 
@@ -3067,7 +3067,7 @@ SMMove_Right:
     AND #$3F               ; and wrap at 64 tiles
     STA sm_scroll_x
 
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@$2000)
+    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPUCTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -3099,7 +3099,7 @@ SMMove_Left:
     AND #$3F               ; and wrap at 64 tiles
     STA sm_scroll_x
 
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@$2000)
+    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPUCTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -3510,7 +3510,7 @@ SMMove_Door:
     LDA tmp+4            ; get the X coord of the tile the player is moving to
     AND #$1F             ; mask out the low bits (column to draw on the nametables)
     CMP #$10             ; see if the high bit is set.  If it is, we're drawing to the NT at $2400
-    BCS @NT2400          ;  otherwise we draw to the NT at $2000
+    BCS @NT2400          ;  otherwise we draw to the NT at PPUCTRL
 
   @NT2000:
     ASL A                      ; double the column to get the PPU dest X coord (2 ppu tiles per map tile)
@@ -3526,7 +3526,7 @@ SMMove_Door:
     ORA lut_2xNTRowStartLo, X
     STA doorppuaddr
     LDA lut_2xNTRowStartHi, X
-    ORA #$04                   ; and OR the high byte of the address with $04 ($2400 -- instead of $2000)
+    ORA #$04                   ; and OR the high byte of the address with $04 ($2400 -- instead of PPUCTRL)
     STA doorppuaddr+1
 
 
@@ -3591,26 +3591,26 @@ RedrawDoor:
 
   @Redraw:
     STA inroom             ; record new inroom status (previously stuffed in A)
-    LDA $2002              ; reset PPU toggle
+    LDA PPUSTATUS              ; reset PPU toggle
 
     LDA doorppuaddr+1      ; load the target PPU address
-    STA $2006
+    STA PPUADDR
     LDA doorppuaddr
-    STA $2006
+    STA PPUADDR
     LDA tsa_ul, X          ; and redraw upper two TSA tiles using the current tileset tsa data in RAM
-    STA $2007
+    STA PPUDATA
     LDA tsa_ur, X
-    STA $2007
+    STA PPUDATA
 
     LDA doorppuaddr+1      ; reload target PPU address
-    STA $2006
+    STA PPUADDR
     LDA doorppuaddr
     ORA #$20               ; but add $20 to it to put it on the second row of the tile (bottom half)
-    STA $2006
+    STA PPUADDR
     LDA tsa_dl, X          ; and redraw lower two TSA tiles
-    STA $2007
+    STA PPUDATA
     LDA tsa_dr, X
-    STA $2007
+    STA PPUDATA
 
     JMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
@@ -3676,8 +3676,8 @@ LoadStandardMapAndObjects:
     STA mapflags          ; set the standard map flag
 
     LDA #0
-    STA $2000             ; disable NMIs
-    STA $2001             ; turn off PPU
+    STA PPUCTRL             ; disable NMIs
+    STA PPUMASK             ; turn off PPU
 
     JSR LoadStandardMap   ; decompress the map
     JSR LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
@@ -3694,8 +3694,8 @@ LoadStandardMapAndObjects:
 
 PrepStandardMap:
     LDA #0
-    STA $2000               ; disable NMIs
-    STA $2001               ; turn off the PPU
+    STA PPUCTRL               ; disable NMIs
+    STA PPUMASK               ; turn off the PPU
     STA $400C               ; ??  tries to silence noise?  This doesn't really accomplish that.
 
     STA joy_select          ; zero a bunch of other map and input related stuff
@@ -3726,7 +3726,7 @@ PrepStandardMap:
     JSR SetSMScroll         ; set the scroll
 
     LDA #0                  ; turn PPU off (but it's already off!)
-    STA $2001
+    STA PPUMASK
 
     LDX cur_tileset               ; get the tileset
     LDA @lut_TilesetMusicTrack, X ; use it to get the music track tied to this tileset
@@ -4041,7 +4041,7 @@ StartMapMove:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoMapDrawJob:
-    LDA $2002           ; reset PPU toggle  (seems odd to do here...)
+    LDA PPUSTATUS           ; reset PPU toggle  (seems odd to do here...)
 
     LDA mapdraw_job     ; find which job we're to do
     SEC
@@ -4508,9 +4508,9 @@ DrawMapRowCol:
     STA tmp+1                 ; (tmp) now dest address
     LDA mapdraw_ntx           ; get target column to draw to
     CMP #$10
-    BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at $2000
+    BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at PPUCTRL
 
-                  ; if column < $10 (use NT $2000)
+                  ; if column < $10 (use NT PPUCTRL)
       TAX                 ; back up column to X
       ASL A               ; double column number
       ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
@@ -4523,12 +4523,12 @@ DrawMapRowCol:
       ASL A               ; double column number
       ORA tmp             ; OR with low byte of dest pointer.
       STA tmp
-      LDA tmp+1           ; add 4 to high byte (changing NT from $2000 to $2400)
+      LDA tmp+1           ; add 4 to high byte (changing NT from PPUCTRL to $2400)
       CLC
       ADC #$04            ; Dest pointer is now prepped
       STA tmp+1
 
-       ; no matter which NT ($2000/$2400) is being drawn to, both forks reconnect here
+       ; no matter which NT (PPUCTRL/$2400) is being drawn to, both forks reconnect here
   @DetermineRowOrCol:
     LDA mapflags          ; find out if we're moving drawing a row or column
     AND #$02
@@ -4547,27 +4547,27 @@ DrawMapRowCol:
     INX              ; This creates a down-counter:  it is '16 - column_number', indicating the number of
     STX tmp+2        ;   columns that must be drawn until we reach the NT boundary
     LDY #$00         ; zero Y -- our source index
-    LDA $2002        ; reset PPU toggle
+    LDA PPUSTATUS        ; reset PPU toggle
     LDA tmp+1
-    STA $2006        ; set PPU addr to previously calculated dest addr
+    STA PPUADDR        ; set PPU addr to previously calculated dest addr
     LDA tmp
-    STA $2006
+    STA PPUADDR
 
   @RowLoop_U:
     LDA draw_buf_ul, Y ; load 2 tiles from drawing buffer and draw them
-    STA $2007          ;   first UL
+    STA PPUDATA          ;   first UL
     LDA draw_buf_ur, Y ;   then UR
-    STA $2007
+    STA PPUDATA
     INY              ; inc source index (to look at next tile)
     DEX              ; dec down counter
     BNE :+           ; if it expired, we've reached NT boundary
 
       LDA tmp+1      ; at NT boundary... so load high byte
       EOR #$04       ;  toggle NT bit
-      STA $2006      ;  and write back as the new high byte
+      STA PPUADDR      ;  and write back as the new high byte
       LDA tmp        ; then get low byte
       AND #$E0       ;  snap it to start of the row
-      STA $2006      ;  and write back as the new low byte
+      STA PPUADDR      ;  and write back as the new low byte
 
 :   CPY #$10         ; see if we've drawn 16 tiles yet (one full row)
     BCC @RowLoop_U   ; if not, continue looping
@@ -4577,27 +4577,27 @@ DrawMapRowCol:
     ADC #$20         ;  it points it to the next row of NT tiles
     STA tmp
     LDA tmp+1
-    STA $2006        ; then re-copy the dest addr to set the PPU address
+    STA PPUADDR        ; then re-copy the dest addr to set the PPU address
     LDA tmp
-    STA $2006
+    STA PPUADDR
     LDY #$00         ; zero our source index again
     LDX tmp+2        ; restore X to our down counter
 
 @RowLoop_D:
     LDA draw_buf_dl, Y ; repeat same tile copying work done above,
-    STA $2007          ;   but this time we're drawing the bottom half of the tiles
+    STA PPUDATA          ;   but this time we're drawing the bottom half of the tiles
     LDA draw_buf_dr, Y ;   first DL
-    STA $2007          ;   then DR
+    STA PPUDATA          ;   then DR
     INY                ; inc source index (next tile)
     DEX                ; dec down counter (for NT boundary)
     BNE :+
     
       LDA tmp+1      ; at NT boundary again.. same deal.  load high byte of dest
       EOR #$04       ;   toggle NT bit
-      STA $2006      ;   and write back
+      STA PPUADDR      ;   and write back
       LDA tmp        ; load low byte
       AND #$E0       ;   snap to start of row
-      STA $2006      ;   write back
+      STA PPUADDR      ;   write back
 
 :   CPY #$10
     BCC @RowLoop_D   ; loop until all 16 tiles drawn
@@ -4615,28 +4615,28 @@ DrawMapRowCol:
     TAX              ; put downcounter in X for immediate use
     STX tmp+2        ; and back it up in tmp+2 for future use
     LDY #$00         ; zero Y -- our source index
-    LDA $2002        ; clear PPU toggle
+    LDA PPUSTATUS        ; clear PPU toggle
     LDA tmp+1
-    STA $2006        ; set PPU addr to previously calculated dest address
+    STA PPUADDR        ; set PPU addr to previously calculated dest address
     LDA tmp
-    STA $2006
+    STA PPUADDR
     LDA #$04
-    STA $2000        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
+    STA PPUCTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
 
 @ColLoop_L:
     LDA draw_buf_ul, Y ; draw the left two tiles that form this map tile
-    STA $2007          ;   first UL
+    STA PPUDATA          ;   first UL
     LDA draw_buf_dl, Y ;   then DL
-    STA $2007
+    STA PPUDATA
     DEX              ; dec our down counter.
     BNE :+           ;   once it expires, we've reach the NT boundary
 
       LDA tmp+1      ; at NT boundary.. get high byte of dest
       AND #$24       ;   snap to top of NT
-      STA $2006      ;   and write back
+      STA PPUADDR      ;   and write back
       LDA tmp        ; get low byte
       AND #$1F       ;   snap to top, while retaining current column
-      STA $2006      ;   and write back
+      STA PPUADDR      ;   and write back
 
 :   INY              ; inc our source index
     CPY #$0F
@@ -4646,29 +4646,29 @@ DrawMapRowCol:
                      ; now that the left-hand tiles are drawn, draw the right-hand tiles
     LDY #$00         ; clear our source index
     LDA tmp+1        ; restore dest address
-    STA $2006
+    STA PPUADDR
     LDA tmp          ; but add 1 to the low byte (to move to right-hand column)
     CLC              ;   note:  the game does not write back to tmp -- why not?!!
     ADC #$01
-    STA $2006
+    STA PPUADDR
     LDX tmp+2        ; restore down counter into X
 
 @ColLoop_R:
     LDA draw_buf_ur, Y ; load right-hand tiles and draw...
-    STA $2007          ;   first UR
+    STA PPUDATA          ;   first UR
     LDA draw_buf_dr, Y ;   then DR
-    STA $2007
+    STA PPUDATA
     DEX                ; dec down counter
     BNE :+             ; if it expired, we're at the NT boundary
 
       LDA tmp+1      ; at NT boundary, get high byte of dest
       AND #$24       ;   snap to top of NT
-      STA $2006      ;   and write back
+      STA PPUADDR      ;   and write back
       LDA tmp        ; get low byte of dest
       CLC            ;   and add 1 (this could've been avoided if it wrote back to tmp above)
       ADC #$01       ;   anyway -- adding 1 move to right-hand column (again)
       AND #$1F       ;   snap to top of NT, while retaining current column
-      STA $2006      ;   and write to low byte of PPU address
+      STA PPUADDR      ;   and write to low byte of PPU address
 
 :   INY              ; inc our source index
     CPY #$0F         ; loop until we've drawn 15 tiles
@@ -4720,7 +4720,7 @@ PrepAttributePos:
     CMP #$10        ; see if column >= $10... if it is, we need the right-hand attribute table
     BCC :+
        AND #$0F     ;   need right-hand attribute, mask column to low 4 bits
-       LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of $2000)
+       LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of PPUCTRL)
 
 :   STX tmp+2       ; put the high byte of the dest ppu address in tmp+2
     LDX #$33        ; X=$33 (for even columns)
@@ -4823,24 +4823,24 @@ DrawMapAttributes:
 
 :   STX tmp+1       ; dump X to tmp+1.  This is our upper-bound
     LDX #$00        ; clear X (source index)
-    LDA $2002       ; reset PPU toggle
+    LDA PPUSTATUS       ; reset PPU toggle
 
 @Loop:
     LDA draw_buf_at_hi, X  ; set our PPU addr to desired value
-    STA $2006
+    STA PPUADDR
     LDA draw_buf_at_lo, X
-    STA $2006
-    LDA $2007              ; dummy PPU read to fill read buffer
-    LDA $2007              ; read the attribute byte at the desired address
+    STA PPUADDR
+    LDA PPUDATA              ; dummy PPU read to fill read buffer
+    LDA PPUDATA              ; read the attribute byte at the desired address
     STA tmp                ; back it up in temp ram
     EOR draw_buf_attr, X   ; EOR with attribute byte to make attribute bits inversed (so that the next EOR will correct them)
     AND draw_buf_at_msk, X ; mask out desired attribute bits
     EOR tmp                ; EOR again with original byte, correcting desired attribute bits, and restoring other bits
     LDY draw_buf_at_hi, X  ; reload desired PPU address with Y (so not to disrupt A)
-    STY $2006
+    STY PPUADDR
     LDY draw_buf_at_lo, X
-    STY $2006
-    STA $2007              ; write new attribute byte back to attribute tables
+    STY PPUADDR
+    STA PPUDATA              ; write new attribute byte back to attribute tables
     INX                    ; inc our source index
     CPX tmp+1              ; and loop until it reaches our upper-bound
     BCC @Loop
@@ -5299,10 +5299,10 @@ ShowDialogueBox:
 DialogueBox_Frame:
     JSR Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
     LDA #>oam          ; do sprite DMA
-    STA $4014          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
+    STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
 
     LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
-    STA $2000
+    STA PPUCTRL
 
         ; now the game loops to burn VBlank time, so that it can start doing raster effects to split the screen
 
@@ -5338,7 +5338,7 @@ DialogueBox_Frame:
       ; so we don't want it to be visible any more for the rest of this frame
 
     LDA soft2000                   ; so get the normal "onscreen" NT
-    STA $2000                      ; and set it
+    STA PPUCTRL                      ; and set it
     JMP CallMusicPlay_NoSwap       ; then call the Music Play routine and exit
 
 
@@ -5458,7 +5458,7 @@ ScreenWipe_Close:
  ;;
 
 ScreenWipe_Finalize:
-    STA $2001          ; turn on/off the PPU (Close turns it off, Open turns it on)
+    STA PPUMASK          ; turn on/off the PPU (Close turns it off, Open turns it on)
     LDA #0
     STA $4002          ; then silence the Sq1 sound effect by setting its F-value to zero
     STA $4003
@@ -5483,7 +5483,7 @@ ScreenWipe_Finalize:
 
 ScreenWipeFrame_Prep:
     LDA #>oam           ; do sprite DMA
-    STA $4014           ;  (friendly reminder:  sprite DMA burns 513 cycles)
+    STA OAMDMA           ;  (friendly reminder:  sprite DMA burns 513 cycles)
 
     JSR DrawMapPalette  ; draw the palette
 
@@ -5548,7 +5548,7 @@ ScreenWipeFrame:
                              ;  to attempt to realign the timing.
 
     LDA #$10                 ; turn BG rendering off
-    STA $2001
+    STA PPUMASK
     LDX tmp+4                ; wait for tmp+4 scanlines
     @WaitLines_Off:
       JSR WaitScanline
@@ -5557,7 +5557,7 @@ ScreenWipeFrame:
     PAGECHECK @WaitLines_Off
 
     LDA #$1E                 ; turn BG rendering on
-    STA $2001
+    STA PPUMASK
     LDX tmp+5                ; wait for tmp+5 scanlines
     @WaitLines_On:
       JSR WaitScanline
@@ -5566,7 +5566,7 @@ ScreenWipeFrame:
     PAGECHECK @WaitLines_On
 
     LDA #$10                 ; then turn BG rendering back off.  Leave it off for the rest of the frame
-    STA $2001
+    STA PPUMASK
 
     LDA tmp+5           ; check the number of visible scanlines
     AND #$0C            ; mask out bits 2,3
@@ -5652,7 +5652,7 @@ StartScreenWipe:
 
     JSR WaitForVBlank_L   ; then wait for VBlank
     LDA #>oam             ; and do sprite DMA
-    STA $4014
+    STA OAMDMA
 
     LDA #$01              ; silence all channels except for square 1
     STA $4015             ;   this stops all music.  Square 1 is used for the wipe sound effect
@@ -5856,45 +5856,45 @@ ProcessJoyButtons:
 
 
 DrawPalette:
-    LDA $2002       ; Reset PPU toggle
+    LDA PPUSTATUS       ; Reset PPU toggle
     LDA #$3F        ; set PPU Address to $3F00 (start of palettes)
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
+    STA PPUADDR
     LDX #$00        ; set X to zero (our source index)
     JMP _DrawPalette_Norm   ; and copy the normal palette
 
 DrawMapPalette:
-    LDA $2002       ; Reset PPU Toggle
+    LDA PPUSTATUS       ; Reset PPU Toggle
     LDA #$3F        ; set PPU Address to $3F00 (start of palettes)
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
+    STA PPUADDR
     LDX #$00        ; clear X (our source index)
     LDA inroom      ; check in-room flag
     BEQ _DrawPalette_Norm   ; if we're not in a room, copy normal palette...otherwise...
 
   @InRoomLoop:
       LDA inroom_pal, X ; if we're in a room... the BG palette (first $10 colors) come from
-      STA $2007         ;   $03E0 instead
+      STA PPUDATA         ;   $03E0 instead
       INX
       CPX #$10          ; loop $10 times to copy the whole BG palette
       BCC @InRoomLoop   ;   once the BG palette is drawn, continue drawing the sprite palette per normal
 
 _DrawPalette_Norm:
     LDA cur_pal, X     ; get normal palette
-    STA $2007          ;  and draw it
+    STA PPUDATA          ;  and draw it
     INX
     CPX #$20           ; loop until $20 colors have been drawn (full palette)
     BCC _DrawPalette_Norm
 
-    LDA $2002          ; once done, do the weird thing NES games do
+    LDA PPUSTATUS          ; once done, do the weird thing NES games do
     LDA #$3F           ;  reset PPU address to start of palettes ($3F00)
-    STA $2006          ;  and then to $0000.  Most I can figure is that they do this
+    STA PPUADDR          ;  and then to $0000.  Most I can figure is that they do this
     LDA #$00           ;  to avoid a weird color from being displayed when the PPU is off
-    STA $2006
-    STA $2006
-    STA $2006
+    STA PPUADDR
+    STA PPUADDR
+    STA PPUADDR
     RTS
 
 
@@ -5910,7 +5910,7 @@ WaitVBlank_NoSprites:
     JSR ClearOAM              ; clear OAM
     JSR WaitForVBlank_L       ; wait for VBlank
     LDA #>oam
-    STA $4014                 ; then do sprite DMA (hide all sprites)
+    STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
 
 
@@ -5993,8 +5993,8 @@ BattleTransition:
                      ; this will switch to a new emphasis mode every 4 frames
                      ; and will cycle through all 8 emphasis modes a total of 4 times
 
-    ORA #$0A         ; OR emphasis bits with other info for $2001 (enable BG rendering, disable sprites)
-    STA $2001        ; write set emphasis
+    ORA #$0A         ; OR emphasis bits with other info for PPUMASK (enable BG rendering, disable sprites)
+    STA PPUMASK        ; write set emphasis
 
     LDA #$0F         ; enable volume decay for the noise channel
     STA $400C        ;   and set it to decay at slowest speed -- but since the decay gets restarted every
@@ -6015,7 +6015,7 @@ BattleTransition:
     BCC @Loop        ; and keep looping until it reaches $41
 
     LDA #$00         ; at which point
-    STA $2001        ; turn off the PPU
+    STA PPUMASK        ; turn off the PPU
     STA $4015        ;  and APU
 
     JMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
@@ -6030,29 +6030,29 @@ BattleTransition:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PalCyc_DrawPalette:
-    LDA $2002          ; reset PPU toggle
+    LDA PPUSTATUS          ; reset PPU toggle
     LDX #0             ; X will be our loop counter.  Zero it
 
     LDA #$3F           ; set PPU addr to $3F00 (palettes)
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
+    STA PPUADDR
 
   @Loop:
       LDA tmp_pal, X   ; get color from tmp_pal
-      STA $2007        ; draw it
+      STA PPUDATA        ; draw it
       INX
       CPX #$10         ; and keep looping ($10 iterations)
       BCC @Loop
 
-    LDA $2002          ; reset PPU toggle
+    LDA PPUSTATUS          ; reset PPU toggle
 
     LDA #$3F           ; move PPU addr off of palettes
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006
-    STA $2006
-    STA $2006
+    STA PPUADDR
+    STA PPUADDR
+    STA PPUADDR
 
     RTS                ; and exit
 
@@ -6134,7 +6134,7 @@ CyclePalettes:
     LSR A             ; check 'reverse' bit
     BCS :+            ; if NOT doing reverse....
       LDA #0          ; ... then turn PPU off
-      STA $2001
+      STA PPUMASK
 
 :   LDA #BANK_MENUS   ; swap to menus bank
     JMP SwapPRG_L     ; and exit
@@ -6161,14 +6161,14 @@ PalCyc_SetScroll:
 
   @Do_Zero:              ; otherwise, do zero scroll
     LDA soft2000
-    STA $2000            ; set NT bits
+    STA PPUCTRL            ; set NT bits
 
     LDA #$0A
-    STA $2001            ; disable sprite rendering
+    STA PPUMASK            ; disable sprite rendering
 
     LDA #$00
-    STA $2005
-    STA $2005            ; zero scroll
+    STA PPUSCROLL
+    STA PPUSCROLL            ; zero scroll
 
     RTS                  ; exit
 
@@ -6180,13 +6180,13 @@ PalCyc_SetScroll:
   @Do_OW:
     JSR SetOWScroll_PPUOn  ; set overworld scroll
     LDA #$0A
-    STA $2001              ; disable sprites
+    STA PPUMASK              ; disable sprites
     RTS                    ; exit
 
   @Do_SM:
     JSR SetSMScroll      ; set standard map scroll
     LDA #$0A
-    STA $2001            ; disable sprites
+    STA PPUMASK            ; disable sprites
     RTS                  ; exit
 
 
@@ -6359,7 +6359,7 @@ PalCyc_Step:
 ;;    tmp+2  = 0 when the 'beam' is expanding upward from the player sprite to the UL corner
 ;;             1 when the 'beam' has reached the UL corner and begins retracting to the UL corner
 ;;              (moving away from the player sprite)
-;;    tmp+15 = desired X scroll for the screen (as it needs to be written to $2005)
+;;    tmp+15 = desired X scroll for the screen (as it needs to be written to PPUSCROLL)
 ;;
 ;;    "Illuminated" scanlines just have the monochrome effect switched on for part of them.  There
 ;;  are no palette changes involved in this effect.
@@ -6369,14 +6369,14 @@ PalCyc_Step:
 
 DoAltarEffect:
     LDA sm_scroll_x      ; get the X scroll for the map
-    ASL A                ; multiply it by 16 to get the value need to be written to $2005
+    ASL A                ; multiply it by 16 to get the value need to be written to PPUSCROLL
     ASL A
     ASL A
     ASL A
     STA tmp+15           ; record it for future use in the routine
 
     LDA NTsoft2000       ; copy the NT scroll to the main soft2000 var
-    STA soft2000         ; 'soft2000' is written to $2000 automatically every frame (in OnNMI)
+    STA soft2000         ; 'soft2000' is written to PPUCTRL automatically every frame (in OnNMI)
                          ; This ensures that the NT scroll will be correct during this routine
 
     LDA #0
@@ -6404,7 +6404,7 @@ DoAltarEffect:
     LDA #$05             ; again it isn't immediately audible, but will be as soon as its vol is changed
     STA $4007
 
-    LDA $2002            ; reset PPU toggle (seems unnecessary here?)
+    LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
 
 @MainLoop:
     JSR AltarFrame         ; do a frame and sync to desired raster time
@@ -6460,7 +6460,7 @@ DoAltarEffect:
     NOP
 
     LDA tmp+15          ; restore the desired X scroll (to undo the possible shaking)
-    STA $2005
+    STA PPUSCROLL
 
     LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
     STA $4007           ;  however note that sq2 is currently playing the wrong note (freq was changed for
@@ -6499,14 +6499,14 @@ AltarFrame:
 
     AND #$01          ; also use the low bit of lines/8 as a scroll adjustment
     EOR tmp+15        ; OR with desired X scroll
-    STA $2005         ; and record this as the scroll for the next frame.  This causes
+    STA PPUSCROLL         ; and record this as the scroll for the next frame.  This causes
                       ;  the screen to "shake" by 1 pixel every 8 frames.  This hides
                       ;  the unavoidable inperfection of the monochrome effect (unavoidable because
                       ;  you can't time the writes to the exact pixel no matter how careful you are)
 
     JSR WaitForVBlank_L    ; wait for VBlank.  This returns ~37 cycles into VBlank
     LDA #>oam         ; Do sprite DMA.  This burns another 513+2+4 cycles -- currently ~556 into VBl
-    STA $4014
+    STA OAMDMA
 
     LDY #6            ; do a bit more stalling to get the time right where we want it (+2 cycs for LDY)
   @Loop:
@@ -6573,7 +6573,7 @@ DoAltarScanline:
       CRITPAGECHECK @Loop
 
     LDA #$1F        ; +2 = 59
-    STA $2001       ; +4 = 63 -- monochrome turned on 63 cycs in
+    STA PPUMASK       ; +4 = 63 -- monochrome turned on 63 cycs in
 
     LDY #$1E        ; +2 = 65
     NOP             ; +2 = 67
@@ -6583,7 +6583,7 @@ DoAltarScanline:
     NOP             ; +2 = 95
     NOP             ; +2 = 97
     NOP             ; +2 = 99
-    STY $2001       ; +4 = 103 -- monochrome turned off 103 cycs in
+    STY PPUMASK       ; +4 = 103 -- monochrome turned off 103 cycs in
                     ;   following RTS makes this routine 109 cycles long
 
   @Burn12:          ; the routine JSRs here to burn 12 cycles (JSR+RTS = 12 cycs)
@@ -6740,7 +6740,7 @@ DrawDialogueString:
     BCC @DTE             ; if $1A-$79, it's a DTE code
 
    @SingleTile:
-      STA $2007            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
+      STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
 
       LDA dest_x           ; increment the dest address by 1
       CLC
@@ -6761,13 +6761,13 @@ DrawDialogueString:
       PHA                ; and push it to back it up (will need it again later)
 
       LDA lut_DTE1, X    ; get the first byte in the DTE pair
-      STA $2007          ; and draw it
+      STA PPUDATA          ; and draw it
       JSR @IncDest       ; update PPU dest address
 
       PLA                ; restore DTE code
       TAX                ; and put it in X again (X was corrupted by @IncDest call)
       LDA lut_DTE2, X    ; get second byte in DTE pair
-      STA $2007          ; draw it
+      STA PPUDATA          ; draw it
       JSR @IncDest       ; and update PPU address again
 
       DEC tmp+7            ; decrement cautionary counter
@@ -6898,7 +6898,7 @@ DrawDialogueString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddrToDest:
-    LDA $2002          ; reset PPU toggle
+    LDA PPUSTATUS          ; reset PPU toggle
     LDX dest_x         ; get dest_x in X
     LDY dest_y         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
@@ -6906,20 +6906,20 @@ SetPPUAddrToDest:
 
  @NTA:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    STA $2006                ; write it
+    STA PPUADDR                ; write it
     TXA                      ; put column/X coord in A
     ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    STA $2006                ; and write as low byte
+    STA PPUADDR                ; and write as low byte
     RTS
 
  @NTB:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of $2000)
-    STA $2006                ; write as high byte of PPU address
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    STA PPUADDR                ; write as high byte of PPU address
     TXA                      ; put column in A
     AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
     ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    STA $2006                ;  for our low byte of PPU address
+    STA PPUADDR                ;  for our low byte of PPU address
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6978,11 +6978,11 @@ DrawImageRect:
     STA tmp              ;  and store it in tmp (this will be our row loop down counter)
 
   @RowLoop:
-    LDA $2002            ; reset PPU toggle
+    LDA PPUSTATUS            ; reset PPU toggle
     LDA ppu_dest+1       ; load up desired PPU address
-    STA $2006
+    STA PPUADDR
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
 
     LDX dest_wd          ; load width into X (column down counter)
    @ColLoop:
@@ -6990,7 +6990,7 @@ DrawImageRect:
       BEQ :+              ; if it's nonzero....
         CLC
         ADC tmp+2         ; ...add our modifier to it
-:     STA $2007           ; draw it
+:     STA PPUDATA           ; draw it
       INY                 ; inc source index
       DEX                 ; dec our col loop counter
       BNE @ColLoop        ; continue looping until X expires
@@ -7358,8 +7358,8 @@ AddGPToParty:
 
 DrawComplexString_Exit:
     LDA #$00       ; reset scroll to 0
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
     LDA ret_bank   ; swap back to original bank
     JMP SwapPRG_L  ;   then return
 
@@ -7386,11 +7386,11 @@ DrawComplexString:
 :   CMP #$1A          ; values below $1A are control codes.  See if this is a control code
     BCC @ControlCode  ;   if it is, jump ahead
 
-    LDX $2002         ; reset PPU toggle
+    LDX PPUSTATUS         ; reset PPU toggle
     LDX ppu_dest+1    ;  load and set desired PPU address
-    STX $2006         ;  do this with X, as to not disturb A, which is still our character
+    STX PPUADDR         ;  do this with X, as to not disturb A, which is still our character
     LDX ppu_dest
-    STX $2006
+    STX PPUADDR
 
     CMP #$7A          ; see if this is a DTE character
     BCS @noDTE        ;  if < #$7A, it is DTE  (even though it probably should be #$6A)
@@ -7399,12 +7399,12 @@ DrawComplexString:
       SBC #$1A        ; subtract #$1A to get a zero-based index
       TAX             ; put the index in X
       LDA lut_DTE1, X ;  load and draw the first character in DTE
-      STA $2007
+      STA PPUDATA
       LDA lut_DTE2, X ;  load the second DTE character to be drawn in a bit
       INC ppu_dest    ;  increment the destination PPU address
 
   @noDTE:
-    STA $2007         ; draw the character as-is
+    STA PPUDATA         ; draw the character as-is
     INC ppu_dest      ; increment dest PPU address
     JMP @Draw_NoStall ; and repeat the process until terminated
 
@@ -7646,27 +7646,27 @@ DrawComplexString:
       LDX #$C7         ; set X to the "E" tile
       LDY #$C2         ; and Y to the "-" tile
 
-:   LDA $2002       ; both equipped and nonequipped code meet up here
+:   LDA PPUSTATUS       ; both equipped and nonequipped code meet up here
     LDA ppu_dest+1  ; reset PPU toggle
-    STA $2006       ; and set desired PPU address
+    STA PPUADDR       ; and set desired PPU address
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
 
     LDA #$FF
-    STA $2007       ; draw a space (why??? -- screws up result!)
-    STX $2007       ; then the "E" (if equipped) or another space (if not)
+    STA PPUDATA       ; draw a space (why??? -- screws up result!)
+    STX PPUDATA       ; then the "E" (if equipped) or another space (if not)
 
     INC ppu_dest    ; inc dest address
 
-    LDA $2002       ; reset toggle again
+    LDA PPUSTATUS       ; reset toggle again
     LDA ppu_dest+1  ; and set desired PPU address
-    STA $2006
+    STA PPUADDR
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
 
     LDA #$FF        ; draw a space.  Again.. why?  This only makes sense if you're in inc-by-32 mode
-    STA $2007       ;  otherwise this space will overwrite the "E" we just drew.  But if you're in inc-by-32 mode...
-    STY $2007       ;  the "E-" will draw 1 line below the item name (makes no sense).
+    STA PPUDATA       ;  otherwise this space will overwrite the "E" we just drew.  But if you're in inc-by-32 mode...
+    STY PPUDATA       ;  the "E-" will draw 1 line below the item name (makes no sense).
                     ; but anyway yeah.. after that space, draw the "-" or another space
 
     INC ppu_dest    ; inc dest PPU address
@@ -7804,10 +7804,10 @@ DrawBox:
     JSR DrawBoxRow_Bot    ; Draw bottom row
 
     LDA soft2000          ; reset some PPU info
-    STA $2000
+    STA PPUCTRL
     LDA #0
-    STA $2005             ; and scroll information
-    STA $2005
+    STA PPUSCROLL             ; and scroll information
+    STA PPUSCROLL
 
     LDA dest_x        ; get dest X coord
     CLC
@@ -7835,23 +7835,23 @@ DrawBox:
 
 DrawBoxRow_Mid:
     JSR MenuCondStall  ; do the conditional stall
-    LDA $2002          ; reset PPU toggle
+    LDA PPUSTATUS          ; reset PPU toggle
     LDA ppu_dest+1
-    STA $2006          ; Load up desired PPU address
+    STA PPUADDR          ; Load up desired PPU address
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
     LDX tmp+10         ; Load adjusted width into X (for loop counter)
     LDA #$FA           ; FA = L border tile
-    STA $2007          ;   draw left border
+    STA PPUDATA          ;   draw left border
 
     LDA #$FF           ; FF = inner box body tile
 @Loop:
-      STA $2007        ;  draw box body tile
+      STA PPUDATA        ;  draw box body tile
       DEX              ;    until X expires
       BNE @Loop
 
     LDA #$FB           ; FB = R border tile
-    STA $2007          ;  draw right border
+    STA PPUDATA          ;  draw right border
 
     LDA ppu_dest       ; Add #$20 to PPU address so that it points to the next row
     CLC
@@ -7878,24 +7878,24 @@ DrawBoxRow_Mid:
 
 DrawBoxRow_Bot:
     JSR MenuCondStall   ; Do the conditional stall
-    LDA $2002           ; Reset PPU Toggle
+    LDA PPUSTATUS           ; Reset PPU Toggle
     LDA ppu_dest+1      ;  and load up PPU Address
-    STA $2006
+    STA PPUADDR
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
 
     LDX tmp+10          ; put adjusted width in X (for loop counter)
     LDA #$FC            ;  FC = DL border tile
-    STA $2007
+    STA PPUDATA
 
     LDA #$FD            ;  FD = bottom border tile
 @Loop:
-      STA $2007         ;  Draw it
+      STA PPUDATA         ;  Draw it
       DEX               ;   until X expires
       BNE @Loop
 
     LDA #$FE            ;  FE = DR border tile
-    STA $2007
+    STA PPUDATA
 
     RTS
 
@@ -7914,24 +7914,24 @@ DrawBoxRow_Bot:
 
 DrawBoxRow_Top:
     JSR MenuCondStall   ; Do the conditional stall
-    LDA $2002           ; reset PPU toggle
+    LDA PPUSTATUS           ; reset PPU toggle
     LDA ppu_dest+1
-    STA $2006           ; set PPU Address appropriately
+    STA PPUADDR           ; set PPU Address appropriately
     LDA ppu_dest
-    STA $2006
+    STA PPUADDR
 
     LDX tmp+10          ; load the adjusted width into X (our loop counter)
     LDA #$F7            ; F7 = UL border tile
-    STA $2007           ;   draw UL border
+    STA PPUDATA           ;   draw UL border
 
     LDA #$F8            ; F8 = U border tile
 @Loop:
-      STA $2007         ;   draw U border
+      STA PPUDATA         ;   draw U border
       DEX               ;     until X expires
       BNE @Loop
 
     LDA #$F9            ; F9 = UR border tile
-    STA $2007           ;   draw it
+    STA PPUDATA           ;   draw it
 
     LDA ppu_dest        ; Add #$20 to our input PPU address so that it
     CLC                 ;  points to the next row
@@ -7961,10 +7961,10 @@ MenuCondStall:
     BEQ @Exit              ; if zero, we're not to stall, so just exit
 
       LDA soft2000         ;  we're stalling... so reset the scroll
-      STA $2000
+      STA PPUCTRL
       LDA #0
-      STA $2005            ;  scroll inside menus is always 0
-      STA $2005
+      STA PPUSCROLL            ;  scroll inside menus is always 0
+      STA PPUSCROLL
 
       JSR CallMusicPlay    ;  Keep the music playing
       JSR WaitForVBlank_L  ; then wait a frame
@@ -8006,24 +8006,24 @@ EraseBox:
      BEQ @NoStall       ; if not, skip over this stalling code
 
        LDA soft2000         ; reset scroll
-       STA $2000
+       STA PPUCTRL
        LDA #0
-       STA $2005
-       STA $2005
+       STA PPUSCROLL
+       STA PPUSCROLL
        JSR CallMusicPlay    ; call music play routine
        JSR WaitForVBlank_L  ; and wait for vblank
 
    @NoStall:
-     LDA $2002          ; reset PPU toggle
+     LDA PPUSTATUS          ; reset PPU toggle
      LDA ppu_dest+1     ; set the desired PPU address
-     STA $2006
+     STA PPUADDR
      LDA ppu_dest
-     STA $2006
+     STA PPUADDR
 
      LDX box_wd         ; get box width in X (downcounter for upcoming loop)
      LDA #0             ; zero A
    @ColLoop:
-       STA $2007        ; draw tile 0 (blank tile)
+       STA PPUDATA        ; draw tile 0 (blank tile)
        DEX              ; decrement X
        BNE @ColLoop     ; loop until X expires (box_wd iterations)
 
@@ -8041,10 +8041,10 @@ EraseBox:
 
 
     LDA soft2000    ; otherwise, we're done.  Reset the scroll
-    STA $2000
+    STA PPUCTRL
     LDA #0
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
     RTS             ; and exit!
 
 
@@ -8128,7 +8128,7 @@ AnimateAirshipLanding:
 AirshipTransitionFrame:
     JSR WaitForVBlank_L   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
-    STA $4014
+    STA OAMDMA
 
     LDA framecounter      ; increment the frame counter by 1
     CLC                   ;   (why doesn't it just use INC?)
@@ -9577,7 +9577,7 @@ LoadSingleMapObject:
 
 LoadEpilogueSceneGFX:
     LDA #$00                ; This routine is 100% identical to 
-    STA $2001               ;   LoadBridgeSceneGFX below, except it loads CHR from
+    STA PPUMASK               ;   LoadBridgeSceneGFX below, except it loads CHR from
     STA $4015               ;   a different address.
     
     LDA #<data_EpilogueCHR
@@ -9618,7 +9618,7 @@ LoadEpilogueSceneGFX:
 
 LoadBridgeSceneGFX:
     LDA #0
-    STA $2001                ; turn off PPU
+    STA PPUMASK                ; turn off PPU
     STA $4015                ; and APU
 
     LDA #<data_BridgeCHR     ; load a pointer to the bridge scene graphics (CHR first)
@@ -9637,7 +9637,7 @@ LoadBridgeSceneGFX:
                         ; now this is a little tricky.  It uses the CHR loading routine
                         ;    to load NT data instead of CHR
     LDX #4              ; 4 rows of tiles = $400 bytes (1 full NT)
-    LDA #$20            ; destination address = ppu $2000! (nametable)
+    LDA #$20            ; destination address = ppu PPUCTRL! (nametable)
     JSR CHRLoadToA      ; so this fills the whole nametable with NT data
                         ;  stored at lut_BridgeGFX + $800 (+$800 because of the 8 rows of
                         ;  tiles that were copied previously)
@@ -9647,7 +9647,7 @@ LoadBridgeSceneGFX:
 
     LDX #4              ; and set X to 4 again so we draw another $400 bytes (full NT)
     JSR CHRLoad_Cont    ; draw the SAME nametable.  This makes the nametables at
-                        ;  $2000 and $2400 identical!  This is used for visual effects
+                        ;  PPUCTRL and $2400 identical!  This is used for visual effects
 
 
     JMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
@@ -9772,10 +9772,10 @@ LoadOWBGCHR:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CHRLoadToA:
-    LDY $2002   ; reset PPU Addr toggle
-    STA $2006   ; write high byte of dest address
+    LDY PPUSTATUS   ; reset PPU Addr toggle
+    STA PPUADDR   ; write high byte of dest address
     LDA #0
-    STA $2006   ; write low byte:  0
+    STA PPUADDR   ; write low byte:  0
 
           ; no JMP or RTS -- seamlessly runs into CHRLoad
 
@@ -9802,7 +9802,7 @@ CHRLoad:
 
 CHRLoad_Cont:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA $2007         ; and write it to CHR-RAM
+    STA PPUDATA         ; and write it to CHR-RAM
     INY               ; inc our source index
     BNE CHRLoad_Cont  ; if it didn't wrap, continue looping
 
@@ -9869,11 +9869,11 @@ LoadMenuCHR:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadMapObjCHR:
-    LDA $2002      ; reset PPU toggle
+    LDA PPUSTATUS      ; reset PPU toggle
     LDA #$11
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006      ; set PPU Addr to $1100 (start of map object CHR)
+    STA PPUADDR      ; set PPU Addr to $1100 (start of map object CHR)
 
     LDA #0
     STA tmp+5      ; 0 -> tmp+5
@@ -9921,7 +9921,7 @@ LoadMapObjCHR:
     LDY #0           ; clear Y for upcoming CHR loading loop
   @CHRLoop:
       LDA (tmp), Y   ; load 256 bytes of CHR (16 tiles -- 1 row)
-      STA $2007
+      STA PPUDATA
       INY
       BNE @CHRLoop
     PLA              ; pull obj source index from stack
@@ -9992,7 +9992,7 @@ LoadBattleBGCHRAndPalettes:
 
   @Loop:                  ; Battle backdrops are actually 1 row + 2 tiles ($12 tiles)
       LDA (tmp), Y        ;   so loop to load another 2 tiles ($20 bytes)
-      STA $2007
+      STA PPUDATA
       INY
       CPY #$20
       BCC @Loop
@@ -10125,11 +10125,11 @@ LoadMenuBGCHRAndPalettes:
 LoadBatSprCHRPalettes_NewGame:
     LDA #BANK_BTLCHR
     JSR SwapPRG_L  ; Swap to bank 9
-    LDA $2002      ; Reset PPU Addr Toggle
+    LDA PPUSTATUS      ; Reset PPU Addr Toggle
     LDA #$10
-    STA $2006      ;  set dest PPU Addr to $1000
+    STA PPUADDR      ;  set dest PPU Addr to $1000
     LDA #$00
-    STA $2006
+    STA PPUADDR
 
     LDA #>lut_BatSprCHR    ;  set source pointer
     STA tmp+1
@@ -10147,11 +10147,11 @@ LoadBatSprCHRPalettes_NewGame:
 LoadBatSprCHRPalettes:
     LDA #BANK_BTLCHR
     JSR SwapPRG_L  ; swap to bank 9
-    LDA $2002      ; reset ppu addr toggle
+    LDA PPUSTATUS      ; reset ppu addr toggle
     LDA #$10
-    STA $2006      ; set dest ppu addr to $1000
+    STA PPUADDR      ; set dest ppu addr to $1000
     LDA #$00
-    STA $2006
+    STA PPUADDR
     STA tmp           ; clear low byte of source pointer
     LDA ch_class      ; get character 1's class
     JSR @LoadClass    ;  load it
@@ -11364,9 +11364,9 @@ SwapBtlTmpBytes_L:          JMP SwapBtlTmpBytes
 
 SetBattlePPUAddr:
     LDA btltmp+7
-    STA $2006
+    STA PPUADDR
     LDA btltmp+6
-    STA $2006
+    STA PPUADDR
     RTS
     
     
@@ -11400,7 +11400,7 @@ Battle_WritePPUData:
     
   @Loop:
       LDA (btltmp+4), Y         ; copy source data to PPU
-      STA $2007
+      STA PPUDATA
       INY
       DEX
       BNE @Loop
@@ -11409,9 +11409,9 @@ Battle_WritePPUData:
     JSR SwapPRG_L
     
     LDA #$00                    ; reset scroll before exiting
-    STA $2001
-    STA $2005
-    STA $2005
+    STA PPUMASK
+    STA PPUSCROLL
+    STA PPUSCROLL
     RTS
     
     
@@ -11433,11 +11433,11 @@ Battle_WritePPUData:
 Battle_ReadPPUData:
     JSR WaitForVBlank_L         ; Wait for VBlank
     JSR SetBattlePPUAddr        ; Set given PPU Address to read from
-    LDA $2007                   ; Throw away buffered byte
+    LDA PPUDATA                   ; Throw away buffered byte
     LDY #$00
     LDX btltmp+8                ; btltmp+8 is number of bytes to read
   @Loop:
-      LDA $2007
+      LDA PPUDATA
       STA (btltmp+4), Y           ; write to (btltmp+4)
       INY
       DEX
@@ -11480,7 +11480,7 @@ BattleCrossPageJump:
 EnterBattle:
     JSR WaitForVBlank_L       ; wait for VBlank and do Sprite DMA
     LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
-    STA $4014                 ;  off at this point
+    STA OAMDMA                 ;  off at this point
 
   ;; Load formation data to buffer in RAM
 
@@ -11519,17 +11519,17 @@ EnterBattle:
     LDA #0
     STA a:menustall           ; disable menu stalling
     JSR Battle_PPUOff         ; turn PPU off
-    LDA $2002                 ; reset PPU toggle
+    LDA PPUSTATUS                 ; reset PPU toggle
 
-    LDX #>$2000
-    LDA #<$2000
-    JSR SetPPUAddr_XA         ; set PPU address to $2000 (start of nametable)
+    LDX #>PPUCTRL
+    LDA #<PPUCTRL
+    JSR SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
 
     LDY #8                    ; loops to clear $0800 bytes of NT data (both nametables)
   @ClearNT_OuterLoop:
       LDX #0
     @ClearNT_InnerLoop:         ; inner loop clears $100 bytes
-        STA $2007
+        STA PPUDATA
         DEX
         BNE @ClearNT_InnerLoop
       DEY                       ; outer loop runs inner loop 8 times
@@ -11568,7 +11568,7 @@ EnterBattle:
     LDX #0
   @AttrLoop:
       LDA lut_BtlAttrTbl, X   ; copy over attribute bytes
-      STA $2007
+      STA PPUDATA
       INX
       CPX #$40
       BNE @AttrLoop           ; loop until all $40 bytes copied
@@ -11619,7 +11619,7 @@ EnterBattle:
     LDA #0
     LDX #$10
   @ClearFFLoop:
-      STA $2007             ; write $10 zeros to clear the tile
+      STA PPUDATA             ; write $10 zeros to clear the tile
       DEX
       BNE @ClearFFLoop
 
@@ -11649,8 +11649,8 @@ DrawBattleBackdropRow:
     STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
     JSR @Section         ; draw first section
 
-    LDA $2007            ; inc the PPU address by 2 to skip over those two bars of
-    LDA $2007            ;  the box boundaries.
+    LDA PPUDATA            ; inc the PPU address by 2 to skip over those two bars of
+    LDA PPUDATA            ;  the box boundaries.
 
     LDY #6               ; do 6 columns for the second section
     STY btltmp+11
@@ -11663,7 +11663,7 @@ DrawBattleBackdropRow:
       LDA @lut_BackdropLayout, X   ; get the tile to draw in this column
       CLC
       ADC btltmp+10                ; add to that our additive (to draw the right row)
-      STA $2007                    ; draw the tile
+      STA PPUDATA                    ; draw the tile
       INX                          ; inc our loop counter
       CPX btltmp+11                ; and loop until we've drawn the desired number of columns
       BNE @Loop
@@ -11684,8 +11684,8 @@ DrawBattleBackdropRow:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddr_XA:
-    STX $2006   ; write X as high byte
-    STA $2006   ; A as low byte
+    STX PPUADDR   ; write X as high byte
+    STA PPUADDR   ; A as low byte
     RTS
 
 
@@ -11750,8 +11750,8 @@ Battle_PPUOff:
     LDA #0
     STA a:soft2000     ; clear soft2000
     STA a:unk_FE       ; ?? I don't think this is ever used
-    STA $2000          ; disable NMIs
-    STA $2001          ; and turn off PPU
+    STA PPUCTRL          ; disable NMIs
+    STA PPUMASK          ; and turn off PPU
     RTS
 
 
@@ -11797,10 +11797,10 @@ BattleScreenShake:
       
       JSR BattleRNG
       AND #$03          ; get a random number betwee 0-3
-      STA $2005         ; use as X scroll
+      STA PPUSCROLL         ; use as X scroll
       JSR BattleRNG
       AND #$03          ; another random number
-      STA $2005         ; for Y scroll
+      STA PPUSCROLL         ; for Y scroll
       
       DEC loop_counter
       BNE @Loop
@@ -11855,7 +11855,7 @@ LoadBattlePalette:
 ;;
 ;;  Battle_UpdatePPU_UpdateAudio_FixedBank  [$F485 :: 0x3F495]
 ;;
-;;  Resets scroll and $2001, then updates audio.
+;;  Resets scroll and PPUMASK, then updates audio.
 ;;
 ;;  Used by only a few routines in the fixed bank.
 ;;
@@ -11863,10 +11863,10 @@ LoadBattlePalette:
 
 Battle_UpdatePPU_UpdateAudio_FixedBank:
     LDA btl_soft2001
-    STA $2001
+    STA PPUMASK
     LDA #$00            ; reset scroll
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
   ; JMP BattleUpdateAudio_FixedBank  ; <- flow continues to this routine
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11967,13 +11967,13 @@ Battle_DrawMessageRow_VBlank:
     
 Battle_DrawMessageRow:
     LDA $8B
-    STA $2006           ; set provided PPU address
+    STA PPUADDR           ; set provided PPU address
     LDA $8A
-    STA $2006
+    STA PPUADDR
     LDY #$00
   @Loop:
       LDA ($88), Y      ; read $19 bytes from source pointer
-      STA $2007         ;  and draw them
+      STA PPUDATA         ;  and draw them
       INY
       CPY #$19
       BNE @Loop
@@ -13873,14 +13873,14 @@ OnReset:
     INX
     BNE @ResetRAM
 
-    STA $2000      ; Disable NMIs
+    STA PPUCTRL      ; Disable NMIs
     LDA #$06
-    STA $2001      ; disable Spr/BG rendering (shut off PPU)
+    STA PPUMASK      ; disable Spr/BG rendering (shut off PPU)
     CLD            ; clear Decimal flag (just a formality, doesn't really do anything)
 
     LDX #$02       ; wait for 2 vblanks to occurs (2 full frames)
   @Loop: 
-      BIT $2002      ;  This is necessary because the PPU requires some time to "warm up"
+      BIT PPUSTATUS      ;  This is necessary because the PPU requires some time to "warm up"
       BPL @Loop      ;  failure to do this will result in the PPU basically not working
       DEX
       BNE @Loop
@@ -13937,8 +13937,8 @@ OnReset:
 
 OnNMI:
     LDA soft2000
-    STA $2000      ; set the PPU state
-    LDA $2002      ; clear VBlank flag and reset 2005/2006 toggle
+    STA PPUCTRL      ; set the PPU state
+    LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
     PLA
     PLA
     PLA            ; pull the RTI return info off the stack
@@ -13953,7 +13953,7 @@ OnNMI:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForVBlank:
-    LDA $2002      ; check VBlank flag
+    LDA PPUSTATUS      ; check VBlank flag
     BPL @Wait      ; if off, VBlank hasn't occured yet, so jump to the wait
                    ;  otherwise... whatever code occured since the last frame took longer than
                    ;  1 frame... so...
@@ -13962,13 +13962,13 @@ WaitForVBlank:
   @Loop:
       SEC          ; the reason for this is because the game doesn't want NMI to fire during VBlank
       SBC #$01     ;  because then you'd have less than a full VBlank for drawing next frame
-      BNE @Loop    ;  Of course... just reading $2002 above will prevent this from happening, so this isn't
+      BNE @Loop    ;  Of course... just reading PPUSTATUS above will prevent this from happening, so this isn't
                    ;  really necessary, but it doesn't hurt.
 
   @Wait:
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
-    STA $2000      ; and write it to PPU status reg
+    STA PPUCTRL      ; and write it to PPU status reg
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
 @LoopForever:
@@ -13984,27 +13984,27 @@ OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it
 
 ClearBGPalette:
     LDA #$00
-    STA $2001   ; Disable BG/Sprites (shut PPU off)
-    LDA $2002   ; reset 2005/2006 write toggle
+    STA PPUMASK   ; Disable BG/Sprites (shut PPU off)
+    LDA PPUSTATUS   ; reset 2005/2006 write toggle
     LDA #$3F
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006   ; set PPU address to $3F00 (start of BG palette)
+    STA PPUADDR   ; set PPU address to $3F00 (start of BG palette)
 
     LDX #$10
     LDA #$0F
 
   @Loop:
-    STA $2007   ; write 0F black to the palette
+    STA PPUDATA   ; write 0F black to the palette
     DEX
     BNE @Loop   ; repeat $10 times (entire BG palette)
 
     LDA #$3F
-    STA $2006
+    STA PPUADDR
     LDA #$00
-    STA $2006   ; set ppu addr to $3F00 (again), then to $0000
-    STA $2006   ; lots of commercial games do this.  Best I can figure is because they don't want to leave
-    STA $2006   ; the PPU addr pointing to palettes because this can cause different colors to be drawn when the PPU
+    STA PPUADDR   ; set ppu addr to $3F00 (again), then to $0000
+    STA PPUADDR   ; lots of commercial games do this.  Best I can figure is because they don't want to leave
+    STA PPUADDR   ; the PPU addr pointing to palettes because this can cause different colors to be drawn when the PPU
     RTS         ;  is off.  But why they change to $3F00 first is beyond me....
 
 
@@ -14162,8 +14162,8 @@ PaletteFrame:
     JSR WaitForVBlank_L      ; Wait for VBlank
     JSR DrawPalette_L        ; then update the palette
     LDA #0                   ; reset the scroll
-    STA $2005
-    STA $2005
+    STA PPUSCROLL
+    STA PPUSCROLL
     JMP CallMusicPlay_L      ; update music engine, then exit
 
 

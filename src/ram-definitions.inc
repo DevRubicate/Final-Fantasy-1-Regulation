@@ -158,10 +158,12 @@
     RESERVEZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
     RESERVEZP lvlup_curexp,                     0 ; 2 bytes      ; $80       ; 2 byte pointer to character's current EXP
     RESERVEZP btlptr,                           2 ; 2 bytes      ; $80
+    RESERVEZP levelup_lvlupptr,                 0 ; 2 bytes      ; $82       ; local, pointer to level up data
     RESERVEZP lvlup_exptoadv,                   0 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
     RESERVEZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
     RESERVEZP lvlup_chmagic,                    2 ; 2 bytes      ; $84       ; 2 byte pointer to character's magic data
     RESERVEZP lvlup_chstats,                    2 ; 2 bytes      ; $86       ; 2 byte pointer to character's OB stats
+    RESERVEZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
     RESERVEZP battlereward,                     3 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
     GAP                                         1
     RESERVEZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C
@@ -379,8 +381,10 @@
     GAP                                         72
     RESERVE btl_turnorder,                      13 ; $6848         ; $D entries (9 enemies + 4 characters)
     GAP                                         1
+    RESERVE levelup_loop,                       0 ; $6856
     RESERVE btl_mathbuf,                        0 ; $6856     ; $14 bytes?, 2 byte pairs, used as buffers for mathematical routines
     RESERVE math_hitchance,                     2 ; $6856
+    RESERVE levelup_statsindex,                 0 ; $6858
     RESERVE math_basedamage,                    2 ; $6858
     RESERVE math_numhits,                       0 ; $685A
     RESERVE math_magrandhit,                    2 ; $685A
@@ -450,6 +454,7 @@
     RESERVE btltmp_divLo,                       1 ; $688B
     RESERVE btltmp_divHi,                       1 ; $688C
     RESERVE btltmp_divV,                        1 ; $688D
+    RESERVE levelup_classid,                    1 ; $688E ; local, stores class ID
     RESERVE btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
     RESERVE btl_charcmdbuf,                     16 ; $688F
     RESERVE char_order_buf,                     0 ; $689F
@@ -474,8 +479,8 @@
     RESERVE btltmp_boxright,                    0 ; $68B5
     RESERVE btltmp_multC,                       1 ; $68B5
     GAP                                         1
-    RESERVE btl_soft2000,                       1 ; $68B7    ; soft copy of $2000 used in battles
-    RESERVE btl_soft2001,                       1 ; $68B8    ; soft copy of $2001 used in battles
+    RESERVE btl_soft2000,                       1 ; $68B7    ; soft copy of PPUCTRL used in battles
+    RESERVE btl_soft2001,                       1 ; $68B8    ; soft copy of PPUMASK used in battles
     GAP                                         1
     RESERVE btlbox_blockdata,                   1 ; $68BA
     GAP                                         99
@@ -498,6 +503,7 @@
     RESERVE btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
     RESERVE btlcurs_max,                        0 ; $6AAB     ; highest value for the cursor
     RESERVE btlcurs_y,                          1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
+    RESERVE levelup_statupbuffer,               0 ; $6AAC     ; 5 bytes indicating which stats have been increased
     RESERVE btlcurs_positions,                  1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
     GAP                                         36
     RESERVE btl_drawflagsA,                     1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead ; bit    4 = set to draw battle cursor ; bit    5 = set to draw weapon attack graphic ; bit    6 = set to draw magic graphic & flash BG.
@@ -532,7 +538,7 @@
     RESERVE btl_followupmusic,                  1 ; $6BA7 ; song to play in battle after current song finishes.  Moved to music_track once music_track has its high bit set  (does this ever happen?)
     RESERVE btl_charattrib,                     4 ; $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
     RESERVE btl_responddelay,                   1 ; $6BAC
-    GAP                                         1
+    RESERVE levelup_levindex,                   1 ; $6BAD ; local, stores the index to level up stats
     RESERVE btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
     RESERVE btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
     RESERVE btl_potion_pure,                    1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)

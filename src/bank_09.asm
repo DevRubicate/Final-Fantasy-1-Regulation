@@ -4203,14 +4203,14 @@ Minimap_DrawTitleCHR:
 
     @SmallLoop:
       LDA lut_MinimapTitleCHRDest_hi, Y  ; load up the destination PPU address for this
-      STA $2006                          ;  tile of the title graphic
+      STA PPUADDR                          ;  tile of the title graphic
       LDA lut_MinimapTitleCHRDest_lo, Y  ; get low byte as well
       CLC
       ADC lut_MinimapBitplane, X         ; and add bitplane/row info to low byte
-      STA $2006                          ;  before writing it
+      STA PPUADDR                          ;  before writing it
 
       LDA (minimap_ptr), Y   ; get the preloaded CHR data
-      STA $2007              ; and draw it
+      STA PPUDATA              ; and draw it
 
       INY                    ; inc loop counter/index
       CPY #$28
@@ -4225,11 +4225,11 @@ Minimap_DrawTitleCHR:
     STA minimap_ptr+1
 
     LDA soft2000             ; reset the scroll
-    STA $2000
+    STA PPUCTRL
     LDA #$00
-    STA $2005
+    STA PPUSCROLL
     LDA #$E8
-    STA $2005
+    STA PPUSCROLL
 
     JSR Minimap_DrawSFX       ; play ugly drawing sound effect
     INX
@@ -4402,7 +4402,7 @@ EnterMinimap:
     STA cur_bank           ; set cur bank (required for music routine)
 
     LDA #$00
-    STA $2001
+    STA PPUMASK
     STA $4015              ; turn off PPU and APU
 
     LDA #$41               ; switch to music track $41 (crystal theme)
@@ -4485,14 +4485,14 @@ Minimap_DrawDecorCHR:
 
     @SmallLoop:
       LDA lut_MinimapDecorCHRDest_hi, Y  ; load up the destination PPU address for this
-      STA $2006                          ;  tile of the title graphic
+      STA PPUADDR                          ;  tile of the title graphic
       LDA lut_MinimapDecorCHRDest_lo, Y  ; get low byte as well
       CLC
       ADC lut_MinimapBitplane, X         ; and add bitplane/row info to low byte
-      STA $2006                          ;  before writing it
+      STA PPUADDR                          ;  before writing it
 
       LDA (minimap_ptr), Y   ; get the preloaded CHR data
-      STA $2007              ; and draw it
+      STA PPUDATA              ; and draw it
 
       INY                    ; inc loop counter/index
       CPY #$30
@@ -4507,11 +4507,11 @@ Minimap_DrawDecorCHR:
     STA minimap_ptr+1
 
     LDA soft2000             ; reset the scroll
-    STA $2000
+    STA PPUCTRL
     LDA #$00
-    STA $2005
+    STA PPUSCROLL
     LDA #$E8
-    STA $2005
+    STA PPUSCROLL
 
     JSR Minimap_DrawSFX       ; play ugly drawing sound effect
     INX
@@ -4666,18 +4666,18 @@ lut_MinimapDecorCHRDest_hi:
 MinimapFrame:
     JSR WaitForVBlank_L    ; wait for VBlank
     LDA #>oam              ; Sprite DMA
-    STA $4014
+    STA OAMDMA
 
     JSR DrawPalette_L      ; draw the palette
     LDA #$1E               ; turn PPU on
-    STA $2001
+    STA PPUMASK
 
     LDA soft2000           ; reset scroll to $00,$E8
-    STA $2000
+    STA PPUCTRL
     LDA #$00
-    STA $2005
+    STA PPUSCROLL
     LDA #$E8
-    STA $2005
+    STA PPUSCROLL
 
     JSR CallMusicPlay_L    ; keep the music playing
 
@@ -4725,11 +4725,11 @@ Minimap_DrawRows:
 
       @RowLoop:
         LDA minimap_ptr+1    ; set PPU address
-        STA $2006
-        STX $2006
+        STA PPUADDR
+        STX PPUADDR
 
         LDA mm_drawbuf, X    ; get graphic from drawing buffer
-        STA $2007            ; and draw it
+        STA PPUDATA            ; and draw it
 
         TXA
         CLC
@@ -4739,11 +4739,11 @@ Minimap_DrawRows:
         BCC @RowLoop         ; keep looping until X wraps ($20 interations -- $10 tiles)
 
       LDA soft2000          ; drawing for this row is done -- reset the scroll
-      STA $2000
+      STA PPUCTRL
       LDA #$00
-      STA $2005
+      STA PPUSCROLL
       LDA #$E8
-      STA $2005
+      STA PPUSCROLL
 
       JSR Minimap_DrawSFX   ; play the ugly drawing sound effect
 
@@ -4908,11 +4908,11 @@ Minimap_FillNTPal:
    ; draw the NT data at lut_MinimapNT
    ;
 
-    LDA $2002          ; reset PPU toggle
-    LDA #>$2000        ; set PPU address to $2000  (start of nametables)
-    STA $2006
-    LDA #<$2000
-    STA $2006
+    LDA PPUSTATUS          ; reset PPU toggle
+    LDA #>PPUCTRL        ; set PPU address to PPUCTRL  (start of nametables)
+    STA PPUADDR
+    LDA #<PPUCTRL
+    STA PPUADDR
 
     LDA #<lut_MinimapNT
     STA tmp
@@ -4923,7 +4923,7 @@ Minimap_FillNTPal:
     LDY #$00            ; Y is low byte of counter and index
    @NTLoop:
        LDA (tmp), Y     ; get byte from LUT
-       STA $2007        ; draw it
+       STA PPUDATA        ; draw it
        INY              ; inc source index
        BNE @NTLoop      ; if it wrapped....
       INC tmp+1         ; inc high byte of source pointer
@@ -4934,17 +4934,17 @@ Minimap_FillNTPal:
    ; clear the BG pattern table
    ;
 
-    LDA $2002           ; reset PPU toggle
+    LDA PPUSTATUS           ; reset PPU toggle
     LDA #>$0000         ; set PPU address to $0000 (start of BG pattern table)
-    STA $2006
+    STA PPUADDR
     LDA #<$0000
-    STA $2006
+    STA PPUADDR
 
                         ; A=0
     LDY #$10            ; Y is high byte of loop counter
     LDX #$00            ; X is low byte
    @ClearCHRLoop:
-       STA $2007           ; zero out the pattern tables
+       STA PPUDATA           ; zero out the pattern tables
        INX
        BNE @ClearCHRLoop
       DEY
@@ -4954,16 +4954,16 @@ Minimap_FillNTPal:
    ; load CHR for sprites ("you are here" mark, and town/dungeon points)
    ;
 
-    LDA $2002          ; reset PPU toggle
+    LDA PPUSTATUS          ; reset PPU toggle
     LDA #>$1800        ; PPU address = $1800  (start of CHR for sprite tile $80)
-    STA $2006
+    STA PPUADDR
     LDA #<$1800
-    STA $2006
+    STA PPUADDR
 
     LDX #$00
    @SpriteCHRLoop:
       LDA lut_MinimapSprCHR, X
-      STA $2007                      ; copy the CHR to the PPU
+      STA PPUDATA                      ; copy the CHR to the PPU
       INX                            ; inc loop counter
       CPX #$20
       BCC @SpriteCHRLoop             ; loop until $20 bytes copied (2 tiles)
@@ -4992,19 +4992,19 @@ Minimap_FillNTPal:
 
     JSR WaitForVBlank_L   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
-    STA $4014
+    STA OAMDMA
 
     JSR DrawPalette_L     ; draw the palette
 
     LDA soft2000
-    STA $2000             ; set NT scroll and pattern page assignments
+    STA PPUCTRL             ; set NT scroll and pattern page assignments
     LDA #$0A
-    STA $2001             ; turn on BG rendering, but leave sprites invisible for now
+    STA PPUMASK             ; turn on BG rendering, but leave sprites invisible for now
 
     LDA #$00              ; set scroll to $00,$E8  (8 pixels up from bottom of the NT)
-    STA $2005             ;   since there's vertical mirroring, this scrolls up 8 pixels,
+    STA PPUSCROLL             ;   since there's vertical mirroring, this scrolls up 8 pixels,
     LDA #$E8              ;   which makes the screen appear to be 8 pixels lower than
-    STA $2005             ;   what you might expect.  This centers the image on the screen a bit better
+    STA PPUSCROLL             ;   what you might expect.  This centers the image on the screen a bit better
                           ; The NT could've just been drawn 1 tile down.. but that would mess with
                           ; attribute alignment
 
