@@ -511,3 +511,37 @@ en_gp           = $0F  ; 2 bytes
 en_enemyid      = $11
 en_unknown12    = $12  ; low byte of HP max
 en_unknown13    = $13  ; not initialized?  probably suppoed to be high byte of HP max
+
+;; Battle stuff
+MATHBUF_HITCHANCE           = 0
+MATHBUF_BASEDAMAGE          = 1
+MATHBUF_NUMHITS             = 2
+MATHBUF_MAGRANDHIT          = 2
+MATHBUF_CATEGORY            = 3
+MATHBUF_ELEMENT             = 4
+MATHBUF_RANDHIT             = 4
+MATHBUF_DMGCALC             = 5
+MATHBUF_CRITCHANCE          = 6
+MATHBUF_AILMENTCHANCE       = 7
+MATHBUF_MAGDEFENDERHP       = $12
+MATHBUF_DEFENDERHP          = $13
+MATHBUF_MAGDEFENDERMAXHP    = $15
+MATHBUF_TOTALDAMAGE         = $16
+
+btlch_slotindex   = $00
+btlch_class       = $01
+btlch_ailments    = $02       ; appears not to be used?  OB always seems to be used
+btlch_hp          = $03       ; appears not to be used?  OB always seems to be used
+btlch_hitrate     = $05
+btlch_magdef      = $06
+btlch_evade       = $07
+btlch_absorb      = $08
+btlch_dmg         = $09
+btlch_elemresist  = $0A
+btlch_numhitsmult = $0B
+btlch_numhits     = $0C
+btlch_category    = $0D           ; always 0 since players have no category assigned
+btlch_elemweak    = $0E           ; always 0 (players can't have weaknesses)
+btlch_critrate    = $0F
+btlch_wepgfx      = $10
+btlch_wepplt      = $11

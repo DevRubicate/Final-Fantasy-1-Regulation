@@ -23,184 +23,184 @@
 .endif
     ; for sound channels (between Bx-Dx)
     ;  see constants.inc
-    RESERVEZP ch_scoreptr,        2   ; $00
-    RESERVEZP ch_envptr,          2   ; $02 ptr to start of env data
-    RESERVEZP ch_envpos,          1   ; $04 pos in env data (00-1F)
-    RESERVEZP ch_lenctr,          1   ; $05 counter for score data (note length)
-    RESERVEZP ch_frqtblptr,       1   ; $06 pointer to freq table (changes per octave)
-    RESERVEZP story_dropinput,    1   ; $07
-    RESERVEZP ch_lentblptr,       2   ; $08 pointer to length table (changes per tempo)
-    RESERVEZP ch_envrate,         1   ; $0A rate/speed of env table traversal
-    RESERVEZP ch_envrem,          1   ; $0B remaining "fraction" of env data (3 bits of fraction)
-    RESERVEZP ch_vol,             1   ; $0C output volume
-    RESERVEZP inroom,             0   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
-    RESERVEZP ch_loopctr,         1   ; $0D remaining loop counter
-    RESERVEZP doorppuaddr,        0   ; $0E 2 bytes, PPU address of door drawing work
-    RESERVEZP ch_freq,            1   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
-    GAP                           1
-    RESERVEZP tmp,                     16 ; 16 bytes
-    mu_scoreptr := tmp+8  ;2 bytes, shared tmp
-    dlgbox_row :=  tmp+$C  ; shared tmp
-    palcyc_mode := tmp+$C  ; shared tmp
-    RESERVEZP joy,                     1 ; $20
-    RESERVEZP joy_ignore,              1 ; $21
-    RESERVEZP joy_select,              1 ; $22
-    RESERVEZP joy_start,               1 ; $23
-    RESERVEZP joy_a,                   1 ; $24
-    RESERVEZP joy_b,                   1 ; $25
-    RESERVEZP sprindex,                1 ; $26
-
-    RESERVEZP ow_scroll_x,             1 ; $27  ; X scroll of OW in tiles
-    RESERVEZP ow_scroll_y,             1 ; $28  ; Y scroll in tiles
-    RESERVEZP sm_scroll_x,             1 ; $29  ; ditto, but for standard maps
-    RESERVEZP sm_scroll_y,             1 ; $2A
-    RESERVEZP mapdraw_x,               1 ; $2B
-    RESERVEZP mapdraw_y,               1 ; $2C
-    RESERVEZP mapflags,                1 ; $2D  ; bit 0 set when in standard map.  bit 1 set to indicate column drawing instead of row drawing
+    RESERVEZP ch_scoreptr,             2 ; 2 bytes   ; $00
+    RESERVEZP ch_envptr,               2 ; 2 bytes   ; $02 ptr to start of env data
+    RESERVEZP ch_envpos,               1 ; 1 bytes   ; $04 pos in env data (00-1F)
+    RESERVEZP ch_lenctr,               1 ; 1 bytes   ; $05 counter for score data (note length)
+    RESERVEZP ch_frqtblptr,            1 ; 1 bytes   ; $06 pointer to freq table (changes per octave)
+    RESERVEZP story_dropinput,         1 ; 1 bytes   ; $07
+    RESERVEZP ch_lentblptr,            2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
+    RESERVEZP ch_envrate,              1 ; 1 bytes   ; $0A rate/speed of env table traversal
+    RESERVEZP ch_envrem,               1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
+    RESERVEZP ch_vol,                  1 ; 1 bytes   ; $0C output volume
+    RESERVEZP inroom,                  0 ; 1 bytes   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
+    RESERVEZP ch_loopctr,              1 ; 1 bytes   ; $0D remaining loop counter
+    RESERVEZP ch_freq,                 0 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
+    RESERVEZP doorppuaddr,             2 ; 2 bytes   ; $0E 2 bytes, PPU address of door drawing work
+    RESERVEZP tmp,                     0 ; 16 bytes  ; $10
+    GAP                                8
+    RESERVEZP mu_scoreptr,             2 ; 2 bytes   ; $18
     GAP                                1
-    RESERVEZP scroll_y,                1 ; $2F  ; Y scroll in tiles (16x16).  range=0-E
-    RESERVEZP mapdraw_nty,             1 ; $30
-    RESERVEZP mapdraw_ntx,             1 ; $31
-    RESERVEZP mapdraw_job,             1 ; $32  ; 0=no job, 1=draw attribs, 2=draw tiles
-    RESERVEZP mg_slidedir,             0 ; $33  ; shared
-    RESERVEZP facing,                  1 ; $33  ; 1=R  2=L  4=D  8=U
-    RESERVEZP move_speed,              1 ; $34  ; pixels to move per frame (map)
-    RESERVEZP move_ctr_x,              1 ; $35  ; pixels between tiles (map movement -- 00-0F)
-    RESERVEZP move_ctr_y,              1 ; $36  ; ditto but for Y axis
-    RESERVEZP menustall,               1 ; $37       ; see MenuCondStall in bank F for explanation
-    RESERVEZP box_x,                   0 ; $38
-    RESERVEZP theend_x,                1 ; $38
-    RESERVEZP box_y,                   0 ; $39
-    RESERVEZP theend_y,                1 ; $39
-    RESERVEZP dest_x,                  1 ; $3A
-    RESERVEZP dest_y,                  1 ; $3B
-    RESERVEZP box_wd,                  0 ; $3C ; shared
-    RESERVEZP dest_wd,                 1 ; $3C
-    RESERVEZP box_ht,                  0 ; $3D ; shared
-    RESERVEZP dest_ht,                 1 ; $3D
-    RESERVEZP image_ptr,               0 ; $3E ; shared
-    RESERVEZP text_ptr,                2 ; $3E ; 2 bytes
-    RESERVEZP spr_x,                   1 ; $40
-    RESERVEZP mm_maprow,               0 ; $41 ; shared
-    RESERVEZP spr_y,                   1 ; $41
-    RESERVEZP vehicle,                 1 ; $42 ;1=walking, 2=canoe, 4=ship, 8=airship
-    RESERVEZP inforest,                1 ; $43 ; nonzero if in forest
-    RESERVEZP tileprop,                2 ; $44 ; 2 bytes
-    RESERVEZP vehicle_next,            1 ; $46 ; vehicle we're walking onto
-    RESERVEZP vehchgpause,             1 ; $47 ; forced pause when changing vehicles
-    RESERVEZP cur_map,                 1 ; $48
-    RESERVEZP cur_tileset,             1 ; $49
-    RESERVEZP cur_mapobj,              1 ; $4A ; counter for updating which map object
-    RESERVEZP music_track,             1 ; $4B
-    RESERVEZP mu_chanprimer,           1 ; $4C
-    RESERVEZP mu_chan,                 1 ; $4D
+    RESERVEZP dlgbox_row,              0 ; 1 bytes   ; $1B
+    RESERVEZP palcyc_mode,             1 ; 1 bytes   ; $1B
+    GAP                                4
+    RESERVEZP joy,                     1 ; 1 bytes      ; $20
+    RESERVEZP joy_ignore,              1 ; 1 bytes      ; $21
+    RESERVEZP joy_select,              1 ; 1 bytes      ; $22
+    RESERVEZP joy_start,               1 ; 1 bytes      ; $23
+    RESERVEZP joy_a,                   1 ; 1 bytes      ; $24
+    RESERVEZP joy_b,                   1 ; 1 bytes      ; $25
+    RESERVEZP sprindex,                1 ; 1 bytes      ; $26
+    RESERVEZP ow_scroll_x,             1 ; 1 bytes      ; $27  ; X scroll of OW in tiles
+    RESERVEZP ow_scroll_y,             1 ; 1 bytes      ; $28  ; Y scroll in tiles
+    RESERVEZP sm_scroll_x,             1 ; 1 bytes      ; $29  ; ditto, but for standard maps
+    RESERVEZP sm_scroll_y,             1 ; 1 bytes      ; $2A
+    RESERVEZP mapdraw_x,               1 ; 1 bytes      ; $2B
+    RESERVEZP mapdraw_y,               1 ; 1 bytes      ; $2C
+    RESERVEZP mapflags,                1 ; 1 bytes      ; $2D  ; bit 0 set when in standard map.  bit 1 set to indicate column drawing instead of row drawing
+    GAP                                1
+    RESERVEZP scroll_y,                1 ; 1 bytes      ; $2F  ; Y scroll in tiles (16x16).  range=0-E
+    RESERVEZP mapdraw_nty,             1 ; 1 bytes      ; $30
+    RESERVEZP mapdraw_ntx,             1 ; 1 bytes      ; $31
+    RESERVEZP mapdraw_job,             1 ; 1 bytes      ; $32  ; 0=no job, 1=draw attribs, 2=draw tiles
+    RESERVEZP mg_slidedir,             0 ; 1 bytes      ; $33  ; shared
+    RESERVEZP facing,                  1 ; 1 bytes      ; $33  ; 1=R  2=L  4=D  8=U
+    RESERVEZP move_speed,              1 ; 1 bytes      ; $34  ; pixels to move per frame (map)
+    RESERVEZP move_ctr_x,              1 ; 1 bytes      ; $35  ; pixels between tiles (map movement -- 00-0F)
+    RESERVEZP move_ctr_y,              1 ; 1 bytes      ; $36  ; ditto but for Y axis
+    RESERVEZP menustall,               1 ; 1 bytes      ; $37       ; see MenuCondStall in bank F for explanation
+    RESERVEZP box_x,                   0 ; 1 bytes      ; $38
+    RESERVEZP theend_x,                1 ; 1 bytes      ; $38
+    RESERVEZP box_y,                   0 ; 1 bytes      ; $39
+    RESERVEZP theend_y,                1 ; 1 bytes      ; $39
+    RESERVEZP dest_x,                  1 ; 1 bytes      ; $3A
+    RESERVEZP dest_y,                  1 ; 1 bytes      ; $3B
+    RESERVEZP box_wd,                  0 ; 1 bytes      ; $3C ; shared
+    RESERVEZP dest_wd,                 1 ; 1 bytes      ; $3C
+    RESERVEZP box_ht,                  0 ; 1 bytes      ; $3D ; shared
+    RESERVEZP dest_ht,                 1 ; 1 bytes      ; $3D
+    RESERVEZP image_ptr,               0 ; 1 bytes      ; $3E ; shared
+    RESERVEZP text_ptr,                2 ; 2 bytes      ; $3E ; 2 bytes
+    RESERVEZP spr_x,                   1 ; 1 bytes      ; $40
+    RESERVEZP mm_maprow,               0 ; 1 bytes      ; $41 ; shared
+    RESERVEZP spr_y,                   1 ; 1 bytes      ; $41
+    RESERVEZP vehicle,                 1 ; 1 bytes      ; $42 ;1=walking, 2=canoe, 4=ship, 8=airship
+    RESERVEZP inforest,                1 ; 1 bytes      ; $43 ; nonzero if in forest
+    RESERVEZP tileprop,                2 ; 2 bytes      ; $44 ; 2 bytes
+    RESERVEZP vehicle_next,            1 ; 1 bytes      ; $46 ; vehicle we're walking onto
+    RESERVEZP vehchgpause,             1 ; 1 bytes      ; $47 ; forced pause when changing vehicles
+    RESERVEZP cur_map,                 1 ; 1 bytes      ; $48
+    RESERVEZP cur_tileset,             1 ; 1 bytes      ; $49
+    RESERVEZP cur_mapobj,              1 ; 1 bytes      ; $4A ; counter for updating which map object
+    RESERVEZP music_track,             1 ; 1 bytes      ; $4B
+    RESERVEZP mu_chanprimer,           1 ; 1 bytes      ; $4C
+    RESERVEZP mu_chan,                 1 ; 1 bytes      ; $4D
     GAP                                2
-    RESERVEZP entering_shop,           1 ; $50 ; nonzero = about to enter shop
-    RESERVEZP shop_id,                 1 ; $51
-    RESERVEZP tileprop_now,            1 ; $52 ; special tile properties that we're on (tileprop isn't necessarily what we're standing on)
-    RESERVEZP ow_tile,                 1 ; $53
-    RESERVEZP ppu_dest,                2 ; $54  ; 2 bytes
-    RESERVEZP dlgflg_reentermap,       1 ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
-    RESERVEZP cur_bank,                1 ; $57
-    RESERVEZP ret_bank,                1 ; $58
+    RESERVEZP entering_shop,           1 ; 1 bytes      ; $50 ; nonzero = about to enter shop
+    RESERVEZP shop_id,                 1 ; 1 bytes      ; $51
+    RESERVEZP tileprop_now,            1 ; 1 bytes      ; $52 ; special tile properties that we're on (tileprop isn't necessarily what we're standing on)
+    RESERVEZP ow_tile,                 1 ; 1 bytes      ; $53
+    RESERVEZP ppu_dest,                2 ; 2 bytes      ; $54  ; 2 bytes
+    RESERVEZP dlgflg_reentermap,       1 ; 1 bytes      ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
+    RESERVEZP cur_bank,                1 ; 1 bytes      ; $57
+    RESERVEZP ret_bank,                1 ; 1 bytes      ; $58
     GAP                                3
-    RESERVEZP name_input_draw_buf,     1 ; $5C
+    RESERVEZP name_input_draw_buf,     1 ; 1 bytes      ; $5C
     GAP                                3
-    RESERVEZP format_buf,              1 ; $60  ; 7 bytes (5A-60) -- must not cross page bound
-    RESERVEZP shutter_a,               0 ; $61  ; shared
-    RESERVEZP lu_cursor,               0 ; $61  ; shared
-    RESERVEZP mm_bplo,                 0 ; $61  ; shared
-    RESERVEZP dlg_itemid,              0 ; $61  ; shared
-    RESERVEZP equipmenu_tmp,           0 ; $61  ; shared
-    RESERVEZP joy_prevdir,             1 ; $61
-    RESERVEZP shutter_b,               0 ; $62  ; shared
-    RESERVEZP lu_cursor2,              0 ; $62  ; shared
-    RESERVEZP mm_bphi,                 0 ; $62  ; shared
-    RESERVEZP intro_ataddr,            0 ; $62  ; shared
-    RESERVEZP cursor,                  0 ; $62
-    RESERVEZP theend_src,              1 ; $62
-    RESERVEZP lu_mode,                 0 ; $63  ; shared
-    RESERVEZP intro_atbyte,            0 ; $63  ; shared
-    RESERVEZP cursor_max,              0 ; $63
-    RESERVEZP cursor2,                 1 ; $63  ; shared (secondary cursor)
-    RESERVEZP lu_joyprev,              0 ; $64  ; shared
-    RESERVEZP intro_color,             0 ; $64  ; shared
-    RESERVEZP mg_slidespr,             0 ; $64  ; shared, 3 bytes
-    RESERVEZP namecurs_x,              0 ; $64
-    RESERVEZP shopcurs_x,              0 ; $64  ; shared
-    RESERVEZP eq_modecurs,             0 ; $64  ; shared
-    RESERVEZP hp_recovery,             0 ; $64
-    RESERVEZP minimap_ptr,             1 ; $64  ; shared, 2 bytes
-    RESERVEZP mp_required,             0 ; $65
-    RESERVEZP namecurs_y,              0 ; $65
-    RESERVEZP shopcurs_y,              0 ; $65  ; shared
-    RESERVEZP story_credits,           1 ; $65  ; shared
-    RESERVEZP submenu_targ,            0 ; $66  ; shared with shop_type
-    RESERVEZP shop_type,               0 ; $66
-    RESERVEZP story_page,              0 ; $66  ; shared
-    RESERVEZP equipoffset,             1 ; $66  ; MUST be shared with shop_type
-    RESERVEZP story_timer,             0 ; $67  ; shared
-    RESERVEZP draweq_stradd,           0 ; $67  ; shared
-    RESERVEZP char_index,              0 ; $67
-    RESERVEZP mm_pixrow,               0 ; $67  ; shared
-    RESERVEZP talkobj,                 1 ; $67  ; shared -- object you're talking to on SM
-    RESERVEZP sm_player_x,             1 ; $68  ; player X/Y position on standard map.  Only used for NPC collision detection
-    RESERVEZP sm_player_y,             1 ; $69
-    RESERVEZP btlformation,            1 ; $6A
-    RESERVEZP enCHRpage,               1 ; $6B
-    RESERVEZP altareffect,             1 ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
+    RESERVEZP format_buf,              1 ; 7 bytes     ; $60  ; 7 bytes (5A-60) -- must not cross page bound
+    RESERVEZP shutter_a,               0 ; 1 bytes     ; $61  ; shared
+    RESERVEZP lu_cursor,               0 ; 1 bytes     ; $61  ; shared
+    RESERVEZP mm_bplo,                 0 ; 1 bytes     ; $61  ; shared
+    RESERVEZP dlg_itemid,              0 ; 1 bytes     ; $61  ; shared
+    RESERVEZP equipmenu_tmp,           0 ; 1 bytes     ; $61  ; shared
+    RESERVEZP joy_prevdir,             1 ; 1 bytes     ; $61
+    RESERVEZP shutter_b,               0 ; 1 bytes     ; $62  ; shared
+    RESERVEZP lu_cursor2,              0 ; 1 bytes     ; $62  ; shared
+    RESERVEZP mm_bphi,                 0 ; 1 bytes     ; $62  ; shared
+    RESERVEZP intro_ataddr,            0 ; 1 bytes     ; $62  ; shared
+    RESERVEZP cursor,                  0 ; 1 bytes     ; $62
+    RESERVEZP theend_src,              1 ; 1 bytes     ; $62
+    RESERVEZP lu_mode,                 0 ; 1 bytes     ; $63  ; shared
+    RESERVEZP intro_atbyte,            0 ; 1 bytes     ; $63  ; shared
+    RESERVEZP cursor_max,              0 ; 1 bytes     ; $63
+    RESERVEZP cursor2,                 1 ; 1 bytes     ; $63  ; shared (secondary cursor)
+    RESERVEZP lu_joyprev,              0 ; 1 bytes     ; $64  ; shared
+    RESERVEZP intro_color,             0 ; 1 bytes     ; $64  ; shared
+    RESERVEZP mg_slidespr,             0 ; 3 bytes     ; $64  ; shared, 3 bytes
+    RESERVEZP namecurs_x,              0 ; 1 bytes     ; $64
+    RESERVEZP shopcurs_x,              0 ; 1 bytes     ; $64  ; shared
+    RESERVEZP eq_modecurs,             0 ; 1 bytes     ; $64  ; shared
+    RESERVEZP hp_recovery,             0 ; 1 bytes     ; $64
+    RESERVEZP minimap_ptr,             1 ; 2 bytes     ; $64  ; shared, 2 bytes
+    RESERVEZP mp_required,             0 ; 1 bytes     ; $65
+    RESERVEZP namecurs_y,              0 ; 1 bytes     ; $65
+    RESERVEZP shopcurs_y,              0 ; 1 bytes     ; $65  ; shared
+    RESERVEZP story_credits,           1 ; 1 bytes     ; $65  ; shared
+    RESERVEZP submenu_targ,            0 ; 1 bytes     ; $66  ; shared with shop_type
+    RESERVEZP shop_type,               0 ; 1 bytes     ; $66
+    RESERVEZP story_page,              0 ; 1 bytes     ; $66  ; shared
+    RESERVEZP equipoffset,             1 ; 1 bytes     ; $66  ; MUST be shared with shop_type
+    RESERVEZP story_timer,             0 ; 1 bytes     ; $67  ; shared
+    RESERVEZP draweq_stradd,           0 ; 1 bytes     ; $67  ; shared
+    RESERVEZP char_index,              0 ; 1 bytes     ; $67
+    RESERVEZP mm_pixrow,               0 ; 1 bytes     ; $67  ; shared
+    RESERVEZP talkobj,                 1 ; 1 bytes     ; $67  ; shared -- object you're talking to on SM
+    RESERVEZP sm_player_x,             1 ; 1 bytes     ; $68  ; player X/Y position on standard map.  Only used for NPC collision detection
+    RESERVEZP sm_player_y,             1 ; 1 bytes     ; $69
+    RESERVEZP btlformation,            1 ; 1 bytes     ; $6A
+    RESERVEZP enCHRpage,               1 ; 1 bytes     ; $6B
+    RESERVEZP altareffect,             1 ; 1 bytes     ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
     GAP                                15
-    RESERVEZP dlgmusic_backup,         1 ; $7C  ; backup music track for restoring music after the dialogue box changes it
-    RESERVEZP dlgsfx,                  1 ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
-    RESERVEZP sq2_sfx,                 1 ; $7E
-    RESERVEZP descboxopen,             1 ; $7F
-    RESERVEZP btl_ib_charstat_ptr,     0 ; $80
-    RESERVEZP lvlup_curexp,            0 ; $80       ; 2 byte pointer to character's current EXP
-    RESERVEZP btlptr,                  2 ; $80
-    RESERVEZP lvlup_exptoadv,          0 ; $82       ; 2 byte pointer to EXP needed to advance
-    RESERVEZP btl_ob_charstat_ptr,     2 ; $82
-    RESERVEZP lvlup_chmagic,           2 ; $84       ; 2 byte pointer to character's magic data
-    RESERVEZP lvlup_chstats,           2 ; $86       ; 2 byte pointer to character's OB stats
-    RESERVEZP battlereward,            3 ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly
+    RESERVEZP dlgmusic_backup,         1 ; 1 bytes      ; $7C  ; backup music track for restoring music after the dialogue box changes it
+    RESERVEZP dlgsfx,                  1 ; 1 bytes      ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
+    RESERVEZP sq2_sfx,                 1 ; 1 bytes      ; $7E
+    RESERVEZP descboxopen,             1 ; 1 bytes      ; $7F
+    RESERVEZP btl_ib_charstat_ptr,     0 ; 1 bytes      ; $80
+    RESERVEZP lvlup_curexp,            0 ; 2 bytes      ; $80       ; 2 byte pointer to character's current EXP
+    RESERVEZP btlptr,                  2 ; 2 bytes      ; $80
+    RESERVEZP lvlup_exptoadv,          0 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
+    RESERVEZP btl_ob_charstat_ptr,     2 ; 2 bytes      ; $82
+    RESERVEZP lvlup_chmagic,           2 ; 2 bytes      ; $84       ; 2 byte pointer to character's magic data
+    RESERVEZP lvlup_chstats,           2 ; 2 bytes      ; $86       ; 2 byte pointer to character's OB stats
+    RESERVEZP battlereward,            3 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly
                                     ;  if rewards ever exceed the 2-byte boundary, since the game assumes you
                                     ;  will never receive more than 65535 XP/GP in any one battle.
     GAP                                1
-    RESERVEZP btldraw_blockptrstart,   2 ;  $8C
-    RESERVEZP btldraw_blockptrend,     2 ;  $8E
-
-    RESERVEZP btl_entityptr_ibram,     0 ;  $90
-    RESERVEZP btldraw_src,             0 ;  $90   ; source data
-    RESERVEZP btlsfx_frontseat,        0 ;  $90   ; where battle sfx data is stored in zero page
-    RESERVEZP btltmp,                  2 ;  $90  ; 16 bytes ?
-    RESERVEZP btl_entityptr_obrom,     0 ;  $92
-    RESERVEZP btldraw_dst,             2 ;  $92   ; destination pointer
-    RESERVEZP btlsfx_framectr,         0 ;  $94   ; The total frame counter for the entire sound effect
-    RESERVEZP btldraw_subsrc,          2 ;  $94   ; source pointer of substring
+    RESERVEZP btldraw_blockptrstart,   2 ; 2 bytes      ; $8C
+    RESERVEZP btldraw_blockptrend,     2 ; 2 bytes      ; $8E
+    RESERVEZP btl_entityptr_ibram,     0 ; 2 bytes      ; $90
+    RESERVEZP btldraw_src,             0 ; 2 bytes      ; $90   ; source data
+    RESERVEZP btlsfx_frontseat,        0 ; 1 bytes      ; $90   ; where battle sfx data is stored in zero page
+    RESERVEZP btltmp,                  2 ; 16 bytes     ; $90  ; 16 bytes ?
+    RESERVEZP btl_entityptr_obrom,     0 ; 1 bytes      ; $92
+    RESERVEZP btldraw_dst,             2 ; 2 bytes      ; $92   ; destination pointer
+    RESERVEZP btlsfx_framectr,         0 ; 1 bytes      ; $94   ; The total frame counter for the entire sound effect
+    RESERVEZP btldraw_subsrc,          2 ; 2 bytes      ; $94   ; source pointer of substring
     GAP                                2
-    RESERVEZP btlsfxsq2_len,           0 ;  $98
-    RESERVEZP btl_magdataptr,          1 ;  $98
-    RESERVEZP btlsfxnse_len,           1 ;  $99
-    RESERVEZP btlsfxsq2_framectr,      1 ;  $9A
-    RESERVEZP btlsfxnse_framectr,      1 ;  $9B
-    RESERVEZP btlsfxsq2_ptr,           2 ;  $9C
-    RESERVEZP btlsfxnse_ptr,           1 ;  $9E
-    RESERVEZP btldraw_max,             1 ;  $9F   ; maximum characters to draw
+    RESERVEZP btlsfxsq2_len,           0 ; 1 bytes      ; $98
+    RESERVEZP btl_magdataptr,          1 ; 2 bytes      ; $98
+    RESERVEZP btlsfxnse_len,           1 ; 1 bytes      ; $99
+    RESERVEZP btlsfxsq2_framectr,      1 ; 1 bytes      ; $9A
+    RESERVEZP btlsfxnse_framectr,      1 ; 1 bytes      ; $9B
+    RESERVEZP btlsfxsq2_ptr,           2 ; 2 bytes      ; $9C
+    RESERVEZP btlsfxnse_ptr,           1 ; 2 bytes      ; $9E
+    RESERVEZP btldraw_max,             1 ; 1 bytes      ; $9F   ; maximum characters to draw
     GAP                                1
-    RESERVEZP actual_bank,             1 ;  $A1
+    RESERVEZP actual_bank,             1 ; 1 bytes      ;  $A1
     GAP                                78
-    RESERVEZP framecounter,            2 ;  $F0  ; 2 bytes!
+    RESERVEZP framecounter,            2 ; 2 bytes      ;  $F0  ; 2 bytes!
     GAP                                2
-    RESERVEZP npcdir_seed,             1 ;  $F4  ; RNG seed for determining direction for NPCs to walk
-    RESERVEZP battlestep,              1 ;  $F5
-    RESERVEZP battlestep_sign,         1 ;  $F6
-    RESERVEZP battlecounter,           1 ;  $F7
-    RESERVEZP battlerate,              1 ;  $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
-    RESERVEZP startintrocheck,         1 ;  $F9
-    RESERVEZP respondrate,             1 ;  $FA
+    RESERVEZP npcdir_seed,             1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
+    RESERVEZP battlestep,              1 ; 1 bytes      ; $F5
+    RESERVEZP battlestep_sign,         1 ; 1 bytes      ; $F6
+    RESERVEZP battlecounter,           1 ; 1 bytes      ; $F7
+    RESERVEZP battlerate,              1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
+    RESERVEZP startintrocheck,         1 ; 1 bytes      ; $F9
+    RESERVEZP respondrate,             1 ; 1 bytes      ; $FA
     GAP                                2
-    RESERVEZP NTsoft2000,              1 ;  $FD  ; same as soft2000, but used to track coarse NT scroll
-    RESERVEZP unk_FE,                  1 ;  $FE
-    RESERVEZP soft2000,                0 ;  $FF
+    RESERVEZP NTsoft2000,              1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
+    RESERVEZP unk_FE,                  1 ; 1 bytes      ; $FE
+    RESERVEZP soft2000,                0 ; 1 bytes      ; $FF
 
 .ifdef _DEFINE_MEMORY
     .segment "STACK"
@@ -221,60 +221,49 @@
 .endif
 
 
-    RESERVE puzzle,          0 ; $0300
-    RESERVE item_box,        0 ; $0300 $20? bytes -- shares space with str_buf
-    RESERVE str_buf,         0 ; $0300 $39 bytes at least -- buffer must not cross page
-    RESERVE ptygen,          40  ; $40 bytes, shared
-    ptygen_class   := ptygen
-    ptygen_name    := ptygen+2
-    ptygen_name_x  := ptygen+6
-    ptygen_name_y  := ptygen+7
-    ptygen_class_x := ptygen+8
-    ptygen_class_y := ptygen+9
-    ptygen_spr_x   := ptygen+$A
-    ptygen_spr_y   := ptygen+$B
-    ptygen_box_x   := ptygen+$C
-    ptygen_box_y   := ptygen+$D
-    ptygen_curs_x  := ptygen+$E
-    ptygen_curs_y  := ptygen+$F
-
-
-    shop_charindex  = $030A  ; shared
-    shop_spell      = $030B  ; shared
-    shop_curitem    = $030C  ; shared
-    shop_curprice   = $030E  ; 2 shared bytes
-
-    GAP                     152
-    RESERVE cur_pal,        32 ; $03C0       ; 32 bytes
-    inroom_pal      = cur_pal+$20 ; 16 bytes
-    tmp_pal         = $03F0       ; 16 bytes
-    GAP                     32
-    RESERVE tileset_data,   400 ; $0400 $400 bytes -- must be on page bound
-    GAP                     496
-    mm_drawbuf      = $0500  ;$100 bytes, shared, should be on page bound, but don't think it's absolutely required
-    mm_mapbuf       = $0600  ; same
-    mm_mapbuf2      = $0700  ; same
-
-    tileset_prop    = tileset_data  ; 256 bytes, 2 bytes per tile
-    tsa_ul          = tileset_data+$100  ; 128 bytes
-    tsa_ur          = tileset_data+$180  ; 128
-    tsa_dl          = tileset_data+$200  ; 128
-    tsa_dr          = tileset_data+$280  ; 128
-    tsa_attr        = tileset_data+$300  ; 128
-    load_map_pal    = tileset_data+$380  ; $30  (shared with draw_buf -- hence only for loading)
-
-
-    RESERVE draw_buf,        128    ; $0780  ; 128
-    draw_buf_ul     = draw_buf
-    draw_buf_ur     = draw_buf + $10
-    draw_buf_dl     = draw_buf + $20
-    draw_buf_dr     = draw_buf + $30
-    draw_buf_attr   = draw_buf + $40
-    draw_buf_at_hi  = draw_buf + $50
-    draw_buf_at_lo  = draw_buf + $60
-    draw_buf_at_msk = draw_buf + $70
-
-
+    RESERVE puzzle,             0 ; 16 bytes     ; $0300
+    RESERVE item_box,           0 ; 32 bytes     ; $0300 $20? bytes -- shares space with str_buf
+    RESERVE str_buf,            0 ; 57 bytes    ; $0300 $39 bytes at least -- buffer must not cross page
+    RESERVE ptygen,             0 ; 64 bytes     ; $0300 ; $40 bytes, shared
+    RESERVE ptygen_class,       2 ; 2 bytes  ; $0300
+    RESERVE ptygen_name,        4 ; 4 bytes  ; $0302
+    RESERVE ptygen_name_x,      1 ; 1 bytes  ; $0306
+    RESERVE ptygen_name_y,      1 ; 1 bytes  ; $0307
+    RESERVE ptygen_class_x,     1 ; 1 bytes  ; $0308
+    RESERVE ptygen_class_y,     1 ; 1 bytes  ; $0309
+    RESERVE shop_charindex,     0 ; 1 bytes  ; $030A  ; shared
+    RESERVE ptygen_spr_x,       1 ; 1 bytes  ; $030A
+    RESERVE shop_spell,         0 ; 1 bytes  ; $030B  ; shared
+    RESERVE ptygen_spr_y,       1 ; 1 bytes  ; $030B
+    RESERVE shop_curitem,       0 ; 1 bytes  ; $030C  ; shared
+    RESERVE ptygen_box_x,       1 ; 1 bytes  ; $030C
+    RESERVE ptygen_box_y,       1 ; 1 bytes  ; $030D
+    RESERVE shop_curprice,      0 ; 2 bytes  ; $030E  ; 2 shared bytes
+    RESERVE ptygen_curs_x,      1 ; 1 bytes  ; $030E
+    RESERVE ptygen_curs_y,      1 ; 1 bytes  ; $030F
+    GAP                         176
+    RESERVE cur_pal,            32  ; 32 bytes      ; $03C0       ; 32 bytes
+    RESERVE inroom_pal,         16  ; 16 bytes      ; $03E0 ; cur_pal+$20 ; 16 bytes
+    RESERVE tmp_pal,            16  ; 16 bytes      ; $03F0       ; 16 bytes
+    RESERVE tileset_prop,       0   ; 256 bytes     ; $0400  ; 256 bytes, 2 bytes per tile
+    RESERVE tileset_data,       256 ; 1024 bytes    ; $0400 ; 1024 bytes -- must be on page bound
+    RESERVE tsa_ul,             0   ; 128 bytes     ; $0500  ; 128 bytes
+    RESERVE mm_drawbuf,         128 ; 256 bytes     ; $0500  ; 256 bytes, shared, should be on page bound, but don't think it's absolutely required
+    RESERVE tsa_ur,             128 ; 128 bytes     ; $0580  ; 128 bytes
+    RESERVE mm_mapbuf,          0   ; 256 bytes     ; $0600  ; 256 bytes, same
+    RESERVE tsa_dl,             128 ; 128 bytes     ; $0600  ; 128 bytes
+    RESERVE tsa_dr,             128 ; 128 bytes     ; $0680  ; 128 bytes
+    RESERVE tsa_attr,           0   ; 128 bytes     ; $0700  ; 128 bytes
+    RESERVE mm_mapbuf2,         128 ; 256 bytes     ; $0700  ; 256 bytes, same
+    RESERVE load_map_pal,       0   ; 48 bytes      ; $0780  ; 48 bytes  (shared with draw_buf -- hence only for loading)
+    RESERVE draw_buf_ul,        16  ; 16 bytes      ; $0780
+    RESERVE draw_buf_ur,        16  ; 16 bytes      ; $0790
+    RESERVE draw_buf_dl,        16  ; 16 bytes      ; $07A0
+    RESERVE draw_buf_dr,        16  ; 16 bytes      ; $07B0
+    RESERVE draw_buf_attr,      16  ; 16 bytes      ; $07C0
+    RESERVE draw_buf_at_hi,     16  ; 16 bytes      ; $07D0
+    RESERVE draw_buf_at_lo,     16  ; 16 bytes      ; $07E0
+    RESERVE draw_buf_at_msk,    16  ; 16 bytes      ; $07F0
 
 .ifdef _DEFINE_MEMORY
     .segment "PRG_RAM"
@@ -345,25 +334,20 @@
     RESERVE item_stop,          1 ; $603B
 
     ch_stats        = unsram + $0100  ; MUST be on page bound.  Each character allowed $40 bytes, so use 00,40,80,C0 to index ch_stats
-
     ch_class        = ch_stats + $00
     ch_ailments     = ch_stats + $01
     ch_name         = ch_stats + $02  ; 4 bytes
-
     ch_exp          = ch_stats + $07  ; 3 bytes
     ch_curhp        = ch_stats + $0A  ; 2 bytes
     ch_maxhp        = ch_stats + $0C  ; 2 bytes
-
     ch_str          = ch_stats + $10
     ch_agil         = ch_stats + $11
     ch_int          = ch_stats + $12
     ch_vit          = ch_stats + $13
     ch_luck         = ch_stats + $14
-
     ch_exptonext    = ch_stats + $16  ; 2 bytes -- only for user display, not actually used.
     ch_weapons      = ch_stats + $18  ; 4
     ch_armor        = ch_weapons + 4  ; 4
-
     ch_substats     = ch_stats + $20
     ch_dmg          = ch_substats + $00
     ch_hitrate      = ch_substats + $01
@@ -371,10 +355,8 @@
     ch_evade        = ch_substats + $03
     ch_resist       = ch_substats + $04
     ch_magdef       = ch_substats + $05
-
     ch_level        = ch_stats + $26        ; OB this is 0 based, IB this is 1 based
 
-    game_flags      = unsram + $0200  ; must be on page bound
 
     ; Out of battle, spell data is stored stupidly so valid values are only 00-08, where 01 to 08 are actual spells
     ;   and 00 is 'empty'.  Each spell is conceptually in a "slot" that belongs to each spell level.  Therefore,
@@ -390,66 +372,32 @@
       ch_maxmp        = ch_mp + $08
       
       
-    btl_chstats         = $6800  ; $12 bytes per character
-      btlch_slotindex   = $00
-      btlch_class       = $01
-      btlch_ailments    = $02       ; appears not to be used?  OB always seems to be used
-      btlch_hp          = $03       ; appears not to be used?  OB always seems to be used
-      btlch_hitrate     = $05
-      btlch_magdef      = $06
-      btlch_evade       = $07
-      btlch_absorb      = $08
-      btlch_dmg         = $09
-      btlch_elemresist  = $0A
-      btlch_numhitsmult = $0B
-      btlch_numhits     = $0C
-      btlch_category    = $0D           ; always 0 since players have no category assigned
-      btlch_elemweak    = $0E           ; always 0 (players can't have weaknesses)
-      btlch_critrate    = $0F
-      btlch_wepgfx      = $10
-      btlch_wepplt      = $11
 
-      
-    btl_turnorder       = $6848         ; $D entries (9 enemies + 4 characters)
-      
-    ;; Battle stuff
-        MATHBUF_HITCHANCE           = 0
-        MATHBUF_BASEDAMAGE          = 1
-        MATHBUF_NUMHITS             = 2
-        MATHBUF_MAGRANDHIT          = 2
-        MATHBUF_CATEGORY            = 3
-        MATHBUF_ELEMENT             = 4
-        MATHBUF_RANDHIT             = 4
-        MATHBUF_DMGCALC             = 5
-        MATHBUF_CRITCHANCE          = 6
-        MATHBUF_AILMENTCHANCE       = 7
-        MATHBUF_MAGDEFENDERHP       = $12
-        MATHBUF_DEFENDERHP          = $13
-        MATHBUF_MAGDEFENDERMAXHP    = $15
-        MATHBUF_TOTALDAMAGE         = $16
-        
-    btl_mathbuf = $6856     ; $14 bytes?, 2 byte pairs, used as buffers for mathematical routines
-        math_hitchance      = btl_mathbuf + (MATHBUF_HITCHANCE*2)   ; $6856
-        math_basedamage     = btl_mathbuf + (MATHBUF_BASEDAMAGE*2)  ; $6858
-        math_numhits        = btl_mathbuf + (MATHBUF_NUMHITS*2)     ; $685A
-        math_magrandhit     = btl_mathbuf + (MATHBUF_MAGRANDHIT*2)  ; $685A
-        math_category       = btl_mathbuf + (MATHBUF_CATEGORY*2)    ; $685C not really math... but whatever
-        math_element        = btl_mathbuf + (MATHBUF_ELEMENT*2)     ; $685E not really math... but whatever
-        math_randhit        = btl_mathbuf + (MATHBUF_RANDHIT*2)     ; $685E
-        math_dmgcalc        = btl_mathbuf + (MATHBUF_DMGCALC*2)     ; $6860
-        math_critchance     = btl_mathbuf + (MATHBUF_CRITCHANCE*2)  ; $6862
-        math_ailmentchance  = btl_mathbuf + (MATHBUF_AILMENTCHANCE*2);$6864
-        ;btl_defender_hp             = btl_mathbuf + (MATHBUF_DEFENDERHP*2)  ; $687C -- treated as part of math buffer by some code
-        ;battle_totaldamage          = btl_mathbuf + (MATHBUF_TOTALDAMAGE*2)  ; $6882 -- treated as part of math buffer by some code
-        ;btlmag_defender_hp                      = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
-        ;btlmag_defender_hpmax                   = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
-
-    theend_drawbuf  = $6800     ; $700 bytes!
-        
-    GAP                                     2080
-    RESERVE btlmag_spellconnected,          1 ; $685C
-    GAP                                     9
+    GAP                                     452
+    RESERVE game_flags,                     0 ; $6200  ; must be on page bound
+    GAP                                     1536
+    RESERVE btl_chstats,                    0 ; $6800  ; $12 bytes per character
+    RESERVE theend_drawbuf,                 0 ; $6800    ; $700 bytes!
+    GAP                                     72
+    RESERVE btl_turnorder,                  13 ; $6848         ; $D entries (9 enemies + 4 characters)
+    GAP                                     1
+    RESERVE btl_mathbuf,                    0 ; $6856     ; $14 bytes?, 2 byte pairs, used as buffers for mathematical routines
+    RESERVE math_hitchance,                 2 ; $6856
+    RESERVE math_basedamage,                2 ; $6858
+    RESERVE math_numhits,                   0 ; $685A
+    RESERVE math_magrandhit,                2 ; $685A
+    RESERVE btlmag_spellconnected,          0 ; $685C ; 1 byte
+    RESERVE math_category,                  2 ; $685C ; not really math... but whatever
+    RESERVE math_element,                   0 ; $685E ; not really math... but whatever
+    RESERVE math_randhit,                   2 ; $685E
+    RESERVE math_dmgcalc,                   2 ; $6860
+    RESERVE math_critchance,                2 ; $6862
+    RESERVE math_ailmentchance,             2 ; $6864
     RESERVE battle_ailmentrandchance,       1 ; $6866
+    ;btl_defender_hp             = btl_mathbuf + (MATHBUF_DEFENDERHP*2)  ; $687C -- treated as part of math buffer by some code
+    ;battle_totaldamage          = btl_mathbuf + (MATHBUF_TOTALDAMAGE*2)  ; $6882 -- treated as part of math buffer by some code
+    ;btlmag_defender_hp                      = btl_mathbuf + (MATHBUF_MAGDEFENDERHP*2)  ; $687A
+    ;btlmag_defender_hpmax                   = btl_mathbuf + (MATHBUF_MAGDEFENDERMAXHP*2)  ; $6880
     GAP                                     3
     RESERVE battle_hitsconnected,           1 ; $686A     ; number of hits actually connected
     RESERVE battle_critsconnected,          1 ; $686B
