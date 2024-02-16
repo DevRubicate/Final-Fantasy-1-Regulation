@@ -425,7 +425,82 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             ch_resist,                          1 ; ch_substats + $04
     RES             ch_magdef,                          1 ; ch_substats + $05
     RES             ch_level,                           1 ; ch_stats + $26        ; OB this is 0 based, IB this is 1 based
-    GAP                                                 217
+    GAP                                                 25
+    RES             ch1_class,                          1
+    RES             ch1_ailments,                       1
+    RES             ch1_name,                           4
+    RES             ch1_exp,                            3
+    RES             ch1_curhp,                          2
+    RES             ch1_maxhp,                          2
+    GAP                                                 3
+    RES             ch1_str,                            1
+    RES             ch1_agil,                           1
+    RES             ch1_int,                            1
+    RES             ch1_vit,                            1
+    RES             ch1_luck,                           1
+    GAP                                                 1
+    RES             ch1_exptonext,                      2
+    RES             ch1_weapons,                        4
+    RES             ch1_armor,                          4
+    RES             ch1_substats,                       0
+    RES             ch1_dmg,                            1
+    RES             ch1_hitrate,                        1
+    RES             ch1_absorb,                         1
+    RES             ch1_evade,                          1
+    RES             ch1_resist,                         1
+    RES             ch1_magdef,                         1
+    RES             ch1_level,                          1
+    GAP                                                 25
+    RES             ch2_class,                          1
+    RES             ch2_ailments,                       1
+    RES             ch2_name,                           4
+    RES             ch2_exp,                            3
+    RES             ch2_curhp,                          2
+    RES             ch2_maxhp,                          2
+    GAP                                                 3
+    RES             ch2_str,                            1
+    RES             ch2_agil,                           1
+    RES             ch2_int,                            1
+    RES             ch2_vit,                            1
+    RES             ch2_luck,                           1
+    GAP                                                 1
+    RES             ch2_exptonext,                      2
+    RES             ch2_weapons,                        4
+    RES             ch2_armor,                          4
+    RES             ch2_substats,                       0
+    RES             ch2_dmg,                            1
+    RES             ch2_hitrate,                        1
+    RES             ch2_absorb,                         1
+    RES             ch2_evade,                          1
+    RES             ch2_resist,                         1
+    RES             ch2_magdef,                         1
+    RES             ch2_level,                          1
+    GAP                                                 25
+    RES             ch3_class,                          1
+    RES             ch3_ailments,                       1
+    RES             ch3_name,                           4
+    RES             ch3_exp,                            3
+    RES             ch3_curhp,                          2
+    RES             ch3_maxhp,                          2
+    GAP                                                 3
+    RES             ch3_str,                            1
+    RES             ch3_agil,                           1
+    RES             ch3_int,                            1
+    RES             ch3_vit,                            1
+    RES             ch3_luck,                           1
+    GAP                                                 1
+    RES             ch3_exptonext,                      2
+    RES             ch3_weapons,                        4
+    RES             ch3_armor,                          4
+    RES             ch3_substats,                       0
+    RES             ch3_dmg,                            1
+    RES             ch3_hitrate,                        1
+    RES             ch3_absorb,                         1
+    RES             ch3_evade,                          1
+    RES             ch3_resist,                         1
+    RES             ch3_magdef,                         1
+    RES             ch3_level,                          1
+    GAP                                                 25
     RES_PAGE        game_flags,                         256 ; $6200  ; must be on page bound
     ; Out of battle, spell data is stored stupidly so valid values are only 00-08, where 01 to 08 are actual spells
     ;   and 00 is 'empty'.  Each spell is conceptually in a "slot" that belongs to each spell level.  Therefore,
@@ -454,20 +529,9 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             ch3_curmp,                          8
     RES             ch3_maxmp,                          8
     GAP                                                 16
-    RES             sram,                               0 ; $400 bytes ; $6400
-    GAP                                                 253
-    RES             sram_checksum,                      1   ; $64FD
-    RES             sram_assert_55,                     1   ; $64FE
-    RES             sram_assert_AA,                     1   ; $64FF
-    GAP                                                 927
-    RES             char_order_buf,                     4 ; $689F
-    GAP                                                 515
-    RES             eobbox_slotid,                      1 ; $6AA6
-    RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
-    RES             eobbox_textid,                      1 ; $6AA7
-    GAP                                                 265
-    RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
-    GAP                                                 78
+    RES             sram,                               1023 ; $6400
+    RES             sram_checksum,                      1   ; $67FF
+    GAP                                                 1024
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     256 ; $6C00 ; temporary space used by the lineup menu
     RES             lutmp_ch_magic,                     1 ; $6D00
@@ -555,8 +619,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             levelup_classid,                    0 ; $688E ; local, stores class ID
     RES             btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
     RES             btl_charcmdbuf,                     16 ; $688F
-    RES             btl_charcmditem,                    1 ; $689F
-    GAP                                                 3
+    RES             btl_charcmditem,                    0 ; $689F
+    RES             char_order_buf,                     4 ; $689F
     RES             btl_charcmdconsumetype,             1 ; $68A3
     GAP                                                 3
     RES             btl_charcmdconsumeid,               1 ; $68A7
@@ -591,7 +655,10 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
     GAP                                                 2
     RES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
-    GAP                                                 3
+    RES             eobbox_slotid,                      1 ; $6AA6
+    RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
+    RES             eobbox_textid,                      1 ; $6AA7
+    GAP                                                 1
     RES             btl_animatingchar,                  1 ; $6AA9     ; the character currently being animated (0-3)
     RES             btlcurs,                            0 ; $6AAA
     RES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
@@ -636,7 +703,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
     RES             btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
     RES             btl_potion_pure,                    1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)
-    GAP                                                 1
+    RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2

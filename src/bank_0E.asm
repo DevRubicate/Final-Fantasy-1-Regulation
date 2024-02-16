@@ -5836,11 +5836,6 @@ SaveGame:
       INX
       BNE @CopyLoop           ; loop until X expires ($100 iterations)
 
-    LDA #$55                  ; set assertion bytes
-    STA sram_assert_55        ;  if assertion bytes are ever different values
-    LDA #$AA                  ;  the game knows SRAM has been corrupted
-    STA sram_assert_AA        ;   like due to battery failure or something
-
         ; now we need to compute the checksum!
         ;  checksum further verifies that SRAM has not been comprimised
 

@@ -81,21 +81,23 @@ GameStart:
     JSR SwapPRG_L
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram
-    : LDA lut_InitUnsramFirstPage, X; Page 0 of unsram is loaded from this table
-      STA unsram, X
-      
-      LDA #0                        ; stat page filled with zeros (proper stats will be assigned
-      STA ch_stats, X               ;   later after party generation)
-      
-      LDA lut_InitGameFlags, X      ; game flags page loaded from this table
+    : LDA lut_InitGameFlags, X      ; game flags page loaded from this table
       STA game_flags, X
       
-      LDA #0                        ; zero magic data page (proper MP assigned after
-      STA ch_magicdata, X           ; party generation
-      
+      LDA #0                        ; character stats are set after party generation
+      STA ch_stats, X
+      STA ch_magicdata, X
+      STA unsram, X
+
+
       INX                           ; loop for the full page
       BNE :-
       
+    LDX #$1D                        ; Loop $3B times to fill each page of unsram
+    : LDA lut_InitUnsramFirstPage, X; Page 0 of unsram is loaded from this table
+      STA unsram, X
+      DEX                           ; loop for the full page
+      BPL :-
       
     LDA #40
     STA ch_exptonext                ; initialize exptonext.  40 XP to get to level 2
@@ -123,14 +125,8 @@ GameStart:
     
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option
     
-        ; Otherwise, they selected "Continue"...
-    LDA sram_assert_55              ; check sram assertion values to make sure
-    CMP #$55                        ;  sram is not corrupt.  If they are not what are expected...
-    BNE @NewGame                    ;  then do a new game.
-    LDA sram_assert_AA
-    CMP #$AA
-    BNE @NewGame
-    
+    ; Otherwise, they selected "Continue"...
+
     JSR VerifyChecksum              ; Then verify checksum to ensure save game integrity
     BCS @NewGame                    ;  if it failed, do a new game
     
@@ -2054,10 +2050,10 @@ VerifyChecksum:
     LDX #$00      ; and X
     CLC           ; and C!
 @Loop:
-      ADC $6400, X   ; sum every byte between $6400-$67FF
-      ADC $6500, X   ;  include carry in each addition
-      ADC $6600, X
-      ADC $6700, X
+      ADC sram, X   ; sum every byte between $6400-$67FF
+      ADC sram + $100, X   ;  include carry in each addition
+      ADC sram + $200, X
+      ADC sram + $300, X
       INX
       BNE @Loop
 
