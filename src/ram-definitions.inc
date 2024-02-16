@@ -426,8 +426,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             ch_magdef,                          1 ; ch_substats + $05
     RES             ch_level,                           1 ; ch_stats + $26        ; OB this is 0 based, IB this is 1 based
     GAP                                                 217
-    RES_PAGE        game_flags,                         0 ; $6200  ; must be on page bound
-    GAP                                                 256
+    RES_PAGE        game_flags,                         256 ; $6200  ; must be on page bound
     ; Out of battle, spell data is stored stupidly so valid values are only 00-08, where 01 to 08 are actual spells
     ;   and 00 is 'empty'.  Each spell is conceptually in a "slot" that belongs to each spell level.  Therefore,
     ;   both CURE and LAMP are stored as '01' because they're both the first spell in their level, but because
@@ -435,20 +434,34 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     ; In battle, fortunately, that is thrown out the window (why does it do it at all?) and the spells are stored
     ;   in a logical 1-based index where the level simply doesn't matter.
     RES_PAGE        ch_magicdata,                       0 ; $6300  ; must be on page bound
-    RES             ch_spells,                          32 ; $6300
-    RES             ch_mp,                              0 ; 
-    RES             ch_curmp,                           8 ; 8 bytes
-    RES             ch_maxmp,                           8 ; 8 bytes
-    GAP                                                 208
+    RES             ch0_spells,                         32
+    RES             ch0_mp,                             0
+    RES             ch0_curmp,                          8
+    RES             ch0_maxmp,                          8
+    GAP                                                 16
+    RES             ch1_spells,                         32
+    RES             ch1_mp,                             0
+    RES             ch1_curmp,                          8
+    RES             ch1_maxmp,                          8
+    GAP                                                 16
+    RES             ch2_spells,                         32
+    RES             ch2_mp,                             0
+    RES             ch2_curmp,                          8
+    RES             ch2_maxmp,                          8
+    GAP                                                 16
+    RES             ch3_spells,                         32
+    RES             ch3_mp,                             0
+    RES             ch3_curmp,                          8
+    RES             ch3_maxmp,                          8
+    GAP                                                 16
     RES             sram,                               0 ; $400 bytes ; $6400
     GAP                                                 253
     RES             sram_checksum,                      1   ; $64FD
     RES             sram_assert_55,                     1   ; $64FE
     RES             sram_assert_AA,                     1   ; $64FF
-    GAP                                                 768
-    GAP                                                 159
-    RES             char_order_buf,                     0 ; $689F
-    GAP                                                 519
+    GAP                                                 927
+    RES             char_order_buf,                     4 ; $689F
+    GAP                                                 515
     RES             eobbox_slotid,                      1 ; $6AA6
     RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
     RES             eobbox_textid,                      1 ; $6AA7
@@ -456,8 +469,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
     GAP                                                 78
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
-    RES             lutmp_ch_stats,                     1 ; $6C00 ; temporary space used by the lineup menu
-    GAP                                                 255
+    RES             lutmp_ch_stats,                     256 ; $6C00 ; temporary space used by the lineup menu
     RES             lutmp_ch_magic,                     1 ; $6D00
 
 SECTION "BATTLE" ; $6800 - 6DB0

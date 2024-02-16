@@ -288,11 +288,11 @@ PrepBattleVarsAndEnterBattle:
 WriteAilment_PrepMagicPtr:
     STA ch_ailments, X      ; Write the IB ailment (completing the conversion)
     
-    LDA #<ch_spells         ; Set btl pointer to point to the spell list for the current
+    LDA #<ch0_spells         ; Set btl pointer to point to the spell list for the current
     CLC                     ;   character (indicated by btl_tmpindex)
     ADC btl_tmpindex
     STA btlptr
-    LDA #>ch_spells
+    LDA #>ch0_spells
     ADC #$00
     STA btlptr+1
     
@@ -908,7 +908,7 @@ LvlUp_LevelUp:
     
     LDY #$01
     LDA (levelup_lvlupptr), Y              ; get leveldata[1] byte (MP gains)
-    LDY #ch_maxmp - ch_magicdata    ; set Y to index map MP
+    LDY #ch0_maxmp - ch_magicdata    ; set Y to index map MP
   @MagicUpLoop:
       LSR A                         ; shift out low bit
       BCC :+                        ; if set...
@@ -919,7 +919,7 @@ LvlUp_LevelUp:
         STA (lvlup_chmagic), Y
         PLA
     : INY                               ; INY to look at next spell level
-      CPY #ch_maxmp - ch_magicdata + 8  ; loop for all 8 bits (and all 8 spell levels)
+      CPY #ch0_maxmp - ch_magicdata + 8  ; loop for all 8 bits (and all 8 spell levels)
       BNE @MagicUpLoop
     
     ;;---- Cap spell charges at a maximum
@@ -933,7 +933,7 @@ LvlUp_LevelUp:
   : LDA #4+1                ;(KN/NJ jumps here)
   
     ;  At this point, A = max_charges+1
-  : LDY #ch_maxmp - ch_magicdata            ; similar loop as above
+  : LDY #ch0_maxmp - ch_magicdata            ; similar loop as above
   @MagicCapLoop:
       CMP (lvlup_chmagic), Y                ; see if MP max is == one beyond max
       BNE :+                                ; if it is...
@@ -944,7 +944,7 @@ LvlUp_LevelUp:
         STA (lvlup_chmagic), Y
         PLA
     : INY                                   ; repeat for all 8 spell levels
-      CPY #ch_maxmp - ch_magicdata + 8
+      CPY #ch0_maxmp - ch_magicdata + 8
       BNE @MagicCapLoop
   
   @SkipMPGain:      ; jumps here for fighters/thieves (prevent them from getting MP)

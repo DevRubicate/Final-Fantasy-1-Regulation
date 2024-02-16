@@ -726,7 +726,7 @@ BattleSubMenu_Magic:
     ADC $68B3                       ; add to 68B3.  index is now complete:  Index from start of char's spell list, to their chosen spell.
     
     TAY                             ; put that index in Y, and use it to get the chosen spell
-    LDA ch_spells, Y
+    LDA ch0_spells, Y
     BNE :+                          ; if they selected an empty slot, do the @NothingBox -- otherwise skip over it
     
   @NothingBox:
@@ -740,7 +740,7 @@ BattleSubMenu_Magic:
     ADC $68B4                       ; add to 68B4.  This index is now complete:  Index from start of char's MP to the level of their chosen spell
     
     TAX
-    LDA ch_curmp, X                 ; use that index to get their MP for this level
+    LDA ch0_curmp, X                 ; use that index to get their MP for this level
     BEQ @NothingBox                 ; if no more MP for this level, cut to "nothing" box and repeat.
     
     LDY btlcmd_curchar
@@ -3702,7 +3702,7 @@ Battle_DoPlayerTurn:
         
         LDY @playerid
         LDX btl_charcmdconsumeid, Y ; get the level of this spell
-        DEC ch_mp, X                ; take away a spell charge
+        DEC ch0_mp, X                ; take away a spell charge
         
         PLA                         ; restore command index
         TAY

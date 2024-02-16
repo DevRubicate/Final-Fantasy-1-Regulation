@@ -176,7 +176,7 @@ PrintCharStat:
       CLC
       ADC char_index   ; add character index
       TAX
-      LDA ch_mp-$20, X ; get MP  (need to subtract $20 because index is +$20)
+      LDA ch0_mp-$20, X ; get MP  (need to subtract $20 because index is +$20)
       STA tmp          ;  and print it as 1 Digit
       JMP PrintNumber_1Digit
 
@@ -4013,7 +4013,7 @@ EnterShop_Magic:
     JSR ShopPayPrice             ; subtract the item price from party GP
     LDX shop_charindex           ; get the empty slot in X
     LDA shop_spell               ; get the adjusted spell ID
-    STA ch_spells, X             ; add this spell to char's magic list
+    STA ch0_spells, X             ; add this spell to char's magic list
     JMP EnterShop_Magic          ; and re-enter the shop
 
 
@@ -5766,20 +5766,20 @@ MagicShop_AssertLearn:
     ADC #$01             ;  spell ID (1-8).  These are how spell IDs are stored
                          ;  in the character's spell list
 
-    CMP ch_spells, X     ; check each of this character's spells
+    CMP ch0_spells, X     ; check each of this character's spells
     BEQ @AlreadyKnow     ;  on this level.  If any of them match the
-    CMP ch_spells+1, X   ;  current spell... then the character
+    CMP ch0_spells+1, X   ;  current spell... then the character
     BEQ @AlreadyKnow     ;  already knows this spell
-    CMP ch_spells+2, X
+    CMP ch0_spells+2, X
     BEQ @AlreadyKnow
 
-    LDA ch_spells, X     ; If they don't already know the spell.. check
+    LDA ch0_spells, X     ; If they don't already know the spell.. check
     BEQ @FoundEmptySlot  ;  each slot until we find an empty one
     INX                  ; We need an empty slot to put this spell in
-    LDA ch_spells, X
+    LDA ch0_spells, X
     BEQ @FoundEmptySlot
     INX
-    LDA ch_spells, X
+    LDA ch0_spells, X
     BEQ @FoundEmptySlot
 
     LDA #$22                 ; if no empty slot found...
@@ -5925,22 +5925,22 @@ MenuRecoverPartyMP:
     CMP #$02
     BEQ @Skip              ; if stone... skip
 
-      LDA ch_maxmp, X      ; otherwise... refill MP on all level to maximum
-      STA ch_curmp, X
-      LDA ch_maxmp+1, X
-      STA ch_curmp+1, X
-      LDA ch_maxmp+2, X
-      STA ch_curmp+2, X
-      LDA ch_maxmp+3, X
-      STA ch_curmp+3, X
-      LDA ch_maxmp+4, X
-      STA ch_curmp+4, X
-      LDA ch_maxmp+5, X
-      STA ch_curmp+5, X
-      LDA ch_maxmp+6, X
-      STA ch_curmp+6, X
-      LDA ch_maxmp+7, X
-      STA ch_curmp+7, X
+      LDA ch0_maxmp, X      ; otherwise... refill MP on all level to maximum
+      STA ch0_curmp, X
+      LDA ch0_maxmp+1, X
+      STA ch0_curmp+1, X
+      LDA ch0_maxmp+2, X
+      STA ch0_curmp+2, X
+      LDA ch0_maxmp+3, X
+      STA ch0_curmp+3, X
+      LDA ch0_maxmp+4, X
+      STA ch0_curmp+4, X
+      LDA ch0_maxmp+5, X
+      STA ch0_curmp+5, X
+      LDA ch0_maxmp+6, X
+      STA ch0_curmp+6, X
+      LDA ch0_maxmp+7, X
+      STA ch0_curmp+7, X
 
   @Skip:
     TXA             ; move index into A to do some math
@@ -6412,7 +6412,7 @@ MagicMenu_Loop:
     ASL A                  ; double A and mask out the level bits
     AND #$38               ;  this effectively makes A the spell level * 8
 
-    ORA ch_spells, X       ; then ORA with the selected spell on this level
+    ORA ch0_spells, X       ; then ORA with the selected spell on this level
     CLC                    ; and add the spell start constant - 1 (-1 because 0 is not a spell)
     ADC #MG_START-1        ;  A is now the ID number of the selected spell (supposedly.. but that's wrong)
                            ; BUGGED:  it just so happens that this code bug never occured in game because the spells
@@ -6799,7 +6799,7 @@ UseMagic_GetRequiredMP:
     LSR A
     CLC
     ADC tmp                      ; add char index
-    ADC #ch_curmp - ch_magicdata ; and add MP offset to it (seems silly to do it this way....)
+    ADC #ch0_curmp - ch_magicdata ; and add MP offset to it (seems silly to do it this way....)
     TAX                          ; put it in X
     STA mp_required              ; and put it in our MP required var
     LDA ch_magicdata, X          ; get the relevent cur MP
@@ -8616,14 +8616,14 @@ DrawMainMenuCharBoxBody:
     LDA #>str_buf     ; the strings we will be drawing here will be from a RAM buffer
     STA text_ptr+1    ;  so set the high byte of the string pointer
 
-    LDA ch_maxmp, X   ; check all of this character's Max MP
-    ORA ch_maxmp+1, X ;  if any level of spells is nonzero, we'll need to draw the MP
-    ORA ch_maxmp+2, X ;  for this character.  Otherwise, we won't need to.
-    ORA ch_maxmp+3, X ;  this is checked easily by just ORing all the max MP bytes
-    ORA ch_maxmp+4, X
-    ORA ch_maxmp+5, X
-    ORA ch_maxmp+6, X
-    ORA ch_maxmp+7, X
+    LDA ch0_maxmp, X   ; check all of this character's Max MP
+    ORA ch0_maxmp+1, X ;  if any level of spells is nonzero, we'll need to draw the MP
+    ORA ch0_maxmp+2, X ;  for this character.  Otherwise, we won't need to.
+    ORA ch0_maxmp+3, X ;  this is checked easily by just ORing all the max MP bytes
+    ORA ch0_maxmp+4, X
+    ORA ch0_maxmp+5, X
+    ORA ch0_maxmp+6, X
+    ORA ch0_maxmp+7, X
     BNE @DrawMP       ; if max MP is nonzero, jump ahead to DrawMP
       JMP @NoMP       ; otherwise... jump ahead to NoMP
 
@@ -8632,7 +8632,7 @@ DrawMainMenuCharBoxBody:
     LDY #$00          ; Y is dest index for our drawing loop, start it at zero
                       ;  the loop also modifies X to use it as a source index (this is why the char index was pushed)
    @MPLoop:
-      LDA ch_curmp, X ; Get current MP for this level
+      LDA ch0_curmp, X ; Get current MP for this level
       ORA #$80        ;  Or with $80 to get this digit's tile
       STA str_buf, Y  ; write this tile to the temp string
 
@@ -8770,13 +8770,13 @@ DrawMagicMenuMainBox:
     LDY #$08                     ; going to loop 8 times (one for each level of spells
 
   @Loop:
-      LDA ch_spells, X        ; check first spell in level
+      LDA ch0_spells, X        ; check first spell in level
       BNE @FoundSpell         ; if nonzero (has a spell)  escape
       INX
-      LDA ch_spells, X        ; otherwise check next spell...
+      LDA ch0_spells, X        ; otherwise check next spell...
       BNE @FoundSpell
       INX
-      LDA ch_spells, X        ; and next...
+      LDA ch0_spells, X        ; and next...
       BNE @FoundSpell
       INX                     ; INX by 2 because the 4th slot in each level is empty (padding)
       INX                     ; then decrement Y (loop counter)

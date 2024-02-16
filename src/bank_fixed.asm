@@ -1860,8 +1860,8 @@ NewGame_LoadStartingStats:
       CMP #CLS_KN
       BCS :+
         LDA #$02                ; start with 2 MP
-        STA ch_curmp, X
-        STA ch_maxmp, X
+        STA ch0_curmp, X
+        STA ch0_maxmp, X
   : RTS
 
 
@@ -7602,7 +7602,7 @@ DrawComplexString:
                       ;  and CURE is stored in the level 1 section.
     STA tmp           ; store this calculated index in tmp ram
 
-    LDA ch_spells, X  ; use X as index to get the spell
+    LDA ch0_spells, X  ; use X as index to get the spell
     BEQ :+            ; if 0, skip ahead and draw nothing (no spell)
 
       CLC             ; add our level+text index to the current spell
@@ -12625,7 +12625,7 @@ DrawBattleMagicBox:
     JSR BattleMenu_DrawMagicNames
     
     ; Print the MP amount
-    LDA #ch_curmp - ch_magicdata    ; since $88,89 points to magic list, and the
+    LDA #ch0_curmp - ch_magicdata    ; since $88,89 points to magic list, and the
     CLC                             ;  MP is right after that, just change the Y index
     ADC $68B5                       ;  to access the MP.
     TAY                             ; Add the row counter to get this level's MP count
@@ -12681,7 +12681,7 @@ DrawBattleMagicBox:
     STA btl_unfmtcbtbox_buffer+1, X
     JSR BattleMenu_DrawMagicNames
     
-    LDA #ch_curmp - ch_magicdata + 4
+    LDA #ch0_curmp - ch_magicdata + 4
     CLC
     ADC $68B5
     TAY
