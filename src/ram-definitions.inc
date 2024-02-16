@@ -270,32 +270,17 @@ SECTION "OAM"
 SECTION "BSS"
     RES             item_box,                           0 ; 32 bytes        ; $0300 $20? bytes -- shares space with str_buf
     RES             str_buf,                            0 ; 57 bytes        ; $0300 $39 bytes at least -- buffer must not cross page
-    RES             ptygen,                             0 ; 64 bytes        ; $0300 ; $40 bytes, shared
-    RES             ptygen_class,                       2 ; 2 bytes         ; $0300
-    RES             ptygen_name,                        4 ; 4 bytes         ; $0302
-    RES             ptygen_name_x,                      1 ; 1 bytes         ; $0306
-    RES             ptygen_name_y,                      1 ; 1 bytes         ; $0307
-    RES             ptygen_class_x,                     1 ; 1 bytes         ; $0308
-    RES             ptygen_class_y,                     1 ; 1 bytes         ; $0309
-    RES             shop_charindex,                     0 ; 1 bytes         ; $030A  ; shared
-    RES             ptygen_spr_x,                       1 ; 1 bytes         ; $030A
-    RES             shop_spell,                         0 ; 1 bytes         ; $030B  ; shared
-    RES             ptygen_spr_y,                       1 ; 1 bytes         ; $030B
-    RES             shop_curitem,                       0 ; 1 bytes         ; $030C  ; shared
-    RES             ptygen_box_x,                       1 ; 1 bytes         ; $030C
-    RES             ptygen_box_y,                       1 ; 1 bytes         ; $030D
-    RES             shop_curprice,                      0 ; 2 bytes         ; $030E  ; 2 shared bytes
-    RES             ptygen_curs_x,                      1 ; 1 bytes         ; $030E
-    RES             ptygen_curs_y,                      1 ; 1 bytes         ; $030F
+    GAP                                                 10
+    RES             shop_charindex,                     1 ; 1 bytes         ; $030A
+    RES             shop_spell,                         1 ; 1 bytes         ; $030B
+    RES             shop_curitem,                       1 ; 1 bytes         ; $030C
+    GAP                                                 1 ; 1 bytes         ; $030D
+    RES             shop_curprice,                      2 ; 2 bytes         ; $030E
     GAP                                                 176
     RES             cur_pal,                            32  ; 32 bytes      ; $03C0  ; 32 bytes
     RES             inroom_pal,                         16  ; 16 bytes      ; $03E0  ; cur_pal+$20 ; 16 bytes
     RES             tmp_pal,                            16  ; 16 bytes      ; $03F0  ; 16 bytes
-    GAP                                                 256 ; 1024 bytes    ; $0400  ; 1024 bytes -- must be on page bound
-    RES_PAGE        mm_drawbuf,                         256 ; 256 bytes     ; $0500  ; 256 bytes, shared, should be on page bound, but don't think it's absolutely required
-    RES             mm_mapbuf,                          256 ; 256 bytes     ; $0600  ; 256 bytes, same
-    RES             mm_mapbuf2,                         128 ; 256 bytes     ; $0700  ; 256 bytes, same
-    RES             load_map_pal,                       0   ; 48 bytes      ; $0780  ; 48 bytes  (shared with draw_buf -- hence only for loading)
+    GAP                                                 896
     RES             draw_buf_ul,                        16  ; $0780
     RES             draw_buf_ur,                        16  ; $0790
     RES             draw_buf_dl,                        16  ; $07A0
@@ -304,6 +289,22 @@ SECTION "BSS"
     RES             draw_buf_at_hi,                     16  ; $07D0
     RES             draw_buf_at_lo,                     16  ; $07E0
     RES             draw_buf_at_msk,                    16  ; $07F0
+
+SECTION "PARTYGEN"
+    RES             ptygen,                             0 ; 64 bytes        ; $0300 ; $40 bytes, shared
+    RES             ptygen_class,                       2 ; $0300
+    RES             ptygen_name,                        4 ; $0302
+    RES             ptygen_name_x,                      1 ; $0306
+    RES             ptygen_name_y,                      1 ; $0307
+    RES             ptygen_class_x,                     1 ; $0308
+    RES             ptygen_class_y,                     1 ; $0309
+    RES             ptygen_spr_x,                       1 ; $030A
+    RES             ptygen_spr_y,                       1 ; $030B
+    RES             ptygen_box_x,                       1 ; $030C
+    RES             ptygen_box_y,                       1 ; $030D
+    RES             ptygen_curs_x,                      1 ; $030E
+    RES             ptygen_curs_y,                      1 ; $030F
+    ; 16 bytes per character, 4 characters
 
 SECTION "TILESET"
     GAP                                                 256
@@ -314,6 +315,13 @@ SECTION "TILESET"
     RES             tsa_dl,                             128 ; $0600
     RES             tsa_dr,                             128 ; $0680
     RES             tsa_attr,                           128 ; $0700
+    RES             load_map_pal,                       48  ; $0780 (shared with draw_buf -- hence only for loading)
+
+SECTION "MINIMAP"
+    GAP                                                 512
+    RES_PAGE        mm_drawbuf,                         256 ; 256 bytes     ; $0500  ; 256 bytes, shared, should be on page bound, but don't think it's absolutely required
+    RES             mm_mapbuf,                          256 ; 256 bytes     ; $0600  ; 256 bytes, same
+    RES             mm_mapbuf2,                         256 ; 256 bytes     ; $0700  ; 256 bytes, same
 
 SECTION "PUZZLE"
     RES             puzzle,                             16 ; $0300
