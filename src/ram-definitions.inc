@@ -76,21 +76,10 @@
 
 
 SECTIONZP "ZEROPAGE"
-    ; for sound channels (between Bx-Dx)
-    ;  see constants.inc
-    RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
-    RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
-    RESZP ch_envpos,                        1 ; 1 bytes   ; $04 pos in env data (00-1F)
-    RESZP ch_lenctr,                        1 ; 1 bytes   ; $05 counter for score data (note length)
-    RESZP ch_frqtblptr,                     1 ; 1 bytes   ; $06 pointer to freq table (changes per octave)
+    GAP                                     7
     RESZP story_dropinput,                  1 ; 1 bytes   ; $07
-    RESZP ch_lentblptr,                     2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
-    RESZP ch_envrate,                       1 ; 1 bytes   ; $0A rate/speed of env table traversal
-    RESZP ch_envrem,                        1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
-    RESZP ch_vol,                           1 ; 1 bytes   ; $0C output volume
-    RESZP inroom,                           0 ; 1 bytes   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
-    RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
-    RESZP ch_freq,                          0 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
+    GAP                                     5
+    RESZP inroom,                           1 ; 1 bytes   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
     RESZP doorppuaddr,                      2 ; 2 bytes   ; $0E 2 bytes, PPU address of door drawing work
     RESZP tmp,                              0 ; 16 bytes  ; $10
     GAP                                     8
@@ -202,7 +191,7 @@ SECTIONZP "ZEROPAGE"
     RESZP talkobj,                          1 ; 1 bytes     ; $67  ; shared -- object you're talking to on SM
     RESZP sm_player_x,                      1 ; 1 bytes     ; $68  ; player X/Y position on standard map.  Only used for NPC collision detection
     RESZP sm_player_y,                      1 ; 1 bytes     ; $69
-    RESZP btlformation,                     1 ; 1 bytes     ; $6A
+    GAP                                     1
     RESZP enCHRpage,                        1 ; 1 bytes     ; $6B
     RESZP altareffect,                      1 ; 1 bytes     ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
     GAP                                     15
@@ -210,17 +199,53 @@ SECTIONZP "ZEROPAGE"
     RESZP dlgsfx,                           1 ; 1 bytes      ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
     RESZP sq2_sfx,                          1 ; 1 bytes      ; $7E
     RESZP descboxopen,                      1 ; 1 bytes      ; $7F
-    RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
-    RESZP lvlup_curexp,                     0 ; 2 bytes      ; $80       ; 2 byte pointer to character's current EXP
-    RESZP btlptr,                           2 ; 2 bytes      ; $80
+    RESZP lvlup_curexp,                     2 ; 2 bytes      ; $80       ; 2 byte pointer to character's current EXP
     RESZP levelup_lvlupptr,                 0 ; 2 bytes      ; $82       ; local, pointer to level up data
-    RESZP lvlup_exptoadv,                   0 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
-    RESZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
+    RESZP lvlup_exptoadv,                   2 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
     RESZP lvlup_chmagic,                    2 ; 2 bytes      ; $84       ; 2 byte pointer to character's magic data
     RESZP lvlup_chstats,                    2 ; 2 bytes      ; $86       ; 2 byte pointer to character's OB stats
-    RESZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
     RESZP battlereward,                     3 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
-    GAP                                     1
+    GAP                                     22
+    RESZP actual_bank,                      1 ; 1 bytes      ; $A1
+    GAP                                     78
+    RESZP framecounter,                     2 ; 2 bytes      ; $F0
+    GAP                                     2
+    RESZP npcdir_seed,                      1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
+    RESZP battlestep,                       1 ; 1 bytes      ; $F5
+    RESZP battlestep_sign,                  1 ; 1 bytes      ; $F6
+    RESZP battlecounter,                    1 ; 1 bytes      ; $F7
+    RESZP battlerate,                       1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
+    RESZP startintrocheck,                  1 ; 1 bytes      ; $F9
+    RESZP respondrate,                      1 ; 1 bytes      ; $FA
+    GAP                                     2
+    RESZP NTsoft2000,                       1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
+    RESZP unk_FE,                           1 ; 1 bytes      ; $FE
+    RESZP soft2000,                         0 ; 1 bytes      ; $FF
+
+SECTIONZP "SOUND"
+    ; for sound channels (between Bx-Dx) see constants.inc
+    RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
+    RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
+    RESZP ch_envpos,                        1 ; 1 bytes   ; $04 pos in env data (00-1F)
+    RESZP ch_lenctr,                        1 ; 1 bytes   ; $05 counter for score data (note length)
+    RESZP ch_frqtblptr,                     2 ; 2 bytes   ; $06 pointer to freq table (changes per octave)
+    RESZP ch_lentblptr,                     2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
+    RESZP ch_envrate,                       1 ; 1 bytes   ; $0A rate/speed of env table traversal
+    RESZP ch_envrem,                        1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
+    RESZP ch_vol,                           1 ; 1 bytes   ; $0C output volume
+    RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
+    RESZP ch_freq,                          1 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
+
+SECTIONZP "BATTLEZP"
+    GAP                                     106
+    RESZP btlformation,                     1 ; 1 bytes     ; $6A
+    GAP                                     21
+    RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
+    RESZP btlptr,                           2 ; 2 bytes      ; $80
+    RESZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
+    GAP                                     4
+    RESZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
+    GAP                                     4
     RESZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C
     RESZP btldraw_blockptrend,              2 ; 2 bytes      ; $8E
     RESZP btl_entityptr_ibram,              0 ; 2 bytes      ; $90
@@ -240,22 +265,6 @@ SECTIONZP "ZEROPAGE"
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
-    GAP                                     1
-    RESZP actual_bank,                      1 ; 1 bytes      ; $A1
-    GAP                                     78
-    RESZP framecounter,                     2 ; 2 bytes      ; $F0
-    GAP                                     2
-    RESZP npcdir_seed,                      1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
-    RESZP battlestep,                       1 ; 1 bytes      ; $F5
-    RESZP battlestep_sign,                  1 ; 1 bytes      ; $F6
-    RESZP battlecounter,                    1 ; 1 bytes      ; $F7
-    RESZP battlerate,                       1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
-    RESZP startintrocheck,                  1 ; 1 bytes      ; $F9
-    RESZP respondrate,                      1 ; 1 bytes      ; $FA
-    GAP                                     2
-    RESZP NTsoft2000,                       1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
-    RESZP unk_FE,                           1 ; 1 bytes      ; $FE
-    RESZP soft2000,                         0 ; 1 bytes      ; $FF
 
 SECTION "STACK"
     tmp_hi          = $0110  ; 3? bytes
