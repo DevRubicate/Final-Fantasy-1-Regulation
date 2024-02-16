@@ -441,21 +441,15 @@ SECTION "PRG_RAM"
     RES             sram_assert_55,                     1   ; $64FE
     RES             sram_assert_AA,                     1   ; $64FF
     GAP                                                 768
-    _ES             btl_chstats,                        0 ; $6800  ; $12 bytes per character
     RES             theend_drawbuf,                     0 ; $6800    ; $700 bytes!
     GAP                                                 72
-    _ES             btl_turnorder,                      13 ; $6848         ; $D entries (9 enemies + 4 characters)
-    _ES             btl_hp_text_buf,                    0 ; $6855   ; 8 bytes?
-    GAP                                                 1
-    _ES             btl_drink_selection,                0 ; $6856
+    GAP                                                 14
     RES             levelup_loop,                       0 ; $6856
-    _ES             btl_mathbuf,                        0 ; $6856     ; $14 bytes?, 2 byte pairs, used as buffers for mathematical routines
     RES             math_hitchance,                     2 ; $6856
     RES             levelup_statsindex,                 0 ; $6858
     RES             math_basedamage,                    2 ; $6858
     RES             math_numhits,                       0 ; $685A
     RES             math_magrandhit,                    2 ; $685A
-    _ES             btlmag_spellconnected,              0 ; $685C ; 1 byte
     RES             math_category,                      2 ; $685C ; not really math... but whatever
     RES             math_element,                       0 ; $685E ; not really math... but whatever
     RES             math_randhit,                       2 ; $685E
@@ -470,177 +464,36 @@ SECTION "PRG_RAM"
     GAP                                                 3
     RES             battle_hitsconnected,               1 ; $686A     ; number of hits actually connected
     RES             battle_critsconnected,              1 ; $686B
-    _ES             btlmag_attacker_unk686C,            0 ; $686C ; Enemy:  ailments              Player:  ailments
-    _ES             btl_attacker_strength,              1 ; $686C
-    _ES             btlmag_defender_ailments,           0 ; $686D
-    _ES             btl_attacker_category,              1 ; $686D
-    _ES             btlmag_effect,                      0 ; $686E
-    _ES             btl_attacker_element,               1 ; $686E
-    _ES             btl_attacker_hitrate,               1 ; $686F
-    _ES             btlmag_hitrate,                     0 ; $6870
-    _ES             btl_attacker_numhitsmult,           1 ; $6870
-    _ES             btl_attacker_numhits,               1 ; $6871
-    _ES             btlmag_defender_magdef,             0 ; $6872
-    _ES             btl_attacker_critrate,              1 ; $6872
-    _ES             btlmag_defender_unknownRawInit0,    0 ; $6873
-    _ES             btl_attacker_attackailment,         1 ; $6873
-    _ES             btlmag_effectivity,                 1 ; $6874
-    _ES             btlmag_attacker_unk6875,            1 ; $6875 ; Enemy:  ai                    Player:  damage
-    _ES             btlmag_defender_elemweakness,       0 ; $6876
+    GAP                                                 10
     RES             eob_gp_reward,                      0 ; $6876
-    _ES             btl_defender_category,              1 ; $6876
-    _ES             btlmag_defender_elemresist,         0 ; $6877
-    _ES             btl_defender_elemweakness,          1 ; $6877
-    _ES             btlmag_element,                     0 ; $6878
-    _ES             btl_defender_evade,                 0 ; $6878
-    RES             eob_exp_reward,                     1 ; $6878
-    _ES             btlmag_attacker_unk6879,            0 ; $6879 ; Enemy:  high byte of GP       Player:  class
-    _ES             btl_defender_absorb,                1 ; $6879
-    _ES             btlmag_defender_hp,                 0 ; $687A
-    _ES             btl_defender_magdef,                1 ; $687A
-    _ES             btl_defender_elemresist,            1 ; $687B
-    _ES             btl_defender_hp,                    1 ; $687C
-    _ES             btlmag_defender_numhitsmult,        1 ; $687D
-    _ES             btlmag_defender_morale,             1 ; $687E
-    _ES             btlmag_defender_absorb,             1 ; $687F
-    _ES             btlmag_defender_hpmax,              0 ; $6880
-    _ES             btl_attacker_graphic,               1 ; $6880     ; the graphic used for an attack
-    _ES             btl_attacker_varplt,                1 ; $6881     ; The variable palette color used for an attack
-    RES             battle_totaldamage,                 0 ; $6882
-    _ES             btlmag_defender_strength,           1 ; $6882
-    _ES             btlmag_attacker_unk6883,            1 ; $6883 ; Enemy:  0                     Player:  level
-    RES             battle_attacker_index,              0 ; $6884 ; ?? redundant??  why not just use btl_attacker?
-    _ES             btlmag_attacker_unk6884,            1 ; $6884 ; Enemy:  damage                Player:  hit rate
-    RES             battle_defender_index,              0 ; $6885 ; same... but this is necessary for output!  See Battle_DoTurn in bank C!!
-    _ES             btlmag_defender_evade,              1 ; $6885  ; shared with battle_defender_index?  Is that not used for btlmag ?
-    _ES             btlmag_defender_category,           1 ; $6886
-    RES             battle_defenderisplayer,            1 ; $6887 ; nonzero if player is defending, zero if enemy is defending 
-    _ES             btl_attacker_ailments,              1 ; $6888 ;   important for output!  See Battle_DoTurn in bank C
-    _ES             btl_defender_ailments,              1 ; $6889 ; important for output!
-    _ES             btl_rngstate,                       1 ; $688A    ; State of RNG used for in-battle
-    _ES             btltmp_divLo,                       1 ; $688B
-    _ES             btltmp_divHi,                       1 ; $688C
-    _ES             btltmp_divV,                        1 ; $688D
-    RES             levelup_classid,                    0 ; $688E ; local, stores class ID
-    _ES             btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
-    _ES             btl_charcmdbuf,                     16 ; $688F
-    RES             char_order_buf,                     0 ; $689F
-    _ES             btl_charcmditem,                    1 ; $689F
-    GAP                                                 3
-    _ES             btl_charcmdconsumetype,             1 ; $68A3
-    GAP                                                 3
-    _ES             btl_charcmdconsumeid,               1 ; $68A7
-    GAP                                                 7
-    _ES             btl8x8spr_x,                        2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
-    _ES             btl8x8spr_y,                        2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
-    _ES             btl_tmpindex,                       0 ; $68B3 ; temporary holder for a current index
-    _ES             btltmp_multA,                       0 ; $68B3 ; shared
-    _ES             btltmp_boxleft,                     0 ; $68B3
-    _ES             btl_input,                          0 ; $68B3
-    _ES             btl8x8spr_a,                        1 ; $68B3 ; attribute
-    _ES             btltmp_multB,                       0 ; $68B4    ; shared
-    _ES             btl_tmpchar,                        0 ; $68B4 ; temporary holder for a 0-based character index
-    _ES             btltmp_boxcenter,                   0 ; $68B4
-    _ES             btl8x8spr_t,                        1 ; $68B4 ; tile ID
-    _ES             btl8x8spr_i,                        0 ; $68B5 ; slot to draw to (00-3F)
-    _ES             btltmp_boxright,                    0 ; $68B5
-    _ES             btltmp_multC,                       1 ; $68B5
-    GAP                                                 1
-    _ES             btl_soft2000,                       1 ; $68B7    ; soft copy of PPUCTRL used in battles
-    _ES             btl_soft2001,                       1 ; $68B8    ; soft copy of PPUMASK used in battles
-    GAP                                                 1
-    _ES             btlbox_blockdata,                   1 ; $68BA
-    GAP                                                 99
-    _ES             btl_msgbuffer,                      384 ; $691E   ; $180 bytes  ($0C rows * $20 bytes per row); this buffer contains on-screen tiles to be drawn to ppu$2240; (note only $19 bytes are actually drawn, the remaining 7 bytes are padding)
-    _ES             btl_msgdraw_hdr,                    1 ; $6A9E
-    _ES             btl_msgdraw_x,                      1 ; $6A9F
-    _ES             btl_msgdraw_y,                      1 ; $6AA0
-    _ES             btl_msgdraw_srcptr,                 0 ; $6AA1  ; shared ; 2 bytes
-    _ES             btl_msgdraw_width,                  1 ; $6AA1
-    _ES             btl_msgdraw_height,                 1 ; $6AA2
-    _ES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
     GAP                                                 2
-    _ES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
+    RES             eob_exp_reward,                     1 ; $6878
+    GAP                                                 9
+    RES             battle_totaldamage,                 0 ; $6882
+    GAP                                                 2
+    RES             battle_attacker_index,              0 ; $6884 ; ?? redundant??  why not just use btl_attacker?
+    GAP                                                 1
+    RES             battle_defender_index,              0 ; $6885 ; same... but this is necessary for output!  See Battle_DoTurn in bank C!!
+    GAP                                                 2
+    RES             battle_defenderisplayer,            1 ; $6887 ; nonzero if player is defending, zero if enemy is defending 
+    GAP                                                 6
+    RES             levelup_classid,                    0 ; $688E ; local, stores class ID
+    GAP                                                 17
+    RES             char_order_buf,                     0 ; $689F
+    GAP                                                 519
     RES             eobbox_slotid,                      1 ; $6AA6
     RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
     RES             eobbox_textid,                      1 ; $6AA7
-    GAP                                                 1
-    _ES             btl_animatingchar,                  1 ; $6AA9     ; the character currently being animated (0-3)
-    _ES             btlcurs,                            0 ; $6AAA
-    _ES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
-    _ES             btlcurs_max,                        0 ; $6AAB     ; highest value for the cursor
-    _ES             btlcurs_y,                          1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
+    GAP                                                 4
     RES             levelup_statupbuffer,               0 ; $6AAC     ; 5 bytes indicating which stats have been increased
-    _ES             btlcurs_positions,                  1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
-    GAP                                                 36
-    _ES             btl_drawflagsA,                     1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead ; bit    4 = set to draw battle cursor ; bit    5 = set to draw weapon attack graphic ; bit    6 = set to draw magic graphic & flash BG.
-    _ES             btl_drawflagsB,                     1 ; $6AD2  ; bits 0-4 = set to indicate character should be drawn as stone
-    _ES             btl_chardrawinfo,                   0 ; $6AD3        ;$10 bytes, 4 bytes for each character
-    _ES             btl_chardraw_x,                     1 ; $6AD3
-    _ES             btl_chardraw_y,                     1 ; $6AD4
-    _ES             btl_chardraw_gfxset,                1 ; $6AD5
-    _ES             btl_chardraw_pose,                  1 ; $6AD6
-    GAP                                                 12
-    _ES             btlcursspr_x,                       1 ; $6AE3
-    _ES             btlcursspr_y,                       1 ; $6AE4
-    _ES             btlattackspr_x,                     1 ; $6AE5
-    _ES             btlattackspr_y,                     1 ; $6AE6
-    _ES             btlattackspr_t,                     1 ; $6AE7     ; indicate which tile to draw for the weapon graphic
-    _ES             btlattackspr_pose,                  1 ; $6AE8     ; for weapons, 0 or 8 to indicate whether or not to flip it for magic, 0 or ?4? to indicate which frame to draw
-    _ES             btlattackspr_gfx,                   1 ; $6AE9     ; copied to 't' prior to drawing.  Indicates which graphic to use
-    _ES             btlattackspr_wepmag,                1 ; $6AEA     ; 0 for drawing the weapon, 1 for drawing the magic
-    GAP                                                 2
-    _ES             btlattackspr_hidell,                1 ; $6AED     ; nonzero to hide the lower-left tile of the attack graphic, this is done for the "behind the back" frame of weapon swing animation.
-    _ES             btlattackspr_nodraw,                1 ; $6AEE     ; nonzero to hide the weapon/magic sprite entirely. This is used when a non-BB player attacks without any weapon equipped Also used when using ITEMs to supress the magic flashing effect.
-    _ES             btltmp_targetlist,                  9 ; $6AEF     ; temporary buffer (9 entries) containing possible targets
-    _ES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
-    GAP                                                 1
-    _ES             btl_unfmtcbtbox_buffer,             128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
-    _ES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
-    _ES             btlcmd_target,                      1 ; $6B7B     ; the current enemy slot that is being targetted
-    GAP                                                 2
-    _ES             btlcmd_magicgfx,                    8 ; $6B7E     ; 2 bytes per character.  [0] = graphic to draw, [1] = palette to use
-    _ES             btl_result,                         1 ; $6B86 ;   0 = keep battling ;   1 = party defeated ;   2 = all enemies defeated ;   3 = party ran ; $FF = wait for 2 seconds after fadeout before exiting (chaos defeated?)
-    _ES             btl_usepalette,                     32; $6B87 ; $20 bytes - the palette that is actually displayed (after fade effects)
-    _ES             btl_followupmusic,                  1 ; $6BA7 ; song to play in battle after current song finishes.  Moved to music_track once music_track has its high bit set  (does this ever happen?)
-    _ES             btl_charattrib,                     4 ; $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
-    _ES             btl_responddelay,                   1 ; $6BAC
+    GAP                                                 257
     RES             levelup_levindex,                   1 ; $6BAD ; local, stores the index to level up stats
-    _ES             btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
-    _ES             btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
-    _ES             btl_potion_pure,                    1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)
-    RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
-    _ES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
-    _ES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
-    GAP                                                 2
-    _ES             btl_enemyeffect,                    1 ; $6BB6     ; 0 to draw expolosion graphics as the effect nonzero to erase the enemy as the effect
-    _ES             btl_enemyIDs,                       9 ; $6BB7  ; 9 entries of enemy IDs
-    _ES             btl_enemygfxplt,                    9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
-    _ES             btl_enemyroster,                    4 ; $6BC9  ; 4 bytes of enemy IDs printed in the main battle menu, showing enemies in the fight
-    _ES             btl_attacker_alt,                   1 ; $6BCD ; An EXTREMELY redundant and stupid copy of btl_attacker
-    GAP                                                 1
-    _ES             btl_randomplayer,                   1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
     GAP                                                 3
-    _ES             btl_enemystats,                     1 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
-    GAP                                                 44
+    RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
+    GAP                                                 78
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     1 ; $6C00 ; temporary space used by the lineup menu
-    GAP                                                 135
-    _ES             btl_tmppltassign,                   1 ; $6C88    ; temporary value to assign palette to enemies in a formation
-    _ES             btl_attacker,                       1 ; $6C89
-    _ES             btl_defender,                       1 ; $6C8A
-    _ES             btl_combatboxcount_alt,             1 ; $6C8B ; ANOTHER combatbox counter... this is totally redundant
-    _ES             btl_attackid,                       1 ; $6C8C ; >= $42 for enemy attacks
-    GAP                                                 2
-    _ES             btlmag_magicsource,                 1 ; $6C8F ; 0=magic, 1=drink, 2=item
-    _ES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of 
-    GAP                                                 1
-    _ES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
-    _ES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
-    _ES             btltmp_attr,                        40 ; $6C94     ; $40 bytes of attribute data for the battle setup
-    GAP                                                 24
-    _ES             btl_stringoutputbuf,                1 ; $6CD4 ; output buffer where decoded strings are printed
-    GAP                                                 43
+    GAP                                                 255
     RES             lutmp_ch_magic,                     1 ; $6D00
     GAP                                                 19
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
@@ -649,35 +502,7 @@ SECTION "PRG_RAM"
     RES             explode_max_x,                      1 ; $6D16
     RES             explode_max_y,                      1 ; $6D17
     RES             explode_count,                      1 ; $6D18
-    _ES             btltmp_altmsgbuffer,                1 ; $6D19
-    GAP                                                 18
-    _ES             btltmp_attackerbuffer,              1 ; $6D2C
-    GAP                                                 7
-    _ES             btl_palettes,                       1 ; $6D34   ; $20 bytes
-    GAP                                                 31
-    _ES             btl_stringbuf,                      1 ; $6D54   ; $20 byte buffer to contain string data for printing
-    GAP                                                 31
-    _ES             btltmp_backseat,                    1 ; $6D74   ; $10 byte buffer -- backup of btltmp
-    GAP                                                 15
-    _ES             btlform_type,                       0 ; $6D84   ; battle type (high 4 bits) -- low 4 bits are pattern table
-    _ES             btl_formdata,                       1 ; $6D84   ; $10 bytes (formation data as appears in ROM)
-    _ES             btlform_engfx,                      1 ; $6D85   ; graphic assignment (2 bits per enemy)
-    _ES             btlform_enids,                      4 ; $6D86   ; enemy IDs (4 bytes)
-    _ES             btlform_enqty,                      4 ; $6D8A   ; enemy quantities (4 bytes)
-    _ES             btlform_plts,                       2 ; $6D8E   ; palettes for this battle (2 bytes)
-    _ES             btlform_surprise,                   1 ; $6D90   ; surprise rate
-    _ES             btlform_enplt,                      0 ; $6D91   ; enemy palette assign (in high 4 bits)
-    _ES             btlform_norun,                      1 ; $6D91   ; no run flag (in low bit)
-    _ES             btlform_enqtyB,                     2 ; $6D92   ; enemy quantities for B formation (2 bytes)
-    _ES             btlmag_fakeout_ailments,            1 ; $6D94 ;   what these 'fakeout' vars are and how/why they're used
-    _ES             btlmag_fakeout_defindex,            1 ; $6D95 ; See Battle_DoTurn in bank C for a description of
-    _ES             btlmag_fakeout_defplayer,           1 ; $6D96
-    _ES             btlsfx_backseat,                    1 ; $6D97 ; where it is stored when not in zero page (it swaps between the two)
-    GAP                                                 15
-    _ES             btlmag_playerhitsfx,                1 ; $6DA7     ; sound effect to play when magic hits player
-    GAP                                                 8
-    _ES             btltmp_smallslotpos,                1 ; $6DB0
-    GAP                                                 591
+    GAP                                                 743
     RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
     RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
 
