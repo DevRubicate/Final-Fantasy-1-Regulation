@@ -695,10 +695,9 @@ SECTION "PRG_RAM"
     RES             mapobj_pl,                          1 ; $6F0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
     RES             mapobj_tsaptr,                      1 ; $6F0E
     GAP                                                 241
-    RES_ADDRESS     mapdata,                            1, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
-    RES             mm_decorchr,                        1 ; $7000   ; $300 bytes -- should be on page bound, shared
-    GAP                                                 766
-    RES_PAGE        mm_titlechr,                        1 ; $7300   ; $280 bytes -- should be on page bound, shared
+    RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
+    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
+    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
 
 
 
