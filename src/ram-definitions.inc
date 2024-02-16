@@ -637,8 +637,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 1
     RES             btl_randomplayer,                   1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
     GAP                                                 3
-    RES             btl_enemystats,                     1 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
-    GAP                                                 180
+    RES             btl_enemystats,                     180 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
     RES             btl_tmppltassign,                   1 ; $6C88    ; temporary value to assign palette to enemies in a formation
     RES             btl_attacker,                       1 ; $6C89
     RES             btl_defender,                       1 ; $6C8A
@@ -650,8 +649,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 1
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
-    RES             btltmp_attr,                        40 ; $6C94     ; $40 bytes of attribute data for the battle setup
-    GAP                                                 24
+    RES             btltmp_attr,                        64 ; $6C94     ; $40 bytes of attribute data for the battle setup
     RES             btl_stringoutputbuf,                1 ; $6CD4 ; output buffer where decoded strings are printed
     GAP                                                 63
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
@@ -664,12 +662,9 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 18
     RES             btltmp_attackerbuffer,              1 ; $6D2C
     GAP                                                 7
-    RES             btl_palettes,                       1 ; $6D34   ; $20 bytes
-    GAP                                                 31
-    RES             btl_stringbuf,                      1 ; $6D54   ; $20 byte buffer to contain string data for printing
-    GAP                                                 31
-    RES             btltmp_backseat,                    1 ; $6D74   ; $10 byte buffer -- backup of btltmp
-    GAP                                                 15
+    RES             btl_palettes,                       32 ; $6D34   ; $20 bytes
+    RES             btl_stringbuf,                      32 ; $6D54   ; $20 byte buffer to contain string data for printing
+    RES             btltmp_backseat,                    16 ; $6D74   ; $10 byte buffer -- backup of btltmp
     RES             btlform_type,                       0 ; $6D84   ; battle type (high 4 bits) -- low 4 bits are pattern table
     RES             btl_formdata,                       1 ; $6D84   ; $10 bytes (formation data as appears in ROM)
     RES             btlform_engfx,                      1 ; $6D85   ; graphic assignment (2 bits per enemy)
