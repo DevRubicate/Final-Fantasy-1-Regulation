@@ -673,11 +673,16 @@ SECTION "PRG_RAM"
     RES             btlmag_fakeout_defindex,            1 ; $6D95 ; See Battle_DoTurn in bank C for a description of
     RES             btlmag_fakeout_defplayer,           1 ; $6D96
     RES             btlsfx_backseat,                    1 ; $6D97 ; where it is stored when not in zero page (it swaps between the two)
-    GAP                                                             15
+    GAP                                                 15
     RES             btlmag_playerhitsfx,                1 ; $6DA7     ; sound effect to play when magic hits player
-    GAP                                                             8
+    GAP                                                 8
     RES             btltmp_smallslotpos,                1 ; $6DB0
-    GAP                                                             335
+    GAP                                                 591
+    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
+    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
+
+SECTION "MAPOBJ"
+    GAP                                                 3840
     RES_PAGE        mapobj,                             0 ; $6F00   ; $100 bytes -- page
     RES             mapobj_id,                          1 ; $6F00  ; rearranging these is ill advised
     RES             mapobj_flgs,                        1 ; $6F01  ;  because the loader is pretty rigid
@@ -694,13 +699,10 @@ SECTION "PRG_RAM"
     RES             mapobj_face,                        1 ; $6F0C
     RES             mapobj_pl,                          1 ; $6F0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
     RES             mapobj_tsaptr,                      1 ; $6F0E
-    GAP                                                 241
+
+SECTION "MAPDATA"
+    GAP                                                 4096
     RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
-    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
-    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
-
-
-
 
     ;  Buffers to hold character commands for battle.  These must be contiguious in memory
     ;  due to the way memory is cleared.  These buffers also contain a bit of redundant data.
