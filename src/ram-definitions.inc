@@ -446,7 +446,6 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             sram_assert_55,                     1   ; $64FE
     RES             sram_assert_AA,                     1   ; $64FF
     GAP                                                 768
-    RES             theend_drawbuf,                     0 ; $6800    ; $700 bytes!
     GAP                                                 159
     RES             char_order_buf,                     0 ; $689F
     GAP                                                 519
@@ -746,3 +745,8 @@ SECTION "MINIMAP2" ; $7000 - $7580
     ;btl_charcmdconsumeid    = btl_charcmdconsumetype+4  ; $68A7
 
 
+
+
+SECTION "THEEND" ; $6800 - $6F00
+    GAP                                                 2048
+    RES             theend_drawbuf,                     1792 ; $6800    ; $700 bytes!
