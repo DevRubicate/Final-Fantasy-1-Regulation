@@ -5505,34 +5505,31 @@ ReSortPartyByAilment:
     ;  go in ascending order, and characters will debilitating ailments will be
     ;  moved to the back of the party.  (Or at least they would if it sorted
     ;  properly -- see below for explanation of how this is bugged).
-    
-                @outerloopctr = $8A
-                @loopctr = $8B
-    
-    STX @outerloopctr               ; X=4 at this point, do the outer loop 4 times
+
+    STX outerloopctr_alignmentsor               ; X=4 at this point, do the outer loop 4 times
 @OuterSortLoop:
     LDA #$00                        ; inner loop counter -- loop 3 times
-    STA @loopctr
+    STA loopctr_alignmentsort
     
   @InnerLoop:
-      LDY @loopctr
+      LDY loopctr_alignmentsort
       LDA char_order_buf, Y         ; check weight of this slot
       CMP char_order_buf+1, Y       ; compare to weight of next slot
       BCC :+                        ; if the weight of this slot is greater (this slot should be after next slot)
         LDA char_order_buf, Y         ; ... then swap these slots.
         AND #$03                      ; This swap code is BUGGED, because it gets the index from char_order_buf, which
         STA $88                       ;  does not actually reflect the character index anymore!  The character index is
-        LDA char_order_buf+1, Y       ;  in @loopctr!  This actually should be swapping @loopctr and @loopctr+1... you
+        LDA char_order_buf+1, Y       ;  in loopctr_alignmentsort!  This actually should be swapping loopctr_alignmentsort and loopctr_alignmentsort+1... you
         AND #$03                      ;  know... the slots we actually checked.
         STA $89                       ; Because of this, it's possible the routine will screw up the sorting.
         JSR SwapCharsForSorting
     
-    : INC @loopctr                  ; do inner loop 3 times (not 4, because we check slot+1)
-      LDA @loopctr
+    : INC loopctr_alignmentsort                  ; do inner loop 3 times (not 4, because we check slot+1)
+      LDA loopctr_alignmentsort
       CMP #$03
       BNE @InnerLoop
       
-    DEC @outerloopctr               ; do outer loop 4 times, so that the last slot has time to be moved all the way
+    DEC outerloopctr_alignmentsor               ; do outer loop 4 times, so that the last slot has time to be moved all the way
     BNE @OuterSortLoop              ;  to the front.
     
     RTS

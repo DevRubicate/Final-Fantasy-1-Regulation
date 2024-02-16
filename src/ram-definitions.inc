@@ -204,8 +204,11 @@ SECTIONZP "ZEROPAGE"
     RESZP lvlup_exptoadv,                   2 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
     RESZP lvlup_chmagic,                    2 ; 2 bytes      ; $84       ; 2 byte pointer to character's magic data
     RESZP lvlup_chstats,                    2 ; 2 bytes      ; $86       ; 2 byte pointer to character's OB stats
-    RESZP battlereward,                     3 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
-    GAP                                     22
+    RESZP battlereward,                     0 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
+    GAP                                     2
+    RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
+    RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
+    GAP                                     21
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
     GAP                                     78
     RESZP framecounter,                     2 ; 2 bytes      ; $F0
@@ -335,7 +338,9 @@ SECTION "MINIMAP"
 SECTION "PUZZLE"
     RES             puzzle,                             16 ; $0300
 
-SECTION "PRG_RAM"
+
+
+SECTION "PRG_RAM" ; $6000 - $6D00
     RES             unsram,                             0 ; $6000   ; $400 bytes
     RES             ship_vis,                           1 ; $6000
     RES             ship_x,                             1 ; $6001
@@ -442,24 +447,21 @@ SECTION "PRG_RAM"
     RES             sram_assert_AA,                     1   ; $64FF
     GAP                                                 768
     RES             theend_drawbuf,                     0 ; $6800    ; $700 bytes!
-    GAP                                                 158
+    GAP                                                 159
     RES             char_order_buf,                     0 ; $689F
     GAP                                                 519
     RES             eobbox_slotid,                      1 ; $6AA6
     RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
     RES             eobbox_textid,                      1 ; $6AA7
-    GAP                                                 264
+    GAP                                                 265
     RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
     GAP                                                 78
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     1 ; $6C00 ; temporary space used by the lineup menu
     GAP                                                 255
     RES             lutmp_ch_magic,                     1 ; $6D00
-    GAP                                                 767
-    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
-    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
 
-SECTION "BATTLE"
+SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 2048
     RES             btl_chstats,                        72 ; $6800  ; $12 bytes per character
     RES             btl_turnorder,                      13 ; $6848  ; $D entries (9 enemies + 4 characters)
@@ -578,9 +580,7 @@ SECTION "BATTLE"
     RES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
     GAP                                                 2
     RES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
-    _ES             eobbox_slotid,                      1 ; $6AA6
-    _ES             eobbox_textid,                      1 ; $6AA7
-    GAP                                                 1
+    GAP                                                 3
     RES             btl_animatingchar,                  1 ; $6AA9     ; the character currently being animated (0-3)
     RES             btlcurs,                            0 ; $6AAA
     RES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
@@ -625,7 +625,7 @@ SECTION "BATTLE"
     RES             btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
     RES             btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
     RES             btl_potion_pure,                    1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)
-    _ES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
+    GAP                                                 1
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2
@@ -638,9 +638,7 @@ SECTION "BATTLE"
     RES             btl_randomplayer,                   1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
     GAP                                                 3
     RES             btl_enemystats,                     1 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
-    GAP                                                 44
-    _ES             lutmp_ch_stats,                     1 ; $6C00 ; temporary space used by the lineup menu
-    GAP                                                 135
+    GAP                                                 180
     RES             btl_tmppltassign,                   1 ; $6C88    ; temporary value to assign palette to enemies in a formation
     RES             btl_attacker,                       1 ; $6C89
     RES             btl_defender,                       1 ; $6C8A
@@ -655,9 +653,7 @@ SECTION "BATTLE"
     RES             btltmp_attr,                        40 ; $6C94     ; $40 bytes of attribute data for the battle setup
     GAP                                                 24
     RES             btl_stringoutputbuf,                1 ; $6CD4 ; output buffer where decoded strings are printed
-    GAP                                                 43
-    _ES             lutmp_ch_magic,                     1 ; $6D00
-    GAP                                                 19
+    GAP                                                 63
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
     RES             explode_min_x,                      1 ; $6D14
     RES             explode_min_y,                      1 ; $6D15
@@ -693,7 +689,7 @@ SECTION "BATTLE"
     GAP                                                 8
     RES             btltmp_smallslotpos,                1 ; $6DB0
 
-SECTION "MAPOBJ"
+SECTION "MAPOBJ" ; $6F00 - $6F0E
     GAP                                                 3840
     RES_PAGE        mapobj,                             0 ; $6F00   ; $100 bytes -- page
     RES             mapobj_id,                          1 ; $6F00  ; rearranging these is ill advised
@@ -712,9 +708,14 @@ SECTION "MAPOBJ"
     RES             mapobj_pl,                          1 ; $6F0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
     RES             mapobj_tsaptr,                      1 ; $6F0E
 
-SECTION "MAPDATA"
+SECTION "MAPDATA" ; $7000 - $7FFF
     GAP                                                 4096
     RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
+
+SECTION "MINIMAP2" ; $7000 - $7580
+    GAP                                                 4096
+    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
+    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
 
     ;  Buffers to hold character commands for battle.  These must be contiguious in memory
     ;  due to the way memory is cleared.  These buffers also contain a bit of redundant data.
