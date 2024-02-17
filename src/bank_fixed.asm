@@ -220,7 +220,7 @@ EnterOverworldLoop:
 
   @AirshipSFX:
     LDA #$38          ; The airship sound effect performed here is exactly the same
-    STA $400C         ;  as the one desribed in AirshipTransitionFrame  (see that routine
+    STA PAPU_NCTL1         ;  as the one desribed in AirshipTransitionFrame  (see that routine
     LDA framecounter  ;  for details).  Only difference here is that the framecounter
     ASL A             ;  is doubled -- which means the sound effect cycles twice as fast,
     JMP @PlaySFX      ;  so it sounds like the propellers are spinning faster.
@@ -234,13 +234,13 @@ EnterOverworldLoop:
     LSR A             ;     0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0,0,1,2,3....  etc
     LSR A
     ORA #$30          ; use this pattern as the noise volume
-    STA $400C         ;   so the noise is constantly, slowly fading in and out (sounds like ocean waves)
+    STA PAPU_NCTL1         ;   so the noise is constantly, slowly fading in and out (sounds like ocean waves)
     LDA #$0A          ; use a fixed frequency of $0A
 
   @PlaySFX:
     STA PAPU_NFREQ1         ; write specified frequency
     LDA #0
-    STA $400F         ; write to last noise reg to reload length counter and get channel started
+    STA PAPU_NFREQ2         ; write to last noise reg to reload length counter and get channel started
     JMP @Loop         ; then jump back to loop
 
 
@@ -298,7 +298,7 @@ DoOWTransitions:
 
       LDA #0
       STA joy_start       ; clear start button catcher
-      STA $400C           ; silence noise channel (stop ship/airship sound effects)
+      STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
 
       JSR GetOWTile       ; get overworld tile (needed for some items, like the Floater)
       LDA #$00
@@ -314,7 +314,7 @@ DoOWTransitions:
     BEQ @Exit             ; if not... nothing else to check.  Just exit
 
       LDA #$00            ; otherwise... if they did press select..
-      STA $400C           ; silence noise (stop ship/airship sound effects)
+      STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
       JSR CyclePalettes   ; cycle out the palette
 
       LDA joy
@@ -1007,7 +1007,7 @@ DisableAPU:
     STA PAPU_CTL1   ; set Squares and Noise volume to 0
     STA PAPU_CTL2   ;  clear triangle's linear counter (silencing it next clock)
     STA PAPU_TCR1
-    STA $400C
+    STA PAPU_NCTL1
     LDA #$00
     STA PAPU_EN   ; disable all channels
     RTS
@@ -1472,7 +1472,7 @@ DockShip:
     CLC                 ; CLC to indicate success
 
     LDA #$30
-    STA $400C           ; silence noise (kills the "waves" sound)
+    STA PAPU_NCTL1           ; silence noise (kills the "waves" sound)
 
     LDA #$44
     STA music_track     ; switch to music track $44 (overworld theme)
@@ -1862,11 +1862,11 @@ MapTileDamage:
                           ;  normal/monochrome mode (toggles every frame).  This produces the flashy effect
 
     LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
-    STA $400C
+    STA PAPU_NCTL1
     LDA #$0D
     STA PAPU_NFREQ1             ; set noise freq to $0D (low)
     LDA #$00
-    STA $400F             ; set length counter to $0A (silence sound after 5 frames)
+    STA PAPU_NFREQ2             ; set length counter to $0A (silence sound after 5 frames)
                           ; this gets the noise channel playing the "kssssh" sound effect
 
     LDA move_speed            ; check move_speed (will be zero when the move is complete)
@@ -3593,11 +3593,11 @@ RedrawDoor:
 
 PlayDoorSFX:
     LDA #%00001100  ; enable noise decay, set decay speed to $0C (moderately slow)
-    STA $400C
+    STA PAPU_NCTL1
     LDA #$0E
     STA PAPU_NFREQ1       ; set freq to $0E  (2nd lowest possible for noise)
     LDA #$30
-    STA $400F       ; start noise playback -- set length counter to stop after $25 frames
+    STA PAPU_NFREQ2       ; start noise playback -- set length counter to stop after $25 frames
     RTS
 
 
@@ -3664,7 +3664,7 @@ PrepStandardMap:
     LDA #0
     STA PPUCTRL               ; disable NMIs
     STA PPUMASK               ; turn off the PPU
-    STA $400C               ; ??  tries to silence noise?  This doesn't really accomplish that.
+    STA PAPU_NCTL1               ; ??  tries to silence noise?  This doesn't really accomplish that.
 
     STA joy_select          ; zero a bunch of other map and input related stuff
     STA joy_start
@@ -5961,7 +5961,7 @@ BattleTransition:
     STA PPUMASK        ; write set emphasis
 
     LDA #$0F         ; enable volume decay for the noise channel
-    STA $400C        ;   and set it to decay at slowest speed -- but since the decay gets restarted every
+    STA PAPU_NCTL1        ;   and set it to decay at slowest speed -- but since the decay gets restarted every
                      ;   frame in this routine -- this effectively just holds the noise at maximum volume
 
     LDA tmp+12       ; set noise freq to (loopcounter/2)OR3
@@ -5970,7 +5970,7 @@ BattleTransition:
     STA PAPU_NFREQ1        ;    (repeated again)
 
     LDA #0
-    STA $400F        ; reload length counter
+    STA PAPU_NFREQ2        ; reload length counter
 
     INC tmp+12       ; inc our loop counter
     LDA tmp+12
@@ -6353,7 +6353,7 @@ DoAltarEffect:
     STA tmp+1            ; start with 2 scanlines illuminated
 
     LDA #$30
-    STA $400C            ; silence all audio channels by writing setting their volume to 0
+    STA PAPU_NCTL1            ; silence all audio channels by writing setting their volume to 0
     STA PAPU_CTL2
     STA PAPU_CTL1            ;  note this doesn't silence the triangle because tri has no volume control
     STA PAPU_TCR1            ; instead it marks the linear counter to silence the triangle after $30 clocks (12 frames)
@@ -6361,7 +6361,7 @@ DoAltarEffect:
     LDA #$0E
     STA PAPU_NFREQ1            ; set noise to play freq $E  (2nd lowest pitch possible for noise)
     LDA #$00
-    STA $400F            ; start noise playback.  Note noise is still inaudible because its vol=0, but will
+    STA PAPU_NFREQ2            ; start noise playback.  Note noise is still inaudible because its vol=0, but will
                          ; become audible as soon as its volume is changed (see AltarFrame)
 
     STA PAPU_FT2            ; set sq2's freq to $500 (low pitch) and start playback
@@ -6428,7 +6428,7 @@ DoAltarEffect:
 
     LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
     STA PAPU_CT2           ;  however note that sq2 is currently playing the wrong note (freq was changed for
-    STA $400C           ;  the sound effect)
+    STA PAPU_NCTL1           ;  the sound effect)
     STA PAPU_CTL2
 
     LDA #1              ; to prevent sq2 from playing the wrong note, mark it as playing a sound effect so
@@ -6458,7 +6458,7 @@ AltarFrame:
     LSR A
 
     ORA #$30          ; use monochrome scanlines/8 as the volume for sq2 and noise effect
-    STA $400C         ;  this will cause the sound effect to fade in and fade out and more/less
+    STA PAPU_NCTL1         ;  this will cause the sound effect to fade in and fade out and more/less
     STA PAPU_CTL2         ;  lines of the effect are visible
 
     AND #$01          ; also use the low bit of lines/8 as a scroll adjustment
@@ -6572,7 +6572,7 @@ PlaySFX_Error:
     STA PAPU_CTL1        ; silence square 1 (set volume to 0)
     STA PAPU_TCR1        ; attempt (and fail) to silence triangle (this just sets the linear reload.. but without
                      ;   a write to $400B, it will not take effect)
-    STA $400C        ; silence noise (set vol to 0)
+    STA PAPU_NCTL1        ; silence noise (set vol to 0)
 
     LDY #$0F         ; loop 16 times
   @Loop:
@@ -8073,7 +8073,7 @@ AnimateAirshipLanding:
     STA facing         ; reset facing to face the player rightward
 
     LDA #0
-    STA $400C          ; silence airship noise sound effect by setting volume to zero
+    STA PAPU_NCTL1          ; silence airship noise sound effect by setting volume to zero
 
     RTS                ; then exit
 
@@ -8114,7 +8114,7 @@ AirshipTransitionFrame:
     JSR DrawOWObj_BridgeCanal   ;  and bridge/canal
 
     LDA #%00111000
-    STA $400C            ; set noise volume to 8
+    STA PAPU_NCTL1            ; set noise volume to 8
 
     LDA framecounter     ; use framecounter as frequency for noise
     STA PAPU_NFREQ1            ;   this will result in a the pitch starting high, then quickly sweeping
@@ -8124,7 +8124,7 @@ AirshipTransitionFrame:
                          ;  128 frames
 
     LDA #0               ; write to last noise reg just to prime the length counter
-    STA $400F            ;  ensures noise will be audible
+    STA PAPU_NFREQ2            ;  ensures noise will be audible
 
     RTS                  ; frame is complete!  Exit
 

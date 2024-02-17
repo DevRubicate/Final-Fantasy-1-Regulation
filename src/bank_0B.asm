@@ -1619,11 +1619,11 @@ RespondDelay_UndrawAllCombatBoxes:
 
 RespondDelay:
     LDA btl_responddelay
-    STA $6AD0               ; loop counter
+    STA tmp_6ad0               ; loop counter
   @Loop:
       JSR WaitForVBlank   ; Do a frame
       JSR MusicPlay         ; update music
-      DEC $6AD0             ; repeat for desired number of frames
+      DEC tmp_6ad0             ; repeat for desired number of frames
       BNE @Loop
     RTS
     
@@ -1827,12 +1827,12 @@ ChaosDeath_FadeNoise:
     DEC chaosdeath_screamcounter             ; DEC noise setting
     
     LDA chaosdeath_screamcounter
-    STA $400C           ; write it to noise volume control
+    STA PAPU_NCTL1           ; write it to noise volume control
     LDA #$FF
     STA $400D           ; (no effect)
-    STA $400F           ; set length counter (make noise audible)
+    STA PAPU_NFREQ2     ; set length counter (make noise audible)
     LDA #$0F
-    STA $400E           ; set tone -- lowest possible frequency resulting in a very low rumble.
+    STA PAPU_NFREQ1     ; set tone -- lowest possible frequency resulting in a very low rumble.
     
     RTS
 
@@ -2030,14 +2030,14 @@ ChaosDeath:
 PrepareEnemyFormation:
     ; Start by doing some blanket RAM clearing
     
-    ; zero RAM at $6BB2 to $6C8F
+    ; zero RAM at tmp_6bb2 to $6C8F
     ; This is basic RAM clearing to prep generation of the battle formation.
     ;   This clears things like number of available slots for each enemy, as well
     ;   as enemy stats.
     LDA #$00
     LDX #$DE
     LDY #$00
-    : STA $6BB2, Y
+    : STA tmp_6bb2, Y
       INY
       DEX
       BNE :-

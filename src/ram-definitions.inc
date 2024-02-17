@@ -614,6 +614,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             math_magrandhit,                    2 ; $685A
     RES             btlmag_spellconnected,              0 ; $685C ; 1 byte
     RES             math_category,                      2 ; $685C ; not really math... but whatever
+    RES             tmp_685e,                           0 ; $685E
     RES             math_element,                       0 ; $685E ; not really math... but whatever
     RES             math_randhit,                       2 ; $685E
     RES             math_dmgcalc,                       2 ; $6860
@@ -692,6 +693,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             regen_loopctr,                      0 ; $68AF - 1 byte    ; local - loop down-counter
     RES             btl8x8spr_x,                        2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
     RES             btl8x8spr_y,                        2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
+    RES             tmp_68b3,                           0 ; $68B3
     RES             btl_tmpindex,                       0 ; $68B3 ; temporary holder for a current index
     RES             btltmp_multA,                       0 ; $68B3 ; shared
     RES             btltmp_boxleft,                     0 ; $68B3
@@ -730,7 +732,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             displaymsgcode,                     0 ; $6AA7
     RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
     RES             eobbox_textid,                      1 ; $6AA7
-    GAP                                                 1
+    RES             tmp_6aa8,                           1 ; $6AA8
     RES             btl_animatingchar,                  1 ; $6AA9     ; the character currently being animated (0-3)
     RES             btlcurs,                            0 ; $6AAA
     RES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
@@ -738,7 +740,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btlcurs_y,                          1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
     RES             levelup_statupbuffer,               0 ; $6AAC     ; 5 bytes indicating which stats have been increased
     RES             btlcurs_positions,                  1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
-    GAP                                                 36
+    GAP                                                 35
+    RES             tmp_6ad0,                           1 ; $6AD0
     RES             btl_drawflagsA,                     1 ; $6AD1  ; bits 0-3 = set to indicate character should be drawn as dead ; bit    4 = set to draw battle cursor ; bit    5 = set to draw weapon attack graphic ; bit    6 = set to draw magic graphic & flash BG.
     RES             btl_drawflagsB,                     1 ; $6AD2  ; bits 0-4 = set to indicate character should be drawn as stone
     RES             btl_chardrawinfo,                   0 ; $6AD3        ;$10 bytes, 4 bytes for each character
@@ -759,6 +762,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btlattackspr_hidell,                1 ; $6AED     ; nonzero to hide the lower-left tile of the attack graphic, this is done for the "behind the back" frame of weapon swing animation.
     RES             btlattackspr_nodraw,                1 ; $6AEE     ; nonzero to hide the weapon/magic sprite entirely. This is used when a non-BB player attacks without any weapon equipped Also used when using ITEMs to supress the magic flashing effect.
     RES             btltmp_targetlist,                  9 ; $6AEF     ; temporary buffer (9 entries) containing possible targets
+    RES             tmp_6af8,                           0 ; $6AF8
     RES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
     GAP                                                 1
     RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
@@ -773,13 +777,15 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_followupmusic,                  1 ; $6BA7 ; song to play in battle after current song finishes.  Moved to music_track once music_track has its high bit set  (does this ever happen?)
     RES             btl_charattrib,                     4 ; $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
     RES             btl_responddelay,                   1 ; $6BAC
-    RES             poison_index,                       0 ; 6BAD  ;  local - temp to hold OB stat index (00, 40, 80, C0)
+    RES             tmp_6bad,                           0 ; $6BAD
+    RES             poison_index,                       0 ; $6BAD  ;  local - temp to hold OB stat index (00, 40, 80, C0)
     RES             regen_id,                           0 ; $6BAD ; 1 byte       ; local - enemy ID and loop up-counter
     RES             levelup_levindex,                   1 ; $6BAD ; local, stores the index to level up stats
     RES             btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
     RES             btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because
     RES             btl_potion_pure,                    1 ; $6BB0 ;  it can fall out of sync with the ACTUAL items (if a character trying to use one dies, for example)
     RES             battle_bank,                        1 ; $6BB1  ; The bank to jump back to for setting up battles
+    RES             tmp_6bb2,                           0 ; $6BB2
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2

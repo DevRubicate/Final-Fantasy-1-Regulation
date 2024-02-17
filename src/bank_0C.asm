@@ -689,10 +689,10 @@ BattleSubMenu_Magic:
     ASL A
     ASL A
     ASL A                           ; put usable char index in 68B3,4  (00,40,80,C0)
-    STA $68B3                       ;  68B3 will eventually be index to the player's magic list
+    STA tmp_68b3                       ;  68B3 will eventually be index to the player's magic list
     STA tmp_68b4                       ;  68B4 will eventually be index to the player's MP
     
-    LDA $6AF8                       ; this was the "magic page".  So this will be 1 if the user selected a L5-8 spell, and 0 if L1-4 spell
+    LDA tmp_6af8                       ; this was the "magic page".  So this will be 1 if the user selected a L5-8 spell, and 0 if L1-4 spell
     AND #$01
     ASL A
     ASL A
@@ -700,8 +700,8 @@ BattleSubMenu_Magic:
     ASL A
     ASL A
     CLC
-    ADC $68B3
-    STA $68B3                       ; 68B3 = CharIndex + Page*4*4.  (4 spells per level * 4 levels per page)
+    ADC tmp_68b3
+    STA tmp_68b3                       ; 68B3 = CharIndex + Page*4*4.  (4 spells per level * 4 levels per page)
     
     PLA                             ; pull Page*4
     CLC
@@ -714,7 +714,7 @@ BattleSubMenu_Magic:
     CLC
     ADC btlcurs_x                   ; + X position
     CLC
-    ADC $68B3                       ; add to 68B3.  index is now complete:  Index from start of char's spell list, to their chosen spell.
+    ADC tmp_68b3                       ; add to 68B3.  index is now complete:  Index from start of char's spell list, to their chosen spell.
     
     TAY                             ; put that index in Y, and use it to get the chosen spell
     LDA ch0_spells, Y
@@ -748,7 +748,7 @@ BattleSubMenu_Magic:
     
     LDY #$05
     LDA (btl_varA), Y
-    STA $68B3                       ; put magic graphic at 68B3 (temp)
+    STA tmp_68b3                       ; put magic graphic at 68B3 (temp)
     
     LDY #$06
     LDA (btl_varA), Y
@@ -758,7 +758,7 @@ BattleSubMenu_Magic:
     ASL A
     TAY                             ; use 2*char as index for btlcmd_magicgfx
     
-    LDA $68B3
+    LDA tmp_68b3
     STA btlcmd_magicgfx, Y          ; record magic graphic
     LDA tmp_68b4
     STA btlcmd_magicgfx+1, Y        ; and magic palette
@@ -934,11 +934,11 @@ BattleSubMenu_Item:
     STA btl_tmpvar1     ; (selected column stored in temporary_3 for later)
     ASL A                       ;  * 4
     ASL A
-    STA $68B3
+    STA tmp_68b3
     LDA btlcurs_y               ;  + Selected row
     AND #$03
     CLC
-    ADC $68B3                   ;  = equip slot of selected item
+    ADC tmp_68b3                   ;  = equip slot of selected item
     
     ADC #ch_weapons - ch_stats  ; + offset for character equipment = index for ob stats
     TAY
@@ -1020,11 +1020,11 @@ GetPointerToMagicData:
     JSR MultiplyXA
     CLC
     ADC #<lut_MagicData     ; low byte
-    STA $68B3
+    STA tmp_68b3
     TXA
     ADC #>lut_MagicData     ; high byte in X
     TAX
-    LDA $68B3               ; low byte in A
+    LDA tmp_68b3               ; low byte in A
     RTS
     
     
@@ -1047,7 +1047,7 @@ EnterBattlePrepareSprites:
     
     LDA #$00
     STA btl_msgdraw_blockcount  ; clear the block count
-    STA $6AF8                   ; ??
+    STA tmp_6af8                   ; ??
     STA btlattackspr_nodraw                   ; ??
     
     ;;  Prep all the character drawing stuff
@@ -1673,9 +1673,9 @@ SelectPlayerTarget:
     LDA $6AF9               ; Get the current char from backup (why doesn't it just use btlcmd_curchar?)
     
   @PushLeft:
-    STA $68B3               ; increment the character index.  WHY?!?! This doesn't make any sense and
-    INC $68B3               ;   is a waste of code and time, and just complicates the below labels!
-    LDA $68B3               ;   This is so stupid!!!
+    STA tmp_68b3               ; increment the character index.  WHY?!?! This doesn't make any sense and
+    INC tmp_68b3               ;   is a waste of code and time, and just complicates the below labels!
+    LDA tmp_68b3               ;   This is so stupid!!!
     
     ASL A                           ; *2 to use as index for the cursor positions.  Put in Y
     TAY
@@ -2016,15 +2016,13 @@ MenuSelection_Drink:
 ;;    Same idea as MenuSelection_2x4, but rewritten as it is more complex than
 ;;  a basic 2x4 menu.  See MenuSelection_2x4 for input/output and other details.
 ;;
-;;  additional output:   $6AF8 = magic page
+;;  additional output:   tmp_6af8 = magic page
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MenuSelection_Magic:
-    STA $6AF9                   ; ??? This is never used
-    
     LDA #$00
-    STA $6AF8                   ; set page number to 0 (draw top page of magic box)
+    STA tmp_6af8                   ; set page number to 0 (draw top page of magic box)
     
     JSR DrawBattleMagicBox    ; draw it!
     JMP @MenuSelection          ; pointless jump, as this code immediately follws
@@ -2114,10 +2112,10 @@ MenuSelection_Magic:
     AND #$03
     CMP #$03                    ; see if it's at the bottom of the page
     BNE @NormalMove_Down        ; if not, do a normal move
-    LDA $6AF8                   ; otherwise, check the page
+    LDA tmp_6af8                   ; otherwise, check the page
     BEQ :+
       RTS                       ; page 1 = do nothing
-  : INC $6AF8                   ; page 0 = inc to page 1
+  : INC tmp_6af8                   ; page 0 = inc to page 1
     LDA #$01
     JSR UndrawNBattleBlocks   ; undraw the page 0 magic box
     JSR DrawBattleMagicBox    ; draw the page 1 magic box
@@ -2129,11 +2127,11 @@ MenuSelection_Magic:
     LDA btlcurs_y
     AND #$03                    ; top row of page?
     BNE @NormalMove_Up          ; no?  then normal move
-    LDA $6AF8                   ; yes?  check page
+    LDA tmp_6af8                   ; yes?  check page
     CMP #$01
     BEQ :+
       RTS                       ; page 0?  exit
-  : DEC $6AF8                   ; page 1?  move to page 0, and redraw it
+  : DEC tmp_6af8                   ; page 1?  move to page 0, and redraw it
     LDA #$01
     JSR UndrawNBattleBlocks
     JSR DrawBattleMagicBox
@@ -2311,21 +2309,21 @@ SetNaturalPose:
     RTS
     
 @CheckHP:                       ; if they don't have poison/stun/sleep, we need to check their HP
-    LDA ch_maxhp, Y     ; move max HP to $68B3,4
-    STA $68B3
+    LDA ch_maxhp, Y     ; move max HP to tmp_68b3,4
+    STA tmp_68b3
     LDA ch_maxhp+1, Y
     STA tmp_68b4
     
     LSR tmp_68b4           ; divide it by 4 (25% of max HP)
-    ROR $68B3
+    ROR tmp_68b3
     LSR tmp_68b4
-    ROR $68B3
+    ROR tmp_68b3
     
     LDA ch_curhp+1, Y   ; if the high byte of their HP is nonzero, they have over 256, which is
     BNE @DoStanding     ;   definitely more than 25% max, so DoStanding
     
     LDA ch_curhp, Y     ; otherwise, compare low byte of HP to low byte of 25%
-    CMP $68B3
+    CMP tmp_68b3
     BCC @DoCrouching    ; if cur HP is less, they are crouching
                         ; otherwise, they're standing
 @DoStanding:            
@@ -2390,7 +2388,7 @@ CharWalkAnimationRight:
 
 CharacterWalkAnimation:
     LDA #$08
-    STA $6AA8                   ; loop down counter -- looping 8 times for 16 total frames
+    STA tmp_6aa8                   ; loop down counter -- looping 8 times for 16 total frames
     
   @Loop:
       LDA btl_animatingchar     ; get the character index
@@ -2398,7 +2396,7 @@ CharacterWalkAnimation:
       ASL A
       TAX                       ; index for btl_chardraw buffer
       
-      LDA $6AA8
+      LDA tmp_6aa8
       AND #$02                  ; toggle animation pose every 4 frames
       ASL A                     ; switch between pose '0' (stand) and pose '4' (walk)
       STA btl_chardraw_pose, X
@@ -2410,7 +2408,7 @@ CharacterWalkAnimation:
       
       JSR UpdateSprites_TwoFrames   ; update sprites, do 2 frames of animation
       
-      DEC $6AA8
+      DEC tmp_6aa8
       BNE @Loop                 ; keep looping
     RTS
     
@@ -2429,9 +2427,9 @@ PlayFanfareAndCheer:
     STA btl_followupmusic
     
     LDA #$40                    ; loop counter
-    STA $6AA8
+    STA tmp_6aa8
   @Loop:
-      LDA $6AA8
+      LDA tmp_6aa8
       AND #(CHARPOSE_CHEER >> 1)    ; alternate between CHEER/STAND poses every 8 loop iterations
       ASL A
       STA btl_chardraw_pose+$0
@@ -2441,7 +2439,7 @@ PlayFanfareAndCheer:
       
       JSR UpdateSprites_TwoFrames   ; draw!
       
-      DEC $6AA8
+      DEC tmp_6aa8
       BNE @Loop
       
     JSR SetAllNaturalPose           ; afterwards, give everyone their natural pose
@@ -2471,14 +2469,14 @@ WalkForwardAndStrike:
     JSR CharacterWalkAnimation
     
     LDA #$08                    ; 6AA8 is the loop counter (loop 8 times), alternates between 
-    STA $6AA8                   ;   animation frames every 2 iterations.
+    STA tmp_6aa8                   ;   animation frames every 2 iterations.
     
   @DoAttackAnimationLoop:
     LDA btl_drawflagsA                  ; set the "draw weapon" draw flag
     ORA #$20                            ;  note:  for magic, this is changed in PrepAttackSprite call below
     STA btl_drawflagsA
     
-    LDA $6AA8
+    LDA tmp_6aa8
     AND #$02                            ; every other frame...
     BEQ @BFrame
         JSR PrepAttackSprite_AFrame     ; alternate between AFrame of animation
@@ -2488,7 +2486,7 @@ WalkForwardAndStrike:
         
     : JSR UpdateSprites_TwoFrames       ; redraw sprites on screen, do 2 frames.
     
-      DEC $6AA8
+      DEC tmp_6aa8
       BNE @DoAttackAnimationLoop        ; loop until counter expires
     
     
@@ -3102,13 +3100,13 @@ FlashCharacterSprite:
       BNE :-
       
     LDA #$10
-    STA $6BAD           ; Main Loop counter
+    STA tmp_6bad           ; Main Loop counter
     
   @MainLoop:
     LDX $6AAA           ; X = OAM offset
     LDY #$00            ; Y = inner loop counter
     
-    LDA $6BAD
+    LDA tmp_6bad
     AND #$02            ; every 2 iterations of main loop, toggle character's visibility
     BEQ @ShowSpriteLoop
     
@@ -3131,7 +3129,7 @@ FlashCharacterSprite:
   
   @NextIteration:
     JSR BattleFrame     ; Do a frame and update sprites
-    DEC $6BAD
+    DEC tmp_6bad
     BNE @MainLoop       ; Keep looping until main counter expires
     
     RTS
@@ -4446,7 +4444,7 @@ DoPhysicalAttack:
     STA battle_totaldamage+1
     
     LDA math_basedamage
-    STA $6BAD                   ; 6BAD is temp space for base damage.  Moved here because we will be writing over math_basedamage
+    STA tmp_6bad                   ; 6BAD is temp space for base damage.  Moved here because we will be writing over math_basedamage
     
   @HitLoop:             ;  [A7DD :: 327ED]
     JSR ClearMathBufHighBytes   ; A=0
@@ -4459,11 +4457,11 @@ DoPhysicalAttack:
     BNE :+
        JMP @NextHitIteration    ; skip if got 200 exactly (guaranteed miss)
        
-  : LDX $6BAD
+  : LDX tmp_6bad
     LDA #$00
     JSR RandAX
     CLC
-    ADC $6BAD
+    ADC tmp_6bad
     STA math_basedamage     ; random between [basedmg, basedmg*2]
     BCC :+                
       LDA #$FF
@@ -4869,10 +4867,10 @@ DrawCharacterStatus:
     JSR UpdateSprites_BattleFrame
     
     LDA #$00
-    STA $685E                           ; temp var for character index/loop counter
+    STA tmp_685e                           ; temp var for character index/loop counter
     
 @CharacterLoop:
-    LDA $685E
+    LDA tmp_685e
     JSR PrepCharStatPointers
     LDY #ch_ailments - ch_stats
     LDA (btl_ob_charstat_ptr), Y        ; get OB ailments (why not IB?)
@@ -4888,7 +4886,7 @@ DrawCharacterStatus:
     ADC #$41            
     STA $6B60           ; ailment index @ 6B60
     
-    LDA $685E           ; get 4+character index, which is the FormatBattleString character code for
+    LDA tmp_685e           ; get 4+character index, which is the FormatBattleString character code for
     CLC                 ; printing the character's name
     ADC #$04
     STA $6B5E           ; name code @ $6B5E
@@ -4914,7 +4912,7 @@ DrawCharacterStatus:
     JSR FormatBattleString    ; format it (printed to btl_stringoutputbuf).  Note again that
                                 ;  FormatBattleString creates an interleaved string.
     
-    LDA $685E                   ; use a LUT to get the target PPU address at which to draw this
+    LDA tmp_685e                   ; use a LUT to get the target PPU address at which to draw this
     ASL A                       ;   character's status
     TAY
     LDA lut_CharStatusPPUAddr, Y
@@ -4962,8 +4960,8 @@ DrawCharacterStatus:
     JSR BattleUpdatePPU                 ; reset scroll
     JSR BattleUpdateAudio               ; update audio for the frame we just waited for
     
-    INC $685E                   ; inc char index/loop counter
-    LDA $685E
+    INC tmp_685e                   ; inc char index/loop counter
+    LDA tmp_685e
     CMP #$04
     BEQ :+
       JMP @CharacterLoop        ; loop for all 4 characters
@@ -5217,10 +5215,10 @@ FadeOutOneShade:
         BNE @SetColor
     : SEC                   ; otherwise, subtract $10 to take it down a shade
       SBC #$10
-      STA $68B3             ; save new brightness to temp ram
+      STA tmp_68b3             ; save new brightness to temp ram
       LDA btl_palettes, Y   ; get the original color
       AND #$CF              ; remove brightness
-      ORA $68B3             ; apply new brightness
+      ORA tmp_68b3             ; apply new brightness
       
     @SetColor:
       STA btl_usepalette, Y ; write new color to usepalette
@@ -5823,23 +5821,23 @@ DoDivision:
     TXA                     ; backup X
     PHA
     LDA #$00                ; clear temp ram (to hold remainder)
-    STA $68B3
+    STA tmp_68b3
     
     LDX #16                 ; loop 16 times (each bit in HiLo)
     ROL btltmp_divLo
     ROL btltmp_divHi        ; left shift 1 bit out
   @Loop:
-      ROL $68B3             ; roll the bit into remainder
-      LDA $68B3
+      ROL tmp_68b3             ; roll the bit into remainder
+      LDA tmp_68b3
       CMP btltmp_divV       ; see if it's >= divisor
       BCC :+
         SBC btltmp_divV     ; if yes, subtract divisor
-        STA $68B3
+        STA tmp_68b3
     : ROL btltmp_divLo      ; if subtracted, roll 1 into low bit, otherwise, roll 0
       ROL btltmp_divHi      ;   this ultimately will perform the division
       DEX
       BNE @Loop             ; loop for all 16 bits
-    LDA $68B3
+    LDA tmp_68b3
     STA btltmp_divV         ; store remainder
     
     PLA                     ; restory X
@@ -5898,7 +5896,7 @@ MathBuf_Add16:
     LDA btl_mathbuf, Y
     CLC
     ADC btl_mathbuf, X
-    STA $6BCF               ; add low bytes together
+    STA temp_6bcf               ; add low bytes together
     
     LDA btl_mathbuf+1, Y
     ADC btl_mathbuf+1, X
@@ -5906,14 +5904,14 @@ MathBuf_Add16:
     
     BCC :+                  ; if there was high-byte carry
       LDA #$FF              ; cap at $FFFF
-      STA $6BCF
+      STA temp_6bcf
       STA $6BD0
       
   : PLA                     ; restore target index
     ASL A                   ; *2 to use as index
     TAX
     
-    LDA $6BCF               ; move sum to target slot in math buffer
+    LDA temp_6bcf               ; move sum to target slot in math buffer
     STA btl_mathbuf, X
     LDA $6BD0
     STA btl_mathbuf+1, X
@@ -5940,7 +5938,7 @@ MathBuf_Sub16:
     LDA btl_mathbuf, X
     SEC
     SBC btl_mathbuf, Y
-    STA $6BCF
+    STA temp_6bcf
     
     LDA btl_mathbuf+1, X
     SBC btl_mathbuf+1, Y
@@ -5948,13 +5946,13 @@ MathBuf_Sub16:
     
     BCS :+
       LDA #$00
-      STA $6BCF
+      STA temp_6bcf
       STA $6BD0
       
   : PLA
     ASL A
     TAX
-    LDA $6BCF
+    LDA temp_6bcf
     STA btl_mathbuf, X
     LDA $6BD0
     STA btl_mathbuf+1, X
@@ -5972,14 +5970,14 @@ MathBuf_Sub16:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MathBuf_Add:
-    STA $6BCF       ; backup index
+    STA temp_6bcf       ; backup index
     PHA             ; backup A,X,Y
     TXA
     PHA
     TYA
     PHA
     
-    LDA $6BCF       ; index value * 2 to use as index
+    LDA temp_6bcf       ; index value * 2 to use as index
     ASL A
     TAY
     
@@ -6014,19 +6012,19 @@ MathBuf_Add:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MathBuf_Sub:
-    STA $6BCF           ; routine is identical to MathBuf_Add, only it subtracts
+    STA temp_6bcf           ; routine is identical to MathBuf_Add, only it subtracts
     PHA                 ;   instead.  Spare comments.
     TXA
     PHA
     TYA
     PHA
-    LDA $6BCF
+    LDA temp_6bcf
     ASL A
     TAY
-    STX $6BCF
+    STX temp_6bcf
     SEC
     LDA btl_mathbuf, Y
-    SBC $6BCF
+    SBC temp_6bcf
     STA btl_mathbuf, Y
     LDA btl_mathbuf+1, Y
     SBC #$00
@@ -6501,7 +6499,7 @@ DrawDamageCombatBox:
 
 ShowAltBattleMessage:
     PHA                     ; backup AXY
-    STA $6BCF               ; (also, store the alt message ID in temp mem)
+    STA temp_6bcf               ; (also, store the alt message ID in temp mem)
     TXA
     PHA
     TYA
@@ -6510,7 +6508,7 @@ ShowAltBattleMessage:
     LDA #$0F                ; 0F is the control code for printing battle messages
     STA btltmp_altmsgbuffer ;  write it to a string buffer
     
-    LDX $6BCF               ; Get the alt message ID in X
+    LDX temp_6bcf               ; Get the alt message ID in X
     LDA @AltMessageLut, X   ; run it through a LUT to get the ACTUAL ID.
     
         ; One message in particular isn't applied to player targets
@@ -6842,11 +6840,11 @@ ShowAltBattleMessage_ClearAllBoxes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnemyAi_ShouldPerformAction:
-    STA $6BCF       ; store rate
+    STA temp_6bcf       ; store rate
     LDA #$00
     LDX #$80
     JSR RandAX      ; rand[ 0, 128 ]
-    CMP $6BCF       ; C clear if rand is less than rate (action should be performed)
+    CMP temp_6bcf       ; C clear if rand is less than rate (action should be performed)
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6972,13 +6970,13 @@ GetRandomPlayerTarget:
       JSR BattleRNG       ; get a random number
       CMP #$20
       BCS :+
-        INC $6BCF           ; inc target if < $20
+        INC temp_6bcf           ; inc target if < $20
     : CMP #$40
       BCS :+
-        INC $6BCF           ; inc target if < $40
+        INC temp_6bcf           ; inc target if < $40
     : CMP #$80
       BCS :+
-        INC $6BCF           ; inc target if < $80
+        INC temp_6bcf           ; inc target if < $80
         
       ; The end result here, is:
       ;  4/8 chance of target=0   (rand is [80,FF])
@@ -6990,7 +6988,7 @@ GetRandomPlayerTarget:
       ORA btl_drawflagsB        ; OR with 'stone' flags
       
       ASL A                 ; left shift 1 because below loop is 1-based
-      LDX $6BCF             ; get target
+      LDX temp_6bcf             ; get target
       INX                   ; make target 1 based
       : LSR A
         DEX
