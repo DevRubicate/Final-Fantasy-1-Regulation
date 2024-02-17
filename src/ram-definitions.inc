@@ -243,6 +243,7 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP loopctr,                          0 ; 1 bytes      ; $8B
     RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
     GAP                                     14
+    RESZP tmp_9a_9b,                        0 ; 1 bytes      ; $9A
     RESZP battleturn_enramstats,            0 ; 2 bytes      ; $9A
     RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
     RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
@@ -727,8 +728,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_msgdraw_width,                  1 ; $6AA1
     RES             btl_msgdraw_height,                 1 ; $6AA2
     RES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
-    GAP                                                 2
-
+    RES             tmp_6aa4,                           1 ; $6AA4
+    GAP                                                 1
     RES             displayloopctr,                     0 ; $6AA6
     RES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
     RES             eobbox_slotid,                      1 ; $6AA6

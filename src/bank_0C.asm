@@ -6629,8 +6629,8 @@ BtlMag_PrintMagicMessage:
 
 ApplyEnemyAilmentMask:
     LDY #en_ailments
-    AND ($9A), Y
-    STA ($9A), Y
+    AND (tmp_9a_9b), Y
+    STA (tmp_9a_9b), Y
     RTS
 
     

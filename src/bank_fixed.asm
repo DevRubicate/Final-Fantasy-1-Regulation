@@ -12109,7 +12109,7 @@ DrawBattleBox:
     LDA btl_msgdraw_height      ; get the height of the box
     SEC
     SBC #$02                    ; subtract 2 to make this the number of center rows to draw
-    STA $68B6                   ; store in temp
+    STA temp_68b6                   ; store in temp
     
     LDA #$FA                    ; Draw all the center rows
     STA btltmp_boxleft
@@ -12119,7 +12119,7 @@ DrawBattleBox:
     STA btltmp_boxright
   @Loop:
       JSR DrawBattleBox_Row
-      DEC $68B6
+      DEC temp_68b6
       BNE @Loop
       
     LDA #$FC                    ; draw the bottom row
@@ -12286,8 +12286,8 @@ DrawBlockBuffer:
 
 UndrawBattleBlock:
     LDA btl_msgdraw_blockcount
-    STA $6AA4                       ; backup the block count
-    DEC $6AA4                       ; reduce the count by 1 so we draw one less
+    STA tmp_6aa4                       ; backup the block count
+    DEC tmp_6aa4                       ; reduce the count by 1 so we draw one less
     JSR ClearBattleMessageBuffer    ; erase everything in the buffer
     
     LDA #<btlbox_blockdata          ; reset the blockptr
@@ -12300,7 +12300,7 @@ UndrawBattleBlock:
     
   @Loop:
       LDA btl_msgdraw_blockcount    ; compare block count
-      CMP $6AA4                     ;   to 1-less-than original block count
+      CMP tmp_6aa4                     ;   to 1-less-than original block count
       BEQ :+                        ; if we've reached that, we're done
       JSR DrawBattleBoxAndText      ; otherwise, draw another block
       INC btl_msgdraw_blockcount
@@ -12404,10 +12404,10 @@ DrawRosterBox:
       INC btl_msgdraw_y
     
       TYA
-      JSR GetPointerToRosterString    ; put the pointer in $68B3
-      LDA $68B3                       ; ... just to move it to btl_msgdraw_srcptr
+      JSR GetPointerToRosterString    ; put the pointer in tmp_68b3
+      LDA tmp_68b3                       ; ... just to move it to btl_msgdraw_srcptr
       STA btl_msgdraw_srcptr          ; (why doesn't GetPointerToRosterString just
-      LDA $68B4                       ;  put it in btl_msgdraw_srcptr directly?)
+      LDA tmp_68b4                       ;  put it in btl_msgdraw_srcptr directly?)
       STA btl_msgdraw_srcptr+1
     
       JSR BattleDraw_AddBlockToBuffer ; Add this block to the draw buffer
@@ -12458,8 +12458,8 @@ DrawCommandBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawCombatBox:
-    STX $68B3           ; stuff X,Y in temp mem
-    STY $68B4
+    STX tmp_68b3           ; stuff X,Y in temp mem
+    STY tmp_68b4
     
     ASL A               ; Y = A * 8  (8 bytes per box)
     ASL A
@@ -12483,9 +12483,9 @@ DrawCombatBox:
       CPX #$03
       BNE :-
       
-    LDA $68B3                   ; use temp mem (YX provided at start of routine)
+    LDA tmp_68b3                   ; use temp mem (YX provided at start of routine)
     STA btl_msgdraw_srcptr      ;  as pointer to text data
-    LDA $68B4
+    LDA tmp_68b4
     STA btl_msgdraw_srcptr+1
     
     JSR BattleDraw_AddBlockToBuffer ; add this text block
@@ -12910,7 +12910,7 @@ DrawDrinkBox:
 ;;
 ;;  A is the roster entry to get (0-3)
 ;;
-;;  A pointer to that roster string is put in $68B3 (temp memory)
+;;  A pointer to that roster string is put in tmp_68b3 (temp memory)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -12918,10 +12918,10 @@ GetPointerToRosterString:
     ASL A                           ; *2 (2 bytes per string)
     CLC
     ADC #<lut_EnemyRosterStrings    ; add to the lut address
-    STA $68B3
+    STA tmp_68b3
     LDA #$00
     ADC #>lut_EnemyRosterStrings
-    STA $68B4
+    STA tmp_68b4
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
