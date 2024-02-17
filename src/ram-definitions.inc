@@ -228,12 +228,12 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
     RESZP loopctr,                          0 ; 1 bytes      ; $8B
     RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
-    GAP                                     15
+    GAP                                     14
     RESZP battleturn_enramstats,            0 ; 2 bytes      ; $9A
     RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
     RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
-    GAP                                     3
+    GAP                                     4
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
     GAP                                     78
     RESZP framecounter,                     2 ; 2 bytes      ; $F0
