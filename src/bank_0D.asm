@@ -201,23 +201,22 @@ data_TheEndDrawData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawFancyTheEndGraphic:
-            @ppuaddr        = $61
     LDA #$00
     STA soft2000
     
     
     ; Clear CHR at $0800 to $0EFF  (tiles $80-EF)
     ;   clearing $80 bytes per frame (1 loop iteration = 1 frame)
-    STA @ppuaddr            ;
+    STA theend_ppuaddr            ;
     LDA #>$0800
-    STA @ppuaddr+1          ; set @ppu addr to $0800
+    STA theend_ppuaddr+1          ; set @ppu addr to $0800
     
   @ClearCHRLoop:
         JSR WaitForVBlank     ; wait for VBlank
         
-        LDA @ppuaddr+1          ; set ppu addr
+        LDA theend_ppuaddr+1          ; set ppu addr
         STA PPUADDR
-        LDA @ppuaddr
+        LDA theend_ppuaddr
         STA PPUADDR
         
         LDX #$80                ; clear $80 bytes
@@ -232,14 +231,14 @@ DrawFancyTheEndGraphic:
         
         JSR TheEnd_EndVblank    ; reset scroll, play music
         
-        LDA @ppuaddr            ; Add $80 to low byte
+        LDA theend_ppuaddr            ; Add $80 to low byte
         CLC
         ADC #$80
-        STA @ppuaddr
+        STA theend_ppuaddr
         BNE @ClearCHRLoop       ; if carry...
         
-        INC @ppuaddr+1          ; ...inc high byte
-        LDA @ppuaddr+1
+        INC theend_ppuaddr+1          ; ...inc high byte
+        LDA theend_ppuaddr+1
         CMP #$0F
         BCC @ClearCHRLoop       ; keep looping until high byte reaches $10
     
@@ -251,32 +250,29 @@ DrawFancyTheEndGraphic:
     ;
     ; This time, we draw one row of tiles each frame.
     ;   10 rows of tiles, each row has 10 tiles
-    
-                @drawtile       = $63
-                @loopctr        = $64
-    
+
     LDA #<$20A8
-    STA @ppuaddr
+    STA theend_ppuaddr
     LDA #>$20A8
-    STA @ppuaddr+1
+    STA theend_ppuaddr+1
     
     LDA #$80
-    STA @drawtile
+    STA theend_drawtile
     LDA #10
-    STA @loopctr
+    STA theend_loopctr
     
   @FillNTLoop:
         JSR WaitForVBlank         ; vblank
 
-        LDA @ppuaddr+1              ; ppu addr
+        LDA theend_ppuaddr+1              ; ppu addr
         STA PPUADDR
-        LDA @ppuaddr
+        LDA theend_ppuaddr
         STA PPUADDR
         
         LDX #10
-        : LDA @drawtile             ; draw 10 tiles
+        : LDA theend_drawtile             ; draw 10 tiles
           STA PPUDATA
-          INC @drawtile             ; (incrementing the tile each time so they're all unique)
+          INC theend_drawtile             ; (incrementing the tile each time so they're all unique)
           DEX
           BNE :-
           
@@ -286,15 +282,15 @@ DrawFancyTheEndGraphic:
         
         JSR TheEnd_EndVblank        ; scroll reset + music
         
-        LDA @ppuaddr                ; move ppu addr down 1 row
+        LDA theend_ppuaddr                ; move ppu addr down 1 row
         CLC
         ADC #$20
-        STA @ppuaddr
-        LDA @ppuaddr+1
+        STA theend_ppuaddr
+        LDA theend_ppuaddr+1
         ADC #0
-        STA @ppuaddr+1
+        STA theend_ppuaddr+1
         
-        DEC @loopctr                ; loop 
+        DEC theend_loopctr                ; loop 
         BNE @FillNTLoop
     
     ; Loop to change the attributes used to make the graphic use
@@ -429,20 +425,15 @@ DrawFancyTheEndGraphic:
  
  
     ; Here, we actually want to start filling
-  @DoFill:
-                @filly      = $65       ; Y coord for filling
-                @fillx      = $64       ; X coord for filling
-                @fillppu    = $3E       ; ppu addr for filling
-                @fillram    = $66       ; ram addr for filling
-                
+  @DoFill:  
     LDX theend_y        ; backup this position
-    STX @filly
+    STX theend_filly
     LDX theend_x
-    STX @fillx
+    STX theend_fillx
     
     JSR TheEnd_MovePos  ; move actual position
     
-    LDX @filly                  ; check Y coord against gradient lut to see if
+    LDX theend_filly                  ; check Y coord against gradient lut to see if
     LDA @lut_FillGradient, X    ;  we should fill on this row
     BEQ @FillLoop_Next          ; If zero, don't fill.  Skip.
     
@@ -453,26 +444,26 @@ DrawFancyTheEndGraphic:
     ;  a 1-directional flood fill)
     ;
 @FillInnerLoop:
-    LDA @fillx                  ; Move Left 1 pixel
+    LDA theend_fillx                  ; Move Left 1 pixel
     SEC
     SBC #$01
     BMI @FillLoop_Next          ; Abort if we've moved off the left edge!
-    STA @fillx
+    STA theend_fillx
 
     ;  Set PPU/RAM buffer pointers to access the current fill position pixel
-    LDX @fillx
-    LDY @filly
+    LDX theend_fillx
+    LDY theend_filly
     LDA lut_TheEndPixelPosition_X, X
     CLC
     ADC lut_TheEndPixelPosition_Ylo, Y
-    STA @fillppu
-    STA @fillram
+    STA theend_fillppu
+    STA theend_ramaddr
     LDA lut_TheEndPixelPosition_Yhi, Y
     ADC #$00
-    STA @fillppu+1
+    STA theend_fillppu+1
     CLC
     ADC #$60
-    STA @fillram+1
+    STA theend_ramaddr+1
     
     ; Get the mask for this pixel
     TXA
@@ -481,19 +472,19 @@ DrawFancyTheEndGraphic:
     LDA lut_TheEndPixelMasks, X
     
     LDY #$00
-    AND (@fillram), Y           ; check to see if the pixel is already set
+    AND (theend_ramaddr), Y           ; check to see if the pixel is already set
     BNE @FillLoop_Next          ; if it was, we're done filling, as we've hit the "left wall"
     
     ; Otherwise... we want to draw this pixel to fill!
     JSR WaitForVBlank             ; have to draw in VBlank
     
     LDA lut_TheEndPixelMasks, X     ; get pixel mask again
-    ORA (@fillram), Y               ; update RAM
-    STA (@fillram), Y
+    ORA (theend_ramaddr), Y               ; update RAM
+    STA (theend_ramaddr), Y
     
-    LDX @fillppu+1                  ; set pixel in PPU
+    LDX theend_fillppu+1                  ; set pixel in PPU
     STX PPUADDR
-    LDX @fillppu
+    LDX theend_fillppu
     STX PPUADDR
     STA PPUDATA
     
@@ -636,21 +627,18 @@ lut_TheEnd_AttrTable:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TheEnd_SetPixel:
-                @bufaddr  = $66     ; local - points to pos in RAM
-                @ppuaddr  = $3E     ; local - points to pos in PPU
-
     ; prep local pointers based on given X,Y position
     LDA lut_TheEndPixelPosition_X, X
     CLC
     ADC lut_TheEndPixelPosition_Ylo, Y
-    STA @ppuaddr
-    STA @bufaddr
+    STA theend_ppuaddr
+    STA theend_bufaddr
     LDA lut_TheEndPixelPosition_Yhi, Y
     ADC #$00
-    STA @ppuaddr+1
+    STA theend_ppuaddr+1
     CLC
     ADC #$60
-    STA @bufaddr+1
+    STA theend_bufaddr+1
     
     ; Then get the mask to the appropriate pixel
     TXA
@@ -660,15 +648,15 @@ TheEnd_SetPixel:
     
     ; Draw this pixel to our RAM buffer
     LDY #$00
-    ORA (@bufaddr), Y
-    STA (@bufaddr), Y
+    ORA (theend_bufaddr), Y
+    STA (theend_bufaddr), Y
     
     ; Draw it to the actual PPU
     LDX PPUSTATUS
     
-    LDX @ppuaddr+1
+    LDX theend_ppuaddr+1
     STX PPUADDR
-    LDX @ppuaddr
+    LDX theend_ppuaddr
     STX PPUADDR
     STA PPUDATA
     

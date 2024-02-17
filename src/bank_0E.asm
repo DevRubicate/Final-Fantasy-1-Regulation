@@ -2791,9 +2791,6 @@ DoNameInput:
     STA namecurs_y          ; Y position (0-6)
     
     ; Some local temp vars
-                @cursoradd      = $63
-                @selectedtile   = $10
-    
     JSR ClearNT
     JSR DrawNameInputScreen
     
@@ -2872,7 +2869,7 @@ DoNameInput:
     ;;;;;;;;;;;;;;;;;;
   @B_Pressed:
     LDA #$FF                ; if B was pressed, erase the previous tile
-    STA @selectedtile       ;   by setting selectedtile to be a space
+    STA theend_selectedtile       ;   by setting selectedtile to be a space
     
     LDA cursor              ; then by pre-emptively moving the cursor back
     SEC                     ;   so @SetTile will overwrite the prev char
@@ -2881,7 +2878,7 @@ DoNameInput:
       STA cursor
       
   : LDA #$00                ; set cursoradd to 0 so @SetTile doesn't change
-    STA @cursoradd          ; the cursor
+    STA nameinput_cursoradd          ; the cursor
     STA joy_b               ; clear joy_b as well
     
     BEQ @SetTile            ; (always branches)
@@ -2901,9 +2898,9 @@ DoNameInput:
         JMP :++                         ; 256 bytes -- even though that seems very unlikely.
         
   : LDA lut_NameInput, X
-  : STA @selectedtile               ; record selected tile
+  : STA theend_selectedtile               ; record selected tile
     LDA #$01
-    STA @cursoradd                  ; set cursoradd to 1 to indicate we want @SetTile to move the cursor forward
+    STA nameinput_cursoradd                  ; set cursoradd to 1 to indicate we want @SetTile to move the cursor forward
     
     LDA cursor                      ; check current cursor position
     CMP #$04                        ;  If we've already input 4 letters for this name....
@@ -2915,14 +2912,14 @@ DoNameInput:
     CLC                         ;   letter in this character's name
     ADC char_index
     TAX
-    LDA @selectedtile
+    LDA theend_selectedtile
     STA ptygen_name, X          ; and write the selected tile
     
     JSR NameInput_DrawName      ; Redraw the name as it appears on-screen
     
     LDA cursor                  ; Then add to our cursor
     CLC
-    ADC @cursoradd
+    ADC nameinput_cursoradd
     BPL :+                      ; clipping at 0 (if subtracting -- although this never happens)
       LDA #$00
   : STA cursor

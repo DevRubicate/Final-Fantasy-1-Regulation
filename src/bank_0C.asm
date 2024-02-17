@@ -3376,41 +3376,36 @@ CheckForBattleEnd:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ApplyRegenToAllEnemies:
-            @id = $6BAD         ; local - enemy ID and loop up-counter
-            @loopctr = $68AF    ; local - loop down-counter
-            @ram = $88          ; local - pointer to enemy RAM stats
-            @rom = $8A          ; local - pointer to enemy ROM stats
-            
+ApplyRegenToAllEnemies:    
     LDA #0
-    STA @id
+    STA regen_id
     LDA btl_enemycount
-    STA @loopctr
+    STA regen_loopctr
     
   @MainLoop:
-    LDA @id
+    LDA regen_id
     JSR GetEnemyStatPtr
-    STA @ram
-    STX @ram+1              ; get the pointer to RAM stats and record it
+    STA regen_ramstats
+    STX regen_ramstats+1              ; get the pointer to RAM stats and record it
     
     LDY #en_romptr          ; use that to get the ROM pointer, and record it
-    LDA (@ram), Y
-    STA @rom
+    LDA (regen_ramstats), Y
+    STA regen_romstats
     INY
-    LDA (@ram), Y
-    STA @rom+1
+    LDA (regen_ramstats), Y
+    STA regen_romstats+1
     
     ; Now that we have RAM and ROM pointers for this enemy...
     LDY #ENROMSTAT_CATEGORY     ; Get the enemy category, and see if they are
-    LDA (@rom), Y               ;  regenerative
+    LDA (regen_romstats), Y               ;  regenerative
     AND #CATEGORY_REGEN
     BEQ @Next                   ; If not, skip them -- go to next iteration
     
     LDY #en_hp                  ; move their HP to the math buffer
-    LDA (@ram), Y
+    LDA (regen_ramstats), Y
     STA btl_mathbuf
     INY
-    LDA (@ram), Y
+    LDA (regen_ramstats), Y
     STA btl_mathbuf+1
     
     LDA #$00
@@ -3418,10 +3413,10 @@ ApplyRegenToAllEnemies:
     JSR MathBuf_Add             ; regenerative enemies recover 3 HP
     
     LDY #ENROMSTAT_HPMAX        ; put HP max in mathbuf2
-    LDA (@rom), Y               ;  ... because a normal CMP would be too simple
+    LDA (regen_romstats), Y               ;  ... because a normal CMP would be too simple
     STA btl_mathbuf+2           ;  ...
     INY                         ;  ...
-    LDA (@rom), Y
+    LDA (regen_romstats), Y
     STA btl_mathbuf+3
     
     LDY #$00                    ; compare HP and MaxHP buffers
@@ -3436,14 +3431,14 @@ ApplyRegenToAllEnemies:
       
   : LDY #en_hp                  ; move HP back to RAM stats
     LDA btl_mathbuf
-    STA (@ram), Y
+    STA (regen_ramstats), Y
     INY
     LDA btl_mathbuf+1
-    STA (@ram), Y
+    STA (regen_ramstats), Y
     
   @Next:
-    INC @id                     ; loop until all enemies counted
-    DEC @loopctr
+    INC regen_id                     ; loop until all enemies counted
+    DEC regen_loopctr
     BNE @MainLoop
     
     RTS
@@ -3490,10 +3485,7 @@ ApplyEndOfRoundEffects:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ApplyPoisonToPlayer:
-            @id    = $685A  ; local - temp to hold character ID
-            @index = $6BAD  ; local - temp to hold OB stat index (00, 40, 80, C0)
-            
-    STA @id             ; record character ID
+    STA poison_id       ; record character ID
     ASL A
     ASL A
     ASL A
@@ -3501,7 +3493,7 @@ ApplyPoisonToPlayer:
     ASL A
     ASL A               ; left shift 6 to convert to index
     TAX                 ; put index in X
-    STA @index          ; and back it up for later
+    STA poison_index          ; and back it up for later
     
     LDA ch_ailments, X  ; get this character's ailments
     AND #AIL_POISON
@@ -3530,11 +3522,11 @@ ApplyPoisonToPlayer:
       STA btl_mathbuf           ;  ...  3rd time's a charm... right?
       STA btl_mathbuf+1         ;  (grrrrrrr)
       
-      LDX @index
+      LDX poison_index
       LDA #AIL_DEAD
       STA ch_ailments, X        ; give them the DEAD ailment
       
-      LDA @id                   ; then remove their action from the command buffer
+      LDA poison_id             ; then remove their action from the command buffer
       AND #$03                  ;   this is entirely unnecessary, since poison damage is only
       ASL A                     ;   applied between rounds
       ASL A
@@ -3543,7 +3535,7 @@ ApplyPoisonToPlayer:
       STA btl_charcmdbuf, Y
       
   @ExtractFromMathBuf:
-    LDX @index
+    LDX poison_index
     LDA btl_mathbuf             ; take their HP back out of the math buffer
     STA ch_curhp, X
     LDA btl_mathbuf+1
@@ -3646,11 +3638,9 @@ Battle_DoTurn:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Battle_DoPlayerTurn:
-        @playerid = $88         ; local - holds player ID (0-3)
-        
+Battle_DoPlayerTurn: 
     AND #$03                    ; mask off the high bit to get the player ID
-    STA @playerid               ;  and record it for future use
+    STA battleturn_playerid               ;  and record it for future use
     
     ASL A
     ASL A
@@ -3663,7 +3653,7 @@ Battle_DoPlayerTurn:
     LSR A                       ; shift out bit 2 ('attack' bit)
     BCC :+                      ; if set... attack the enemy
       LDX btl_charcmdbuf+2, Y           ; X = enemy target
-      LDA @playerid                     ; A = attacker
+      LDA battleturn_playerid                     ; A = attacker
       JMP PlayerAttackEnemy_Physical    ; Do the attack!
       
   : LSR A                       ; shift out bit 3 ('drink' bit)
@@ -3671,7 +3661,7 @@ Battle_DoPlayerTurn:
       TYA
       PHA                           ; push command index
       
-      LDY @playerid
+      LDY battleturn_playerid
       LDX btl_charcmdconsumeid, Y   ; get the potion they're using in X (0=heal, 1=pure)
       DEC item_heal, X              ; actually remove the potion from their inventory
       
@@ -3680,19 +3670,19 @@ Battle_DoPlayerTurn:
       
       LDA btl_charcmdbuf+1, Y       ; get the effect ID in A ($40 for heal, $41 for pure)
       LDX btl_charcmdbuf+2, Y       ; get the target in X
-      LDY @playerid                 ; get the actor in Y
+      LDY battleturn_playerid                 ; get the actor in Y
       JMP Player_DoDrink
       
   : LSR A                       ; shift out bit 4 ('item' bit)
     BCC :+                      ; if set... use item!
       LDA btl_charcmdbuf+1, Y       ; A = effect ID
       LDX btl_charcmdbuf+2, Y       ; X = target
-      LDY @playerid                 ; Y = attacker
+      LDY battleturn_playerid                 ; Y = attacker
       JMP Player_DoItem
       
   : LSR A                       ; shift out bit 5 ('run' bit)
     BCC :+
-      LDA @playerid                 ; load this player's ID
+      LDA battleturn_playerid                 ; load this player's ID
       JMP Battle_PlayerTryRun       ; try to run!
       
   : LSR A                       ; shift out bit 6 ('magic' bit)
@@ -3700,7 +3690,7 @@ Battle_DoPlayerTurn:
         TYA                         ; back up command index
         PHA
         
-        LDY @playerid
+        LDY battleturn_playerid
         LDX btl_charcmdconsumeid, Y ; get the level of this spell
         DEC ch0_mp, X                ; take away a spell charge
         
@@ -3709,30 +3699,29 @@ Battle_DoPlayerTurn:
         
         LDA btl_charcmdbuf+1, Y     ; A = effect
         LDX btl_charcmdbuf+2, Y     ; X = target
-        LDY @playerid               ; Y = attacker
+        LDY battleturn_playerid               ; Y = attacker
         JMP Player_DoMagic
     
     ;;  Code reaches here if the player had no command, which would only happen if they are
     ;;  immobilized or dead.
     
     :
-        @ail = $89          ; local, temp ram to hold ailments
-    
-    LDA @playerid
+
+    LDA battleturn_playerid
     JSR PrepCharStatPointers        ; load player's ailments
     LDY #ch_ailments - ch_stats
     LDA (btl_ob_charstat_ptr), Y
-    STA @ail
+    STA battleturn_ail
     
     AND #AIL_SLEEP          ; are they asleep?
     BEQ :+
-      LDA @playerid         ; if yes, try to wake up
+      LDA battleturn_playerid         ; if yes, try to wake up
       JMP Battle_PlayerTryWakeup
       
-  : LDA @ail
+  : LDA battleturn_ail
     AND #AIL_STUN           ; are they stunned?
     BEQ :+
-      LDA @playerid
+      LDA battleturn_playerid
       JMP Battle_PlayerTryUnstun    ; if yes, try to unstun
       
     ; otherwise, they simply don't have an action or they're dead/stone
@@ -6666,14 +6655,12 @@ ApplyEnemyAilmentMask:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_DoEnemyTurn:
-        @enram = $9A            ; local (points to enemy stats in RAM)
-
     STA btl_attacker
     STA btl_attacker_alt
     
     JSR GetEnemyStatPtr
-    STA @enram                  ; put pointer to this enemy's stats in $9A,9B
-    STX @enram+1
+    STA battleturn_enramstats                  ; put pointer to this enemy's stats in $9A,9B
+    STX battleturn_enramstats+1
     
     LDA #$02
     STA btlmag_playerhitsfx     ; enemy->player magic plays the "cha" sound effect (ID 2)
@@ -6683,7 +6670,7 @@ Battle_DoEnemyTurn:
     STA btlmag_magicsource      ; Enemies can't use potions or items -- so their magic source is always 'magic'
     
     LDY #en_ailments
-    LDA (@enram), Y             ; see if they're stunned or asleep
+    LDA (battleturn_enramstats), Y             ; see if they're stunned or asleep
     AND #AIL_SLEEP | AIL_STUN
     BEQ @EnemyActive
     
@@ -6706,10 +6693,10 @@ Battle_DoEnemyTurn:
     
   @Asleep:                  ; If the enemy is asleep
     LDY #en_unknown12       ; This is TOTALLY *BUGGED*
-    LDA (@enram), Y         ; Loads a 16-bit value into the math buffer that is NEVER properly initialized.
+    LDA (battleturn_enramstats), Y         ; Loads a 16-bit value into the math buffer that is NEVER properly initialized.
     STA btl_mathbuf         ;   The low byte is enemy's max HP... but the high byte is never set properly
     INY
-    LDA (@enram), Y
+    LDA (battleturn_enramstats), Y
     STA btl_mathbuf+1
     
     LDA #$00
@@ -6732,7 +6719,7 @@ Battle_DoEnemyTurn:
 
   @EnemyActive:                         ; jumps here if enemy is active (not stunned or asleep)
     LDY #en_ailments
-    LDA (@enram), Y                     ; check the high bit to see if they're confused
+    LDA (battleturn_enramstats), Y                     ; check the high bit to see if they're confused
     BPL @EnemyActive_AndNotConfused     ; if clear, jump ahead to EnemyActive_AndNotConfused.  Otherwise...
     
     ; If enemy is confused:
@@ -6761,14 +6748,12 @@ Battle_DoEnemyTurn:
     ;;  Code reaches here if enemy has normal status -- not stunned, asleep, or confused.  It can just do
     ;;  its normal action:
   @EnemyActive_AndNotConfused:
-        @enrom = $9C            ; local - points to enemy data in ROM
-        
     LDY #en_romptr
-    LDA (@enram), Y
-    STA @enrom
+    LDA (battleturn_enramstats), Y
+    STA battleturn_enromstats
     INY
-    LDA (@enram), Y
-    STA @enrom+1           ; pointer to enemy ROM data in $9C,9D  (for Enemy_DoAi)
+    LDA (battleturn_enramstats), Y
+    STA battleturn_enromstats+1           ; pointer to enemy ROM data in $9C,9D  (for Enemy_DoAi)
     
     LDA ch_level
     ASL A
@@ -6787,7 +6772,7 @@ Battle_DoEnemyTurn:
     ;   if V is less than $50, the enemy will run!
     
     LDY #en_morale
-    LDA (@enram), Y     ; morale
+    LDA (battleturn_enramstats), Y     ; morale
     SEC
     SBC $9E
     BCC @RunAway        ; run if morale < 2*level_of_leader
@@ -6814,13 +6799,13 @@ Battle_DoEnemyTurn:
     LDA #AIL_DEAD
     STA btl_defender_ailments       ; Mark ourselves as dead (See Battle_DoTurn for why this is important)
     LDY #en_ailments
-    STA (@enram), Y                 ; Give ourselves the 'DEAD' ailment
+    STA (battleturn_enramstats), Y                 ; Give ourselves the 'DEAD' ailment
     
     LDA #$00
     STA battle_defenderisplayer     ; Fill output:  defender is an enemy
     
     LDY #en_exp
-    : STA (@enram), Y               ; erase this enemy's GP and Exp rewards
+    : STA (battleturn_enramstats), Y               ; erase this enemy's GP and Exp rewards
       INY
       CPY #en_exp+4
       BNE :-
@@ -6886,16 +6871,11 @@ EnemyAi_ShouldPerformAction:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Enemy_DoAi:
-        @enram = $9A        ; input - pointer to enemy RAM stats
-        @enrom = $9C        ; input - pointer to enemy ROM stats
-        
-        @aiptr = $9E        ; local - pointer to enemy's AI data
-    
     LDA #$00                    ; initialize high byte of AI pointer (in preparation for math below)
-    STA @aiptr+1                ;   (this could be done in the below math, but whatever)
+    STA battleturn_enai+1                ;   (this could be done in the below math, but whatever)
     
     LDY #ENROMSTAT_AI
-    LDA (@enrom), Y
+    LDA (battleturn_enromstats), Y
     CMP #$FF                    ; get AI id from ROM (if it's read from ROM, why is it stored in RAM?)
     BNE :+
       JMP ChooseAndAttackPlayer ; no AI -- just attack a random player
@@ -6903,31 +6883,31 @@ Enemy_DoAi:
     ; use enemy AI
   : LDX #$10                ; get a pointer to this enemy's AI data
     JSR MultiplyXA          ; $10 bytes per AI entry
-    CLC                     ;   end result, of this math:  @aiptr points to this enemy's AI data
+    CLC                     ;   end result, of this math:  battleturn_enai points to this enemy's AI data
     ADC #<lut_EnemyAi
-    STA @aiptr
+    STA battleturn_enai
     TXA
     ADC #>lut_EnemyAi
-    STA @aiptr+1            ; pointer to AI data
+    STA battleturn_enai+1            ; pointer to AI data
     
     LDY #$00
-    LDA (@aiptr), Y                 ; Get byte 0 (magic rate)
+    LDA (battleturn_enai), Y                 ; Get byte 0 (magic rate)
     JSR EnemyAi_ShouldPerformAction ; See if we should do a magic attack
     BCS @CheckSpecialAttack         ; if not, jump ahead to check for special attacks
     
   @DoMagicAttack:
     LDY #en_aimagpos
-    LDA (@enram), Y
+    LDA (battleturn_enramstats), Y
     AND #$07                        ; get current magic pos
     JSR @IncrementAiPos             ; increment magic position
     ADC #$02                        ; position+2 is the index to the spell to cast
     TAY
-    LDA (@aiptr), Y                 ; get the spell to cast
+    LDA (battleturn_enai), Y                 ; get the spell to cast
     CMP #$FF                        ; if $FF (empty slot)...
     BNE :+
       LDA #$00                      ; ...reset position, and start over
       LDY #en_aimagpos
-      STA (@enram), Y
+      STA (battleturn_enramstats), Y
       JMP @DoMagicAttack            ; keep going until we find a non-empty spell slot
     
   : JMP Enemy_DoMagicEffect         ; with the magic spell in A, do the magic attack
@@ -6938,30 +6918,30 @@ Enemy_DoAi:
     PHA                             ; backup position
     CLC
     ADC #$01                        ; +1
-    STA (@enram), Y                    ; and write it back
+    STA (battleturn_enramstats), Y                    ; and write it back
     PLA                             ; restore backup
     RTS
   
   @CheckSpecialAttack:
     LDY #$01
-    LDA (@aiptr), Y                 ; get special attack rate
+    LDA (battleturn_enai), Y                 ; get special attack rate
     JSR EnemyAi_ShouldPerformAction ; see if we should do it
     BCS ChooseAndAttackPlayer       ; if not, just do a normal attack
     
     ; otherwise, do a special attack
   @DoSpecialAttack:
     LDY #en_aiatkpos            ; This block is the same as @DoMagicAttack -- the only difference
-    LDA (@enram), Y             ;   is it cycles through the 4 enemy attack slots instead of the
+    LDA (battleturn_enramstats), Y             ;   is it cycles through the 4 enemy attack slots instead of the
     AND #$03                    ;   8 magic slots.
     JSR @IncrementAiPos
     ADC #$0B
     TAY
-    LDA (@aiptr), Y
+    LDA (battleturn_enai), Y
     CMP #$FF
     BNE :+
       LDA #$00
       LDY #en_aiatkpos
-      STA (@enram), Y
+      STA (battleturn_enramstats), Y
       JMP @DoSpecialAttack
   : CLC
     ADC #$42                    ; add $42 to the special attack ID to indicate it's a special attack (0-3F are magic, and 40,41 are heal/pure potions)
@@ -7400,8 +7380,7 @@ PrepEntityPtr_Enemy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 Enemy_DoMagicEffect:
-            @enram =    $9A     ; input - points to this enemy's stats in RAM
-            
+    
     STA btl_attackid                        ; store spell/attack we're using
     JSR ClearAltMessageBuffer
     LDA btl_attacker_alt                    ; get attacker slot index (why doesn't this just load btl_attacker?!?!?!)
@@ -7419,7 +7398,7 @@ Enemy_DoMagicEffect:
     JSR PrepareEnemyMagAttack               ; load attacker's stats (never used!  Pointless!)
     
     LDY #en_ailments
-    LDA (@enram), Y                         ; get this enemy's ailments
+    LDA (battleturn_enramstats), Y                         ; get this enemy's ailments
     AND #AIL_MUTE                           ; are they muted?
     BEQ :+
       JSR DrawCombatBox_Attack              ; if yes, draw their attack name

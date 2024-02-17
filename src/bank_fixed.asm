@@ -13786,7 +13786,7 @@ SwapPRG:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OnReset:
-    SEI            ; Set Interrupt flag (prevent IRQs from occuring)
+    SEI                     ; Set Interrupt flag (prevent IRQs from occuring)
    
     LDA #0    
     LDX #0
@@ -13801,49 +13801,47 @@ OnReset:
     INX
     BNE @ResetRAM
 
-    STA PPUCTRL      ; Disable NMIs
+    STA PPUCTRL             ; Disable NMIs
     LDA #$06
-    STA PPUMASK      ; disable Spr/BG rendering (shut off PPU)
-    CLD            ; clear Decimal flag (just a formality, doesn't really do anything)
+    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
+    CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
 
-    LDX #$02       ; wait for 2 vblanks to occurs (2 full frames)
+    LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
   @Loop: 
-      BIT PPUSTATUS      ;  This is necessary because the PPU requires some time to "warm up"
-      BPL @Loop      ;  failure to do this will result in the PPU basically not working
+      BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
+      BPL @Loop             ;  failure to do this will result in the PPU basically not working
       DEX
       BNE @Loop
 
     ; MMC5
       
-    STX $5010      ; Disable MMC5 PCM and IRQs
-    STX $5204      ; Disable MMC5 scanline IRQs
-    STX $5130      ; Check doc on MMC5 to see what this does
-    STX $5113      ; swap battery-backed PRG RAM into $6000 page.     
-    STX $5200      ; disable split-screen mode
-    STX $5101      ; 8k CHR swap mode (no swapping)
-    STX $5127      ; Swap in first CHR Page
-    INX            ; 01
-    STX $5100      ; 16k PRG-RAM swap
-    STX $5103      ; Allow writing to PRG-RAM B  
-    INX            ; 02
-    STX $5102      ; Allow writing to PRG-RAM A
-    STX $5104      ; ExRAM mode Ex2   
+    STX $5010               ; Disable MMC5 PCM and IRQs
+    STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
+    STX $5130               ; Check doc on MMC5 to see what this does
+    STX MMC5_RAM_BANK       ; swap battery-backed PRG RAM into $6000 page.     
+    STX $5200               ; disable split-screen mode
+    STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
+    STX MMC5_CHR_BANK7      ; Swap in first CHR Page
+    INX                     ; 01
+    STX MMC5_PRG_MODE       ; 16k PRG-RAM swap
+    STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
+    INX                     ; 02
+    STX MMC5_RAM_PROTECT_1  ; Allow writing to PRG-RAM A
+    STX MMC5_EXRAM_MODE     ; ExRAM mode Ex2   
     LDX #$44
-    STX $5105      ; Vertical mirroring
+    STX MMC5_MIRROR         ; Vertical mirroring
     LDX #$FF        
-    STX $5117
+    STX MMC5_PRG_BANK3
 
     LDA #0
-    STA $4016      ; clear joypad strobe??  This seems like an odd place to do it since it doesn't read joy data here  =P
-
-    STA $4010      ; disble DMC IRQs
+    STA PAPU_MODCTL         ; disble DMC IRQs
     LDA #$C0
-    STA $4017      ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
+    STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
 
-    TXS            ; transfer it to the Stack Pointer (resetting the SP)
+    TXS                     ; transfer it to the Stack Pointer (resetting the SP)
 
     JSR DisableAPU
-    JMP GameStart    ; jump to the start of the game!
+    JMP GameStart           ; jump to the start of the game!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -14147,6 +14145,80 @@ CallMinimapDecompress:
     LDA #BANK_MINIMAP
     JMP SwapPRG
 
+
+;Impl_Call_Bank0:
+;    ; Save A
+;    STA CallVar1
+;    ; Save Y
+;    STY CallVar2
+;
+;    ; Pull then push the stack to find the low address of our caller
+;    PLA
+;    STA TrampolineL
+;    CLC
+;    ADC #3 ; When we return we want to return right after the extra 3 byte data after the JSR instruction
+;
+;    ; Pull then push the stack to find the high address of our caller
+;    PLA
+;    STA TrampolineH
+;    ADC #0 ; If the previous ADC caused a carry we add it here
+;
+;    ; Save back the high address
+;    PHA
+;
+;    ; Save back the low address
+;    LDA TrampolineL
+;    ADC #3
+;    PHA
+;
+;    ; Save what page the bank is currently in
+;    LDA PRG_Bank0_Page
+;    PHA
+;
+;    ; Push this address to the stack so we can return here
+;    JSR +
+;    ; We just got back so time to rewind
+;
+;    ; Save A
+;    STA CallVar1
+;
+;    ; Pull what page our bank used to be in and switch back
+;    PLA
+;    STA PRG_Bank0_Page
+;    STA MMC5_PRG_BANK0
+;
+;    ; Load A
+;    LDA CallVar1
+;
+;    ; Return to orginal caller
+;    RTS
+;
+;    +
+;
+;    ; Read the low address we want to jump to and push it to the stack
+;    LDY #1
+;    LDA (TrampolineL), Y
+;    PHA
+;
+;    ; Read the high address we want to jump to and push it to the stack
+;    INY
+;    LDA (TrampolineL), Y
+;    PHA
+;
+;    ; Read what bank we are going to and switch to it
+;    INY
+;    LDA (TrampolineL), Y
+;    STA PRG_Bank0_Page
+;    STA MMC5_PRG_BANK0
+;
+;
+;    ; Load A
+;    LDA CallVar1
+;    ; Load Y
+;    LDY CallVar2
+;
+;    ; Activate the trampoline
+;    RTS
 
 .segment "VECTORS"
 

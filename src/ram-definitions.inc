@@ -75,83 +75,86 @@
 
 
 
-SECTIONZP "ZEROPAGE"
+SECTIONZP "ZEROPAGE" ; $07 - $FF
     GAP                                     7
-    RESZP story_dropinput,                  1 ; 1 bytes   ; $07
+    RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
-    RESZP inroom,                           1 ; 1 bytes   ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
-    RESZP doorppuaddr,                      2 ; 2 bytes   ; $0E 2 bytes, PPU address of door drawing work
-    RESZP tmp,                              0 ; 16 bytes  ; $10
+    RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
+    RESZP doorppuaddr,                      2 ; 2 bytes     ; $0E 2 bytes, PPU address of door drawing work
+    RESZP theend_selectedtile,              0 ; 1 bytes ; $10
+    RESZP tmp,                              0 ; 16 bytes    ; $10
     GAP                                     8
-    RESZP mu_scoreptr,                      2 ; 2 bytes   ; $18
+    RESZP mu_scoreptr,                      2 ; 2 bytes     ; $18
     GAP                                     1
-    RESZP dlgbox_row,                       0 ; 1 bytes   ; $1B
-    RESZP palcyc_mode,                      1 ; 1 bytes   ; $1B
+    RESZP dlgbox_row,                       0 ; 1 bytes     ; $1B
+    RESZP palcyc_mode,                      1 ; 1 bytes     ; $1B
     GAP                                     4
-    RESZP joy,                              1 ; 1 bytes      ; $20
-    RESZP joy_ignore,                       1 ; 1 bytes      ; $21
-    RESZP joy_select,                       1 ; 1 bytes      ; $22
-    RESZP joy_start,                        1 ; 1 bytes      ; $23
-    RESZP joy_a,                            1 ; 1 bytes      ; $24
-    RESZP joy_b,                            1 ; 1 bytes      ; $25
-    RESZP sprindex,                         1 ; 1 bytes      ; $26
-    RESZP ow_scroll_x,                      1 ; 1 bytes      ; $27  ; X scroll of OW in tiles
-    RESZP ow_scroll_y,                      1 ; 1 bytes      ; $28  ; Y scroll in tiles
-    RESZP sm_scroll_x,                      1 ; 1 bytes      ; $29  ; ditto, but for standard maps
-    RESZP sm_scroll_y,                      1 ; 1 bytes      ; $2A
-    RESZP mapdraw_x,                        1 ; 1 bytes      ; $2B
-    RESZP mapdraw_y,                        1 ; 1 bytes      ; $2C
-    RESZP mapflags,                         1 ; 1 bytes      ; $2D  ; bit 0 set when in standard map.  bit 1 set to indicate column drawing instead of row drawing
+    RESZP joy,                              1 ; 1 bytes     ; $20
+    RESZP joy_ignore,                       1 ; 1 bytes     ; $21
+    RESZP joy_select,                       1 ; 1 bytes     ; $22
+    RESZP joy_start,                        1 ; 1 bytes     ; $23
+    RESZP joy_a,                            1 ; 1 bytes     ; $24
+    RESZP joy_b,                            1 ; 1 bytes     ; $25
+    RESZP sprindex,                         1 ; 1 bytes     ; $26
+    RESZP ow_scroll_x,                      1 ; 1 bytes     ; $27  ; X scroll of OW in tiles
+    RESZP ow_scroll_y,                      1 ; 1 bytes     ; $28  ; Y scroll in tiles
+    RESZP sm_scroll_x,                      1 ; 1 bytes     ; $29  ; ditto, but for standard maps
+    RESZP sm_scroll_y,                      1 ; 1 bytes     ; $2A
+    RESZP mapdraw_x,                        1 ; 1 bytes     ; $2B
+    RESZP mapdraw_y,                        1 ; 1 bytes     ; $2C
+    RESZP mapflags,                         1 ; 1 bytes     ; $2D  ; bit 0 set when in standard map.  bit 1 set to indicate column drawing instead of row drawing
     GAP                                     1
-    RESZP scroll_y,                         1 ; 1 bytes      ; $2F  ; Y scroll in tiles (16x16).  range=0-E
-    RESZP mapdraw_nty,                      1 ; 1 bytes      ; $30
-    RESZP mapdraw_ntx,                      1 ; 1 bytes      ; $31
-    RESZP mapdraw_job,                      1 ; 1 bytes      ; $32  ; 0=no job, 1=draw attribs, 2=draw tiles
-    RESZP mg_slidedir,                      0 ; 1 bytes      ; $33  ; shared
-    RESZP facing,                           1 ; 1 bytes      ; $33  ; 1=R  2=L  4=D  8=U
-    RESZP move_speed,                       1 ; 1 bytes      ; $34  ; pixels to move per frame (map)
-    RESZP move_ctr_x,                       1 ; 1 bytes      ; $35  ; pixels between tiles (map movement -- 00-0F)
-    RESZP move_ctr_y,                       1 ; 1 bytes      ; $36  ; ditto but for Y axis
-    RESZP menustall,                        1 ; 1 bytes      ; $37       ; see MenuCondStall in bank F for explanation
-    RESZP box_x,                            0 ; 1 bytes      ; $38
-    RESZP theend_x,                         1 ; 1 bytes      ; $38
-    RESZP box_y,                            0 ; 1 bytes      ; $39
-    RESZP theend_y,                         1 ; 1 bytes      ; $39
-    RESZP dest_x,                           1 ; 1 bytes      ; $3A
-    RESZP dest_y,                           1 ; 1 bytes      ; $3B
-    RESZP box_wd,                           0 ; 1 bytes      ; $3C ; shared
-    RESZP dest_wd,                          1 ; 1 bytes      ; $3C
-    RESZP box_ht,                           0 ; 1 bytes      ; $3D ; shared
-    RESZP dest_ht,                          1 ; 1 bytes      ; $3D
-    RESZP image_ptr,                        0 ; 1 bytes      ; $3E ; shared
-    RESZP text_ptr,                         2 ; 2 bytes      ; $3E ; 2 bytes
-    RESZP spr_x,                            1 ; 1 bytes      ; $40
-    RESZP mm_maprow,                        0 ; 1 bytes      ; $41 ; shared
-    RESZP spr_y,                            1 ; 1 bytes      ; $41
-    RESZP vehicle,                          1 ; 1 bytes      ; $42 ;1=walking, 2=canoe, 4=ship, 8=airship
-    RESZP inforest,                         1 ; 1 bytes      ; $43 ; nonzero if in forest
-    RESZP tileprop,                         2 ; 2 bytes      ; $44 ; 2 bytes
-    RESZP vehicle_next,                     1 ; 1 bytes      ; $46 ; vehicle we're walking onto
-    RESZP vehchgpause,                      1 ; 1 bytes      ; $47 ; forced pause when changing vehicles
-    RESZP cur_map,                          1 ; 1 bytes      ; $48
-    RESZP cur_tileset,                      1 ; 1 bytes      ; $49
-    RESZP cur_mapobj,                       1 ; 1 bytes      ; $4A ; counter for updating which map object
-    RESZP music_track,                      1 ; 1 bytes      ; $4B
-    RESZP mu_chanprimer,                    1 ; 1 bytes      ; $4C
-    RESZP mu_chan,                          1 ; 1 bytes      ; $4D
+    RESZP scroll_y,                         1 ; 1 bytes     ; $2F  ; Y scroll in tiles (16x16).  range=0-E
+    RESZP mapdraw_nty,                      1 ; 1 bytes     ; $30
+    RESZP mapdraw_ntx,                      1 ; 1 bytes     ; $31
+    RESZP mapdraw_job,                      1 ; 1 bytes     ; $32  ; 0=no job, 1=draw attribs, 2=draw tiles
+    RESZP mg_slidedir,                      0 ; 1 bytes     ; $33  ; shared
+    RESZP facing,                           1 ; 1 bytes     ; $33  ; 1=R  2=L  4=D  8=U
+    RESZP move_speed,                       1 ; 1 bytes     ; $34  ; pixels to move per frame (map)
+    RESZP move_ctr_x,                       1 ; 1 bytes     ; $35  ; pixels between tiles (map movement -- 00-0F)
+    RESZP move_ctr_y,                       1 ; 1 bytes     ; $36  ; ditto but for Y axis
+    RESZP menustall,                        1 ; 1 bytes     ; $37       ; see MenuCondStall in bank F for explanation
+    RESZP box_x,                            0 ; 1 bytes     ; $38
+    RESZP theend_x,                         1 ; 1 bytes     ; $38
+    RESZP box_y,                            0 ; 1 bytes     ; $39
+    RESZP theend_y,                         1 ; 1 bytes     ; $39
+    RESZP dest_x,                           1 ; 1 bytes     ; $3A
+    RESZP dest_y,                           1 ; 1 bytes     ; $3B
+    RESZP box_wd,                           0 ; 1 bytes     ; $3C ; shared
+    RESZP dest_wd,                          1 ; 1 bytes     ; $3C
+    RESZP box_ht,                           0 ; 1 bytes     ; $3D ; shared
+    RESZP dest_ht,                          1 ; 1 bytes     ; $3D
+    RESZP theend_fillppu,                   0 ; 2 bytes     ; $3E ; ppu addr for filling
+    RESZP image_ptr,                        0 ; 1 bytes     ; $3E ; shared
+    RESZP text_ptr,                         2 ; 2 bytes     ; $3E ; 2 bytes
+    RESZP spr_x,                            1 ; 1 bytes     ; $40
+    RESZP mm_maprow,                        0 ; 1 bytes     ; $41 ; shared
+    RESZP spr_y,                            1 ; 1 bytes     ; $41
+    RESZP vehicle,                          1 ; 1 bytes     ; $42 ; 1=walking, 2=canoe, 4=ship, 8=airship
+    RESZP inforest,                         1 ; 1 bytes     ; $43 ; nonzero if in forest
+    RESZP tileprop,                         2 ; 2 bytes     ; $44 ; 2 bytes
+    RESZP vehicle_next,                     1 ; 1 bytes     ; $46 ; vehicle we're walking onto
+    RESZP vehchgpause,                      1 ; 1 bytes     ; $47 ; forced pause when changing vehicles
+    RESZP cur_map,                          1 ; 1 bytes     ; $48
+    RESZP cur_tileset,                      1 ; 1 bytes     ; $49
+    RESZP cur_mapobj,                       1 ; 1 bytes     ; $4A ; counter for updating which map object
+    RESZP music_track,                      1 ; 1 bytes     ; $4B
+    RESZP mu_chanprimer,                    1 ; 1 bytes     ; $4C
+    RESZP mu_chan,                          1 ; 1 bytes     ; $4D
     GAP                                     2
-    RESZP entering_shop,                    1 ; 1 bytes      ; $50 ; nonzero = about to enter shop
-    RESZP shop_id,                          1 ; 1 bytes      ; $51
-    RESZP tileprop_now,                     1 ; 1 bytes      ; $52 ; special tile properties that we're on (tileprop isn't necessarily what we're standing on)
-    RESZP ow_tile,                          1 ; 1 bytes      ; $53
-    RESZP ppu_dest,                         2 ; 2 bytes      ; $54  ; 2 bytes
-    RESZP dlgflg_reentermap,                1 ; 1 bytes      ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
-    RESZP cur_bank,                         1 ; 1 bytes      ; $57
-    RESZP ret_bank,                         1 ; 1 bytes      ; $58
+    RESZP entering_shop,                    1 ; 1 bytes     ; $50 ; nonzero = about to enter shop
+    RESZP shop_id,                          1 ; 1 bytes     ; $51
+    RESZP tileprop_now,                     1 ; 1 bytes     ; $52 ; special tile properties that we're on (tileprop isn't necessarily what we're standing on)
+    RESZP ow_tile,                          1 ; 1 bytes     ; $53
+    RESZP ppu_dest,                         2 ; 2 bytes     ; $54  ; 2 bytes
+    RESZP dlgflg_reentermap,                1 ; 1 bytes     ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
+    RESZP cur_bank,                         1 ; 1 bytes     ; $57
+    RESZP ret_bank,                         1 ; 1 bytes     ; $58
     GAP                                     3
-    RESZP name_input_draw_buf,              1 ; 1 bytes      ; $5C
+    RESZP name_input_draw_buf,              1 ; 1 bytes     ; $5C
     GAP                                     3
     RESZP format_buf,                       1 ; 7 bytes     ; $60  ; 7 bytes (5A-60) -- must not cross page bound
+    RESZP theend_ppuaddr,                   0 ; 2 bytes     ; $61
     RESZP shutter_a,                        0 ; 1 bytes     ; $61  ; shared
     RESZP lu_cursor,                        0 ; 1 bytes     ; $61  ; shared
     RESZP mm_bplo,                          0 ; 1 bytes     ; $61  ; shared
@@ -164,10 +167,14 @@ SECTIONZP "ZEROPAGE"
     RESZP intro_ataddr,                     0 ; 1 bytes     ; $62  ; shared
     RESZP cursor,                           0 ; 1 bytes     ; $62
     RESZP theend_src,                       1 ; 1 bytes     ; $62
+    RESZP nameinput_cursoradd,              0 ; 1 bytes
+    RESZP theend_drawtile,                  0 ; 1 bytes     ; $63  ; shared
     RESZP lu_mode,                          0 ; 1 bytes     ; $63  ; shared
     RESZP intro_atbyte,                     0 ; 1 bytes     ; $63  ; shared
     RESZP cursor_max,                       0 ; 1 bytes     ; $63
     RESZP cursor2,                          1 ; 1 bytes     ; $63  ; shared (secondary cursor)
+    RESZP theend_fillx,                     0 ; 1 bytes     ; $64
+    RESZP theend_loopctr,                   0 ; 1 bytes     ; $64  ; shared
     RESZP lu_joyprev,                       0 ; 1 bytes     ; $64  ; shared
     RESZP intro_color,                      0 ; 1 bytes     ; $64  ; shared
     RESZP mg_slidespr,                      0 ; 3 bytes     ; $64  ; shared, 3 bytes
@@ -176,10 +183,13 @@ SECTIONZP "ZEROPAGE"
     RESZP eq_modecurs,                      0 ; 1 bytes     ; $64  ; shared
     RESZP hp_recovery,                      0 ; 1 bytes     ; $64
     RESZP minimap_ptr,                      1 ; 2 bytes     ; $64  ; shared, 2 bytes
+    RESZP theend_filly,                     0 ; 1 bytes     ; $65
     RESZP mp_required,                      0 ; 1 bytes     ; $65
     RESZP namecurs_y,                       0 ; 1 bytes     ; $65
     RESZP shopcurs_y,                       0 ; 1 bytes     ; $65  ; shared
     RESZP story_credits,                    1 ; 1 bytes     ; $65  ; shared
+    RESZP theend_ramaddr,                   0 ; 2 bytes     ; $66
+    RESZP theend_bufaddr,                   0 ; 2 bytes     ; $66
     RESZP submenu_targ,                     0 ; 1 bytes     ; $66  ; shared with shop_type
     RESZP shop_type,                        0 ; 1 bytes     ; $66
     RESZP story_page,                       0 ; 1 bytes     ; $66  ; shared
@@ -195,20 +205,37 @@ SECTIONZP "ZEROPAGE"
     RESZP enCHRpage,                        1 ; 1 bytes     ; $6B
     RESZP altareffect,                      1 ; 1 bytes     ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
     GAP                                     15
-    RESZP dlgmusic_backup,                  1 ; 1 bytes      ; $7C  ; backup music track for restoring music after the dialogue box changes it
-    RESZP dlgsfx,                           1 ; 1 bytes      ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
-    RESZP sq2_sfx,                          1 ; 1 bytes      ; $7E
-    RESZP descboxopen,                      1 ; 1 bytes      ; $7F
-    RESZP lvlup_curexp,                     2 ; 2 bytes      ; $80       ; 2 byte pointer to character's current EXP
-    RESZP levelup_lvlupptr,                 0 ; 2 bytes      ; $82       ; local, pointer to level up data
-    RESZP lvlup_exptoadv,                   2 ; 2 bytes      ; $82       ; 2 byte pointer to EXP needed to advance
-    RESZP lvlup_chmagic,                    2 ; 2 bytes      ; $84       ; 2 byte pointer to character's magic data
-    RESZP lvlup_chstats,                    2 ; 2 bytes      ; $86       ; 2 byte pointer to character's OB stats
-    RESZP battlereward,                     0 ; 3 bytes      ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
-    GAP                                     2
+    RESZP dlgmusic_backup,                  1 ; 1 bytes     ; $7C  ; backup music track for restoring music after the dialogue box changes it
+    RESZP dlgsfx,                           1 ; 1 bytes     ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
+    RESZP sq2_sfx,                          1 ; 1 bytes     ; $7E
+    RESZP descboxopen,                      1 ; 1 bytes     ; $7F
+    RESZP lvlup_curexp,                     2 ; 2 bytes     ; $80       ; 2 byte pointer to character's current EXP
+    RESZP levelup_lvlupptr,                 0 ; 2 bytes     ; $82       ; local, pointer to level up data
+    RESZP lvlup_exptoadv,                   0 ; 2 bytes     ; $82       ; 2 byte pointer to EXP needed to advance
+    RESZP chaosdeath_rvalprev,              1 ; 1 bytes     ; $82      ; "previous" random value
+    RESZP chaosdeath_rval,                  1 ; 1 bytes     ; $83   ; a random value
+    RESZP lvlup_chmagic,                    0 ; 2 bytes     ; $84       ; 2 byte pointer to character's magic data
+    RESZP divisor,                          1 ; 1 bytes     ; $84
+    RESZP remainder,                        1 ; 1 bytes     ; $85
+    RESZP lvlup_chstats,                    2 ; 2 bytes     ; $86       ; 2 byte pointer to character's OB stats
+    RESZP battleturn_playerid,              0 ; 1 bytes     ; $88
+    RESZP regen_ramstats,                   0 ; 2 bytes     ; $88   ; 2 bytes
+    RESZP chaosdeath_ppuaddr,               0 ; 2 bytes     ; $88   ; 2 bytes
+    RESZP battlereward,                     0 ; 3 bytes     ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
+    GAP                                     1
+    RESZP battleturn_ail,                   1 ; 1 bytes     ; $89 ; local, temp ram to hold ailments
+    RESZP regen_romstats,                   0 ; 2 bytes     ; $8A   ; 2 bytes
     RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
+    RESZP loopctr,                          0 ; 1 bytes      ; $8B
     RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
-    GAP                                     21
+    GAP                                     15
+    RESZP battleturn_enramstats,            0 ; 2 bytes      ; $9A
+    RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
+    RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
+    RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
+    GAP                                     1
+    RESZP battleturn_enai,                  1 ; 1 bytes      ; $9E ; local - pointer to enemy's AI data
+    GAP                                     1
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
     GAP                                     78
     RESZP framecounter,                     2 ; 2 bytes      ; $F0
@@ -225,7 +252,7 @@ SECTIONZP "ZEROPAGE"
     GAP                                     1
     RESZP soft2000,                         0 ; 1 bytes      ; $FF
 
-SECTIONZP "SOUND"
+SECTIONZP "SOUND" ; $00 - $0E
     ; for sound channels (between Bx-Dx) see constants.inc
     RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
     RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
@@ -239,7 +266,7 @@ SECTIONZP "SOUND"
     RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
     RESZP ch_freq,                          1 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
 
-SECTIONZP "BATTLEZP"
+SECTIONZP "BATTLEZP" ; $6A - $9F
     GAP                                     106
     RESZP btlformation,                     1 ; 1 bytes     ; $6A
     GAP                                     21
@@ -279,7 +306,7 @@ SECTION "OAM"
     oam_a           = oam+2
     oam_x           = oam+3
 
-SECTION "BSS"
+SECTION "BSS" ; $0300 - $0800
     RES             item_box,                           0 ; 32 bytes        ; $0300 $20? bytes -- shares space with str_buf
     RES             str_buf,                            0 ; 57 bytes        ; $0300 $39 bytes at least -- buffer must not cross page
     GAP                                                 10
@@ -302,7 +329,7 @@ SECTION "BSS"
     RES             draw_buf_at_lo,                     16  ; $07E0
     RES             draw_buf_at_msk,                    16  ; $07F0
 
-SECTION "PARTYGEN"
+SECTION "PARTYGEN" ; $0300 - $0340
     RES             ptygen,                             0 ; 64 bytes        ; $0300 ; $40 bytes, shared
     RES             ptygen_class,                       2 ; $0300
     RES             ptygen_name,                        4 ; $0302
@@ -318,7 +345,7 @@ SECTION "PARTYGEN"
     RES             ptygen_curs_y,                      1 ; $030F
     ; 16 bytes per character, 4 characters
 
-SECTION "TILESET"
+SECTION "TILESET" ; $0400 - $07B0
     GAP                                                 256
     RES_PAGE        tileset_data,                       0   ; $0400 - 1024 bytes -- must be on page bound
     RES             tileset_prop,                       256 ; $0400 - 2 bytes per tile
@@ -329,13 +356,13 @@ SECTION "TILESET"
     RES             tsa_attr,                           128 ; $0700
     RES             load_map_pal,                       48  ; $0780 (shared with draw_buf -- hence only for loading)
 
-SECTION "MINIMAP"
+SECTION "MINIMAP" ; $0500 - $0800
     GAP                                                 512
     RES_PAGE        mm_drawbuf,                         256 ; 256 bytes     ; $0500  ; 256 bytes, shared, should be on page bound, but don't think it's absolutely required
     RES             mm_mapbuf,                          256 ; 256 bytes     ; $0600  ; 256 bytes, same
     RES             mm_mapbuf2,                         256 ; 256 bytes     ; $0700  ; 256 bytes, same
 
-SECTION "PUZZLE"
+SECTION "PUZZLE" ; $0300 - $0310
     RES             puzzle,                             16 ; $0300
 
 
@@ -548,6 +575,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             math_hitchance,                     2 ; $6856
     RES             levelup_statsindex,                 0 ; $6858
     RES             math_basedamage,                    2 ; $6858
+    RES             poison_id,                          0 ; $685A ; local - temp to hold character ID
     RES             math_numhits,                       0 ; $685A
     RES             math_magrandhit,                    2 ; $685A
     RES             btlmag_spellconnected,              0 ; $685C ; 1 byte
@@ -616,6 +644,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btltmp_divLo,                       1 ; $688B
     RES             btltmp_divHi,                       1 ; $688C
     RES             btltmp_divV,                        1 ; $688D
+    RES             statbyte,                           0 ; $688E 
     RES             levelup_classid,                    0 ; $688E ; local, stores class ID
     RES             btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
     RES             btl_charcmdbuf,                     16 ; $688F
@@ -625,6 +654,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 3
     RES             btl_charcmdconsumeid,               1 ; $68A7
     GAP                                                 7
+    RES             regen_loopctr,                      0 ; $68AF - 1 byte    ; local - loop down-counter
     RES             btl8x8spr_x,                        2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
     RES             btl8x8spr_y,                        2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
     RES             btl_tmpindex,                       0 ; $68B3 ; temporary holder for a current index
@@ -645,6 +675,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 1
     RES             btlbox_blockdata,                   1 ; $68BA
     GAP                                                 99
+    RES             chaosdeath_tilerowtbl,              0 ; $691E  maybe 256 bytes
     RES             btl_msgbuffer,                      384 ; $691E   ; $180 bytes  ($0C rows * $20 bytes per row); this buffer contains on-screen tiles to be drawn to ppu$2240; (note only $19 bytes are actually drawn, the remaining 7 bytes are padding)
     RES             btl_msgdraw_hdr,                    1 ; $6A9E
     RES             btl_msgdraw_x,                      1 ; $6A9F
@@ -654,8 +685,11 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_msgdraw_height,                 1 ; $6AA2
     RES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
     GAP                                                 2
+
+    RES             displayloopctr,                     0 ; $6AA6
     RES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
     RES             eobbox_slotid,                      1 ; $6AA6
+    RES             displaymsgcode,                     0 ; $6AA7
     RES             inputdelaycounter,                  0 ; $6AA7     ; counter to delay multiple-input processing when holding a direction
     RES             eobbox_textid,                      1 ; $6AA7
     GAP                                                 1
@@ -689,6 +723,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btltmp_targetlist,                  9 ; $6AEF     ; temporary buffer (9 entries) containing possible targets
     RES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
     GAP                                                 1
+    RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
     RES             btl_unfmtcbtbox_buffer,             128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
     RES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
     RES             btlcmd_target,                      1 ; $6B7B     ; the current enemy slot that is being targetted
@@ -699,6 +734,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_followupmusic,                  1 ; $6BA7 ; song to play in battle after current song finishes.  Moved to music_track once music_track has its high bit set  (does this ever happen?)
     RES             btl_charattrib,                     4 ; $6BA8 ; attributes to use when drawing charcters in battle  (4 bytes, 1 for each)
     RES             btl_responddelay,                   1 ; $6BAC
+    RES             poison_index,                       0 ; 6BAD  ;  local - temp to hold OB stat index (00, 40, 80, C0)
+    RES             regen_id,                           0 ; $6BAD ; 1 byte       ; local - enemy ID and loop up-counter
     RES             levelup_levindex,                   1 ; $6BAD ; local, stores the index to level up stats
     RES             btl_strikingfirst,                  1 ; $6BAE ; nonzero if players are striking first.  Zero otherwise
     RES             btl_potion_heal,                    1 ; $6BAF ; battle containers for Heal/Pure potions.  Stored separately because

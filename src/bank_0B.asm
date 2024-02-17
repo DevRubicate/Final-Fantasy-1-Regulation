@@ -950,10 +950,9 @@ LvlUp_LevelUp:
   @SkipMPGain:      ; jumps here for fighters/thieves (prevent them from getting MP)
     
     ;;---- Record stat byte
-                @statbyte = $688E   ; local, the stat gains byte from the level up data
     LDY #$00
     LDA (levelup_lvlupptr), Y              ; get leveldata[0] byte (other stat gains)
-    STA @statbyte                   ; record it!
+    STA statbyte                   ; record it!
     
     ;;---- HP gain
     LDY #ch_vit - ch_stats  ; Base HP gain depends on vitality
@@ -964,7 +963,7 @@ LvlUp_LevelUp:
     ADC #$01                ; Vit/4 + 1
     PHA                     ;  (push it for later)
     
-    LDA @statbyte           ; check the stat byte
+    LDA statbyte           ; check the stat byte
     AND #$20                ; see if the "strong" bit is set
     BEQ :+                  ; if this is a strong level....
       LDA #20               ;   get an additional HP bonus of rand[20,25]
@@ -993,9 +992,9 @@ LvlUp_LevelUp:
     JSR GiveHpBonusToChar   ; Finally, apply the HP bonus!
     
     ;;---- other stat gains (str/vit/etc)
-    ASL @statbyte               ; drop the high 3 bits of the stat byte, other bits
-    ASL @statbyte               ;   will be shifted out the high end
-    ASL @statbyte
+    ASL statbyte               ; drop the high 3 bits of the stat byte, other bits
+    ASL statbyte               ;   will be shifted out the high end
+    ASL statbyte
     
     LDA #$00                    ; zero our loop counter
     STA levelup_loop
@@ -1004,7 +1003,7 @@ LvlUp_LevelUp:
     
     ; Loop 5 times, possibly increasing each of the base stats
   @StatUpLoop:
-      ASL @statbyte             ; shift out the high bit of the stat byte
+      ASL statbyte             ; shift out the high bit of the stat byte
       BCC @StatUpRandomChance   ; if clear, stat has a random chance of increase
 
     @IncreaseStat:              ; if set, stat has a guaranteed increase
@@ -1083,36 +1082,36 @@ LvlUp_LevelUp:
     ; Now we need to loop through all of the base stats (str/int/etc) and print
     ;  a "Str Up!" msg if that stat increased.
     
-            @displayloopctr    = $6AA6
-            @displaymsgcode    = $6AA7
-            @displaybuffer     = $6AFA
+
+
+
     LDA #$00
-    STA @displayloopctr             ; zero the loop counter
+    STA displayloopctr             ; zero the loop counter
     LDA #BTLMSG_STR
-    STA @displaymsgcode             ; start with msg code for 'Str'
+    STA displaymsgcode             ; start with msg code for 'Str'
     
   @DisplayLoop:
-    LDY @displayloopctr
+    LDY displayloopctr
     LDA levelup_statupbuffer, Y            ; check to see if the stat increased
     
     BEQ @DisplayLoop_Next           ; if it didn't, skip ahead.  Otherwise...
     
       LDA #BTLMSG_UP                ; fill the display buffer with the following string:
-      STA @displaybuffer+3          ; 0F <StatMsgCode> 0F <UpMsgCode> 00
+      STA displaybuffer+3          ; 0F <StatMsgCode> 0F <UpMsgCode> 00
       LDA #$0F                      ;  which of course will print "Str Up!" or "Int Up!"
-      STA @displaybuffer+0
-      STA @displaybuffer+2
-      LDA @displaymsgcode
-      STA @displaybuffer+1
+      STA displaybuffer+0
+      STA displaybuffer+2
+      LDA displaymsgcode
+      STA displaybuffer+1
       LDA #$00
-      STA @displaybuffer+4
+      STA displaybuffer+4
       
       LDA #BANK_THIS                ; set swap-back bank to this bank.
       STA a:cur_bank
       
       LDA #$04
-      LDX #<@displaybuffer
-      LDY #>@displaybuffer
+      LDX #<displaybuffer
+      LDY #>displaybuffer
       JSR DrawCombatBox           ; draw this string in combat box 4
       
       JSR RespondDelay              ; wait a bit for them to read it
@@ -1122,9 +1121,9 @@ LvlUp_LevelUp:
       JSR UndrawNBattleBlocks     ; then undraw the box we just drew
       
   @DisplayLoop_Next:
-    INC @displaymsgcode             ; inc msg code to refer to next stat name
-    INC @displayloopctr
-    LDA @displayloopctr
+    INC displaymsgcode             ; inc msg code to refer to next stat name
+    INC displayloopctr
+    LDA displayloopctr
     CMP #$05                        ; loop 5 times (for each stat)
     BNE @DisplayLoop
     
@@ -1333,9 +1332,8 @@ GiveHpBonusToChar:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddBattleRewardToVal:
-            @loopctr = $8B          ; local
     LDA #$03
-    STA @loopctr                ; loop 3 times (adding 3 bytes)
+    STA loopctr                ; loop 3 times (adding 3 bytes)
     LDA #$00
     TAY                     ; A, X, Y all zero'd
     TAX                     ; Y = dest index, X = source index
@@ -1350,7 +1348,7 @@ AddBattleRewardToVal:
       INX                   ; inc indexes to do next byte
       INY
       
-      DEC @loopctr          ; loop 3 times, for each byte
+      DEC loopctr          ; loop 3 times, for each byte
       BNE @Loop
       
     RTS
@@ -1460,30 +1458,26 @@ DivideRewardBySurvivors:
     : DEX
       BNE @CountLoop
       
-      
     ;;  Loop to divide exp reward by the number of remaining characters.
     ;;    strangely, this only divides a 16-bit value, when the experience itself
     ;;    is tallied into a 24-bit value.  I wouldn't say this is bugged, but it's
     ;;    a curiosity.
-          @divisor =    $84
-          @remainder =  $85
-      
-    STY @divisor                ; Y (the number of surviving party members) is the divisor
+    STY divisor                ; Y (the number of surviving party members) is the divisor
     LDA #$00
-    STA @remainder              ; zero remainder
+    STA remainder              ; zero remainder
     
     LDX #16                     ; loop 16 times, one for each bit of the dividend
     
     ROL battlereward            ; roll out the high bit of the sum into C
     ROL battlereward+1
   @DivLoop:
-    ROL @remainder              ; roll bit into remainder
+    ROL remainder              ; roll bit into remainder
     
-    LDA @remainder
-    CMP @divisor
+    LDA remainder
+    CMP divisor
     BCC :+                      ; once the remainder >= divisor
-      SBC @divisor              ;  ... subtract divisor
-      STA @remainder
+      SBC divisor              ;  ... subtract divisor
+      STA remainder
   : ROL battlereward            ; roll 1 into result (if subtracted)
     ROL battlereward+1          ; or 0 into result (if didn't subtract)
     DEX
@@ -1873,29 +1867,20 @@ ChaosDeath:
     STA $4015
     
     ; a bunch of local vars
-            @rvalprev       = $82   ; "previous" random value
-            @rval           = $83   ; a random value
-            @ppuaddr        = $88   ; 2 bytes
-            @outerctr       = $9A
-            @innerctr       = $9B
-            @tilerowtbl     = btl_msgbuffer ; a table of 256 entries which says which row to erase for each tile
-                                            ;   note that the table is 256 entries but it only NEEDS to be 128.
-                                            ;   The last 128 entries are not used.
-    
     LDA #$00                    ; Start the Low-pitch noise rumble
     STA $9C                     ; See ChaosDeath_FadeNoise for details
     JSR ChaosDeath_FadeNoise
 
-    LDY #$00                    ; Fill @tilerowtbl with randomness
+    LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness
   @TableFillLoop:
       JSR BattleRNG
-      STA @tilerowtbl, Y
+      STA chaosdeath_tilerowtbl, Y
       INY
       BNE @TableFillLoop
       
       
     ;   The Choas Death effect is done with a nested Loop.  There is an inner loop that runs $100
-    ; times.  Each time it runs, it erases one row of pixels (row determined by @tilerowtbl)
+    ; times.  Each time it runs, it erases one row of pixels (row determined by chaosdeath_tilerowtbl)
     ; for a tile between $00-7F.  This will erase Chaos as well as the battle backdrop tiles.
     ;
     ;   The outer loop will change which row gets erased by incrementing each value in the table.
@@ -1907,13 +1892,13 @@ ChaosDeath:
     ;   A frame is drawn after every row of pixels is erased.
     
     LDA #$08
-    STA @outerctr         ; outer loop counter.   Loop 8 times (once for each pixel row)
+    STA chaosdeath_outerctr         ; outer loop counter.   Loop 8 times (once for each pixel row)
   @OuterLoop:
       LDA #$00
-      STA @innerctr         ; inner loop counter  Loop $100 times (for $80 tiles -- they'll get erased twice each)
+      STA chaosdeath_innerctr         ; inner loop counter  Loop $100 times (for $80 tiles -- they'll get erased twice each)
     @InnerLoop:
     
-        LDA @innerctr               ; update the noise playback halfway through the inner loop
+        LDA chaosdeath_innerctr               ; update the noise playback halfway through the inner loop
         CMP #$80
         BNE :+
           JSR ChaosDeath_FadeNoise
@@ -1922,28 +1907,28 @@ ChaosDeath:
         LDX #$79
         JSR RandAX
         
-        STA @rval                   ; store the tile number for later use
+        STA chaosdeath_rval                   ; store the tile number for later use
         
         LDX #$10                    ; multiply the tile ID by $10 to get the PPU addr to that
         JSR MultiplyXA              ;  tile's CHR
-        STA @ppuaddr
-        STX @ppuaddr+1
+        STA chaosdeath_ppuaddr
+        STX chaosdeath_ppuaddr+1
         
-        LDY @rval                   ; get tile number, use it to figure out which row to erase
-        LDA @tilerowtbl, Y
+        LDY chaosdeath_rval                   ; get tile number, use it to figure out which row to erase
+        LDA chaosdeath_tilerowtbl, Y
         AND #$07                    ; mask off to get 0-7 (only 8 rows of tiles)
         
         TAY                             ; These two lines are entirely pointless.  They might as well be NOPs
         LDA @StupidestLutInTheWorld, Y  ; They probably were meant to scramble the desired row -- but the lut
                                         ;  does not scramble anything -- it's an identity lut.  Moreover, the
-                                        ;  @tilerowtbl was already randomized, so this is pointless anyway.
+                                        ;  chaosdeath_tilerowtbl was already randomized, so this is pointless anyway.
         
         CLC                         ; Add the row number to the PPU addr
-        ADC @ppuaddr
-        STA @ppuaddr
-        LDA @ppuaddr+1
+        ADC chaosdeath_ppuaddr
+        STA chaosdeath_ppuaddr
+        LDA chaosdeath_ppuaddr+1
         ADC #$00
-        STA @ppuaddr+1
+        STA chaosdeath_ppuaddr+1
         
         JSR WaitForVBlank         ; Wait for VBlank
         
@@ -1957,26 +1942,26 @@ ChaosDeath:
         LDA #$00
         STA PPUDATA               ; erase it
         
-        LDA @rvalprev           ; load *another* random value
+        LDA chaosdeath_rvalprev           ; load *another* random value
         AND #$03
         STA PPUSCROLL               ; use it as X scroll to shake the screen
         
-        LDA @rval               ; use tile ID as random number for Y scroll
-        STA @rvalprev           ;  (and use it as X scroll next iteration)
+        LDA chaosdeath_rval               ; use tile ID as random number for Y scroll
+        STA chaosdeath_rvalprev           ;  (and use it as X scroll next iteration)
         AND #$03
         STA PPUSCROLL
         
-        DEC @innerctr           ; loop 256 times!
+        DEC chaosdeath_innerctr           ; loop 256 times!
         BNE @InnerLoop
         ;- end inner loop
     
-      LDX #$00                  ; Once the inner loop ends, INC each entry in the @tilerowtbl
-      : INC @tilerowtbl, X      ;  so change which rows get erased next outer iteration
+      LDX #$00                  ; Once the inner loop ends, INC each entry in the chaosdeath_tilerowtbl
+      : INC chaosdeath_tilerowtbl, X      ;  so change which rows get erased next outer iteration
         INX
         BNE :-
       
       JSR ChaosDeath_FadeNoise  ; update noise effect
-      DEC @outerctr
+      DEC chaosdeath_outerctr
       BNE @OuterLoop            ; outer loop 8 times
     ;- end outer loop
     
@@ -2011,10 +1996,10 @@ ChaosDeath:
     ASL A
     ASL A
     CLC
-    ADC @ppuaddr    ; Add to ppu addr
+    ADC chaosdeath_ppuaddr    ; Add to ppu addr
     PHA             ; (push low byte, since PPUADDR needs high byte written first)
     LDA #$00
-    ADC @ppuaddr+1  ; Resume addition to high byte
+    ADC chaosdeath_ppuaddr+1  ; Resume addition to high byte
     STA PPUADDR       ; write high byte
     PLA             ; then pull and write low byte
     STA PPUADDR
