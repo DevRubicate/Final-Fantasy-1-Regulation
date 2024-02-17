@@ -286,7 +286,9 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btl_varI,                         0 ; $88
     RESZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
     RESZP btl_tmpvar1,                      1 ; 1 bytes      ; $88
+    RESZP btl_varJ,                         0 ; $89
     RESZP btl_tmpvar2,                      1 ; 1 bytes      ; $89
+    RESZP btl_varK,                         0 ; $8A
     RESZP btl_tmpvar3,                      1 ; 1 bytes      ; $8A
     RESZP btl_tmpvar4,                      1 ; 1 bytes      ; $8B
     RESZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C

@@ -1058,13 +1058,13 @@ MiniGameLoop:
                        ; otherwise... movement where the cursor currently is
                        ; is illegal.  Play an ugly error sound effect
     LDA #%00111100     ; 12.5% duty (harsh), volume=C
-    STA $4004
+    STA PAPU_CTL2
     LDA #%10001100     ; sweep upwards in pitch (period=0, shift=4)
-    STA $4005
+    STA PAPU_RAMP2
     LDA #$70
-    STA $4006          ; F value = $070
+    STA PAPU_FT2          ; F value = $070
     LDA #$00
-    STA $4007
+    STA PAPU_CT2
 
     LDA #$14
     STA sq2_sfx        ; mark sq2 as being sound effect for $14 frames
@@ -1312,18 +1312,18 @@ Music_NewSong:
       LDA #0
       STA sq2_sfx         ; zero sq2_sfx (seems strange to do here)
 
-      STA $4002           ; then zero each of the channels output freq (including noise)
-      STA $4003           ; This in effect silences the squares
-      STA $4006           ;  and SLOPPILY silences the tri (tri will pop)
-      STA $4007           ;  but does not silence noise -- instead it just makes it crazy high pitched
-      STA $400A
-      STA $400B
-      STA $400E
+      STA PAPU_FT1           ; then zero each of the channels output freq (including noise)
+      STA PAPU_CT1           ; This in effect silences the squares
+      STA PAPU_FT2           ;  and SLOPPILY silences the tri (tri will pop)
+      STA PAPU_CT2           ;  but does not silence noise -- instead it just makes it crazy high pitched
+      STA PAPU_TFREQ1
+      STA PAPU_TFREQ2
+      STA PAPU_NFREQ1
 
       LDA #$30            ; *then* set channel volumes to zero -- this will properly
-      STA $4000           ;  silence the squares and noise... and will eventually silence
-      STA $4004           ;  triangle (next linear counter clock).  
-      STA $4008
+      STA PAPU_CTL1           ;  silence the squares and noise... and will eventually silence
+      STA PAPU_CTL2           ;  triangle (next linear counter clock).  
+      STA PAPU_TCR1
       STA $400C
 
   @PrimeChannel:
@@ -1377,12 +1377,12 @@ Music_NewSong:
       LDA #0             ; then zero sq2_sfx *again*
       STA sq2_sfx        ;  (again this seems silly to do here)
 
-      STA $4002          ; and zero all channel freqs except noise
-      STA $4003          ;  utterly pointless as they've already been zerod
-      STA $4006
-      STA $4007
-      STA $400A
-      STA $400B
+      STA PAPU_FT1          ; and zero all channel freqs except noise
+      STA PAPU_CT1          ;  utterly pointless as they've already been zerod
+      STA PAPU_FT2
+      STA PAPU_CT2
+      STA PAPU_TFREQ1
+      STA PAPU_TFREQ2
   @Exit:
     RTS
 
@@ -1411,9 +1411,9 @@ MusicPlay:
     BNE @Exit          ;  so just exit
 
       LDA #$70         ; otherwise (low bit clear), channels need to be silenced
-      STA $4000        ; silence square by setting their volume to zero
-      STA $4004
-      STA $4008        ; triangle silences eventually (once length or linear counter expires)
+      STA PAPU_CTL1        ; silence square by setting their volume to zero
+      STA PAPU_CTL2
+      STA PAPU_TCR1        ; triangle silences eventually (once length or linear counter expires)
 
       INC music_track  ; set low bit of music track to mark channels as silenced.  Then exit
 
@@ -1429,7 +1429,7 @@ MusicPlay:
   ;; First, update Square 1's regs to match output music data
   ;;  The high bit of the output F-value is checked to see if the frequency has changed.
   ;;  If there was no change, the frequency should not be written again because writing
-  ;;  to the last channel reg ($4003 for sq1) to change the freq resets the duty.  If
+  ;;  to the last channel reg (PAPU_CT1 for sq1) to change the freq resets the duty.  If
   ;;  this is done every frame, the sound would crackle something fierce.
 
     LDA CHAN_SQ1 + ch_freq+1     ; get high bit of output F-value
@@ -1437,13 +1437,13 @@ MusicPlay:
 
       LDA CHAN_SQ1 + ch_vol      ; get the output volume
       ORA #%01110000             ;  set bits to disable length and decay, and set duty to 25%
-      STA $4000                  ;  output the volume/duty
+      STA PAPU_CTL1                  ;  output the volume/duty
       LDA #%01111111
-      STA $4001                  ; disable sweep unit
+      STA PAPU_RAMP1                  ; disable sweep unit
       LDA CHAN_SQ1 + ch_freq
-      STA $4002
+      STA PAPU_FT1
       LDA CHAN_SQ1 + ch_freq+1
-      STA $4003                  ; output frequency
+      STA PAPU_CT1                  ; output frequency
 
       LDA #$80                   ; set high bit of freq to mark that it doesn't need to be updated
       STA CHAN_SQ1 + ch_freq+1   ;  anymore (that LDA should probalby be ORA, but it doesn't matter)
@@ -1452,9 +1452,9 @@ MusicPlay:
     @Sq1_NoFreqChange:           ; if the freq is not to be changed...
       LDA CHAN_SQ1 + ch_vol      ; still update volume (same process as above)
       ORA #%01110000
-      STA $4000
+      STA PAPU_CTL1
       LDA #%01111111             ; and disable sweep
-      STA $4001
+      STA PAPU_RAMP1
 
   @Sq1_Done:
 
@@ -1481,15 +1481,15 @@ MusicPlay:
    @Sq2_FreqChange:
       LDA CHAN_SQ2 + ch_vol     ; get volume
       ORA #%00110000            ; disable length/decay.  Don't set any duty bits (12.5% by default)
-      STA $4004                 ; output
+      STA PAPU_CTL2                 ; output
       LDA #%01111111
-      STA $4005                 ; disable sweep
+      STA PAPU_RAMP2                 ; disable sweep
 
       LDA CHAN_SQ2 + ch_freq    ; output freq
-      STA $4006
+      STA PAPU_FT2
       LDA CHAN_SQ2 + ch_freq+1
       AND #$0F                  ; remove high bit flag from F-value (not necessary)
-      STA $4007
+      STA PAPU_CT2
       ORA #$80                  ; then set high bit to mark that it doesn't need updating
       STA CHAN_SQ2 + ch_freq+1  ; and write it back
       JMP @Sq2_Done             ; then sq2 is done!
@@ -1497,9 +1497,9 @@ MusicPlay:
    @Sq2_NoFreqChange:
       LDA CHAN_SQ2 + ch_vol     ; update vol/sweep just as above -- but don't update freq
       ORA #%00110000
-      STA $4004
+      STA PAPU_CTL2
       LDA #%01111111
-      STA $4005
+      STA PAPU_RAMP2
 
   @Sq2_Done:
 
@@ -1513,11 +1513,11 @@ MusicPlay:
     BMI @Tri_HighBitSet         ; if high bit of high byte set, skip ahead
 
       LDA #%10001111            ; otherwise, set linear counter to keep channel playing
-      STA $4008                 ;  (keep it audible)
+      STA PAPU_TCR1                 ;  (keep it audible)
       LDA CHAN_TRI + ch_freq    ; set the freq
-      STA $400A
+      STA PAPU_TFREQ1
       LDA CHAN_TRI + ch_freq+1
-      STA $400B
+      STA PAPU_TFREQ2
 
       LDA #%10000000
       STA CHAN_TRI + ch_freq+1  ; then set high bit to indicate freq doesn't need updating
@@ -1527,7 +1527,7 @@ MusicPlay:
       CMP #$FF                  ;  see if high byte = $FF
       BNE @Tri_Done             ; if not, do nothing
         LDA #%10000000          ;  otherwise, silence the tri by setting the linear counter reload
-        STA $4008               ;  to zero.  This will silence the tri on the next linear counter clock.
+        STA PAPU_TCR1               ;  to zero.  This will silence the tri on the next linear counter clock.
 
   @Tri_Done:
 

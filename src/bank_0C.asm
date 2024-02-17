@@ -145,15 +145,6 @@ ExitBattle:
     STA btl_result                  ;  before exiting
     BNE WaitFrames_BattleResult
     
-    
-; Unused space -- looks like old code from above ExitBattle routine -- like from a previous assembly
-;   that didn't get overwritten
-  .BYTE $A0                     ; ?
-  .BYTE $A9, $78                ; LDA #$78
-  .BYTE $8D, $86, $6B           ; STA btl_result
-  .BYTE $D0, $29                ; BNE somewhere (WaitFrames_BattleResult?)
-  .BYTE $F2, $38, $60, $20      ; ?
-  
   
 .align $100
 
@@ -756,11 +747,11 @@ BattleSubMenu_Magic:
     STX btl_varB
     
     LDY #$05
-    LDA ($80), Y
+    LDA (btl_varA), Y
     STA $68B3                       ; put magic graphic at 68B3 (temp)
     
     LDY #$06
-    LDA ($80), Y
+    LDA (btl_varA), Y
     STA $68B4                       ; put magic palette at 68B4 (temp)
     
     LDA btlcmd_curchar
@@ -773,7 +764,7 @@ BattleSubMenu_Magic:
     STA btlcmd_magicgfx+1, Y        ; and magic palette
     
     LDY #$03
-    LDA ($80), Y                    ; get the target for this spell (stored as semi-flags:  01,02,04,08,10,20 are valid values)
+    LDA (btl_varA), Y                    ; get the target for this spell (stored as semi-flags:  01,02,04,08,10,20 are valid values)
     
   @CheckTarget_01:
     LSR A                           ; shift out low bit
@@ -955,8 +946,8 @@ BattleSubMenu_Item:
     AND #$7F                    ; mask off the 'equipped' bit
     BEQ @NothingBox             ; if zero, print nothing box and exit
     
-    STA btl_tmpvar2                     ; if nonzero, stick it in $89
-    DEC $89                     ; convert from 1-based to 0-based
+    STA btl_tmpvar2                     ; if nonzero, stick it in btl_varJ
+    DEC btl_varJ                     ; convert from 1-based to 0-based
     
     LDA btl_tmpvar1                     ; get the selected column (0=weapon, 1=armor)
     BNE @GetArmorSpell          ; if armor selected jump ahead
@@ -978,14 +969,14 @@ BattleSubMenu_Item:
     ADC #TCITYPE_ARMSTART       ; convert to item index
     STA btl_charcmditem, Y      ; record as item being used
     
-    LDA $89
+    LDA btl_varJ
     JSR GetPointerToArmorData   ; pointer to armor data in XA
     
   @GetSpellCast:
     STA btl_tmpvar1                     ; store pointer to wep/armor data in $88,89
-    STX $89
+    STX btl_varJ
     LDY #$03                    ; Y=3 to index, since byte 3 in both wep/armor data is the "spell cast" entry
-    LDA ($88), Y                ; get spell cast
+    LDA (btl_varI), Y                ; get spell cast
     
     TAX                             ; put it in X
     DEX                             ; DEX to make it 0-based (FF becomes "no spell")
@@ -1275,19 +1266,19 @@ UpdateSprites_BattleFrame:
       LSR A                 ; shift out dead bit
       ROL $88               ;   and into $88
       LSR A                 ; shift out stone bit
-      ROL $89               ;   and into $89
+      ROL btl_varJ               ;   and into btl_varJ
       
       TXA                   ; Loop until we do character 0
       BNE @ExtractDeadStoneBits
     
     LDA btl_drawflagsA  ; move new dead bits into drawflagsA
     AND #$F0
-    ORA $88
+    ORA btl_varI
     STA btl_drawflagsA
     
     LDA btl_drawflagsB  ; move new stone bits into drawflagsB
     AND #$F0
-    ORA $89
+    ORA btl_varJ
     STA btl_drawflagsB
     
     
@@ -2908,7 +2899,7 @@ DoMagicFlash:
     CMP #$20                        ; if it's white, replace it with gray so it isn't
     BNE :+                          ;   so overwhelming
       LDA #$10
-  : STA btl_tmpvar2                         ; store in tmp  ($89 is the flash color)
+  : STA btl_tmpvar2                         ; store in tmp  (btl_varJ is the flash color)
   
     LDA btl_palettes + $10          ; get the original BG color
     STA $6D16                       ; back it up (probably unnecessary, since btl_palettes is never changed)
@@ -3012,16 +3003,16 @@ PrepareAndDrawSimpleCombatBox:
     
     LDY #$00
     LDA $68B1                   ; get the control code
-    STA ($88), Y                ; write it to pos 0
+    STA (btl_varI), Y                ; write it to pos 0
     INY
     TXA
-    STA ($88), Y                ; write secondary byte to pos 1
+    STA (btl_varI), Y                ; write secondary byte to pos 1
     INY
     LDA #$00
-    STA ($88), Y                ; write terminator to pos 2
+    STA (btl_varI), Y                ; write terminator to pos 2
     
-    LDX $88                     ; put source pointer for drawing in YX
-    LDY $89
+    LDX btl_varI                ; put source pointer for drawing in YX
+    LDY btl_varJ
     
     INC btl_combatboxcount      ; count this combat box
     
@@ -3966,14 +3957,14 @@ PlayerAttackEnemy_Physical:
     
     TXA
     JSR GetEnemyStatPtr
-    STA $84                         ; $84,85 points to enemy stats in RAM
-    STX $85
+    STA btl_varE                         ; btl_varE,85 points to enemy stats in RAM
+    STX btl_varF
     LDY #en_romptr
-    LDA ($84), Y
-    STA $86
+    LDA (btl_varE), Y
+    STA btl_varG
     INY
-    LDA ($84), Y
-    STA $87                         ; $86,87 points to enemy stats in ROM
+    LDA (btl_varE), Y
+    STA btl_varH                        ; $86,87 points to enemy stats in ROM
     
     ;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Attacker/PLAYER stats
@@ -4023,30 +4014,30 @@ PlayerAttackEnemy_Physical:
     ;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Defender/ENEMY stats
     LDY #en_ailments                ; ailment from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_defender_ailments
     
     LDY #ENROMSTAT_CATEGORY         ; category from ROM
-    LDA ($86), Y
+    LDA (btl_varG), Y
     STA btl_defender_category
     
     LDY #ENROMSTAT_ELEMWEAK         ; elemental weakness from ROM
-    LDA ($86), Y                    ; BUGGED - it should be taking this from enemy RAM stats, not from ROM stats
+    LDA (btl_varG), Y                    ; BUGGED - it should be taking this from enemy RAM stats, not from ROM stats
     STA btl_defender_elemweakness   ;   as a result, spells which modify this (XFER) have no effect when used on enemies.
     
     LDY #en_evade                   ; evade from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_defender_evade
     
     LDY #en_defense                 ; absorb/defense from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_defender_absorb
     
     LDY #en_hp                      ; HP from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_defender_hp
     INY
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_defender_hp+1
     
     
@@ -4060,14 +4051,14 @@ PlayerAttackEnemy_Physical:
     
     LDY #en_ailments                ; IB ailements
     LDA btl_defender_ailments
-    STA ($84), Y
+    STA (btl_varE), Y
     
     LDY #en_hp                      ; IB HP
     LDA btl_defender_hp
-    STA ($84), Y
+    STA (btl_varE), Y
     INY
     LDA btl_defender_hp+1
-    STA ($84), Y
+    STA (btl_varE), Y
     
     LDY #btlch_ailments             ; update attacker ailments (pointless, they're not changed by physical attacks)
     LDA btl_attacker_ailments
@@ -4100,13 +4091,13 @@ EnemyAttackPlayer_Physical:
     TXA
     JSR GetEnemyStatPtr             ; get pointer to enemy stats in XA
     
-    STA $84                 ; pointer to enemy RAM stats at $84,85
-    STX $85
+    STA btl_varE                 ; pointer to enemy RAM stats at btl_varE,85
+    STX btl_varF
     LDY #en_romptr
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA $86
     INY
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA $87                 ; pointer to enemy ROM stats at $86,87
         
     ;;;;;;;;;;;;;;;;;;;;;
@@ -4116,39 +4107,39 @@ EnemyAttackPlayer_Physical:
     STA battle_defenderisplayer
     
     LDY #en_strength            ; strength from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_attacker_strength
     
     LDY #ENROMSTAT_CATEGORY     ; category from ROM (this doesn't really make sense because 
-    LDA ($86), Y                ;   defending player does not have any category)
+    LDA (btl_varG), Y                ;   defending player does not have any category)
     STA btl_attacker_category
     
     LDY #ENROMSTAT_ELEMWEAK     ; uses enemy's elemental WEAKNESS (from ROM) as their attack element.  BUGGED ?
-    LDA ($86), Y                ; This doesn't make any sense, as it leads to things like FrWolves
+    LDA (btl_varG), Y                ; This doesn't make any sense, as it leads to things like FrWolves
     STA btl_attacker_element    ;  attacking with fire.
     
     LDY #ENROMSTAT_HITRATE      ; hit rate from ROM
-    LDA ($86), Y
+    LDA (btl_varG), Y
     STA btl_attacker_hitrate
     
     LDY #en_numhitsmult         ; num hits multiplier from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_attacker_numhitsmult
     
     LDY #ENROMSTAT_NUMHITS      ; num hits from ROM
-    LDA ($86), Y
+    LDA (btl_varG), Y
     STA btl_attacker_numhits
     
     LDY #ENROMSTAT_CRITRATE     ; crit rate from ROM
-    LDA ($86), Y
+    LDA (btl_varG), Y
     STA btl_attacker_critrate
     
     LDY #ENROMSTAT_ATTACKAIL    ; attack ailment from ROM  (curse you, Sorcerers!!!)
-    LDA ($86), Y
+    LDA (btl_varG), Y
     STA btl_attacker_attackailment
     
     LDY #en_ailments            ; inflicted ailments from RAM
-    LDA ($84), Y
+    LDA (btl_varE), Y
     STA btl_attacker_ailments
     
     ;;;;;;;;;;;;;;;;;;;;;
@@ -4198,7 +4189,7 @@ EnemyAttackPlayer_Physical:
     
     LDY #en_ailments                ; update attacker's ailments
     LDA btl_attacker_ailments       ; This is totally pointless... attacker ailments are 
-    STA ($84), Y                    ;   completely unaffected by the attack.
+    STA (btl_varE), Y                    ;   completely unaffected by the attack.
     
     LDY #btlch_hp                   ; this actually updates IB HP -- but again... it doesn't seem to be used
     LDA btl_defender_hp
@@ -4927,7 +4918,7 @@ DrawCharacterStatus:
     ASL A                       ;   character's status
     TAY
     LDA lut_CharStatusPPUAddr, Y
-    STA $88
+    STA btl_varI
     LDA lut_CharStatusPPUAddr+1, Y
     STA btl_tmpvar2                     ; put the target PPU address at $88,89
     
@@ -5017,9 +5008,9 @@ DrawStatusRow:
     CLC
     ADC #$20
     STA $88
-    LDA $89
+    LDA btl_varJ
     ADC #$00
-    STA $89
+    STA btl_varJ
     
     RTS
 
@@ -5373,7 +5364,7 @@ GetCharOBMagDataPointers:
 ;;
 ;;  SwapCharsForSorting  [$AC57 :: 0x32C67]
 ;;
-;;  input:  $88 and $89 = char IDs (0-3) to swap
+;;  input:  $88 and btl_varJ = char IDs (0-3) to swap
 ;;
 ;;    This routine swaps not only character stats,
 ;;  but also the character entries in char_order_buf
@@ -5382,18 +5373,18 @@ GetCharOBMagDataPointers:
 
 SwapCharsForSorting:
     LDA btl_tmpvar1                 ; Swap ch_stats
-    LDX $89
+    LDX btl_varJ
     JSR GetCharOBPointers
     JSR SwapCharOBStats
     
     LDA btl_tmpvar1                 ; Swap ch_magic
-    LDX $89
+    LDX btl_varJ
     JSR GetCharOBMagDataPointers
     JSR SwapCharOBStats
     
     LDA btl_tmpvar1                 ; put char IDs in X,Y
     TAY
-    LDA $89
+    LDA btl_varJ
     TAX
     
     LDA char_order_buf, Y   ; so that we can swap their entries in char_order_buf
@@ -5687,14 +5678,14 @@ LoadOneCharacterIBStats:
         SBC #$01
         JSR GetPointerToWeaponData  ; get a pointer to the weapon data
         STA btl_tmpvar1                     ; put the pointer at $88
-        STX $89
+        STX btl_varJ
       
         LDY #$07
-        LDA ($88), Y
+        LDA (btl_varI), Y
         LDY #btlch_wepplt           ; get palette
         STA (btl_ib_charstat_ptr), Y
         LDY #$06
-        LDA ($88), Y                ; get the weapon graphic
+        LDA (btl_varI), Y                ; get the weapon graphic
 
   :
     LDY #btlch_wepgfx

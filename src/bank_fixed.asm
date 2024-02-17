@@ -238,7 +238,7 @@ EnterOverworldLoop:
     LDA #$0A          ; use a fixed frequency of $0A
 
   @PlaySFX:
-    STA $400E         ; write specified frequency
+    STA PAPU_NFREQ1         ; write specified frequency
     LDA #0
     STA $400F         ; write to last noise reg to reload length counter and get channel started
     JMP @Loop         ; then jump back to loop
@@ -1004,9 +1004,9 @@ ClearZeroPage:
 
 DisableAPU:
     LDA #$30
-    STA $4000   ; set Squares and Noise volume to 0
-    STA $4004   ;  clear triangle's linear counter (silencing it next clock)
-    STA $4008
+    STA PAPU_CTL1   ; set Squares and Noise volume to 0
+    STA PAPU_CTL2   ;  clear triangle's linear counter (silencing it next clock)
+    STA PAPU_TCR1
     STA $400C
     LDA #$00
     STA PAPU_EN   ; disable all channels
@@ -1864,7 +1864,7 @@ MapTileDamage:
     LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
     STA $400C
     LDA #$0D
-    STA $400E             ; set noise freq to $0D (low)
+    STA PAPU_NFREQ1             ; set noise freq to $0D (low)
     LDA #$00
     STA $400F             ; set length counter to $0A (silence sound after 5 frames)
                           ; this gets the noise channel playing the "kssssh" sound effect
@@ -1909,12 +1909,12 @@ MapPoisonDamage:       ; first thing is to check if ANY characters are poisoned.
   @DoIt:
                             ; play the "you're poisoned" sound effect
     LDA #%00111010          ; 12.5% duty (harsh), volume=$A
-    STA $4004
+    STA PAPU_CTL2
     LDA #%10000001          ; sweep downward in pitch
-    STA $4005
+    STA PAPU_RAMP2
     LDA #$60
-    STA $4006               ; start at F=$060
-    STA $4007
+    STA PAPU_FT2               ; start at F=$060
+    STA PAPU_CT2
 
     LDA #$06                ; indicate sq2 is busy with sound effects for 6 frames
     STA sq2_sfx
@@ -3595,7 +3595,7 @@ PlayDoorSFX:
     LDA #%00001100  ; enable noise decay, set decay speed to $0C (moderately slow)
     STA $400C
     LDA #$0E
-    STA $400E       ; set freq to $0E  (2nd lowest possible for noise)
+    STA PAPU_NFREQ1       ; set freq to $0E  (2nd lowest possible for noise)
     LDA #$30
     STA $400F       ; start noise playback -- set length counter to stop after $25 frames
     RTS
@@ -4098,7 +4098,7 @@ LoadStandardMap:
     TYA               ; restore original high byte of pointer
     ROL A
     ROL A                  ; right shift it by 6 (high 2 bytes become low 2 bytes).
-    ROL A                  ;    These ROLs are a shorter way to do it than LSRs.  Effectively dividing the pointer by $4000
+    ROL A                  ;    These ROLs are a shorter way to do it than LSRs.  Effectively dividing the pointer by PAPU_CTL1
     AND #$03               ; mask out low 2 bits (gets bank number for start of this map)
     ORA #BANK_STANDARDMAPS ; Add standard map bank (use ORA to avoid unwanted carry from above ROLs)
     STA tmp+5              ; put bank number in temp ram for future reference
@@ -5325,19 +5325,19 @@ DialogueBox_Frame:
 
 DialogueBox_Sfx:
     LDX #$38
-    STX $4004      ; 12.5% duty (harsh), volume=8
-    STA $4005      ; for open ($8E):  sweep period=0 (fastest), sweep upwards in pitch, shift=6 (shallow steps)
+    STX PAPU_CTL2      ; 12.5% duty (harsh), volume=8
+    STA PAPU_RAMP2      ; for open ($8E):  sweep period=0 (fastest), sweep upwards in pitch, shift=6 (shallow steps)
                    ; for close ($95): sweep period=1 (fast), sweep down in pitch, shift=5 (not as shallow)
 
     LSR A          ; rotate sweep value by 2 bits
     ROR A
     EOR #$FF       ; and invert
-    STA $4006      ; use that as low byte of F value
+    STA PAPU_FT2      ; use that as low byte of F value
                    ; for open:   F = $0DC
                    ; for close:  F = $035
 
     LDA #0         ; set high byte of F value to 0, and reload length counter
-    STA $4007
+    STA PAPU_CT2
     RTS            ; and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5626,9 +5626,9 @@ StartScreenWipe:
     STA PAPU_EN             ;   this stops all music.  Square 1 is used for the wipe sound effect
 
     LDA #$38              ; 12.5% duty (harsh), volume=8
-    STA $4000
+    STA PAPU_CTL1
     LDA #%10001010        ; sweep downwards in pitch with speed=0 (fast!) and shift=2 (medium)
-    STA $4001             ;  don't set F-value here, though -- that isn't done until
+    STA PAPU_RAMP1             ;  don't set F-value here, though -- that isn't done until
                           ;  ScreenWipeFrame
 
     RTS                   ; exit
@@ -5967,7 +5967,7 @@ BattleTransition:
     LDA tmp+12       ; set noise freq to (loopcounter/2)OR3
     LSR A            ;  this results in the following frequency pattern:
     ORA #$03         ; 3,3,3,3,3,3,3,3, 7,7,7,7,7,7,7,7, B,B,B,B,B,B,B,B, F,F,F,F,F,F,F,F,
-    STA $400E        ;    (repeated again)
+    STA PAPU_NFREQ1        ;    (repeated again)
 
     LDA #0
     STA $400F        ; reload length counter
@@ -6354,19 +6354,19 @@ DoAltarEffect:
 
     LDA #$30
     STA $400C            ; silence all audio channels by writing setting their volume to 0
-    STA $4004
-    STA $4000            ;  note this doesn't silence the triangle because tri has no volume control
-    STA $4008            ; instead it marks the linear counter to silence the triangle after $30 clocks (12 frames)
+    STA PAPU_CTL2
+    STA PAPU_CTL1            ;  note this doesn't silence the triangle because tri has no volume control
+    STA PAPU_TCR1            ; instead it marks the linear counter to silence the triangle after $30 clocks (12 frames)
 
     LDA #$0E
-    STA $400E            ; set noise to play freq $E  (2nd lowest pitch possible for noise)
+    STA PAPU_NFREQ1            ; set noise to play freq $E  (2nd lowest pitch possible for noise)
     LDA #$00
     STA $400F            ; start noise playback.  Note noise is still inaudible because its vol=0, but will
                          ; become audible as soon as its volume is changed (see AltarFrame)
 
-    STA $4006            ; set sq2's freq to $500 (low pitch) and start playback
+    STA PAPU_FT2            ; set sq2's freq to $500 (low pitch) and start playback
     LDA #$05             ; again it isn't immediately audible, but will be as soon as its vol is changed
-    STA $4007
+    STA PAPU_CT2
 
     LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
 
@@ -6427,9 +6427,9 @@ DoAltarEffect:
     STA PPUSCROLL
 
     LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
-    STA $4007           ;  however note that sq2 is currently playing the wrong note (freq was changed for
+    STA PAPU_CT2           ;  however note that sq2 is currently playing the wrong note (freq was changed for
     STA $400C           ;  the sound effect)
-    STA $4004
+    STA PAPU_CTL2
 
     LDA #1              ; to prevent sq2 from playing the wrong note, mark it as playing a sound effect so
     STA sq2_sfx         ; the proper freq will be set by the music playback.
@@ -6459,7 +6459,7 @@ AltarFrame:
 
     ORA #$30          ; use monochrome scanlines/8 as the volume for sq2 and noise effect
     STA $400C         ;  this will cause the sound effect to fade in and fade out and more/less
-    STA $4004         ;  lines of the effect are visible
+    STA PAPU_CTL2         ;  lines of the effect are visible
 
     AND #$01          ; also use the low bit of lines/8 as a scroll adjustment
     EOR tmp+15        ; OR with desired X scroll
@@ -6569,8 +6569,8 @@ PlaySFX_Error:
                      ; 1 frame after this routine exits
 
     LDA #$30
-    STA $4000        ; silence square 1 (set volume to 0)
-    STA $4008        ; attempt (and fail) to silence triangle (this just sets the linear reload.. but without
+    STA PAPU_CTL1        ; silence square 1 (set volume to 0)
+    STA PAPU_TCR1        ; attempt (and fail) to silence triangle (this just sets the linear reload.. but without
                      ;   a write to $400B, it will not take effect)
     STA $400C        ; silence noise (set vol to 0)
 
@@ -6581,23 +6581,23 @@ PlaySFX_Error:
       BPL @Loop      ; and repeat until Y wraps
 
     LDA #$30         ; then silence sq2 (vol to zero)
-    STA $4004
+    STA PAPU_CTL2
     LDA #$00
-    STA $4006        ; and reset sq2's freq to 0
+    STA PAPU_FT2        ; and reset sq2's freq to 0
     RTS              ; then exit
 
   @Frame:
     JSR WaitForVBlank    ; wait a frame
 
     LDA #%10001100    ;  50% duty, decay speed=%1100, no fixed volume, length enabled
-    STA $4004
+    STA PAPU_CTL2
     LDA #%10001001    ;  sweep upwards in pitch, speed=0 (fast!), shift=1 (large steps!)
-    STA $4005
+    STA PAPU_RAMP2
 
     LDA #$80
-    STA $4006         ; set initial freq to $080 (but it will sweep upwards in pitch quickly)
+    STA PAPU_FT2         ; set initial freq to $080 (but it will sweep upwards in pitch quickly)
     LDA #$00          ; and length to $0A  (longer than 1 frame... so length might as well be disabled
-    STA $4007         ;   because this is written every frame)
+    STA PAPU_CT2         ;   because this is written every frame)
     RTS
 
 
@@ -8117,7 +8117,7 @@ AirshipTransitionFrame:
     STA $400C            ; set noise volume to 8
 
     LDA framecounter     ; use framecounter as frequency for noise
-    STA $400E            ;   this will result in a the pitch starting high, then quickly sweeping
+    STA PAPU_NFREQ1            ;   this will result in a the pitch starting high, then quickly sweeping
                          ;   downward, then becoming very high again.  Repeating that pattern very
                          ;   quickly (cycles through all pitches once every 16 frames)
                          ; also will switch between "shhhhh" long mode and "bzzzzz" short mode every
@@ -11867,9 +11867,9 @@ BattleDrawMessageBuffer:
     STA $8B
     
     LDA #<btl_msgbuffer     ; set source pointer to point to message data buffer
-    STA $88
+    STA btl_varI
     LDA #>btl_msgbuffer
-    STA $89
+    STA btl_varJ
     
     LDA #$0C
     STA $68B9               ; loop down-counter ($0C rows)
@@ -11879,10 +11879,10 @@ BattleDrawMessageBuffer:
       LDA btl_tmpvar1           ; add $20 to the source pointer to draw next row
       CLC
       ADC #$20
-      STA $88
-      LDA $89
+      STA btl_varI
+      LDA btl_varJ
       ADC #$00
-      STA $89
+      STA btl_varJ
       
       LDA btl_tmpvar3           ; add $20 to the target PPU address
       CLC
@@ -11906,7 +11906,7 @@ BattleDrawMessageBuffer:
 ;;  Draws a row of tiles in the 'message' area on the battle screen.
 ;;  The row consists of $19 tiles.
 ;;
-;;  input:  $88,$89 = pointer to data to draw
+;;  input:  btl_varI,btl_varJ = pointer to data to draw
 ;;          $8A,$8B = PPU address to draw to.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11921,7 +11921,7 @@ Battle_DrawMessageRow:
     STA PPUADDR
     LDY #$00
   @Loop:
-      LDA ($88), Y      ; read $19 bytes from source pointer
+      LDA (btl_varI), Y      ; read $19 bytes from source pointer
       STA PPUDATA         ;  and draw them
       INY
       CPY #$19
@@ -11946,9 +11946,9 @@ BattleDrawMessageBuffer_Reverse:
     STA $8B
     
     LDA #<(btl_msgbuffer + $B*$20)  ; start with the last row of source data
-    STA $88
+    STA btl_varI
     LDA #>(btl_msgbuffer + $B*$20)
-    STA $89
+    STA btl_varJ
     
     LDA #$06                ; loop down counter.  6 iterations, 2 rows per iterations
     STA $68B9               ;    = $C rows
@@ -11968,10 +11968,10 @@ BattleDrawMessageBuffer_Reverse:
     LDA btl_tmpvar1     ; subtract $20 from the source pointer
     SEC
     SBC #$20
-    STA $88
-    LDA $89
+    STA btl_varI
+    LDA btl_varJ
     SBC #$00
-    STA $89
+    STA btl_varJ
     
     LDA btl_tmpvar3     ; and from the dest pointer
     SEC
@@ -12002,32 +12002,32 @@ GetBattleMessagePtr:
     
     TYA         ; multiply Y coord by $20
     ASL A
-    ROL $89
+    ROL btl_varJ
     ASL A
-    ROL $89
+    ROL btl_varJ
     ASL A
-    ROL $89
+    ROL btl_varJ
     ASL A
-    ROL $89
+    ROL btl_varJ
     ASL A
-    ROL $89     ; high byte gets rolled into $89
-    STA btl_tmpvar1     ; low byte in $88
+    ROL btl_varJ     ; high byte gets rolled into btl_varJ
+    STA btl_tmpvar1     ; low byte in btl_varI
     
     TXA         ; Add X coord to low byte
     CLC
-    ADC $88
-    STA $88
+    ADC btl_varI
+    STA btl_varI
     
     LDA #$00    ; add any carry to high byte
-    ADC $89
-    STA $89
+    ADC btl_varJ
+    STA btl_varJ
     
     CLC                 ; lastly, sum that result with 'btl_msgbuffer'
     LDA #<btl_msgbuffer
-    ADC $88
+    ADC btl_varI
     TAX                 ; low byte in X
     LDA #>btl_msgbuffer
-    ADC $89
+    ADC btl_varJ
     TAY                 ; high byte in Y
     RTS
 
@@ -12038,7 +12038,7 @@ GetBattleMessagePtr:
 ;;  Draws a single row of tiles for a box
 ;;
 ;;  input:
-;;               $88,89 = dest pointer to draw to      (updated to point to next row after the routine exits)
+;;               btl_varI,89 = dest pointer to draw to      (updated to point to next row after the routine exits)
 ;;    btl_msgdraw_width = width of the box
 ;;       btltmp_boxleft = tile to draw for left side
 ;;     btltmp_boxcenter = tile to draw for center
@@ -12049,7 +12049,7 @@ GetBattleMessagePtr:
 DrawBattleBox_Row:
     LDY #$00
     LDA btltmp_boxleft      ; draw the left tile
-    STA ($88), Y
+    STA (btl_varI), Y
     
     LDX btl_msgdraw_width
     DEX                     ; X is the width-2 (-2 to remove the left/right sides)
@@ -12058,21 +12058,21 @@ DrawBattleBox_Row:
     
     LDA btltmp_boxcenter
   @Loop:                    ; draw all the center tiles
-      STA ($88), Y
+      STA (btl_varI), Y
       INY
       DEX
       BNE @Loop
       
     LDA btltmp_boxright     ; lastly, draw the right tile
-    STA ($88), Y
+    STA (btl_varI), Y
     
     LDA btl_tmpvar1         ; add $20 to the dest pointer to have it point to
     CLC             ;  the next row
     ADC #$20
-    STA $88
-    LDA $89
+    STA btl_varI
+    LDA btl_varJ
     ADC #$00
-    STA $89
+    STA btl_varJ
     
     RTS
 
@@ -12095,8 +12095,8 @@ DrawBattleBox:
     LDX btl_msgdraw_x           ; get X,Y coords of box
     LDY btl_msgdraw_y
     JSR GetBattleMessagePtr
-    STX $88                     ; put in $88,$89, this is our destination pointer
-    STY $89
+    STX btl_varI                     ; put in btl_varI,btl_varJ, this is our destination pointer
+    STY btl_varJ
     
     LDA #$F7                    ; draw the top row of the box
     STA btltmp_boxleft
@@ -12544,9 +12544,9 @@ DrawBattleMagicBox:
     CLC
     ADC #<ch_magicdata      ; and add with ch_magic dat
     STA btl_tmpvar1                 ; to get a pointer to this character's magic list
-    LDA #$00                ;   and put it in $88,89
+    LDA #$00                ;   and put it in btl_varI,89
     ADC #>ch_magicdata
-    STA $89
+    STA btl_varJ
     
     LDA $6AF8               ; See if we're drawing the top or bottom page
     BNE @BottomPage
@@ -12574,12 +12574,12 @@ DrawBattleMagicBox:
     JSR BattleMenu_DrawMagicNames
     
     ; Print the MP amount
-    LDA #ch0_curmp - ch_magicdata    ; since $88,89 points to magic list, and the
+    LDA #ch0_curmp - ch_magicdata    ; since btl_varI,89 points to magic list, and the
     CLC                             ;  MP is right after that, just change the Y index
     ADC $68B5                       ;  to access the MP.
     TAY                             ; Add the row counter to get this level's MP count
     
-    LDA ($88), Y                    ; get the MP count
+    LDA (btl_varI), Y                    ; get the MP count
     CLC
     ADC #$80                        ; + $80 to convert to the tile
     STA btl_unfmtcbtbox_buffer + 12, X  ; print that tile
@@ -12635,7 +12635,7 @@ DrawBattleMagicBox:
     ADC $68B5
     TAY
     
-    LDA ($88), Y
+    LDA (btl_varI), Y
     CLC
     ADC #$80
     STA btl_unfmtcbtbox_buffer + 12, X
@@ -12672,7 +12672,7 @@ DrawBattleMagicBox:
 ;;  '__' bytes are skipped.  These are filled with the "L# " text in another routine
 ;;  'xx xx' bytes are either '0E id' to print the spell name, or '10 04' to print 4 spaces if the slot is empty
 ;;
-;;  input:   $88,89 + Y = source pointer + index to the player's spells to print
+;;  input:   btl_varI,89 + Y = source pointer + index to the player's spells to print
 ;;                    X = dest index to print to in the unformatted buffer
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12683,7 +12683,7 @@ BattleMenu_DrawMagicNames:
     STA btl_unfmtcbtbox_buffer + 6, X
     STA btl_unfmtcbtbox_buffer + 9, X
     
-    LDA ($88), Y                        ; check slot 0
+    LDA (btl_varI), Y                        ; check slot 0
     BNE :+                              ; if it's empty (no spell)
       LDA #$10
       STA btl_unfmtcbtbox_buffer + 3, X ; replace 0E code with 10 code to print spaces
@@ -12696,7 +12696,7 @@ BattleMenu_DrawMagicNames:
 
   @Column1:                             ; Then repeat the above process for each of the 3 columns
     INY
-    LDA ($88), Y
+    LDA (btl_varI), Y
     BNE :+
       LDA #$10
       STA btl_unfmtcbtbox_buffer + 6, X
@@ -12709,7 +12709,7 @@ BattleMenu_DrawMagicNames:
     
   @Column2:
     INY
-    LDA ($88), Y
+    LDA (btl_varI), Y
       BNE :+
       LDA #$10
       STA btl_unfmtcbtbox_buffer + 9, X

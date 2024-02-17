@@ -4308,12 +4308,12 @@ EnterShop_Inn:
     JSR InnClinic_CanAfford     ; assert that they can afford the price, and charge them
 
     LDA #$30                    ; code only reaches here if the price could be afforded
-    STA $4004                   ;   silence square 2
+    STA PAPU_CTL2               ;   silence square 2
     LDA #$7F                    ;   and reset it's F-value to zero.
-    STA $4005                   ;  Game seems to do this in a few places... still not sure why
+    STA PAPU_RAMP2              ;  Game seems to do this in a few places... still not sure why
     LDA #$00                    ;  probably prevents unwanted ugly sounds when switching tracks?
-    STA $4006                   ;   but it only does it for some tracks?
-    STA $4007
+    STA PAPU_FT2                   ;   but it only does it for some tracks?
+    STA PAPU_CT2
 
     JSR MenuFillPartyHP         ; refill the party's HP
     JSR MenuRecoverPartyMP      ;  and MP
@@ -5857,12 +5857,12 @@ SaveGame:
     STA music_track   ; play music track $56 (the "you saved your game" jingle)
 
     LDA #%00110000
-    STA $4004         ; silence sq2 (volume=0)
+    STA PAPU_CTL2         ; silence sq2 (volume=0)
     LDA #$7F
-    STA $4005         ; disable sweep, and clear freq
+    STA PAPU_RAMP2         ; disable sweep, and clear freq
     LDA #$00          ;  this probably just prevents an unwanted squeak or something when
-    STA $4006         ;  the jingle starts.  Not entirely sure why the game does this,
-    STA $4007         ;  but it does it for a few of these jingles.
+    STA PAPU_FT2         ;  the jingle starts.  Not entirely sure why the game does this,
+    STA PAPU_CT2         ;  but it does it for a few of these jingles.
     RTS
 
 
@@ -6114,15 +6114,15 @@ lutMenuPalettes:
 
 PlaySFX_MenuSel:
     LDA #%10111010   ; 50% duty, length disabed, decay disabed, volume=$A
-    STA $4004
+    STA PAPU_CTL2
 
     LDA #%10111010   ; sweep pitch upwards at speed %011 with shift %010
-    STA $4005
+    STA PAPU_RAMP2
 
     LDA #$40         ; set starting pitch to F=$040
-    STA $4006
+    STA PAPU_FT2
     LDA #$00
-    STA $4007
+    STA PAPU_CT2
 
     LDA #$1F
     STA sq2_sfx      ; indicate square 2 is busy with sfx for $1F frames
@@ -6139,15 +6139,15 @@ PlaySFX_MenuSel:
 
 PlaySFX_MenuMove:
     LDA #%01111010   ; 25% duty, length counter disabled, decay disabled, volume=$A
-    STA $4004
+    STA PAPU_CTL2
 
     LDA #%10011011   ; sweep pitch upwards at speed %001 with shift %011
-    STA $4005
+    STA PAPU_RAMP2
 
     LDA #$20
-    STA $4006        ; set starting pitch to F=$020
+    STA PAPU_FT2        ; set starting pitch to F=$020
     LSR A
-    STA $4007
+    STA PAPU_CT2
 
     STA sq2_sfx      ; indicate square 2 is playing a sound effect for $10 frames
     RTS              ;  and exit!
@@ -7616,12 +7616,12 @@ MenuRecoverHP_Abs:
     STA music_track             ; play music track $57 (the little gain HP jingle)
 
     LDA #%00110000              ; set vol for sq2 to zero
-    STA $4004
+    STA PAPU_CTL2
     LDA #%01111111              ; disable sweep
-    STA $4005
+    STA PAPU_RAMP2
     LDA #0                      ; and clear freq
-    STA $4006                   ;  best I can figure... shutting off sq2 here prevents some ugly sounds
-    STA $4007                   ;  from happening when the gain HP jingle starts.  Though I don't see why
+    STA PAPU_FT2                   ;  best I can figure... shutting off sq2 here prevents some ugly sounds
+    STA PAPU_CT2                   ;  from happening when the gain HP jingle starts.  Though I don't see why
                                 ;  that should happen...
 
     LDA tmp                     ; restore the HP recovery ammount in A, before exiting
