@@ -833,7 +833,7 @@ EnterMiniGame:
     LDA #0
     STA menustall         ; disable stalling
     STA PPUMASK             ; turn off PPU
-    STA $4015             ; and APU
+    STA PAPU_EN             ; and APU
 
     LDA #$08              ; clear NT scroll
     STA soft2000
@@ -1372,7 +1372,7 @@ Music_NewSong:
                                 ;  part of the music engine -- this is worthless
 
       LDA #%00001111
-      STA $4015          ; make sure playback for all channels is enabled
+      STA PAPU_EN          ; make sure playback for all channels is enabled
 
       LDA #0             ; then zero sq2_sfx *again*
       STA sq2_sfx        ;  (again this seems silly to do here)

@@ -752,8 +752,8 @@ BattleSubMenu_Magic:
     DEC $6B7D                       ; dec index of selected spell (make it 0 based instead of 1 based)
     LDA $6B7D
     JSR GetPointerToMagicData
-    STA $80                         ; $80,81 points to this spell's data
-    STX $81
+    STA btl_varA                         ; $80,81 points to this spell's data
+    STX btl_varB
     
     LDY #$05
     LDA ($80), Y
@@ -1187,13 +1187,13 @@ DoFrame_WithInput:
     JSR BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
     
     LDY #$01            ; strobe the controllers
-    STY $4016
+    STY JOYPAD
     DEY
-    STY $4016
+    STY JOYPAD
     
     LDY #$08            ; loop 8 times (once for each button)
   @Loop:
-    LDA $4016           ; get button
+    LDA JOYPAD           ; get button
     LSR A               ; shift out low bit
     BCS :+              ; if clear, shift out another one
       LSR A             ;  (this captures detachable Famicom controllers which report in bit 1)
@@ -9782,7 +9782,7 @@ PlayBattleSFX:
     JSR UpdateBattleSFX_Noise
     
     LDA #$0F
-    STA $4015                   ; make sure channels are enabled
+    STA PAPU_EN                   ; make sure channels are enabled
     JSR SwapBattleSFXBytes      ; swap out sfx bytes
     RTS
     

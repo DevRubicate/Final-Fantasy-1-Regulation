@@ -344,7 +344,7 @@ DoOWTransitions:
 
     LDA #$00
     STA PPUMASK              ; turn off the PPU
-    STA $4015              ; and APU
+    STA PAPU_EN              ; and APU
 
     JSR LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
 
@@ -997,7 +997,7 @@ ClearZeroPage:
 ;;  Disable APU  [$C469 :: 0x3C479]
 ;;
 ;;    Silences all channels and prevents them from being audible until they are
-;;  re-enabled (requires another write to $4015).  Channels will become reenabled
+;;  re-enabled (requires another write to PAPU_EN).  Channels will become reenabled
 ;;  once the music engine starts a new track.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1009,7 +1009,7 @@ DisableAPU:
     STA $4008
     STA $400C
     LDA #$00
-    STA $4015   ; disable all channels
+    STA PAPU_EN   ; disable all channels
     RTS
 
 
@@ -1692,7 +1692,7 @@ PrepOverworld:
     LDA #0
     STA PPUCTRL           ; disable NMIs
     STA PPUMASK           ; turn off PPU
-    STA $4015           ; silence APU
+    STA PAPU_EN           ; silence APU
 
     STA scroll_y        ; zero a whole bunch of other things:
     STA tileprop
@@ -2154,7 +2154,7 @@ StandardMapLoop:
 
     LDA #0                  ; then kill PPU, APU
     STA PPUMASK
-    STA $4015
+    STA PAPU_EN
 
     JSR LoadBattleCHRPal    ; Load CHR and palettes for the battle
     LDA btlformation
@@ -5623,7 +5623,7 @@ StartScreenWipe:
     STA OAMDMA
 
     LDA #$01              ; silence all channels except for square 1
-    STA $4015             ;   this stops all music.  Square 1 is used for the wipe sound effect
+    STA PAPU_EN             ;   this stops all music.  Square 1 is used for the wipe sound effect
 
     LDA #$38              ; 12.5% duty (harsh), volume=8
     STA $4000
@@ -5666,13 +5666,13 @@ UpdateJoy:
 
 ReadJoypadData:
     LDA #1
-    STA $4016    ; strobe joypad (refreshes the latch with up to date joy data)
+    STA JOYPAD    ; strobe joypad (refreshes the latch with up to date joy data)
     LDA #0
-    STA $4016
+    STA JOYPAD
 
     LDX #$08     ; loop 8 times (have to read each of the 8 buttons 1 at a time)
 @Loop:
-      LDA $4016  ; get the button state
+      LDA JOYPAD  ; get the button state
       AND #$03   ;  button state gets put in bit 0 usually, but it's on bit 1 for the Famicom if
       CMP #$01   ;  the user is using the seperate controllers.  So doing this AND+CMP combo will set
                  ;  the C flag if either of those bits are set (making this routine FC friendly)
@@ -5930,7 +5930,7 @@ LoadMapPalettes:
 
 BattleTransition:
     LDA #$08
-    STA $4015             ; silence all audio except for noise
+    STA PAPU_EN             ; silence all audio except for noise
     LDA #0
     STA tmp+12            ; zero our loop counter (tmp+12)
 
@@ -5980,7 +5980,7 @@ BattleTransition:
 
     LDA #$00         ; at which point
     STA PPUMASK        ; turn off the PPU
-    STA $4015        ;  and APU
+    STA PAPU_EN        ;  and APU
 
     JMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
 
@@ -9532,7 +9532,7 @@ LoadSingleMapObject:
 LoadEpilogueSceneGFX:
     LDA #$00                ; This routine is 100% identical to 
     STA PPUMASK               ;   LoadBridgeSceneGFX below, except it loads CHR from
-    STA $4015               ;   a different address.
+    STA PAPU_EN               ;   a different address.
     
     LDA #<data_EpilogueCHR
     STA tmp
@@ -9573,7 +9573,7 @@ LoadEpilogueSceneGFX:
 LoadBridgeSceneGFX:
     LDA #0
     STA PPUMASK                ; turn off PPU
-    STA $4015                ; and APU
+    STA PAPU_EN                ; and APU
 
     LDA #<data_BridgeCHR     ; load a pointer to the bridge scene graphics (CHR first)
     STA tmp

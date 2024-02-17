@@ -1844,7 +1844,7 @@ lut_MapObjTalkData:
 EnterLineupMenu:
     LDA #0
     STA PPUMASK             ; turn off the PPU
-    STA $4015             ; silence APU
+    STA PAPU_EN             ; silence APU
     LDA #$08
     STA soft2000          ; reset soft2000 to typical setup
 
@@ -2595,7 +2595,7 @@ NewGamePartyGeneration:
     LDA #$00                ; turn off the PPU
     STA PPUMASK
     LDA #$0F                ; turn ON the audio (it should already be on, though
-    STA $4015               ;  so this is kind of pointless)
+    STA PAPU_EN               ;  so this is kind of pointless)
     
     JSR LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
     
@@ -3458,7 +3458,7 @@ EnterIntroStory:
     JSR IntroStory_MainLoop        ; and run the main loop of the intro story
 
     LDA #0              ; once the intro story exits, shut off the PPU
-    STA $4015
+    STA PAPU_EN
     STA respondrate     ; reset the respond rate
     RTS                 ;  and exit
 
@@ -3528,7 +3528,7 @@ EnterTitleScreen:
       JSR DrawComplexString
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
-    STA $4015               ;   will do this automatically)
+    STA PAPU_EN               ;   will do this automatically)
     JSR TurnMenuScreenOn_ClearOAM  ; turn on the screen and clear OAM
                                    ;  and continue on to the logic loop
 
@@ -3927,7 +3927,7 @@ lut_ShopEntryJump:
 EnterShop:
     LDA #0
     STA PPUMASK              ; turn off PPU
-    STA $4015              ; silence audio
+    STA PAPU_EN              ; silence audio
     STA joy_b              ; erase joypad A and B buttons
     STA joy_a
 
@@ -6164,7 +6164,7 @@ EnterMainMenu:
 
     LDA #0
     STA PPUMASK           ; turn off the PPU (we need to do some drawing)     
-    STA $4015           ; and silence the APU.  Music sill start next time MusicPlay is called.
+    STA PAPU_EN           ; and silence the APU.  Music sill start next time MusicPlay is called.
 
     JSR LoadMenuCHRPal        ; load menu related CHR and palettes
     LDX #$0B
@@ -6728,7 +6728,7 @@ UseMagic_WARP:
                          ;                and JSR to Standard Map loop
     LDA #0               ; turn off PPU and APU
     STA PPUMASK
-    STA $4015
+    STA PAPU_EN
 
     RTS                  ; and RTS.  See notes below
 

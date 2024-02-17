@@ -316,13 +316,13 @@ BattleOver_ProcessResult_L:         JMP BattleOver_ProcessResult
 
 GetJoyInput:
     LDY #$01            ; strobe controller
-    STY $4016
+    STY JOYPAD
     DEY
-    STY $4016
+    STY JOYPAD
     
     LDY #$08            ; Loop 8 times (for each button)
   @Loop:
-      LDA $4016         ; get button input
+      LDA JOYPAD         ; get button input
       LSR A             ; shift bit 0 into C
       BCS :+            ; if clear.. shift bit 1 into C
         LSR A           ;   (this is to support detachable Famicom controllers which have button state in bit 1)
@@ -732,10 +732,10 @@ LvlUp_AwardAndUpdateExp:
   @UpdateToAdvance:
     LDY #ch_exptonext - ch_stats + 1
     PLA                         ; pull high byte
-    STA ($86), Y                ; write it
+    STA (btl_varG), Y                ; write it
     DEY
     PLA                         ; pull low byte
-    STA ($86), Y                ; write it
+    STA (btl_varG), Y                ; write it
     
     RTS             ; Done!
     
@@ -767,7 +767,7 @@ LvlUp_AwardExp:
     STA lvlup_chmagic+1
     
     LDY #ch_ailments - ch_stats     ; check their ailments
-    LDA ($86), Y
+    LDA (btl_varG), Y
     AND #$03
     BEQ :+                          ; no ailments = reward
       CMP #$03
@@ -1862,7 +1862,7 @@ ChaosDeath:
     JSR MusicPlay
     
     LDA #$08                ; silence all channels except Noise
-    STA $4015
+    STA PAPU_EN
     
     ; a bunch of local vars
     LDA #$00                    ; Start the Low-pitch noise rumble
@@ -1980,7 +1980,7 @@ ChaosDeath:
       BNE @Wait2SecondLoop
     
     LDA #$00                ; then finally make the noise shut the hell up
-    STA $4015
+    STA PAPU_EN
     
     RTS                     ; and exit!
  

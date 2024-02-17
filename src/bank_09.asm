@@ -4403,7 +4403,7 @@ EnterMinimap:
 
     LDA #$00
     STA PPUMASK
-    STA $4015              ; turn off PPU and APU
+    STA PAPU_EN              ; turn off PPU and APU
 
     LDA #$41               ; switch to music track $41 (crystal theme)
     STA music_track        ;   but it's not heard until after all drawing is complete (music routine isn't called)
@@ -4770,16 +4770,16 @@ Minimap_DrawRows:
 
 Minimap_DrawSFX:
     LDA #$02
-    STA $4015            ; silence all channels except for square 2
+    STA PAPU_EN            ; silence all channels except for square 2
 
     LDA #%00110110
-    STA $4004            ; 12.5% duty (harshest), volume=6
+    STA PAPU_CTL2            ; 12.5% duty (harshest), volume=6
     LDA #$7F
-    STA $4005            ; disable sweep
+    STA PAPU_RAMP2            ; disable sweep
     LDA #$60
-    STA $4006            ; play tone at F=$060
+    STA PAPU_FT2            ; play tone at F=$060
     LDA #$00
-    STA $4007
+    STA PAPU_CT2
 
     RTS
 
