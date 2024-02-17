@@ -12537,7 +12537,7 @@ DrawBattleMagicBox:
     INC btl_msgdraw_y
     
     LDA #$00
-    STA $68B5               ; loop counter / row index
+    STA temp_68b5               ; loop counter / row index
     
     LDA btlcmd_curchar
     JSR ShiftLeft6          ; get current character*$40
@@ -12552,7 +12552,7 @@ DrawBattleMagicBox:
     BNE @BottomPage
     
   @TopPage:
-    LDA $68B5               ; row index
+    LDA temp_68b5               ; row index
     ASL A
     ASL A                   ; row index * 4 in Y
     TAY                     ; used as source index to get the magic
@@ -12565,7 +12565,7 @@ DrawBattleMagicBox:
     ; Print the 'L#' text on the left side of the box
     LDA #$95                        ; 'L'
     STA btl_unfmtcbtbox_buffer, X
-    LDA $68B5
+    LDA temp_68b5
     CLC
     ADC #$81                        ; '1' + row (level)
     STA btl_unfmtcbtbox_buffer+1, X
@@ -12576,7 +12576,7 @@ DrawBattleMagicBox:
     ; Print the MP amount
     LDA #ch0_curmp - ch_magicdata    ; since btl_varI,89 points to magic list, and the
     CLC                             ;  MP is right after that, just change the Y index
-    ADC $68B5                       ;  to access the MP.
+    ADC temp_68b5                       ;  to access the MP.
     TAY                             ; Add the row counter to get this level's MP count
     
     LDA (btl_varI), Y                    ; get the MP count
@@ -12599,15 +12599,15 @@ DrawBattleMagicBox:
     
     INC btl_msgdraw_y               ; then move down 2 rows
     INC btl_msgdraw_y
-    INC $68B5                       ; inc the row counter
-    LDA $68B5
+    INC temp_68b5                       ; inc the row counter
+    LDA temp_68b5
     CMP #$04
     BNE @TopPage                    ; and loop until all 4 rows drawn
     JMP @Done
     
     
   @BottomPage:                      ; This is identical to @TopPage, only it changes
-    LDA $68B5                       ;  a few constants to print the bottom page instead.
+    LDA temp_68b5                       ;  a few constants to print the bottom page instead.
     ASL A                           ; Comments here will be sparse.
     ASL A
     TAY
@@ -12624,7 +12624,7 @@ DrawBattleMagicBox:
     
     LDA #$95                        ; 'L'
     STA btl_unfmtcbtbox_buffer, X
-    LDA $68B5
+    LDA temp_68b5
     CLC
     ADC #$85                        ; '5' + row
     STA btl_unfmtcbtbox_buffer+1, X
@@ -12632,7 +12632,7 @@ DrawBattleMagicBox:
     
     LDA #ch0_curmp - ch_magicdata + 4
     CLC
-    ADC $68B5
+    ADC temp_68b5
     TAY
     
     LDA (btl_varI), Y
@@ -12654,8 +12654,8 @@ DrawBattleMagicBox:
     
     INC btl_msgdraw_y
     INC btl_msgdraw_y
-    INC $68B5
-    LDA $68B5
+    INC temp_68b5
+    LDA temp_68b5
     CMP #$04
     BNE @BottomPage
 
@@ -12764,7 +12764,7 @@ DrawBattleItemBox:
     INC btl_msgdraw_y
     
     LDA #$00
-    STA $68B5               ; loop counter and equip slot to print (0-3)
+    STA temp_68b5               ; loop counter and equip slot to print (0-3)
     
     LDA btlcmd_curchar
     JSR ShiftLeft6          ; Get the char stat index in X (00,40,80,C0)
@@ -12785,7 +12785,7 @@ DrawBattleItemBox:
     ;
     ; Strangely, even though only 8 bytes are used, the game spaces rows $20 bytes apart
   @MainLoop:
-    LDA $68B5               ; Row number * $20 in Y
+    LDA temp_68b5               ; Row number * $20 in Y
     JSR ShiftLeft5          ; This is the offset in the unformatted buffer to print to
     TAY
     
@@ -12828,8 +12828,8 @@ DrawBattleItemBox:
     INX                                 ; inc source index
     INC btl_msgdraw_y                   ; move drawing down 2 rows
     INC btl_msgdraw_y
-    INC $68B5                           ; inc the row counter
-    LDA $68B5
+    INC temp_68b5                           ; inc the row counter
+    LDA temp_68b5
     CMP #$04                            ; loop until 4 rows are drawn
     BNE @MainLoop
     

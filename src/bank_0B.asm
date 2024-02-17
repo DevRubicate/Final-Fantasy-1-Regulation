@@ -1542,15 +1542,14 @@ MultiplyXA:
 RandAX:
     STA temporary_2       ; 68AF is the 'lo' value
     INX
-    STX $68B0       ; 68B0 is hi+1.  But this STX is totally unnecessary because this value is never used
-    
+
     TXA
     SEC
     SBC temporary_2       ; subtract to get the range.
-    STA $68B6       ; 68B6 = range
+    STA temp_68b6       ; 68B6 = range
     
     JSR BattleRNG
-    LDX $68B6
+    LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
@@ -2203,7 +2202,7 @@ PrepareEnemyFormation_SmallLarge:
 ;;      btl_enemygfxplt = the graphic and palette assignment for this enemy (graphic in high 2 bits, palette in low bit)
 ;;      btl_enemyIDs    = the actual ID for this enemy
   @GenerateEnemyGroup:
-    STA $6BCF               ; 6BCF is a temp store for the graphic assignment
+    STA temp_6bcf               ; 6BCF is a temp store for the graphic assignment
     
     LDA btl_formdata, Y     ; pointless:  Get the ID of this enemy, but never use it
     LDY btltmp+2            ; Get the group index
@@ -2228,7 +2227,7 @@ PrepareEnemyFormation_SmallLarge:
     ;  but this is TOTALLY unnecessary because it does the exact same check inside the loop
     ;  that immediately follows this code
     LDY #$00
-    LDA $6BCF               ; get graphic assignment
+    LDA temp_6bcf               ; get graphic assignment
     ASL A                   ; check bit 6 to see if it is large/small
     BPL :+
       INY                   ; Y=1 for large enemies, Y=0 for small enemies
@@ -2237,7 +2236,7 @@ PrepareEnemyFormation_SmallLarge:
     
 @Loop:
     LDY #$00
-    LDA $6BCF               ; get bit 6 of graphic again to see if it's small/large
+    LDA temp_6bcf               ; get bit 6 of graphic again to see if it's small/large
     ASL A
     BPL :+
       INY                   ; Y=1 for large, 0 for small
@@ -2249,7 +2248,7 @@ PrepareEnemyFormation_SmallLarge:
     STA btl_smallslots, Y   ; remove one of the available slots
     
     LDX btl_enemycount      ; Get the current enemy counter as an index
-    LDA $6BCF               ; Get graphic
+    LDA temp_6bcf               ; Get graphic
     ORA btl_tmppltassign    ; combine with palette
     STA btl_enemygfxplt, X  ; record it for this generated enemy
     
@@ -2322,7 +2321,7 @@ PrepareEnemyFormation_Fiend:
     TAX
     
     LDA #$08
-    STA $6BCF                   ; 8 rows of tiles.  Used as loop down-counter
+    STA temp_6bcf                   ; 8 rows of tiles.  Used as loop down-counter
     
     LDA lut_FiendTSAPtrs, X     ; source TSA data in btltmp+4
     STA btltmp+4
@@ -2351,7 +2350,7 @@ PrepareEnemyFormation_Fiend:
         
     : JSR BtlTmp6_NextRow       ; update the dest PPU address to point to next row
     
-      DEC $6BCF                 ; dec row counter
+      DEC temp_6bcf                 ; dec row counter
       BNE @RowLoop              ; loop until all 8 rows are drawn
     
     JSR ApplyPalette_FiendChaos             ; apply this fiend's palette
@@ -2425,7 +2424,7 @@ PrepareEnemyFormation_Chaos:
     JSR ReadAttributesFromPPU
     
     LDA #$0C
-    STA $6BCF               ; row counter (used as loop down-counter).  Draw $C rows
+    STA temp_6bcf               ; row counter (used as loop down-counter).  Draw $C rows
     
     LDA #<data_ChaosTSA     ; load source pointer to btltmp+4
     STA btltmp+4            ;  source is the Chaos TSA
@@ -2455,7 +2454,7 @@ PrepareEnemyFormation_Chaos:
         
     : JSR BtlTmp6_NextRow   ; adjust dest pointer to point to next row
     
-      DEC $6BCF             ; dec row counter and loop until we've drawn all rows
+      DEC temp_6bcf             ; dec row counter and loop until we've drawn all rows
       BNE @RowLoop
     
     ; Once all rows are drawn, apply Chaos's palette
@@ -2732,10 +2731,10 @@ DrawFormation_9Small:
     
     LDX #$00
     LDY #$00
-    STY $6BCF           ; temporary counter:  how many enemies we have drawn
+    STY temp_6bcf           ; temporary counter:  how many enemies we have drawn
                         ;   which is confusing, because this is also stored in X for this routine
                         ;   This value and X are always in sync.
-                        ; Best I can figure is X is the src counter, and $6BCF is the dest counter
+                        ; Best I can figure is X is the src counter, and temp_6bcf is the dest counter
                         ;  Though it is completely unnecessary to have both.
     
     
@@ -2768,12 +2767,12 @@ DrawFormation_9Small:
     ;  It also means the enemies span 4 bytes of attributes rather than just 1 byte
     
 @AttributeLoop:
-    LDA $6BCF           ; pointless, not used
+    LDA temp_6bcf           ; pointless, not used
     
     TXA                 ; back up src enemy counter
     PHA
     
-    LDX $6BCF           ; get dst en counter
+    LDX temp_6bcf           ; get dst en counter
     LDA @lut_AttributeOffset, X
     TAY                 ; put offset to attribute data in Y
     
@@ -2800,7 +2799,7 @@ DrawFormation_9Small:
     JSR @ApplyAtAndShift        ; Write lower-right
     
     INX                         ; increment src counter
-    INC $6BCF                   ; increment dest counter
+    INC temp_6bcf                   ; increment dest counter
     DEC btltmp+6                ; count down the number of enemies we have left to draw
     BNE @AttributeLoop          ; Loop until there are no more remaining
     
@@ -3065,11 +3064,11 @@ DrawFormation_Mix:
     
   @SmallEnemyAttr:
     LDA #$00
-    STA $6BCF           ; The small enemy index (0-5)
+    STA temp_6bcf           ; The small enemy index (0-5)
     LDA #$02
-    STA $6C91           ; The actual enemy index (2-7 for small enemies)
+    STA temp_6c92           ; The actual enemy index (2-7 for small enemies)
   @SmallEnemyAttrLoop:
-      LDX $6C91
+      LDX temp_6c92
       LDA btl_enemyIDs, X
       CMP #$FF
       BEQ @NextSmallEnemy   ; if this enemy doesn't exist, skip it
@@ -3093,7 +3092,7 @@ DrawFormation_Mix:
     :   LDA #$50
     
     ;; apply attributes for top half of enemy
-    : LDX $6BCF
+    : LDX temp_6bcf
       PHA
       LDA @lut_SmallEn_AtOffset, X
       TAX                   ; attribute offset in X
@@ -3103,7 +3102,7 @@ DrawFormation_Mix:
       
     ;; Do all the same for bottom half of enemy
     ;;  A=05 if using palette 1, A=0A if using palette 2
-      LDX $6C91
+      LDX temp_6c92
       LDA btl_enemygfxplt, X
       AND #$01
       BEQ :+
@@ -3112,7 +3111,7 @@ DrawFormation_Mix:
       : LDA #$05
       
     ;; apply attributes for bottom half of enemy
-    : LDX $6BCF
+    : LDX temp_6bcf
       PHA
       LDA @lut_SmallEn_AtOffset, X
       TAX
@@ -3121,9 +3120,9 @@ DrawFormation_Mix:
       STA $6C9C, X
     
   @NextSmallEnemy:
-      INC $6C91       ; increment actual index
-      INC $6BCF       ; and small enemy index
-      LDA $6C91
+      INC temp_6c92       ; increment actual index
+      INC temp_6bcf       ; and small enemy index
+      LDA temp_6c92
       CMP #$09        ; keep looping until we do all ?9? enemies (it should only be 8, since the 9th enemy will always be blank)
       BNE @SmallEnemyAttrLoop
     
@@ -3166,11 +3165,11 @@ DrawFormation_Mix:
   @DrawSmallEnemies:
     ; Same idea as the attributes here
     LDA #$02
-    STA $6C91       ; 6C91 is the 'actual' index  (0-7)
+    STA temp_6c92       ; 6C91 is the 'actual' index  (0-7)
     LDA #$00
-    STA $6BCF       ; 6BCF is 2* the 'small' index (0,2,4,6,8,A) - used to index  @lut_SmallEn_DrawPos
+    STA temp_6bcf       ; 6BCF is 2* the 'small' index (0,2,4,6,8,A) - used to index  @lut_SmallEn_DrawPos
   @DrawSmallLoop:
-      LDX $6C91
+      LDX temp_6c92
       LDA btl_enemyIDs, X           ; see if this enemy exists
       CMP #$FF
       BNE :+
@@ -3183,18 +3182,18 @@ DrawFormation_Mix:
       BPL :+
         INC btltmp+2
         
-    : LDX $6BCF                     ; get 'small' index
+    : LDX temp_6bcf                     ; get 'small' index
       LDA @lut_SmallEn_DrawPos, X   ; put the target PPU address in btltmp+0
       STA btltmp+0
       LDA @lut_SmallEn_DrawPos+1, X
       STA btltmp+1
-      INC $6BCF
-      INC $6BCF                     ; increment small index
+      INC temp_6bcf
+      INC temp_6bcf                     ; increment small index
       
       JSR DrawSmallEnemy
   @DrawNextSmallEnemy:
-      INC $6C91             ; inc actual index and loop until all small enemies drawn
-      LDA $6C91
+      INC temp_6c92             ; inc actual index and loop until all small enemies drawn
+      LDA temp_6c92
       CMP #$09
       BNE @DrawSmallLoop
       

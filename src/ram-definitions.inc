@@ -701,11 +701,13 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btltmp_multB,                       0 ; $68B4    ; shared
     RES             btl_tmpchar,                        0 ; $68B4 ; temporary holder for a 0-based character index
     RES             btltmp_boxcenter,                   0 ; $68B4
+    RES             tmp_68b4,                           0 ; $68B4
     RES             btl8x8spr_t,                        1 ; $68B4 ; tile ID
+    RES             temp_68b5,                          0 ; $68B5
     RES             btl8x8spr_i,                        0 ; $68B5 ; slot to draw to (00-3F)
     RES             btltmp_boxright,                    0 ; $68B5
     RES             btltmp_multC,                       1 ; $68B5
-    GAP                                                 1
+    RES             temp_68b6,                          1 ; $68B6
     RES             btl_soft2000,                       1 ; $68B7    ; soft copy of PPUCTRL used in battles
     RES             btl_soft2001,                       1 ; $68B8    ; soft copy of PPUMASK used in battles
     GAP                                                 1
@@ -763,7 +765,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_unfmtcbtbox_buffer,             128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
     RES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
     RES             btlcmd_target,                      1 ; $6B7B     ; the current enemy slot that is being targetted
-    GAP                                                 2
+    GAP                                                 1
+    RES             tmp_6b7d,                           1 ; $6B7D
     RES             btlcmd_magicgfx,                    8 ; $6B7E     ; 2 bytes per character.  [0] = graphic to draw, [1] = palette to use
     RES             btl_result,                         1 ; $6B86 ;   0 = keep battling ;   1 = party defeated ;   2 = all enemies defeated ;   3 = party ran ; $FF = wait for 2 seconds after fadeout before exiting (chaos defeated?)
     RES             btl_usepalette,                     32; $6B87 ; $20 bytes - the palette that is actually displayed (after fade effects)
@@ -785,7 +788,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_enemygfxplt,                    9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
     RES             btl_enemyroster,                    4 ; $6BC9  ; 4 bytes of enemy IDs printed in the main battle menu, showing enemies in the fight
     RES             btl_attacker_alt,                   1 ; $6BCD ; An EXTREMELY redundant and stupid copy of btl_attacker
-    GAP                                                 1
+    RES             temp_6bce,                          1 ; $6BCE
+    RES             temp_6bcf,                          0 ; $6BCF
     RES             btl_randomplayer,                   1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
     GAP                                                 3
     RES             btl_enemystats,                     180 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
@@ -798,6 +802,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btlmag_magicsource,                 1 ; $6C8F ; 0=magic, 1=drink, 2=item
     RES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of 
     GAP                                                 1
+    RES             temp_6c92,                          0 ; $6C92
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
     RES             btltmp_attr,                        64 ; $6C94     ; $40 bytes of attribute data for the battle setup
@@ -805,7 +810,9 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 63
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
     RES             explode_min_x,                      1 ; $6D14
+    RES             tmp_6d15,                           0 ; $6D15
     RES             explode_min_y,                      1 ; $6D15
+    RES             tmp_6d16,                           0 ; $6D16
     RES             explode_max_x,                      1 ; $6D16
     RES             explode_max_y,                      1 ; $6D17
     RES             explode_count,                      1 ; $6D18

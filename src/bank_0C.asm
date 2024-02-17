@@ -690,7 +690,7 @@ BattleSubMenu_Magic:
     ASL A
     ASL A                           ; put usable char index in 68B3,4  (00,40,80,C0)
     STA $68B3                       ;  68B3 will eventually be index to the player's magic list
-    STA $68B4                       ;  68B4 will eventually be index to the player's MP
+    STA tmp_68b4                       ;  68B4 will eventually be index to the player's MP
     
     LDA $6AF8                       ; this was the "magic page".  So this will be 1 if the user selected a L5-8 spell, and 0 if L1-4 spell
     AND #$01
@@ -705,8 +705,8 @@ BattleSubMenu_Magic:
     
     PLA                             ; pull Page*4
     CLC
-    ADC $68B4
-    STA $68B4                       ; 68B4 = CharIndex + Page*4.  (4 levels per page)
+    ADC tmp_68b4
+    STA tmp_68b4                       ; 68B4 = CharIndex + Page*4.  (4 levels per page)
     
     LDA btlcurs_y                   ; get Y position of their selection
     ASL A
@@ -724,11 +724,11 @@ BattleSubMenu_Magic:
       JSR DoNothingMessageBox       ; Show the nothing box
       JMP BattleSubMenu_Magic       ; and redo the magic selection submenu from the beginning
       
-  : STA $6B7D                       ; store spell in 6B7D
+  : STA tmp_6b7d                       ; store spell in 6B7D
     LDA btlcurs_y                   ; get Y selection (effectively the spell level)
     AND #$03
     CLC
-    ADC $68B4                       ; add to 68B4.  This index is now complete:  Index from start of char's MP to the level of their chosen spell
+    ADC tmp_68b4                       ; add to 68B4.  This index is now complete:  Index from start of char's MP to the level of their chosen spell
     
     TAX
     LDA ch0_curmp, X                 ; use that index to get their MP for this level
@@ -740,8 +740,8 @@ BattleSubMenu_Magic:
     TXA
     STA btl_charcmdconsumeid, Y     ; put the spell level as the consumable ID
     
-    DEC $6B7D                       ; dec index of selected spell (make it 0 based instead of 1 based)
-    LDA $6B7D
+    DEC tmp_6b7d                       ; dec index of selected spell (make it 0 based instead of 1 based)
+    LDA tmp_6b7d
     JSR GetPointerToMagicData
     STA btl_varA                         ; $80,81 points to this spell's data
     STX btl_varB
@@ -752,7 +752,7 @@ BattleSubMenu_Magic:
     
     LDY #$06
     LDA (btl_varA), Y
-    STA $68B4                       ; put magic palette at 68B4 (temp)
+    STA tmp_68b4                       ; put magic palette at 68B4 (temp)
     
     LDA btlcmd_curchar
     ASL A
@@ -760,7 +760,7 @@ BattleSubMenu_Magic:
     
     LDA $68B3
     STA btlcmd_magicgfx, Y          ; record magic graphic
-    LDA $68B4
+    LDA tmp_68b4
     STA btlcmd_magicgfx+1, Y        ; and magic palette
     
     LDY #$03
@@ -771,7 +771,7 @@ BattleSubMenu_Magic:
     BCC @CheckTarget_02             ; if set (target=01 -- target all enemies)...
       LDY #$FF
       LDA #$40                      ;  command = 40 xx FF  (where xx = spell index)
-      LDX $6B7D
+      LDX tmp_6b7d
       JMP SetCharacterBattleCommand ; set command and exit
   
   @CheckTarget_02:                  ; target 02 = target one enemy
@@ -782,7 +782,7 @@ BattleSubMenu_Magic:
       BNE :+                        ; if they pressed B to exit
         JMP BattleSubMenu_Magic     ; redo magic submenu from the beginnning
     : LDA #$40
-      LDX $6B7D
+      LDX tmp_6b7d
       JMP SetCharacterBattleCommand ; command = 40 xx TT  (xx = spell, TT = enemy target)
     
   @CheckTarget_04:                  ; target 04 = target self
@@ -792,7 +792,7 @@ BattleSubMenu_Magic:
       ORA #$80                      ; OR with 80 to indicate targetting a player character
       TAY
       LDA #$40
-      LDX $6B7D
+      LDX tmp_6b7d
       JMP SetCharacterBattleCommand
     
   @CheckTarget_08:                  ; target 08 = target whole party
@@ -800,7 +800,7 @@ BattleSubMenu_Magic:
     BCC @Target_10
       LDA #$40
       LDY #$FE                      ; 'FE' targets party
-      LDX $6B7D
+      LDX tmp_6b7d
       JMP SetCharacterBattleCommand ; 40 xx FE
 
   @Target_10:                       ; target 10 = target one player
@@ -814,7 +814,7 @@ BattleSubMenu_Magic:
     ORA #$80                        ; otherwise, put the player target in Y
     TAY
     LDA #$40
-    LDX $6B7D
+    LDX tmp_6b7d
     JMP SetCharacterBattleCommand   ; 40 xx TT
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1637,7 +1637,7 @@ SelectPlayerTarget:
     ; Dead characters need to be pushed left 8 pixels
     ; And the current character needs to be move left 16 pixels (because they've stepped forward)
     LDA #$08                    ; first, move dead characters left 8
-    STA $68B4                   ; $68B4 is temp to hold how much to push left
+    STA tmp_68b4                   ; tmp_68b4 is temp to hold how much to push left
     
     
     LDA btl_drawflagsA
@@ -1669,7 +1669,7 @@ SelectPlayerTarget:
     
   @PushCurChar:
     LDA #16                 ; current char gets pushed left 16 pixels
-    STA $68B4
+    STA tmp_68b4
     LDA $6AF9               ; Get the current char from backup (why doesn't it just use btlcmd_curchar?)
     
   @PushLeft:
@@ -1681,7 +1681,7 @@ SelectPlayerTarget:
     TAY
     LDA btlcurs_positions-2, Y      ; Get original X position (-2 because of the stupid INC above)
     SEC
-    SBC $68B4                       ; Subtract the 'push' amount
+    SBC tmp_68b4                       ; Subtract the 'push' amount
     STA btlcurs_positions-2, Y      ; Store to this X position
     STA btlcurs_positions-2+8, Y    ;   and the mirrored X position
     
@@ -2042,13 +2042,13 @@ MenuSelection_Magic:
     LDA btlcurs_y
     AND #$03
     ASL A
-    STA $68B4
+    STA tmp_68b4
     LDA btlcurs_x
     ASL A
     ASL A
     ASL A
     CLC
-    ADC $68B4           ; Y*2 + X*8 -- putting the cursor positions in COL-major order instead of row major
+    ADC tmp_68b4           ; Y*2 + X*8 -- putting the cursor positions in COL-major order instead of row major
     TAY
     
     LDA lut_MagicCursorPos, Y
@@ -2191,14 +2191,14 @@ MenuSelection_2x4:
     LDA btlcurs_y           ; Get the cursor X,Y pixel position
     AND #$03                ; Main combat menu has 4 rows.  So take low 2 bits
     ASL A                   ;   *2  (2 bytes per entry in btlcurs_positions)
-    STA $68B4               ; store in tmp mem
+    STA tmp_68b4               ; store in tmp mem
     LDA btlcurs_x
     AND #$01                ; only 2 columns (Fight/Run), so mask low bit
     ASL A                   ;   *8
     ASL A
     ASL A
     CLC
-    ADC $68B4               ; add with tmp mem
+    ADC tmp_68b4               ; add with tmp mem
     
     TAY                     ; use as index for position lut to get the sprite position
     LDA btlcurs_positions, Y
@@ -2314,11 +2314,11 @@ SetNaturalPose:
     LDA ch_maxhp, Y     ; move max HP to $68B3,4
     STA $68B3
     LDA ch_maxhp+1, Y
-    STA $68B4
+    STA tmp_68b4
     
-    LSR $68B4           ; divide it by 4 (25% of max HP)
+    LSR tmp_68b4           ; divide it by 4 (25% of max HP)
     ROR $68B3
-    LSR $68B4
+    LSR tmp_68b4
     ROR $68B3
     
     LDA ch_curhp+1, Y   ; if the high byte of their HP is nonzero, they have over 256, which is
@@ -2902,7 +2902,7 @@ DoMagicFlash:
   : STA btl_tmpvar2                         ; store in tmp  (btl_varJ is the flash color)
   
     LDA btl_palettes + $10          ; get the original BG color
-    STA $6D16                       ; back it up (probably unnecessary, since btl_palettes is never changed)
+    STA tmp_6d16                       ; back it up (probably unnecessary, since btl_palettes is never changed)
     
     JSR @FrameNoPaletteChange       ; Draw a normal frame
     
@@ -2910,7 +2910,7 @@ DoMagicFlash:
     JSR @FramePaletteChange         ;  and draw 2 more frames
     JSR @FrameNoPaletteChange
     
-    LDA $6D16                       ; restore original BG color and draw another frame
+    LDA tmp_6d16                       ; restore original BG color and draw another frame
   ; JMP @FramePaletteChange         ;   <- code flows into this routine
     
   @FramePaletteChange:
@@ -5155,7 +5155,7 @@ BattleFadeIn:
     LDA #>oam
     STA OAMDMA                   ; Do DMA (clearing actual PPU OAM)
     LDA #$04
-    STA $68B4                   ; loop downcounter.  Looping 4 times -- once for each shade
+    STA tmp_68b4                   ; loop downcounter.  Looping 4 times -- once for each shade
     JSR BattleUpdateAudio       ; since we just did a frame, keep audio updated
     
     ; This fades in by using the fadeout routine.  Basically it will reset the palette each iteration
@@ -5166,13 +5166,13 @@ BattleFadeIn:
   @Loop:
       JSR ResetUsePalette       ; reset palette
       
-      LDX $68B4
+      LDX tmp_68b4
       : JSR FadeOutOneShade     ; fade out X shades, where X is our loop down-counter
         DEX
         BNE :-
         
       JSR Do3Frames_UpdatePalette   ; draw palette (and turn on PPU)
-      DEC $68B4
+      DEC tmp_68b4
       BNE @Loop                 ; loop until down-counter exhausted
       
     JSR ResetUsePalette         ; Reset to fully-faded in palette
@@ -5190,11 +5190,11 @@ BattleFadeIn:
 BattleFadeOut:
     JSR ResetUsePalette ; reset usepalette
     LDA #$04
-    STA $68B4           ; Loop down counter (loop 4 shades, enough to make solid black)
+    STA tmp_68b4           ; Loop down counter (loop 4 shades, enough to make solid black)
   @Loop:
       JSR FadeOutOneShade           ; fade out one shade
       JSR Do3Frames_UpdatePalette   ; draw it
-      DEC $68B4
+      DEC tmp_68b4
       BNE @Loop                     ; repeat 4 times
     RTS
 
@@ -7259,10 +7259,10 @@ Battle_PlMag_TargetAllPlayers:
     STA btl_attacker_alt            ; set the stupid alt attacker val
     
     LDA #$00
-    STA $6BCE                       ; loop counter (loop through all 4 players)
+    STA temp_6bce                       ; loop counter (loop through all 4 players)
     
 @Loop:
-    LDA $6BCE                           ; use loop counter as player index
+    LDA temp_6bce                           ; use loop counter as player index
     ORA #$80                            ; set high bit to indicate it is a player target
     STA btl_defender                    ; set as defender
     
@@ -7278,8 +7278,8 @@ Battle_PlMag_TargetAllPlayers:
     JSR RespondDelay_UndrawAllBut2Boxes ; undraw all but the Attacker/Attack boxes
     JSR DrawCharacterStatus             ; update player status' (redraw their HP and stuff)
     
-    INC $6BCE                           ; loop through all 4 players.
-    LDA $6BCE
+    INC temp_6bce                           ; loop through all 4 players.
+    LDA temp_6bce
     CMP #$04
     BNE @Loop
     
@@ -7311,22 +7311,22 @@ Battle_PlMag_TargetOneEnemy:
 
 Battle_PlMag_TargetAllEnemies:
     LDA #$00
-    STA $6BCE                       ; loop counter (loop through 9 enemy slots)
+    STA temp_6bce                       ; loop counter (loop through 9 enemy slots)
     
   @Loop:
-    LDY $6BCE
+    LDY temp_6bce
     LDA btl_enemyIDs, Y             ; get the ID of this enemy slot
     CMP #$FF                        ;  if FF, the enemy does not exist, so skip it
     BEQ @Next
-      LDA $6BCE                             ; otherwise, if not FF, it's a valid target.
+      LDA temp_6bce                             ; otherwise, if not FF, it's a valid target.
       STA btl_defender                      ; make it the defender
       JSR DrawCombatBox_Defender            ; draw the Defender box
       JSR Battle_CastMagicOnEnemy           ; do the actual spell
       JSR RespondDelay_UndrawAllBut2Boxes   ; undraw all but attacker and attack boxes
       
   @Next:
-    INC $6BCE
-    LDA $6BCE           ; Keep looping until all 9 slots targetted
+    INC temp_6bce
+    LDA temp_6bce           ; Keep looping until all 9 slots targetted
     CMP #$09
     BNE @Loop
     
@@ -7506,10 +7506,10 @@ Battle_CastMagicOnRandEnemy:
 
 Battle_CastMagicOnAllEnemies:
     LDA #$00
-    STA $6BCE                   ; loop counter.  Loop through all 9 enemy slots
+    STA temp_6bce                   ; loop counter.  Loop through all 9 enemy slots
     
   @Loop:
-    LDA $6BCE                   ; BUGGED - see if this enemy is the attacker, and skip it if it is.
+    LDA temp_6bce                   ; BUGGED - see if this enemy is the attacker, and skip it if it is.
     CMP btl_attacker            ;  This doesn't make any sense, as there's no reason why "target all" spells
     BEQ @Next                   ;  should skip the caster.  It doesn't behave this way for players.
     
@@ -7518,7 +7518,7 @@ Battle_CastMagicOnAllEnemies:
     BEQ @Next
     
     ; Otherwise, the enemy exists!  Do it!
-    LDA $6BCE
+    LDA temp_6bce
     STA btl_defender                    ; set defender
     JSR PrepEntityPtr_Enemy             ; prep pointers
     JSR DrawCombatBox_Defender          ; Draw defender box
@@ -7526,8 +7526,8 @@ Battle_CastMagicOnAllEnemies:
     JSR RespondDelay_UndrawAllBut2Boxes ; undraw all boxes except for attacker/attack
     
   @Next:
-    INC $6BCE
-    LDA $6BCE
+    INC temp_6bce
+    LDA temp_6bce
     CMP #$09                    ; loop until all 9 enemy slots targetted
     BNE @Loop
     
@@ -7582,10 +7582,10 @@ Battle_CastMagicOnPlayer_NoLoad:
 
 Battle_CastMagicOnAllPlayers:
     LDA #$00
-    STA $6BCE                   ; loop counter (loop through all players)
+    STA temp_6bce                   ; loop counter (loop through all players)
     
   @Loop:
-    LDA $6BCE
+    LDA temp_6bce
     JSR PrepEntityPtr_Player                ; prep pointers to this player
     
     LDY #ch_ailments - ch_stats             ; if they are dead or stoned, skip them
@@ -7593,7 +7593,7 @@ Battle_CastMagicOnAllPlayers:
     AND #(AIL_DEAD | AIL_STONE)
     BNE :+
     
-      LDA $6BCE
+      LDA temp_6bce
       ORA #$80
       STA btl_defender                      ; set defender (high bit set to indicate it's a player)
       
@@ -7603,8 +7603,8 @@ Battle_CastMagicOnAllPlayers:
       JSR RespondDelay_UndrawAllBut2Boxes   ; undraw all but the attacker and attack boxes
       JSR DrawCharacterStatus               ; And redraw character stats to show updated HP
       
-  : INC $6BCE                   ; inc loop counter
-    LDA $6BCE
+  : INC temp_6bce                   ; inc loop counter
+    LDA temp_6bce
     CMP #$04
     BNE @Loop                   ; loop until all 4 players have been targetted
     
@@ -9149,16 +9149,16 @@ DrawEnemyEffect:
     LDA #$0C
     STA loop_counter               ; row counter / loop counter
     
-    LDA #<$20C2             ; $6D15,6 = target PPU address
-    STA $6D15
+    LDA #<$20C2             ; tmp_6d15,6 = target PPU address
+    STA tmp_6d15
     LDA #>$20C2
-    STA $6D16
+    STA tmp_6d16
     
   @EraseLoop:
       JSR WaitForVBlank           ; Vblank
-      LDA $6D16                     ; Set PPU Addr
+      LDA tmp_6d16                     ; Set PPU Addr
       STA PPUADDR
-      LDA $6D15
+      LDA tmp_6d15
       STA PPUADDR
       
       LDA #$00
@@ -9168,11 +9168,11 @@ DrawEnemyEffect:
       JSR BattleUpdatePPU           ; reset scroll, etc
       
       CLC                           ; move PPU addr to next row
-      LDA $6D15
+      LDA tmp_6d15
       ADC #$20
-      STA $6D15
+      STA tmp_6d15
       BCC :+
-        INC $6D16
+        INC tmp_6d16
     : JSR BattleUpdateAudio         ; update audio for the frame
       DEC loop_counter
       BNE @EraseLoop
@@ -9803,16 +9803,16 @@ UpdateBattleSFX_Square:
       STA btlsfxsq2_framectr    ; byte [4] if the frame length of this portion
       LDY #$00
       LDA (btlsfxsq2_ptr), Y
-      STA $4004                 ; byte [0] is the volume/duty setting
+      STA PAPU_CTL2                 ; byte [0] is the volume/duty setting
       INY
       LDA (btlsfxsq2_ptr), Y
-      STA $4005                 ; byte [1] is the sweep setting
+      STA PAPU_RAMP2                 ; byte [1] is the sweep setting
       INY
       LDA (btlsfxsq2_ptr), Y
-      STA $4006                 ; byte [2] is low 8 bits of F-value
+      STA PAPU_FT2                 ; byte [2] is low 8 bits of F-value
       INY
       LDA (btlsfxsq2_ptr), Y
-      STA $4007                 ; byte [3] is high 3 bits of F-value + length counter
+      STA PAPU_CT2                 ; byte [3] is high 3 bits of F-value + length counter
     
       CLC                       ; add 8 to the pointer (even though we only used 5 bytes of data)
       LDA btlsfxsq2_ptr         ;   (the other 3 bytes are the noise sfx data?)
