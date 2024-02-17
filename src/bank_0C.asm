@@ -4884,18 +4884,18 @@ DrawCharacterStatus:
   : TYA                 ; code reaches here with Y=bitnumber of first ailment (0=death, 1=stone, 2=poison, etc)
     CLC                 ; Add $41 to that ailment to convert it to a "battle message" text index (see FormatBattleString)
     ADC #$41            
-    STA $6B60           ; ailment index @ 6B60
+    STA tmp_6b60           ; ailment index @ tmp_6b60
     
     LDA tmp_685e           ; get 4+character index, which is the FormatBattleString character code for
     CLC                 ; printing the character's name
     ADC #$04
-    STA $6B5E           ; name code @ $6B5E
+    STA tmp_6b5e           ; name code @ tmp_6b5e
     
     LDA #$0F            ; $0F is the "print battle message" code
-    STA $6B5F           ; @ $6B5F, with the actual battle message index (our ailment index) @ 6B60
+    STA tmp_6b5f           ; @ tmp_6b5f, with the actual battle message index (our ailment index) @ tmp_6b60
     
     LDA #$00            ; null terminate
-    STA $6B61           ; At this point, $6B5E contains a string that will be formatted to "<name><ailment>" -- or "<name>HP" if
+    STA tmp_6b61           ; At this point, tmp_6b5e contains a string that will be formatted to "<name><ailment>" -- or "<name>HP" if
                         ;   the character has no ailments.
     
     LDY #ch_curhp - ch_stats        ; Get OB HP stats (why OB?  Why not IB?  wtf?)
@@ -4907,8 +4907,8 @@ DrawCharacterStatus:
     JSR FormatHPForText             ; prints HP string to $6856 (interleaved).  This is done here instead of
                                     ;   below by the actual HP printing so as not to burn valuable VBlank time.
     
-    LDX #<$6B5E                 ; YX = pointer to our "<name><ailment>" string to be formatted
-    LDY #>$6B5E
+    LDX #<tmp_6b5e                 ; YX = pointer to our "<name><ailment>" string to be formatted
+    LDY #>tmp_6b5e
     JSR FormatBattleString    ; format it (printed to btl_stringoutputbuf).  Note again that
                                 ;  FormatBattleString creates an interleaved string.
     

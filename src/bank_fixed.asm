@@ -4309,7 +4309,7 @@ PrepSMRowCol:
 
   @ColumnLoop:
     LDY #$00          ; More of the same, as above.  Only we draw a column instead of a row
-    LDA ($10), Y      ; get the tile
+    LDA (tmp), Y      ; get the tile
     TAY               ; and put it in Y to index
 
     LDA tsa_ul,      Y  ;  copy TSA and attribute bytes to drawing buffer
@@ -6254,7 +6254,7 @@ PalCyc_Step:
 
     BCC :+            ; then check C flag.  If chroma >= $0D....
       LDA #$0F        ; ... replace color with normal black $0F  ($xD, xE, and xF  all get changed to $0F)
-:   STA $03F0, X      ; write cycled color back
+:   STA tmp_pal, X      ; write cycled color back
     INY               ; INY to count this color as 'not done yet'
 
   @NormalSkip:
@@ -10901,7 +10901,7 @@ ReadjustEquipStats:
 
     LDA ch_resist, X       ; get elemental resistence
     INY                    ;   inc source index
-    ORA ($10), Y           ; combine this armor's elemental resistence
+    ORA (tmp), Y           ; combine this armor's elemental resistence
     STA ch_resist, X       ; and write back
 
     LDX equipmenu_tmp      ; restore X to original state
@@ -11872,7 +11872,7 @@ BattleDrawMessageBuffer:
     STA btl_varJ
     
     LDA #$0C
-    STA $68B9               ; loop down-counter ($0C rows)
+    STA tmp_68b9               ; loop down-counter ($0C rows)
   @Loop:
       JSR Battle_DrawMessageRow_VBlank  ; draw a row
       
@@ -11887,14 +11887,14 @@ BattleDrawMessageBuffer:
       LDA btl_tmpvar3           ; add $20 to the target PPU address
       CLC
       ADC #$20
-      STA $8A
+      STA btl_tmpvar3
       LDA btl_tmpvar4
       ADC #$00
       STA btl_tmpvar4
       
       JSR Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
       
-      DEC $68B9         ; loop for each row
+      DEC tmp_68b9         ; loop for each row
       BNE @Loop
     RTS
     
@@ -11907,7 +11907,7 @@ BattleDrawMessageBuffer:
 ;;  The row consists of $19 tiles.
 ;;
 ;;  input:  btl_varI,btl_varJ = pointer to data to draw
-;;          $8A,btl_tmpvar4 = PPU address to draw to.
+;;          btl_tmpvar3,btl_tmpvar4 = PPU address to draw to.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -11951,7 +11951,7 @@ BattleDrawMessageBuffer_Reverse:
     STA btl_varJ
     
     LDA #$06                ; loop down counter.  6 iterations, 2 rows per iterations
-    STA $68B9               ;    = $C rows
+    STA tmp_68b9               ;    = $C rows
     
   @Loop:
       JSR Battle_DrawMessageRow_VBlank  ; draw a row
@@ -11960,7 +11960,7 @@ BattleDrawMessageBuffer_Reverse:
       JSR @AdjustPointers               ; move ptrs again
       JSR Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
       
-      DEC $68B9
+      DEC tmp_68b9
       BNE @Loop         ; loop until all rows drawn
     RTS
 
@@ -12364,10 +12364,10 @@ UndrawNBattleBlocks:
     AND #$FF            ; see if A==0
     BEQ @Exit           ; if zero, just exit
     
-    STA $6AA5           ; otherwise, store in temp to use as a downcounter
+    STA tmp_6aa5           ; otherwise, store in temp to use as a downcounter
   @Loop:
       JSR UndrawBattleBlock ; undraw one
-      DEC $6AA5             ; dec
+      DEC tmp_6aa5             ; dec
       BNE @Loop             ; loop until no more to undraw
   @Exit:
     RTS
@@ -12517,7 +12517,7 @@ ClearUnformattedCombatBoxBuffer:
 ;;    Draws the "Magic box" that appears in the battle menu when the player
 ;;  selects the MAGIC option in the battle menu.
 ;;
-;;  input:     $6AF8 = The page to draw.  0 will draw L1-4 spell page, 1 will draw L5-8 spell page
+;;  input:     tmp_6af8 = The page to draw.  0 will draw L1-4 spell page, 1 will draw L5-8 spell page
 ;;    btlcmd_curchar = the character whose spells we're drawing
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12548,7 +12548,7 @@ DrawBattleMagicBox:
     ADC #>ch_magicdata
     STA btl_varJ
     
-    LDA $6AF8               ; See if we're drawing the top or bottom page
+    LDA tmp_6af8               ; See if we're drawing the top or bottom page
     BNE @BottomPage
     
   @TopPage:
@@ -13120,7 +13120,7 @@ FormatBattleString:
     ; Iterate the string and draw each character
   @Loop:
     LDX #$00
-    LDA ($90, X)        ; get the first char
+    LDA (tmp_90, X)        ; get the first char
     BEQ @Done           ; stop at the null terminator
     CMP #$48
     BCS :+
@@ -13316,32 +13316,32 @@ DrawBattleString_Code0C:            ; print a number (indirect)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBattle_Number:
-    LDA (btldraw_subsrc), Y     ; get the number to print, stuff it in $96,97
-    STA $96
+    LDA (btldraw_subsrc), Y     ; get the number to print, stuff it in tmp_96,tmp_97
+    STA tmp_96
     INY
     LDA (btldraw_subsrc), Y
-    STA $97
+    STA tmp_97
     
     LDX #<10000
     LDY #>10000
     JSR DrawBattle_Division
-    STA $9A                     ; start pulling digits out and stuff them in $9A
+    STA tmp_9a                     ; start pulling digits out and stuff them in tmp_9a
     LDX #<1000
     LDY #>1000
     JSR DrawBattle_Division
-    STA $9B
+    STA tmp_9b
     LDX #<100
     LDY #>100
     JSR DrawBattle_Division
-    STA $9C
+    STA tmp_9c
     LDX #<10
     JSR DrawBattle_Division
-    STA $9D
+    STA tmp_9d
     
     LDX #$00
   @FindFirstDigit:
-    LDA $9A, X          ; keep getting individual digits  (note that INX is done before 
-    INX                 ;    this digit is printed, so we have to read from $9A-1 when printing)
+    LDA tmp_9a, X          ; keep getting individual digits  (note that INX is done before 
+    INX                 ;    this digit is printed, so we have to read from tmp_9a-1 when printing)
     CPX #$05            ; skip ahead to printing the 1's digit 
     BEQ @OnesDigit      ;  if we've exhausted all 5 digits.
     ORA #$00            ; Otherwise, check this digit (OR to update Z flag)
@@ -13349,7 +13349,7 @@ DrawBattle_Number:
     
   @PrintDigits:
     LDY #$01                ; Y=1 to print the bottom part first
-    LDA $9A-1, X            ; get the digit
+    LDA tmp_9a-1, X            ; get the digit
     ORA #$80                ; OR with #$80 to get the tile
     STA (btldraw_dst), Y    ; print the numerical tile
     LDA #$FF
@@ -13462,31 +13462,31 @@ DrawBattleString_ControlCode:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleDrawLoadSubSrcPtr:
-    STA $97             ; high byte of pointer table
+    STA tmp_97             ; high byte of pointer table
     
     JSR DrawBattle_IncSrcPtr
-    LDA ($90), Y        ; get the desired index
+    LDA (tmp_90), Y        ; get the desired index
     
     ASL A               ; multiply by 2 (2 bytes per pointer)
     PHP                 ; backup the carry
-    STA $96             ; use as low byte
+    STA tmp_96             ; use as low byte
     
     TXA                 ; get X (low byte of pointer table)
     CLC
-    ADC $96             ; add with low byte of index
-    STA $96             ; use as final low byte
+    ADC tmp_96             ; add with low byte of index
+    STA tmp_96             ; use as final low byte
     
     LDA #$00            ; add the carry from the X addition
-    ADC $97
+    ADC tmp_97
     PLP                 ; also add the carry from the above *2
     ADC #$00
-    STA $97             ; use as final high byte
+    STA tmp_97             ; use as final high byte
     
     LDY #$00            ; get the pointer, store in btldraw_subsrc
-    LDA ($96), Y
+    LDA (tmp_96), Y
     STA btldraw_subsrc
     INY
-    LDA ($96), Y
+    LDA (tmp_96), Y
     STA btldraw_subsrc+1
     
     RTS
@@ -13772,7 +13772,7 @@ SwapPRG:
   STA actual_bank ; JIGS - see LongCall 
   ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
   ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
-  STA $5115   ; Swap to the desired page
+  STA MMC5_PRG_BANK1   ; Swap to the desired page
   LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
   RTS    
 

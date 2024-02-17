@@ -242,13 +242,20 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
     RESZP loopctr,                          0 ; 1 bytes      ; $8B
     RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
-    GAP                                     14
-    RESZP tmp_9a_9b,                        0 ; 1 bytes      ; $9A
+    GAP                                     5
+    RESZP tmp_90,                           1 ; 1 bytes      ; $90
+    GAP                                     4
+    RESZP tmp_96,                           1 ; 1 bytes      ; $96
+    RESZP tmp_97,                           1 ; 1 bytes      ; $97
+    GAP                                     2
+    RESZP tmp_9a_9b,                        0 ; 2 bytes      ; $9A
     RESZP battleturn_enramstats,            0 ; 2 bytes      ; $9A
     RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
     RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
+    RESZP tmp_9c,                           0 ; 1 bytes      ; $9D
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
-    GAP                                     4
+    RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
+    GAP                                     3
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
     GAP                                     78
     RESZP framecounter,                     2 ; 2 bytes      ; $F0
@@ -309,8 +316,10 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btlsfxsq2_len,                    0 ; 1 bytes      ; $98
     RESZP btl_magdataptr,                   1 ; 2 bytes      ; $98
     RESZP btlsfxnse_len,                    1 ; 1 bytes      ; $99
+    RESZP tmp_9a,                           0 ;              ; $9A
     RESZP btltempvalue,                     0 ;              ; $9A
     RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
+    RESZP tmp_9b,                           0 ;              ; $9B
     RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
     RESZP chaosdeath_screamcounter,         0 ; 1 bytes      ; $9C
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
@@ -716,7 +725,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             temp_68b6,                          1 ; $68B6
     RES             btl_soft2000,                       1 ; $68B7    ; soft copy of PPUCTRL used in battles
     RES             btl_soft2001,                       1 ; $68B8    ; soft copy of PPUMASK used in battles
-    GAP                                                 1
+    RES             tmp_68b9,                           1 ; $68B9
     RES             btlbox_blockdata,                   1 ; $68BA
     GAP                                                 99
     RES             chaosdeath_tilerowtbl,              0 ; $691E  maybe 256 bytes
@@ -729,7 +738,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_msgdraw_height,                 1 ; $6AA2
     RES             btl_msgdraw_blockcount,             1 ; $6AA3      ; the number of blocks drawn
     RES             tmp_6aa4,                           1 ; $6AA4
-    GAP                                                 1
+    RES             tmp_6aa5,                           1 ; $6AA5
     RES             displayloopctr,                     0 ; $6AA6
     RES             btlinput_prevstate,                 0 ; $6AA6 ; prev state for input
     RES             eobbox_slotid,                      1 ; $6AA6
@@ -772,7 +781,13 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
     RES             tmp_6af9,                           1 ; $6AF9
     RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
-    RES             btl_unfmtcbtbox_buffer,             128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
+    RES             btl_unfmtcbtbox_buffer,             101 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
+    
+    RES             tmp_6b5e,                           1
+    RES             tmp_6b5f,                           1
+    RES             tmp_6b60,                           1 ; $6B60
+    RES             tmp_6b61,                           1 ; $6B61
+    GAP                                                 25
     RES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
     RES             btlcmd_target,                      1 ; $6B7B     ; the current enemy slot that is being targetted
     GAP                                                 1
