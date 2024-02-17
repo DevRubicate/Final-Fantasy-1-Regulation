@@ -73,7 +73,19 @@
 
 
 
-
+SECTIONZP "SOUND" ; $00 - $0E
+    ; for sound channels (between Bx-Dx) see constants.inc
+    RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
+    RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
+    RESZP ch_envpos,                        1 ; 1 bytes   ; $04 pos in env data (00-1F)
+    RESZP ch_lenctr,                        1 ; 1 bytes   ; $05 counter for score data (note length)
+    RESZP ch_frqtblptr,                     2 ; 2 bytes   ; $06 pointer to freq table (changes per octave)
+    RESZP ch_lentblptr,                     2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
+    RESZP ch_envrate,                       1 ; 1 bytes   ; $0A rate/speed of env table traversal
+    RESZP ch_envrem,                        1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
+    RESZP ch_vol,                           1 ; 1 bytes   ; $0C output volume
+    RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
+    RESZP ch_freq,                          1 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
 
 SECTIONZP "ZEROPAGE" ; $07 - $FF
     GAP                                     7
@@ -250,24 +262,8 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     GAP                                     1
     RESZP soft2000,                         0 ; 1 bytes      ; $FF
 
-SECTIONZP "SOUND" ; $00 - $0E
-    ; for sound channels (between Bx-Dx) see constants.inc
-    RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
-    RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
-    RESZP ch_envpos,                        1 ; 1 bytes   ; $04 pos in env data (00-1F)
-    RESZP ch_lenctr,                        1 ; 1 bytes   ; $05 counter for score data (note length)
-    RESZP ch_frqtblptr,                     2 ; 2 bytes   ; $06 pointer to freq table (changes per octave)
-    RESZP ch_lentblptr,                     2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
-    RESZP ch_envrate,                       1 ; 1 bytes   ; $0A rate/speed of env table traversal
-    RESZP ch_envrem,                        1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
-    RESZP ch_vol,                           1 ; 1 bytes   ; $0C output volume
-    RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
-    RESZP ch_freq,                          1 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
-
-SECTIONZP "BATTLEZP" ; $6A - $9F
-    GAP                                     106
-
-    GAP                                     22
+SECTIONZP "BATTLEZP" ; $80 - $9F
+    GAP                                     128
     RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
     RESZP btlptr,                           2 ; 2 bytes      ; $80
     RESZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
@@ -567,7 +563,11 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     GAP                                                 16
     RES             sram,                               1023 ; $6400
     RES             sram_checksum,                      1   ; $67FF
-    GAP                                                 1024
+
+    RES             safecall_reg_a,                     1
+    RES             safecall_reg_y,                     1
+
+    GAP                                                 1022
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     256 ; $6C00 ; temporary space used by the lineup menu
     RES             lutmp_ch_magic,                     1 ; $6D00

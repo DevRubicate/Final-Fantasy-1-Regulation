@@ -14146,11 +14146,11 @@ CallMinimapDecompress:
     JMP SwapPRG
 
 
-;Impl_Call_Bank0:
+Impl_Call_Bank0:
 ;    ; Save A
-;    STA CallVar1
+;    STA safecall_reg_a
 ;    ; Save Y
-;    STY CallVar2
+;    STY safecall_reg_y
 ;
 ;    ; Pull then push the stack to find the low address of our caller
 ;    PLA
@@ -14180,7 +14180,7 @@ CallMinimapDecompress:
 ;    ; We just got back so time to rewind
 ;
 ;    ; Save A
-;    STA CallVar1
+;    STA safecall_reg_a
 ;
 ;    ; Pull what page our bank used to be in and switch back
 ;    PLA
@@ -14188,7 +14188,7 @@ CallMinimapDecompress:
 ;    STA MMC5_PRG_BANK0
 ;
 ;    ; Load A
-;    LDA CallVar1
+;    LDA safecall_reg_a
 ;
 ;    ; Return to orginal caller
 ;    RTS
@@ -14213,9 +14213,9 @@ CallMinimapDecompress:
 ;
 ;
 ;    ; Load A
-;    LDA CallVar1
+;    LDA safecall_reg_a
 ;    ; Load Y
-;    LDY CallVar2
+;    LDY safecall_reg_y
 ;
 ;    ; Activate the trampoline
 ;    RTS
