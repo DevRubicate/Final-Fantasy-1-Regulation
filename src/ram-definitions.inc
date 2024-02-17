@@ -242,9 +242,9 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
     RESZP loopctr,                          0 ; 1 bytes      ; $8B
     RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
-    GAP                                     5
-    RESZP tmp_90,                           1 ; 1 bytes      ; $90
     GAP                                     4
+    RESZP tmp_90,                           1 ; 1 bytes      ; $90
+    GAP                                     5
     RESZP tmp_96,                           1 ; 1 bytes      ; $96
     RESZP tmp_97,                           1 ; 1 bytes      ; $97
     GAP                                     2
@@ -781,7 +781,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
     RES             tmp_6af9,                           1 ; $6AF9
     RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
-    RES             btl_unfmtcbtbox_buffer,             101 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
+    RES             btl_unfmtcbtbox_buffer,             100 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
     
     RES             tmp_6b5e,                           1
     RES             tmp_6b5f,                           1
@@ -790,7 +790,6 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 25
     RES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
     RES             btlcmd_target,                      1 ; $6B7B     ; the current enemy slot that is being targetted
-    GAP                                                 1
     RES             tmp_6b7d,                           1 ; $6B7D
     RES             btlcmd_magicgfx,                    8 ; $6B7E     ; 2 bytes per character.  [0] = graphic to draw, [1] = palette to use
     RES             btl_result,                         1 ; $6B86 ;   0 = keep battling ;   1 = party defeated ;   2 = all enemies defeated ;   3 = party ran ; $FF = wait for 2 seconds after fadeout before exiting (chaos defeated?)
@@ -810,7 +809,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2
-    RES             tmp68b6,                            0 ; $6BB6
+    RES             tmp_6bb6,                           0 ; $6BB6
     RES             btl_enemyeffect,                    1 ; $6BB6     ; 0 to draw expolosion graphics as the effect nonzero to erase the enemy as the effect
     RES             btl_enemyIDs,                       9 ; $6BB7  ; 9 entries of enemy IDs
     RES             btl_enemygfxplt,                    9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
@@ -822,7 +821,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             tmp_6bd0,                           1 ; $6BD0
     RES             tmp_6bd1,                           1 ; $6BD1
     RES             tmp_6bd2,                           1 ; $6BD2
-    RES             btl_enemystats,                     179 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM - 180 bytes
+    RES             btl_enemystats,                     180 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM - 180 bytes
     RES             tmp_6c87,                           1 ; $6C87
     RES             btl_tmppltassign,                   1 ; $6C88    ; temporary value to assign palette to enemies in a formation
     RES             btl_attacker,                       1 ; $6C89
@@ -838,9 +837,9 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
     RES             btltmp_attr,                        0 ; $6C94     ; $40 bytes of attribute data for the battle setup
-    GAP                                                 7
+    GAP                                                 8
     RES             tmp_6c9c,                           0 ; $6C9C
-    GAP                                                 57
+    GAP                                                 56
     RES             btl_stringoutputbuf,                1 ; $6CD4 ; output buffer where decoded strings are printed
     GAP                                                 63
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?
@@ -859,7 +858,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 7
     RES             tmp_6d24,                           1 ; $CD24
     RES             tmp_6d25,                           1 ; $CD25
-    GAP                                                 15
+    GAP                                                 6
     RES             btltmp_attackerbuffer,              1 ; $6D2C
     GAP                                                 7
     RES             btl_palettes,                       32 ; $6D34   ; $20 bytes
