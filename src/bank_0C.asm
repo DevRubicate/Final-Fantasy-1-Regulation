@@ -1414,16 +1414,16 @@ DrawCharacter:
     
     INX                     ; X is the char ID.  INX for purposes of below loop.
     LDA #$01                ; This will effectively set temp ram to be 1<<X
-    STA $68B6               ; This seems incredibly stupid though, as this could more easily be accomplished
-    : ASL $68B6             ; with a LUT of:  01,02,04,08
+    STA tmp68b6               ; This seems incredibly stupid though, as this could more easily be accomplished
+    : ASL tmp68b6             ; with a LUT of:  01,02,04,08
       DEX
       BNE :-
-    LSR $68B6               ; <- at this point, $68B6 = 1<<characterID
+    LSR tmp68b6               ; <- at this point, tmp68b6 = 1<<characterID
     
     
     LDA btl_drawflagsA      ; See if the character is dead
     AND #$0F                ;   Not sure what 6AD1 actually holds, but low 4 bits seem to be a flag to indicate which
-    AND $68B6               ;   characters should be drawn lying on the ground
+    AND tmp68b6               ;   characters should be drawn lying on the ground
     BEQ @DrawNotDead            
     
     ;;;;;;;;;;;;;;;
@@ -1450,7 +1450,7 @@ DrawCharacter:
     ; Not dead, but see if they're stone
     LDA btl_drawflagsB  ; Again, not sure exactly what this holds, but low 4 bits seem to indicate
     AND #$0F            ;  which characters are stoned
-    AND $68B6
+    AND tmp68b6
     BEQ @DrawChar       ; if not stoned, just draw them
     
     ; otherwise, if they're stone
@@ -2356,7 +2356,7 @@ CharWalkAnimationRight:
     PHA         ; push char index
     LDA #2      ; positive directional value = move right
     
-:   STA $68AB       ; 68AB = walk direction
+:   STA tmp_68ab       ; 68AB = walk direction
     PLA
     STA btl_animatingchar
     JSR CharacterWalkAnimation
@@ -2370,7 +2370,7 @@ CharWalkAnimationRight:
 ;;
 ;;  input:
 ;;   btl_animatingchar = character index to animate (0-3)
-;;               $68AB = direction/speed (pixels per 2 frames)
+;;               tmp_68ab = direction/speed (pixels per 2 frames)
 ;;                       negative = move left, positive = move right
 ;;
 ;;    This routine does the walk forward and walk back animation for the
@@ -2403,7 +2403,7 @@ CharacterWalkAnimation:
       
       LDA btl_chardraw_x, X     ; add the directional value to the X position
       CLC
-      ADC $68AB
+      ADC tmp_68ab
       STA btl_chardraw_x, X
       
       JSR UpdateSprites_TwoFrames   ; update sprites, do 2 frames of animation
@@ -2465,7 +2465,7 @@ WalkForwardAndStrike:
     STY btlattackspr_wepmag     ; Y = 0,1 to choose between weapon/magic
     
     LDA #-2
-    STA $68AB                   ; walk the character to the left
+    STA tmp_68ab                   ; walk the character to the left
     JSR CharacterWalkAnimation
     
     LDA #$08                    ; 6AA8 is the loop counter (loop 8 times), alternates between 
@@ -2503,7 +2503,7 @@ WalkForwardAndStrike:
     JSR UpdateSprites_TwoFrames         ; then update sprites and do 2 frames.
     
     LDA #2
-    STA $68AB
+    STA tmp_68ab
     JSR CharacterWalkAnimation          ; Do the animation to walk the character back to the right
     
     LDA btl_animatingchar
@@ -2989,7 +2989,7 @@ DrawBattleMessageCombatBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrepareAndDrawSimpleCombatBox:
-    STY $68B1                   ; backup Y (control code)
+    STY tmp_68b1                   ; backup Y (control code)
     PHA                         ; backup A
     
     ASL A                       ; get pointer to this combat box's unformatted buffer
@@ -3000,7 +3000,7 @@ PrepareAndDrawSimpleCombatBox:
     STA btl_tmpvar2                     ; put in temporary_3,temporary_4
     
     LDY #$00
-    LDA $68B1                   ; get the control code
+    LDA tmp_68b1                   ; get the control code
     STA (btl_varI), Y                ; write it to pos 0
     INY
     TXA
@@ -5866,10 +5866,10 @@ RandAX:
     TXA
     SEC
     SBC $68AF       ; subtract to get the range.
-    STA $68B6       ; 68B6 = range
+    STA tmp68b6       ; 68B6 = range
     
     JSR BattleRNG
-    LDX $68B6
+    LDX tmp68b6
     JSR MultiplyXA  ; random()*range
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
@@ -5900,12 +5900,12 @@ MathBuf_Add16:
     
     LDA btl_mathbuf+1, Y
     ADC btl_mathbuf+1, X
-    STA $6BD0               ; and high bytes
+    STA tmp_6bd0               ; and high bytes
     
     BCC :+                  ; if there was high-byte carry
       LDA #$FF              ; cap at $FFFF
       STA temp_6bcf
-      STA $6BD0
+      STA tmp_6bd0
       
   : PLA                     ; restore target index
     ASL A                   ; *2 to use as index
@@ -5913,7 +5913,7 @@ MathBuf_Add16:
     
     LDA temp_6bcf               ; move sum to target slot in math buffer
     STA btl_mathbuf, X
-    LDA $6BD0
+    LDA tmp_6bd0
     STA btl_mathbuf+1, X
     
     RTS
@@ -5942,19 +5942,19 @@ MathBuf_Sub16:
     
     LDA btl_mathbuf+1, X
     SBC btl_mathbuf+1, Y
-    STA $6BD0
+    STA tmp_6bd0
     
     BCS :+
       LDA #$00
       STA temp_6bcf
-      STA $6BD0
+      STA tmp_6bd0
       
   : PLA
     ASL A
     TAX
     LDA temp_6bcf
     STA btl_mathbuf, X
-    LDA $6BD0
+    LDA tmp_6bd0
     STA btl_mathbuf+1, X
     RTS
     
@@ -6115,17 +6115,17 @@ DoubleXAndY:
 LoadEnemyStats:
     LDA btl_enemycount      ; useless, as this is immediately discarded
     LDA #$09
-    STA $6BD1               ; loop down-counter
+    STA tmp_6bd1               ; loop down-counter
     LDA #$00
-    STA $6BD2               ; loop up-counter / enemy index
+    STA tmp_6bd2               ; loop up-counter / enemy index
     
   @EnemyLoop:
-    LDA $6BD2               ; Put a pointer to the current enemy's stat RAM
+    LDA tmp_6bd2               ; Put a pointer to the current enemy's stat RAM
     JSR GetEnemyStatPtr     ;    in btltmp+A
     STA btltmp+$A
     STX btltmp+$B
     
-    LDX $6BD2               ; Check to see if this enemy even exists
+    LDX tmp_6bd2               ; Check to see if this enemy even exists
     JSR DoesEnemyXExist
     BNE :+
       JMP @NextEnemy        ; if it doesn't, skip ahead...
@@ -6145,9 +6145,9 @@ LoadEnemyStats:
     
     ; Copy $C bytes of enemy stat data from ROM to RAM
     LDA #$00
-    STA $6C8E           ; 6C8E is used as an index to lut_RomRamMapping, and is also the loop counter
+    STA tmp_6c8e           ; 6C8E is used as an index to lut_RomRamMapping, and is also the loop counter
   :   JSR @MoveOneByte
-      LDA $6C8E
+      LDA tmp_6c8e
       CMP #$0C * 2      ; Loop until all C bytes have been copied (*2 because the loop counter increases by 2 for
       BNE :-            ;    each byte)
       
@@ -6173,8 +6173,8 @@ LoadEnemyStats:
     ; support subroutine
     ; Gets the next index for the LUT in X
   @GetNextLutIndex:
-    LDX $6C8E       ; put old counter in X
-    INC $6C8E       ; inc counter
+    LDX tmp_6c8e       ; put old counter in X
+    INC tmp_6c8e       ; inc counter
     RTS
     
   ; This LUT maps the source ROM offset to a dest RAM offset
@@ -6213,14 +6213,14 @@ LoadEnemyStats:
     STA (btltmp+$A), Y
     
     
-    LDX $6BD2               ; get the enemy ID
+    LDX tmp_6bd2               ; get the enemy ID
     LDA btl_enemyIDs, X
     LDY #en_enemyid
     STA (btltmp+$A), Y      ; put it in slot 'btlen_enemyid'
     
   @NextEnemy:
-    INC $6BD2           ; inc up-counter to look at next enemy
-    DEC $6BD1           ; dec down-counter
+    INC tmp_6bd2           ; inc up-counter to look at next enemy
+    DEC tmp_6bd1           ; dec down-counter
     BEQ :+
       JMP @EnemyLoop    ; loop until all 9 enemies processed
   : JMP BattleUpdatePPU
@@ -7147,7 +7147,7 @@ Player_DoMagicEffect:
     AND #$03
     ORA #$80
     STA btl_attacker            ; make sure high bit is set, and record them as an attacker
-    STA $6BD1                   ; ???  This value seems to never be used.
+    STA tmp_6bd1                   ; ???  This value seems to never be used.
     STX btl_defender            ; X contains the defender, record them as well
     
     LDA #$00

@@ -2221,7 +2221,7 @@ PrepareEnemyFormation_SmallLarge:
     ORA #$00                ; ORA with 0 just to update the Z flag
     BEQ @Exit2              ; If there are no enemies, jump ahead to an RTS
     
-    STA $6BD0               ; put the number of enemies in 6BD0
+    STA tmp_6bd0               ; put the number of enemies in 6BD0
     
     ; Here the game checks to see if there is a slot available, and exits if there isn't.
     ;  but this is TOTALLY unnecessary because it does the exact same check inside the loop
@@ -2263,7 +2263,7 @@ PrepareEnemyFormation_SmallLarge:
     TAY
     
     INC btl_enemycount      ; increment the generated enemy counter
-    DEC $6BD0               ; decrement the counter indicating how many of this type of enemy we have to make
+    DEC tmp_6bd0               ; decrement the counter indicating how many of this type of enemy we have to make
     BNE @Loop               ; loop until we've generated all of them
     
 @Exit1:
@@ -2477,7 +2477,6 @@ FinalizeEnemyFormation_FiendChaos:
     STA btl_enemycount      ; There is exactly 1 enemy for Fiend/Chaos formations
     LDA btlform_enids       ; Just use the first enemy ID as the only enemy in this formation
     STA btl_enemyIDs
-    STA $6BC9               ; ???  Duplicated to 6BC9?  Why?  I doubt this is ever used
     JMP WriteAttributes_ClearUnusedEnStats
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3579,7 +3578,7 @@ WriteAttributes_ClearUnusedEnStats:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 GetEnemyStatPtr:
-    STY $6C87               ; back-up Y
+    STY tmp_6c87               ; back-up Y
     LDX #$14                ; multiply enemy index by $14  (number of bytes per enemy)
     JSR MultiplyXA
     
@@ -3591,12 +3590,9 @@ GetEnemyStatPtr:
     TAX
     PLA
     
-    LDY $6C87               ; restore Y
+    LDY tmp_6c87               ; restore Y
     RTS
     
-; unused
-  .BYTE $0F, $14, $25, $30
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

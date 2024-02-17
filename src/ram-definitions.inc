@@ -688,10 +688,13 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_charcmdconsumetype,             1 ; $68A3
     GAP                                                 3
     RES             btl_charcmdconsumeid,               1 ; $68A7
-    GAP                                                 7
+    GAP                                                 3
+    RES             tmp_68ab,                           0 ; $68AB
+    GAP                                                 4
     RES             temporary_2,                        0 ; $68AF
     RES             regen_loopctr,                      0 ; $68AF - 1 byte    ; local - loop down-counter
     RES             btl8x8spr_x,                        2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
+    RES             tmp_68b1,                           0 ; $68B1
     RES             btl8x8spr_y,                        2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
     RES             tmp_68b3,                           0 ; $68B3
     RES             btl_tmpindex,                       0 ; $68B3 ; temporary holder for a current index
@@ -789,6 +792,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2
+    RES             tmp68b6,                            0 ; $6BB6
     RES             btl_enemyeffect,                    1 ; $6BB6     ; 0 to draw expolosion graphics as the effect nonzero to erase the enemy as the effect
     RES             btl_enemyIDs,                       9 ; $6BB7  ; 9 entries of enemy IDs
     RES             btl_enemygfxplt,                    9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)
@@ -797,14 +801,18 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             temp_6bce,                          1 ; $6BCE
     RES             temp_6bcf,                          0 ; $6BCF
     RES             btl_randomplayer,                   1 ; $6BCF ; set by GetRandomPlayerTarget  (0-3)
-    GAP                                                 3
-    RES             btl_enemystats,                     180 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM
+    RES             tmp_6bd0,                           1 ; $6BD0
+    RES             tmp_6bd1,                           1 ; $6BD1
+    RES             tmp_6bd2,                           1 ; $6BD2
+    RES             btl_enemystats,                     179 ; $6BD3  ; $14 bytes per enemy - data does NOT match how it is stored in ROM - 180 bytes
+    RES             tmp_6c87,                           1 ; $6C87
     RES             btl_tmppltassign,                   1 ; $6C88    ; temporary value to assign palette to enemies in a formation
     RES             btl_attacker,                       1 ; $6C89
     RES             btl_defender,                       1 ; $6C8A
     RES             btl_combatboxcount_alt,             1 ; $6C8B ; ANOTHER combatbox counter... this is totally redundant
     RES             btl_attackid,                       1 ; $6C8C ; >= $42 for enemy attacks
-    GAP                                                 2
+    GAP                                                 1
+    RES             tmp_6c8e,                           1 ; $6C8E
     RES             btlmag_magicsource,                 1 ; $6C8F ; 0=magic, 1=drink, 2=item
     RES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of 
     GAP                                                 1
