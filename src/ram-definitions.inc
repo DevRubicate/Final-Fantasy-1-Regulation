@@ -810,7 +810,6 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btl_smallslots,                     1 ; $6BB2             ; Number of small enemy slots available
     RES             btl_largeslots,                     1 ; $6BB3  ; Number of large slots available.  Must immediately follow smallslots
     GAP                                                 2
-    RES             tmp_6bb6,                           0 ; $6BB6
     RES             btl_enemyeffect,                    1 ; $6BB6     ; 0 to draw expolosion graphics as the effect nonzero to erase the enemy as the effect
     RES             btl_enemyIDs,                       9 ; $6BB7  ; 9 entries of enemy IDs
     RES             btl_enemygfxplt,                    9 ; $6BC0  ; 9 entries of enemy graphic and palette assignment (graphic in high 2 bits, plt in low bit)

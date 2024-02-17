@@ -1414,16 +1414,16 @@ DrawCharacter:
     
     INX                     ; X is the char ID.  INX for purposes of below loop.
     LDA #$01                ; This will effectively set temp ram to be 1<<X
-    STA tmp_6bb6               ; This seems incredibly stupid though, as this could more easily be accomplished
-    : ASL tmp_6bb6             ; with a LUT of:  01,02,04,08
+    STA temp_68b6               ; This seems incredibly stupid though, as this could more easily be accomplished
+    : ASL temp_68b6             ; with a LUT of:  01,02,04,08
       DEX
       BNE :-
-    LSR tmp_6bb6               ; <- at this point, tmp_6bb6 = 1<<characterID
+    LSR temp_68b6               ; <- at this point, temp_68b6 = 1<<characterID
     
     
     LDA btl_drawflagsA      ; See if the character is dead
     AND #$0F                ;   Not sure what 6AD1 actually holds, but low 4 bits seem to be a flag to indicate which
-    AND tmp_6bb6               ;   characters should be drawn lying on the ground
+    AND temp_68b6               ;   characters should be drawn lying on the ground
     BEQ @DrawNotDead            
     
     ;;;;;;;;;;;;;;;
@@ -1450,7 +1450,7 @@ DrawCharacter:
     ; Not dead, but see if they're stone
     LDA btl_drawflagsB  ; Again, not sure exactly what this holds, but low 4 bits seem to indicate
     AND #$0F            ;  which characters are stoned
-    AND tmp_6bb6
+    AND temp_68b6
     BEQ @DrawChar       ; if not stoned, just draw them
     
     ; otherwise, if they're stone
@@ -5864,10 +5864,10 @@ RandAX:
     TXA
     SEC
     SBC temporary_2       ; subtract to get the range.
-    STA tmp_6bb6       ; 68B6 = range
+    STA temp_68b6       ; 68B6 = range
     
     JSR BattleRNG
-    LDX tmp_6bb6
+    LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
