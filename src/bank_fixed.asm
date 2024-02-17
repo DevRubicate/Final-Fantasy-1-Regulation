@@ -11864,7 +11864,7 @@ BattleDrawMessageBuffer:
     LDA #<$2240     ; set target PPU address to $2240
     STA btl_tmpvar3         ; This has the start of the bottom row of the bounding box for 
     LDA #>$2240     ;  enemies
-    STA $8B
+    STA btl_tmpvar4
     
     LDA #<btl_msgbuffer     ; set source pointer to point to message data buffer
     STA btl_varI
@@ -11888,9 +11888,9 @@ BattleDrawMessageBuffer:
       CLC
       ADC #$20
       STA $8A
-      LDA $8B
+      LDA btl_tmpvar4
       ADC #$00
-      STA $8B
+      STA btl_tmpvar4
       
       JSR Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
       
@@ -11907,7 +11907,7 @@ BattleDrawMessageBuffer:
 ;;  The row consists of $19 tiles.
 ;;
 ;;  input:  btl_varI,btl_varJ = pointer to data to draw
-;;          $8A,$8B = PPU address to draw to.
+;;          $8A,btl_tmpvar4 = PPU address to draw to.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -11915,9 +11915,9 @@ Battle_DrawMessageRow_VBlank:
     JSR BattleWaitForVBlank
     
 Battle_DrawMessageRow:
-    LDA $8B
+    LDA btl_tmpvar4
     STA PPUADDR           ; set provided PPU address
-    LDA $8A
+    LDA btl_tmpvar3
     STA PPUADDR
     LDY #$00
   @Loop:
@@ -11941,9 +11941,9 @@ Battle_DrawMessageRow:
 
 BattleDrawMessageBuffer_Reverse:
     LDA #<$23A0         ; start drawing at the bottom row
-    STA $8A
+    STA btl_tmpvar3
     LDA #>$23A0
-    STA $8B
+    STA btl_tmpvar4
     
     LDA #<(btl_msgbuffer + $B*$20)  ; start with the last row of source data
     STA btl_varI
@@ -11976,10 +11976,10 @@ BattleDrawMessageBuffer_Reverse:
     LDA btl_tmpvar3     ; and from the dest pointer
     SEC
     SBC #$20
-    STA $8A
-    LDA $8B
+    STA btl_tmpvar3
+    LDA btl_tmpvar4
     SBC #$00
-    STA $8B
+    STA btl_tmpvar4
     
     RTS
 
@@ -12939,8 +12939,8 @@ DrawBattleString:
     LDX btl_msgdraw_x
     LDY btl_msgdraw_y
     JSR GetBattleMessagePtr
-    STX $8A                 ; store target pointer in temp ram
-    STY $8B
+    STX btl_tmpvar3                 ; store target pointer in temp ram
+    STY btl_tmpvar4
     
     LDX btl_msgdraw_srcptr
     LDY btl_msgdraw_srcptr+1
@@ -12951,7 +12951,7 @@ DrawBattleString:
   @TopLoop:
       LDA btl_stringoutputbuf, X
       BEQ @StartBottomLoop
-      STA ($8A), Y
+      STA (btl_tmpvar3), Y
       INY
       INX                   ; INX *2 because top/bottom tiles are interleaved
       INX
@@ -12963,7 +12963,7 @@ DrawBattleString:
   @BottomLoop:
       LDA btl_stringoutputbuf+1, X
       BEQ @Exit
-      STA ($8A), Y
+      STA (btl_tmpvar3), Y
       INY
       INX
       INX
@@ -13155,13 +13155,13 @@ FormatBattleString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBattleString_ExpandChar:
-    STA $9E         ; char code
+    STA btltemppointer         ; char code
     PHA             ; backup A/X/Y
     TXA
     PHA
     TYA
     PHA
-    LDA $9E         ; get the char code
+    LDA btltemppointer         ; get the char code
     CMP #$7A
     BCS :+
       BCC @c01_79
@@ -13255,21 +13255,21 @@ DrawBattleString_DrawChar:
 
 DrawBattle_Division:
     LDA #$00
-    STA $98         ; initialize result with zero
+    STA btl_magdataptr         ; initialize result with zero
   @Loop:
-    STX $99
+    STX btlsfxnse_len
     LDA btltmp+6
     SEC
-    SBC $99
-    PHA             ; low byte = $99-X, back it up
+    SBC btlsfxnse_len
+    PHA             ; low byte = btlsfxnse_len-X, back it up
     
-    STY $99
+    STY btlsfxnse_len
     LDA btltmp+7
-    SBC $99         ; high byte = $97-Y
+    SBC btlsfxnse_len         ; high byte = $97-Y
     
     BMI @Done       ; if result is negative, we're done
     
-    INC $98         ; otherwise, increment our result counter
+    INC btl_magdataptr         ; otherwise, increment our result counter
     STA btltmp+7    ; overwrite btltmp+6 with the result of the subtraction
     PLA
     STA btltmp+6
@@ -13277,7 +13277,7 @@ DrawBattle_Division:
     
   @Done:            ; once the result is negative
     PLA             ; throw away the back-up byte
-    LDA $98         ; and put the result in A before exiting
+    LDA btl_magdataptr         ; and put the result in A before exiting
     RTS
 
     
@@ -13569,11 +13569,11 @@ DrawEntityName:
   @Enemy:
     ASL A           ; mulitply A by $14  ($14 bytes per entry in btl_enemystats)
     ASL A           ; first, multiply by 4
-    STA $94         ;    store it in temp
+    STA temp_94     ;    store it in temp
     ASL A           ; then multiply by $10
     ASL A
     CLC
-    ADC $94         ; add with stored *4
+    ADC temp_94     ; add with stored *4
     TAX             ; put in X to index
     
     LDA btl_enemystats + en_enemyid, X   ; get this enemy's ID

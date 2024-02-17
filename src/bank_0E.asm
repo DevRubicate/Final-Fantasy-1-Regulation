@@ -2613,7 +2613,7 @@ NewGamePartyGeneration:
       BPL :-
       
     LDA #$00        ; This null-terminates the draw buffer for when the character's
-    STA $60         ;   name is drawn on the name input screen.  Why this is done here
+    STA format_buf+0         ;   name is drawn on the name input screen.  Why this is done here
                     ;   and not with the actual drawing makes no sense to me.
     
     

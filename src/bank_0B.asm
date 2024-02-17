@@ -972,10 +972,10 @@ LvlUp_LevelUp:
       JMP :++
   : LDA #$00                ; for non-strong levels, no extra bonus
   
-  : STA $68B3               ; store strong bonus in scratch ram
+  : STA temporary_1               ; store strong bonus in scratch ram
     PLA                     ; pull base HP gain
     CLC
-    ADC $68B3               ; add with strong bonus
+    ADC temporary_1               ; add with strong bonus
     STA battlereward        ; record HP bonus as battle reward
     LDA #$00
     STA battlereward+1      ; (zero high byte of battle reward)
@@ -1540,13 +1540,13 @@ MultiplyXA:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RandAX:
-    STA $68AF       ; 68AF is the 'lo' value
+    STA temporary_2       ; 68AF is the 'lo' value
     INX
     STX $68B0       ; 68B0 is hi+1.  But this STX is totally unnecessary because this value is never used
     
     TXA
     SEC
-    SBC $68AF       ; subtract to get the range.
+    SBC temporary_2       ; subtract to get the range.
     STA $68B6       ; 68B6 = range
     
     JSR BattleRNG
@@ -1555,7 +1555,7 @@ RandAX:
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
     CLC
-    ADC $68AF       ; + lo
+    ADC temporary_2       ; + lo
     
     RTS
 
@@ -1573,7 +1573,7 @@ RandAX:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawEOBCombatBox:
-    STA $68B3               ; backup the combo box ID
+    STA temporary_1               ; backup the combo box ID
     
     LDA #BANK_THIS          ; set the current bank for the music driver
     STA a:cur_bank          ; seems weird to do this here...
@@ -1586,7 +1586,7 @@ DrawEOBCombatBox:
     LDA lut_EOBText+1, Y    ; and put in YX
     TAY
     
-    LDA $68B3               ; restore combo box ID in A
+    LDA temporary_1               ; restore combo box ID in A
     JSR DrawCombatBox     ; A = box ID, YX = pointer to string
     
     INC btl_combatboxcount  ; count this combat box
@@ -1849,11 +1849,11 @@ ChaosDeath_FadeNoise:
     
 ChaosDeath:
     LDA #110
-    STA $68B3           ;   loop down counter
+    STA temporary_1           ;   loop down counter
   @WaitLoop:                ; wait for 110 frames (wait for the fanfare music to get 
       JSR WaitForVBlank   ;   through the main jingle part)
       JSR MusicPlay
-      DEC $68B3
+      DEC temporary_1
       BNE @WaitLoop
       
     LDA #$80                ; stop music playback
@@ -1969,14 +1969,14 @@ ChaosDeath:
     ; Wait 2 seconds for dramatic effect
     
     LDA #120
-    STA $9E                 ; 120 frames = 2 seconds
+    STA btltemppointer                 ; 120 frames = 2 seconds
   @Wait2SecondLoop:
       JSR WaitForVBlank
       LDA #$00
       : SEC                 ; small inner loop to burn cycles so that we don't call WaitForVBlank
         SBC #$01            ; immediately at the start of VBlank (even though that shouldn't be
         BNE :-              ; a problem)
-      DEC $9E
+      DEC btltemppointer
       BNE @Wait2SecondLoop
     
     LDA #$00                ; then finally make the noise shut the hell up

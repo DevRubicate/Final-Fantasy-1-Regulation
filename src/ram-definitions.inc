@@ -230,11 +230,13 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP divisor,                          1 ; 1 bytes     ; $84
     RESZP remainder,                        1 ; 1 bytes     ; $85
     RESZP lvlup_chstats,                    2 ; 2 bytes     ; $86       ; 2 byte pointer to character's OB stats
+    RESZP temporary_3,                      0 ; 1 bytes     ; $88
     RESZP battleturn_playerid,              0 ; 1 bytes     ; $88
     RESZP regen_ramstats,                   0 ; 2 bytes     ; $88   ; 2 bytes
     RESZP chaosdeath_ppuaddr,               0 ; 2 bytes     ; $88   ; 2 bytes
     RESZP battlereward,                     0 ; 3 bytes     ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
     GAP                                     1
+    RESZP temporary_4,                      0 ; 1 bytes     ; $89
     RESZP battleturn_ail,                   1 ; 1 bytes     ; $89 ; local, temp ram to hold ailments
     RESZP regen_romstats,                   0 ; 2 bytes     ; $8A   ; 2 bytes
     RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
@@ -299,16 +301,19 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btltmp,                           2 ; 16 bytes     ; $90  ; 16 bytes ?
     RESZP btl_entityptr_obrom,              0 ; 1 bytes      ; $92
     RESZP btldraw_dst,                      2 ; 2 bytes      ; $92   ; destination pointer
+    RESZP temp_94,                          0                ; $94
     RESZP btlsfx_framectr,                  0 ; 1 bytes      ; $94   ; The total frame counter for the entire sound effect
     RESZP btldraw_subsrc,                   2 ; 2 bytes      ; $94   ; source pointer of substring
     GAP                                     2
     RESZP btlsfxsq2_len,                    0 ; 1 bytes      ; $98
     RESZP btl_magdataptr,                   1 ; 2 bytes      ; $98
     RESZP btlsfxnse_len,                    1 ; 1 bytes      ; $99
+    RESZP btltempvalue,                     0 ;              ; $9A
     RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
     RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
     RESZP chaosdeath_screamcounter,         0 ; 1 bytes      ; $9C
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
+    RESZP btltemppointer,                   0 ;              ; $9E ; not actually a pointer
     RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
@@ -683,6 +688,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 3
     RES             btl_charcmdconsumeid,               1 ; $68A7
     GAP                                                 7
+    RES             temporary_2,                        0 ; $68AF
     RES             regen_loopctr,                      0 ; $68AF - 1 byte    ; local - loop down-counter
     RES             btl8x8spr_x,                        2 ; $68AF ; X coord ;  +1 used in drawing code as original position ; These next 5 vars are all in temp memory, and are mostly just used for passing into BattleDraw8x8Sprite
     RES             btl8x8spr_y,                        2 ; $68B1 ; Y coord ;  +1 used in drawing code as original position
@@ -690,6 +696,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btltmp_multA,                       0 ; $68B3 ; shared
     RES             btltmp_boxleft,                     0 ; $68B3
     RES             btl_input,                          0 ; $68B3
+    RES             temporary_1,                        0 ; $68B3
     RES             btl8x8spr_a,                        1 ; $68B3 ; attribute
     RES             btltmp_multB,                       0 ; $68B4    ; shared
     RES             btl_tmpchar,                        0 ; $68B4 ; temporary holder for a 0-based character index

@@ -508,7 +508,7 @@ BacktrackBattleCommand:
     LDA @JumpTable, Y
     STA btl_jumptableptr
     LDA @JumpTable+1, Y
-    STA btl_jumptableptr+1      ; $88,89 is where to jump back to
+    STA btl_jumptableptr+1      ; temporary_3,temporary_4 is where to jump back to
     
     PLA                         ; but first, pull and discard the old return address
     PLA
@@ -931,7 +931,7 @@ BattleSubMenu_Item:
       
   : LDA btlcurs_x               ; Selected column
     AND #$01
-    STA btl_tmpvar1     ; (selected column stored in $88 for later)
+    STA btl_tmpvar1     ; (selected column stored in temporary_3 for later)
     ASL A                       ;  * 4
     ASL A
     STA $68B3
@@ -973,7 +973,7 @@ BattleSubMenu_Item:
     JSR GetPointerToArmorData   ; pointer to armor data in XA
     
   @GetSpellCast:
-    STA btl_tmpvar1                     ; store pointer to wep/armor data in $88,89
+    STA btl_tmpvar1                     ; store pointer to wep/armor data in temporary_3,temporary_4
     STX btl_varJ
     LDY #$03                    ; Y=3 to index, since byte 3 in both wep/armor data is the "spell cast" entry
     LDA (btl_varI), Y                ; get spell cast
@@ -1264,7 +1264,7 @@ UpdateSprites_BattleFrame:
       
       LDA ch_ailments, X    ; get the ailments
       LSR A                 ; shift out dead bit
-      ROL $88               ;   and into $88
+      ROL temporary_3               ;   and into temporary_3
       LSR A                 ; shift out stone bit
       ROL btl_varJ               ;   and into btl_varJ
       
@@ -2997,9 +2997,9 @@ PrepareAndDrawSimpleCombatBox:
     ASL A                       ; get pointer to this combat box's unformatted buffer
     TAY
     LDA lut_UnformattedCombatBoxBuffer, Y
-    STA $88
+    STA temporary_3
     LDA lut_UnformattedCombatBoxBuffer+1, Y
-    STA btl_tmpvar2                     ; put in $88,89
+    STA btl_tmpvar2                     ; put in temporary_3,temporary_4
     
     LDY #$00
     LDA $68B1                   ; get the control code
@@ -4095,10 +4095,10 @@ EnemyAttackPlayer_Physical:
     STX btl_varF
     LDY #en_romptr
     LDA (btl_varE), Y
-    STA $86
+    STA btl_varG
     INY
     LDA (btl_varE), Y
-    STA $87                 ; pointer to enemy ROM stats at $86,87
+    STA btl_varH                 ; pointer to enemy ROM stats at btl_varG,btl_varH
         
     ;;;;;;;;;;;;;;;;;;;;;
     ; Attacker ENEMY stats
@@ -4920,7 +4920,7 @@ DrawCharacterStatus:
     LDA lut_CharStatusPPUAddr, Y
     STA btl_varI
     LDA lut_CharStatusPPUAddr+1, Y
-    STA btl_tmpvar2                     ; put the target PPU address at $88,89
+    STA btl_tmpvar2                     ; put the target PPU address at temporary_3,temporary_4
     
     JSR WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
     LDA PPUSTATUS                   ; clear toggle
@@ -4984,7 +4984,7 @@ DrawCharacterStatus:
 ;;    Each row consists of exactly 4 tiles to be drawn.
 ;;
 ;;  input:
-;;      $88,89 = pointer to target PPU address  (this pointer is modified to point to the next row)
+;;      temporary_3,temporary_4 = pointer to target PPU address  (this pointer is modified to point to the next row)
 ;;      Y      = source offset of the btl_stringoutputbuf buffer
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4992,7 +4992,7 @@ DrawCharacterStatus:
 DrawStatusRow:
     LDA btl_tmpvar2         ; set PPU addr
     STA PPUADDR
-    LDA $88
+    LDA temporary_3
     STA PPUADDR
     
     LDX #$04        ; draw 4 tiles from the btl_stringoutputbuf
@@ -5007,7 +5007,7 @@ DrawStatusRow:
     LDA btl_tmpvar1                         ; then add $20 to dest pointer to move to next row
     CLC
     ADC #$20
-    STA $88
+    STA temporary_3
     LDA btl_varJ
     ADC #$00
     STA btl_varJ
@@ -5364,7 +5364,7 @@ GetCharOBMagDataPointers:
 ;;
 ;;  SwapCharsForSorting  [$AC57 :: 0x32C67]
 ;;
-;;  input:  $88 and btl_varJ = char IDs (0-3) to swap
+;;  input:  temporary_3 and btl_varJ = char IDs (0-3) to swap
 ;;
 ;;    This routine swaps not only character stats,
 ;;  but also the character entries in char_order_buf
@@ -5677,7 +5677,7 @@ LoadOneCharacterIBStats:
         SEC                         ; weapon index is 1-based (convert to 0 based)
         SBC #$01
         JSR GetPointerToWeaponData  ; get a pointer to the weapon data
-        STA btl_tmpvar1                     ; put the pointer at $88
+        STA btl_tmpvar1                     ; put the pointer at temporary_3
         STX btl_varJ
       
         LDY #$07
@@ -6748,7 +6748,7 @@ Battle_DoEnemyTurn:
     
     LDA ch_level
     ASL A
-    STA $9E             ; $9E = 2*level of party leader
+    STA btltemppointer             ; btltemppointer = 2*level of party leader
     
     ; Check the enemy's morale and see if they are going to run away.
     ; The formula for this is:
@@ -6765,14 +6765,14 @@ Battle_DoEnemyTurn:
     LDY #en_morale
     LDA (battleturn_enramstats), Y     ; morale
     SEC
-    SBC $9E
+    SBC btltemppointer
     BCC @RunAway        ; run if morale < 2*level_of_leader
-    STA $9E             ; store Morale-L in 9E
+    STA btltemppointer             ; store Morale-L in btltemppointer
     LDA #$00
     LDX #$32
     JSR RandAX          ; random between [$00-$32]
     CLC
-    ADC $9E             ; A is now 'V' above... X+Morale-L
+    ADC btltemppointer             ; A is now 'V' above... X+Morale-L
     BCS Enemy_DoAi      ; if > 255, do not run
     CMP #$50
     BCS Enemy_DoAi      ; if >= $50, do not run
@@ -9200,20 +9200,7 @@ VBlank_SetPPUAddr:
     PLA                         ; restore A
     RTS
     
-    
-    ; Unused code???
-    ; BC95 :: 0x33CA5
-    PHP
-    PHA
-    CLC
-    LDA #$10
-    ADC $9A
-    STA $9A
-    BCC :+
-      INC $9B
-  : PLA
-    PLP
-    RTS
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
