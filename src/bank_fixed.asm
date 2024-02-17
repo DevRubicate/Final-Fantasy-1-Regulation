@@ -13815,11 +13815,11 @@ OnReset:
 
     ; MMC5
       
-    STX $5010               ; Disable MMC5 PCM and IRQs
+    STX MMC5_PCM_MODE_IRQ   ; Disable MMC5 PCM and IRQs
     STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
-    STX $5130               ; Check doc on MMC5 to see what this does
+    STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
     STX MMC5_RAM_BANK       ; swap battery-backed PRG RAM into $6000 page.     
-    STX $5200               ; disable split-screen mode
+    STX MMC5_SPLIT_MODE     ; disable split-screen mode
     STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
     STX MMC5_CHR_BANK7      ; Swap in first CHR Page
     INX                     ; 01
@@ -13996,7 +13996,7 @@ DimBatSprPalettes:
     SBC #$10           ; otherwise, subtract $10 (dim it)
     BPL :+             ; if that caused it to dro below zero...
       LDA #$0F         ; ...replace it with black ($0F)
-:   STA $03D0, X       ; write the new color back to the palette
+:   STA cur_pal+$10, X       ; write the new color back to the palette
     INY                ; and increment Y to mark this color as not fully dimmed yet
 
   @Skip:

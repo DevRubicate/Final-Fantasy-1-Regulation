@@ -6905,18 +6905,54 @@ UseItem_SetDesc:
     JMP ItemMenu_Loop      ;  then return to the item loop
 
     ; these various items just print simple description.
-UseItem_Crystal:  LDABRA $08, UseItem_SetDesc
-UseItem_Herb:     LDABRA $09, UseItem_SetDesc
-UseItem_Key:      LDABRA $0A, UseItem_SetDesc
-UseItem_TNT:      LDABRA $0B, UseItem_SetDesc
-UseItem_Adamant:  LDABRA $0C, UseItem_SetDesc
-UseItem_Slab:     LDABRA $0D, UseItem_SetDesc
-UseItem_Ruby:     LDABRA $0E, UseItem_SetDesc
-UseItem_Chime:    LDABRA $13, UseItem_SetDesc
-UseItem_Tail:     LDABRA $14, UseItem_SetDesc
-UseItem_Cube:     LDABRA $15, UseItem_SetDesc
-UseItem_Oxyale:   LDABRA $18, UseItem_SetDesc
-UseItem_Canoe:    LDABRA $19, UseItem_SetDesc
+
+UseItem_Crystal:  
+    LDA #$08
+    JMP UseItem_SetDesc
+
+UseItem_Herb:     
+    LDA #$09
+    JMP UseItem_SetDesc
+
+UseItem_Key:      
+    LDA #$0A
+    JMP UseItem_SetDesc
+
+UseItem_TNT:      
+    LDA #$0B
+    JMP UseItem_SetDesc
+
+UseItem_Adamant:  
+    LDA #$0C
+    JMP UseItem_SetDesc
+
+UseItem_Slab:     
+    LDA #$0D
+    JMP UseItem_SetDesc
+
+UseItem_Ruby:     
+    LDA #$0E
+    JMP UseItem_SetDesc
+
+UseItem_Chime:    
+    LDA #$13
+    JMP UseItem_SetDesc
+
+UseItem_Tail:     
+    LDA #$14
+    JMP UseItem_SetDesc
+
+UseItem_Cube:     
+    LDA #$15
+    JMP UseItem_SetDesc
+
+UseItem_Oxyale:   
+    LDA #$18
+    JMP UseItem_SetDesc
+
+UseItem_Canoe:    
+    LDA #$19
+    JMP UseItem_SetDesc
 
 
 ;;;;;;;;;;;;;;;;;;;;;
