@@ -196,10 +196,10 @@ LvlUp_AdjustBBSubStats:
 SubtractOneFromVal:
     LDY #$00            ; self explanitory
     
-    LDA ($80), Y
+    LDA (btl_varA), Y
     SEC
     SBC #$01
-    STA ($80), Y
+    STA (btl_varA), Y
     
     RTS
     
@@ -669,9 +669,9 @@ EndOfBattleWrapUp:
     STA eob_gp_reward+1         ;   a bug as much as it's just a limitation.
     
     LDA #<gold
-    STA $80
+    STA btl_varA
     LDA #>gold
-    STA $81
+    STA btl_varB
     
     JSR GiveRewardToParty
     
@@ -984,10 +984,10 @@ LvlUp_LevelUp:
     LDA lvlup_chstats       ; set $80 to point to character's Max HP
     CLC
     ADC #ch_maxhp - ch_stats
-    STA $80
+    STA btl_varA
     LDA lvlup_chstats+1
     ADC #$00
-    STA $81
+    STA btl_varB
     
     JSR GiveHpBonusToChar   ; Finally, apply the HP bonus!
     
@@ -1255,9 +1255,9 @@ GiveRewardToParty:
     JSR AddBattleRewardToVal        ; add reward to target buffer
     
     LDA #<data_MaxRewardPlusOne     ; set $82 to point to reward max+1 (1000000)
-    STA $82
+    STA btl_varC
     LDA #>data_MaxRewardPlusOne
-    STA $83
+    STA btl_varD
     
     LDY #3 - 1                      ; compare 3 bytes
     JSR MultiByteCmp                ;  current value compared to max
@@ -1267,8 +1267,8 @@ GiveRewardToParty:
     ; Otherwise, current >= max
     
     LDY #$00                ; loop to copy 3 bytes of data
-    : LDA ($82), Y          ; copy max to dest
-      STA ($80), Y
+    : LDA (btl_varC), Y          ; copy max to dest
+      STA (btl_varA), Y
       INY
       CPY #$03
       BNE :-
@@ -1297,17 +1297,17 @@ GiveHpBonusToChar:
     JSR AddBattleRewardToVal    ; add reward (which is the HP bonus)
     
     LDA #<data_MaxHPPlusOne     ; copy HP cap to $82,83
-    STA $82
+    STA btl_varC
     LDA #>data_MaxHPPlusOne
-    STA $83
+    STA btl_varD
     
     LDY #2 - 1                  ; compare 2 byte value (char max HP to HP cap)
     JSR MultiByteCmp
     BCC @Done                   ; if max HP < cap, jump ahead to @Done
     
     LDY #$00                    ; copy the cap over to the max HP
-    : LDA ($82), Y
-      STA ($80), Y
+    : LDA (btl_varC), Y
+      STA (btl_varA), Y
       INY
       CPY #$02
       BNE :-
@@ -1316,10 +1316,10 @@ GiveHpBonusToChar:
  
   @Done:
     LDY #$00                    ; finally, copy the new max HP to eobtext_print_hp so
-    LDA ($80), Y                ;   it can be printed to the user!
+    LDA (btl_varA), Y                ;   it can be printed to the user!
     STA eobtext_print_hp
     INY
-    LDA ($80), Y
+    LDA (btl_varA), Y
     STA eobtext_print_hp+1
     RTS
 
@@ -1337,13 +1337,13 @@ AddBattleRewardToVal:
     LDA #$00
     TAY                     ; A, X, Y all zero'd
     TAX                     ; Y = dest index, X = source index
-    STA $8A                 ;  ??? $8A also zero'd?
+    STA btl_tmpvar3                 ;  ??? btl_tmpvar3 also zero'd?
     
     CLC                     ; CLC at the start of the addition
   @Loop:
-      LDA ($80), Y          ; read dest byte
+      LDA (btl_varA), Y          ; read dest byte
       ADC battlereward, X   ; sum with source/reward byte
-      STA ($80), Y          ; write back to dest
+      STA (btl_varA), Y          ; write back to dest
       
       INX                   ; inc indexes to do next byte
       INY
@@ -1406,15 +1406,15 @@ SumBattleReward:
 ;;
 ;;  output:    Z,C = set to result of CMP
 ;;
-;;    C set if ($80) >= ($82)
+;;    C set if (btl_varA) >= (btl_varC)
 ;;    Z set if they're equal
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MultiByteCmp:
   @Loop:
-    LDA ($80), Y            ; load value
-    CMP ($82), Y            ; compare to target value
+    LDA (btl_varA), Y            ; load value
+    CMP (btl_varC), Y            ; compare to target value
     BEQ @NextByte           ; if equal, do next byte
     
       PHP                     ; if not equal...
@@ -1428,8 +1428,8 @@ MultiByteCmp:
     DEY                     ; decrease byte counter to move to next byte
     BNE @Loop               ; loop if more bytes to compare
     
-    LDA ($80), Y            ; otherwise, if this is the last byte
-    CMP ($82), Y            ; simply do the CMP
+    LDA (btl_varA), Y            ; otherwise, if this is the last byte
+    CMP (btl_varC), Y            ; simply do the CMP
     RTS                     ; the 'Z' result will be preserved on this CMP
     
     
@@ -1483,8 +1483,6 @@ DivideRewardBySurvivors:
     DEX
     BNE @DivLoop
     
-    LDA $85                 ; ??? This seems to be pointless.
-    STA $84
     RTS
     
     
@@ -1679,13 +1677,13 @@ MusicPlay:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_FlipAllChars:
-    LDA #$10                ; put a pointer to first character's OAM data in $8A
-    STA $8A                 ;  start at $10 because the first 4 sprites are for the battle
+    LDA #$10                ; put a pointer to first character's OAM data in btl_tmpvar3
+    STA btl_tmpvar3                 ;  start at $10 because the first 4 sprites are for the battle
     LDA #>oam               ;  cursor/weapon/magic sprite.
-    STA $8B
+    STA btl_tmpvar4
     
     LDA #$00                ; loop up-counter and character index
-    STA $88
+    STA btl_tmpvar1
   @Loop:
       JSR Battle_FlipCharSprite ; flip this character sprite
       
@@ -1698,8 +1696,8 @@ Battle_FlipAllChars:
       STA btl_responddelay      ; change respond delay to 15 (battle is over, so respond rate doesn't matter anymore)
       JSR RespondDelay          ; wait 15 frames
       
-      INC $88                   ; Inc counter and loop until all 4 characters flipped.
-      LDA $88
+      INC btl_tmpvar1                   ; Inc counter and loop until all 4 characters flipped.
+      LDA btl_tmpvar1
       CMP #$04
       
       BNE @Loop
@@ -1734,15 +1732,15 @@ Battle_FlipCharSprite:
                             ;   2 tiles per row
   @Loop:
     LDY #<oam_x              ; swap X coordinates for the tiles
-    LDA ($8A), Y
+    LDA (btl_tmpvar3), Y
     PHA
     LDY #<oam_x+4
-    LDA ($8A), Y
+    LDA (btl_tmpvar3), Y
     LDY #<oam_x
-    STA ($8A), Y
+    STA (btl_tmpvar3), Y
     PLA
     LDY #<oam_x+4
-    STA ($8A), Y
+    STA (btl_tmpvar3), Y
     
     LDY #<oam_a              ; Then set the "flip-X" attribute bit for each tile
     JSR @FlipTile
@@ -1761,18 +1759,18 @@ Battle_FlipCharSprite:
     LDA #4*6                ; add $18 to the pointer to skip then entire character (4 bytes per tile
                             ;   6 tiles per character)
   @AddToPtr:
-    CLC                     ; Add A to the pointer at $8A
-    ADC $8A
-    STA $8A
+    CLC                     ; Add A to the pointer at btl_tmpvar3
+    ADC btl_tmpvar3
+    STA btl_tmpvar3
     LDA #$00                ; (adding carry to high byte is unnecessary, as OAM will never cross a page)
-    ADC $8B
-    STA $8B
+    ADC btl_tmpvar4
+    STA btl_tmpvar4
     RTS
     
   @FlipTile:
-    LDA ($8A), Y            ; get attribute byte
+    LDA (btl_tmpvar3), Y            ; get attribute byte
     ORA #$40                ; set the 'flip-X' bit
-    STA ($8A), Y            ; write it back
+    STA (btl_tmpvar3), Y            ; write it back
     RTS
     
 
@@ -1811,9 +1809,9 @@ lut_EOBText:
 ;;
 ;;  ChaosDeath_FadeNoise  [$A03D :: 0x3204D]
 ;;
-;;  input/output:   $9C = value to write to Noise volume reg
+;;  input/output:   chaosdeath_screamcounter = value to write to Noise volume reg
 ;;
-;;    This routine is called by ChaosDeath.  The first time it is called, 9C=0, which means
+;;    This routine is called by ChaosDeath.  The first time it is called, chaosdeath_screamcounter=0, which means
 ;;  the DEC here will cause it to wrap to $FF.  This will make the noise start playing a rumble
 ;;  at full volume.
 ;;
@@ -1827,9 +1825,9 @@ lut_EOBText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChaosDeath_FadeNoise:
-    DEC $9C             ; DEC noise setting
+    DEC chaosdeath_screamcounter             ; DEC noise setting
     
-    LDA $9C
+    LDA chaosdeath_screamcounter
     STA $400C           ; write it to noise volume control
     LDA #$FF
     STA $400D           ; (no effect)
@@ -1868,7 +1866,7 @@ ChaosDeath:
     
     ; a bunch of local vars
     LDA #$00                    ; Start the Low-pitch noise rumble
-    STA $9C                     ; See ChaosDeath_FadeNoise for details
+    STA chaosdeath_screamcounter; See ChaosDeath_FadeNoise for details
     JSR ChaosDeath_FadeNoise
 
     LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness

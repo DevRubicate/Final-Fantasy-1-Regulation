@@ -11862,7 +11862,7 @@ BattleWaitForVBlank:
 
 BattleDrawMessageBuffer:
     LDA #<$2240     ; set target PPU address to $2240
-    STA $8A         ; This has the start of the bottom row of the bounding box for 
+    STA btl_tmpvar3         ; This has the start of the bottom row of the bounding box for 
     LDA #>$2240     ;  enemies
     STA $8B
     
@@ -11876,7 +11876,7 @@ BattleDrawMessageBuffer:
   @Loop:
       JSR Battle_DrawMessageRow_VBlank  ; draw a row
       
-      LDA $88           ; add $20 to the source pointer to draw next row
+      LDA btl_tmpvar1           ; add $20 to the source pointer to draw next row
       CLC
       ADC #$20
       STA $88
@@ -11884,7 +11884,7 @@ BattleDrawMessageBuffer:
       ADC #$00
       STA $89
       
-      LDA $8A           ; add $20 to the target PPU address
+      LDA btl_tmpvar3           ; add $20 to the target PPU address
       CLC
       ADC #$20
       STA $8A
@@ -11965,7 +11965,7 @@ BattleDrawMessageBuffer_Reverse:
     RTS
 
   @AdjustPointers:
-    LDA $88     ; subtract $20 from the source pointer
+    LDA btl_tmpvar1     ; subtract $20 from the source pointer
     SEC
     SBC #$20
     STA $88
@@ -11973,7 +11973,7 @@ BattleDrawMessageBuffer_Reverse:
     SBC #$00
     STA $89
     
-    LDA $8A     ; and from the dest pointer
+    LDA btl_tmpvar3     ; and from the dest pointer
     SEC
     SBC #$20
     STA $8A
@@ -11998,7 +11998,7 @@ BattleDrawMessageBuffer_Reverse:
 
 GetBattleMessagePtr:
     LDA #$00
-    STA $89     ; zero high byte of temp memory
+    STA btl_tmpvar2     ; zero high byte of temp memory
     
     TYA         ; multiply Y coord by $20
     ASL A
@@ -12011,7 +12011,7 @@ GetBattleMessagePtr:
     ROL $89
     ASL A
     ROL $89     ; high byte gets rolled into $89
-    STA $88     ; low byte in $88
+    STA btl_tmpvar1     ; low byte in $88
     
     TXA         ; Add X coord to low byte
     CLC
@@ -12066,7 +12066,7 @@ DrawBattleBox_Row:
     LDA btltmp_boxright     ; lastly, draw the right tile
     STA ($88), Y
     
-    LDA $88         ; add $20 to the dest pointer to have it point to
+    LDA btl_tmpvar1         ; add $20 to the dest pointer to have it point to
     CLC             ;  the next row
     ADC #$20
     STA $88
@@ -12543,7 +12543,7 @@ DrawBattleMagicBox:
     JSR ShiftLeft6          ; get current character*$40
     CLC
     ADC #<ch_magicdata      ; and add with ch_magic dat
-    STA $88                 ; to get a pointer to this character's magic list
+    STA btl_tmpvar1                 ; to get a pointer to this character's magic list
     LDA #$00                ;   and put it in $88,89
     ADC #>ch_magicdata
     STA $89

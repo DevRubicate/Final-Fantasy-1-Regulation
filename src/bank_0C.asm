@@ -940,7 +940,7 @@ BattleSubMenu_Item:
       
   : LDA btlcurs_x               ; Selected column
     AND #$01
-    STA $88     ; (selected column stored in $88 for later)
+    STA btl_tmpvar1     ; (selected column stored in $88 for later)
     ASL A                       ;  * 4
     ASL A
     STA $68B3
@@ -955,24 +955,24 @@ BattleSubMenu_Item:
     AND #$7F                    ; mask off the 'equipped' bit
     BEQ @NothingBox             ; if zero, print nothing box and exit
     
-    STA $89                     ; if nonzero, stick it in $89
+    STA btl_tmpvar2                     ; if nonzero, stick it in $89
     DEC $89                     ; convert from 1-based to 0-based
     
-    LDA $88                     ; get the selected column (0=weapon, 1=armor)
+    LDA btl_tmpvar1                     ; get the selected column (0=weapon, 1=armor)
     BNE @GetArmorSpell          ; if armor selected jump ahead
     
-    LDA $89                     ; otherwise weapon selected, get the index
+    LDA btl_tmpvar2                     ; otherwise weapon selected, get the index
     LDY btlcmd_curchar
     CLC
     ADC #TCITYPE_WEPSTART       ; convert from weapon index to item index
     STA btl_charcmditem, Y      ; record it in command buffer as item being used
     
-    LDA $89                     ; get weapon index
+    LDA btl_tmpvar2                     ; get weapon index
     JSR GetPointerToWeaponData  ; get a pointer to that weapon's data (in XA)
     JMP @GetSpellCast
 
   @GetArmorSpell:
-    LDA $89                     ; armor index
+    LDA btl_tmpvar2                     ; armor index
     LDY btlcmd_curchar
     CLC
     ADC #TCITYPE_ARMSTART       ; convert to item index
@@ -982,7 +982,7 @@ BattleSubMenu_Item:
     JSR GetPointerToArmorData   ; pointer to armor data in XA
     
   @GetSpellCast:
-    STA $88                     ; store pointer to wep/armor data in $88,89
+    STA btl_tmpvar1                     ; store pointer to wep/armor data in $88,89
     STX $89
     LDY #$03                    ; Y=3 to index, since byte 3 in both wep/armor data is the "spell cast" entry
     LDA ($88), Y                ; get spell cast
@@ -1261,8 +1261,8 @@ UpdateSprites_BattleFrame:
     ; This will update the dead bits in drawflagsA
     ;   and the stone bits in drawflagsB
   : LDA #$00
-    STA $88     ; to hold new dead bits
-    STA $89     ; to hold new dead bits
+    STA btl_tmpvar1     ; to hold new dead bits
+    STA btl_tmpvar2     ; to hold new dead bits
     TAX
     
   @ExtractDeadStoneBits:    ; loop 4 times, starting with character 3 down to character 0
@@ -2908,14 +2908,14 @@ DoMagicFlash:
     CMP #$20                        ; if it's white, replace it with gray so it isn't
     BNE :+                          ;   so overwhelming
       LDA #$10
-  : STA $89                         ; store in tmp  ($89 is the flash color)
+  : STA btl_tmpvar2                         ; store in tmp  ($89 is the flash color)
   
     LDA btl_palettes + $10          ; get the original BG color
     STA $6D16                       ; back it up (probably unnecessary, since btl_palettes is never changed)
     
     JSR @FrameNoPaletteChange       ; Draw a normal frame
     
-    LDA $89                         ; change the BG color to the flash color
+    LDA btl_tmpvar2                         ; change the BG color to the flash color
     JSR @FramePaletteChange         ;  and draw 2 more frames
     JSR @FrameNoPaletteChange
     
@@ -3008,7 +3008,7 @@ PrepareAndDrawSimpleCombatBox:
     LDA lut_UnformattedCombatBoxBuffer, Y
     STA $88
     LDA lut_UnformattedCombatBoxBuffer+1, Y
-    STA $89                     ; put in $88,89
+    STA btl_tmpvar2                     ; put in $88,89
     
     LDY #$00
     LDA $68B1                   ; get the control code
@@ -4929,7 +4929,7 @@ DrawCharacterStatus:
     LDA lut_CharStatusPPUAddr, Y
     STA $88
     LDA lut_CharStatusPPUAddr+1, Y
-    STA $89                     ; put the target PPU address at $88,89
+    STA btl_tmpvar2                     ; put the target PPU address at $88,89
     
     JSR WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
     LDA PPUSTATUS                   ; clear toggle
@@ -4999,7 +4999,7 @@ DrawCharacterStatus:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawStatusRow:
-    LDA $89         ; set PPU addr
+    LDA btl_tmpvar2         ; set PPU addr
     STA PPUADDR
     LDA $88
     STA PPUADDR
@@ -5013,7 +5013,7 @@ DrawStatusRow:
       DEX
       BNE @Loop
       
-    LDA $88                         ; then add $20 to dest pointer to move to next row
+    LDA btl_tmpvar1                         ; then add $20 to dest pointer to move to next row
     CLC
     ADC #$20
     STA $88
@@ -5381,17 +5381,17 @@ GetCharOBMagDataPointers:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwapCharsForSorting:
-    LDA $88                 ; Swap ch_stats
+    LDA btl_tmpvar1                 ; Swap ch_stats
     LDX $89
     JSR GetCharOBPointers
     JSR SwapCharOBStats
     
-    LDA $88                 ; Swap ch_magic
+    LDA btl_tmpvar1                 ; Swap ch_magic
     LDX $89
     JSR GetCharOBMagDataPointers
     JSR SwapCharOBStats
     
-    LDA $88                 ; put char IDs in X,Y
+    LDA btl_tmpvar1                 ; put char IDs in X,Y
     TAY
     LDA $89
     TAX
@@ -5507,10 +5507,10 @@ ReSortPartyByAilment:
       BCC :+                        ; if the weight of this slot is greater (this slot should be after next slot)
         LDA char_order_buf, Y         ; ... then swap these slots.
         AND #$03                      ; This swap code is BUGGED, because it gets the index from char_order_buf, which
-        STA $88                       ;  does not actually reflect the character index anymore!  The character index is
+        STA btl_tmpvar1                       ;  does not actually reflect the character index anymore!  The character index is
         LDA char_order_buf+1, Y       ;  in loopctr_alignmentsort!  This actually should be swapping loopctr_alignmentsort and loopctr_alignmentsort+1... you
         AND #$03                      ;  know... the slots we actually checked.
-        STA $89                       ; Because of this, it's possible the routine will screw up the sorting.
+        STA btl_tmpvar2                       ; Because of this, it's possible the routine will screw up the sorting.
         JSR SwapCharsForSorting
     
     : INC loopctr_alignmentsort                  ; do inner loop 3 times (not 4, because we check slot+1)
@@ -5686,7 +5686,7 @@ LoadOneCharacterIBStats:
         SEC                         ; weapon index is 1-based (convert to 0 based)
         SBC #$01
         JSR GetPointerToWeaponData  ; get a pointer to the weapon data
-        STA $88                     ; put the pointer at $88
+        STA btl_tmpvar1                     ; put the pointer at $88
         STX $89
       
         LDY #$07

@@ -264,12 +264,23 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
     GAP                                     128
+    RESZP btl_varA,                         0 ; $80
     RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
-    RESZP btlptr,                           2 ; 2 bytes      ; $80
-    RESZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
+    RESZP btlptr,                           0 ; 2 bytes      ; $80
+    GAP                                     1
+    RESZP btl_varB,                         0 ; $81
+    GAP                                     1
+    RESZP btl_varC,                         0 ; $82
+    RESZP btl_ob_charstat_ptr,              0 ; 2 bytes      ; $82
+    GAP                                     1
+    RESZP btl_varD,                         0 ; $83
+    GAP                                     1
     GAP                                     4
     RESZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
-    GAP                                     4
+    RESZP btl_tmpvar1,                      1 ; 1 bytes      ; $88
+    RESZP btl_tmpvar2,                      1 ; 1 bytes      ; $89
+    RESZP btl_tmpvar3,                      1 ; 1 bytes      ; $8A
+    RESZP btl_tmpvar4,                      1 ; 1 bytes      ; $8B
     RESZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C
     RESZP btldraw_blockptrend,              2 ; 2 bytes      ; $8E
     RESZP btl_entityptr_ibram,              0 ;      ; $90 ; 16 bytes?
@@ -286,13 +297,12 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btlsfxnse_len,                    1 ; 1 bytes      ; $99
     RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
     RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
+    RESZP chaosdeath_screamcounter,         0 ; 1 bytes      ; $9C
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
     RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
     RESZP btlformation,                     1 ; 1 bytes      ; $A0
-
-
 
 
 
