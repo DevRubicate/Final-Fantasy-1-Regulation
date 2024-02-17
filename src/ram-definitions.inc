@@ -233,9 +233,7 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
     RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
-    GAP                                     1
-    RESZP battleturn_enai,                  1 ; 1 bytes      ; $9E ; local - pointer to enemy's AI data
-    GAP                                     1
+    GAP                                     3
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
     GAP                                     78
     RESZP framecounter,                     2 ; 2 bytes      ; $F0
@@ -268,8 +266,8 @@ SECTIONZP "SOUND" ; $00 - $0E
 
 SECTIONZP "BATTLEZP" ; $6A - $9F
     GAP                                     106
-    RESZP btlformation,                     1 ; 1 bytes     ; $6A
-    GAP                                     21
+
+    GAP                                     22
     RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
     RESZP btlptr,                           2 ; 2 bytes      ; $80
     RESZP btl_ob_charstat_ptr,              2 ; 2 bytes      ; $82
@@ -278,7 +276,7 @@ SECTIONZP "BATTLEZP" ; $6A - $9F
     GAP                                     4
     RESZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C
     RESZP btldraw_blockptrend,              2 ; 2 bytes      ; $8E
-    RESZP btl_entityptr_ibram,              0 ; 2 bytes      ; $90
+    RESZP btl_entityptr_ibram,              0 ;      ; $90 ; 16 bytes?
     RESZP btldraw_src,                      0 ; 2 bytes      ; $90   ; source data
     RESZP btlsfx_frontseat,                 0 ; 1 bytes      ; $90   ; where battle sfx data is stored in zero page
     RESZP btltmp,                           2 ; 16 bytes     ; $90  ; 16 bytes ?
@@ -293,8 +291,19 @@ SECTIONZP "BATTLEZP" ; $6A - $9F
     RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
     RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
+    RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
+    RESZP btlformation,                     1 ; 1 bytes      ; $A0
+
+
+
+
+
+
+
+
+
 
 SECTION "STACK"
     tmp_hi          = $0110  ; 3? bytes
