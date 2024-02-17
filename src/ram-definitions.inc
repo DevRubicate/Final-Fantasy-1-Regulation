@@ -162,10 +162,11 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP dlgflg_reentermap,                1 ; 1 bytes     ; $56  ; flag to indicate the map needs re-entering due to dialogue (Bahamut/class change)
     RESZP cur_bank,                         1 ; 1 bytes     ; $57
     RESZP ret_bank,                         1 ; 1 bytes     ; $58
-    GAP                                     3
+    GAP                                     1
+    RESZP format_buf,                       0 ; 7 bytes     ; $5A  ; 7 bytes (5A-60) -- must not cross page bound
+    GAP                                     2
     RESZP name_input_draw_buf,              1 ; 1 bytes     ; $5C
-    GAP                                     3
-    RESZP format_buf,                       1 ; 7 bytes     ; $60  ; 7 bytes (5A-60) -- must not cross page bound
+    GAP                                     4
     RESZP theend_ppuaddr,                   0 ; 2 bytes     ; $61
     RESZP shutter_a,                        0 ; 1 bytes     ; $61  ; shared
     RESZP lu_cursor,                        0 ; 1 bytes     ; $61  ; shared

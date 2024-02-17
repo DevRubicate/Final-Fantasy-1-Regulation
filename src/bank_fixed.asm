@@ -6745,17 +6745,17 @@ DrawDialogueString:
 
     @PrintName:            ; Control Code $03 = prints the name of the lead character
       LDA ch_name          ; copy lead character's name to format buffer
-      STA format_buf-4
+      STA format_buf+3
       LDA ch_name+1        ; note that this does not back up the original string, which means
-      STA format_buf-3     ; after this name is drawn, dialogue printing stops!  I don't know if
+      STA format_buf+4     ; after this name is drawn, dialogue printing stops!  I don't know if
       LDA ch_name+2        ; that was intentional or not -- I don't see why it would be.  Therefore
-      STA format_buf-2     ; I would say this is BUGGED, even though I don't think
+      STA format_buf+5     ; I would say this is BUGGED, even though I don't think
       LDA ch_name+3        ; it's ever used in the game
-      STA format_buf-1
+      STA format_buf+6
 
-      LDA #<(format_buf-4) ; make text_ptr point to the format buffer
+      LDA #<(format_buf+3) ; make text_ptr point to the format buffer
       STA text_ptr
-      LDA #>(format_buf-4)
+      LDA #>(format_buf+3)
       STA text_ptr+1
 
       JMP @Loop            ; and continue printing (to print the name, then quit)
@@ -7445,18 +7445,18 @@ DrawComplexString:
       ;; Stat Code $00 -- the character's name
       LDX char_index      ; load character index
       LDA ch_name, X      ; copy name to format buffer
-      STA format_buf-4
+      STA format_buf+3
       LDA ch_name+1, X
-      STA format_buf-3
+      STA format_buf+4
       LDA ch_name+2, X
-      STA format_buf-2
+      STA format_buf+5
       LDA ch_name+3, X
-      STA format_buf-1
+      STA format_buf+6
 
       JSR @Save              ; need to draw a substring, so save current string
-      LDA #<(format_buf-4)   ; set string source pointer to temp buffer
+      LDA #<(format_buf+3)   ; set string source pointer to temp buffer
       STA text_ptr
-      LDA #>(format_buf-4)
+      LDA #>(format_buf+3)
       STA text_ptr+1
       JSR @Draw_NoStall      ; recursively draw it
       JMP @Restore           ; then restore original string and continue
@@ -11121,9 +11121,9 @@ DrawItemBox:
        JSR SwapPRG           ; also swap to BANK_MENUS (for PrintNumber routines)
        JSR PrintNumber_2Digit  ; print the 2 digit number
 
-       LDA format_buf-2        ; copy the printed 2 digit number from the format buffer
+       LDA format_buf+5        ; copy the printed 2 digit number from the format buffer
        STA str_buf+$25         ;  to the end of our string buffer (just before the null terminator)
-       LDA format_buf-1
+       LDA format_buf+6
        STA str_buf+$26
 
 

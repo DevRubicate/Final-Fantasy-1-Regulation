@@ -347,44 +347,44 @@ PrintGold:
 PrintNumber_1Digit:
     LDA tmp              ; no real formatting involved in 1-digit numbers
     ORA #$80             ; just OR the number with $80 to convert it to the tile ID
-    STA format_buf-1     ; write it to output buffer
-    LDA #<format_buf-1
+    STA format_buf+6     ; write it to output buffer
+    LDA #<format_buf+6
     JMP PrintNumber_Exit
                          ; A = start of string, then BNE (or BEQ) to exit
 
 PrintNumber_2Digit:
     JSR FormatNumber_2Digits   ; format the number
     JSR TrimZeros_2Digits      ; trim leading zeros
-    LDA #<format_buf-2
+    LDA #<format_buf+5
     JMP PrintNumber_Exit      ; string start
 
 PrintNumber_3Digit:            ; more of same...
     JSR FormatNumber_3Digits
     JSR TrimZeros_3Digits
-    LDA #<format_buf-3
+    LDA #<format_buf+4
     JMP PrintNumber_Exit
 
 PrintNumber_4Digit:            ; more of same.
     JSR FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
     JSR TrimZeros_4Digits
-    LDA #<format_buf-4
+    LDA #<format_buf+3
     JMP PrintNumber_Exit
 
 PrintNumber_5Digit:
     JSR FormatNumber_5Digits
     JSR TrimZeros_5Digits
-    LDA #<format_buf-5
+    LDA #<format_buf+2
     JMP PrintNumber_Exit
 
 PrintNumber_6Digit:
     JSR FormatNumber_6Digits
     JSR TrimZeros_6Digits
-    LDA #<format_buf-6
+    LDA #<format_buf+1
     JMP PrintNumber_Exit
 
 PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
     STA text_ptr          ; of the pointer in A -- store that to text_ptr, our output pointer
-    LDA #>format_buf      ;  high byte
+    LDA #>(format_buf+7)      ;  high byte
     STA text_ptr+1
     RTS                   ; and exit!
 
@@ -396,45 +396,45 @@ PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
 ;;  replace leading '0' characters ($80) with a blank space character ($FF)
 ;;  which converts a string like "0100" to the desired " 100"
 ;;
-;;    The ones digits (at format_buf-1) is never trimmed.  So you still get "  0"
+;;    The ones digits (at format_buf+6) is never trimmed.  So you still get "  0"
 ;;  if the number is zero.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TrimZeros_6Digits:
-    LDA format_buf-6   ; get first digit
+    LDA format_buf+1   ; get first digit
     CMP #$80           ; check if it's "0" (tile $80)
     BNE TrimZeros_RTS  ; if it's not, exit
     LDA #$FF           ; if it is, replace with blank space ($FF)
-    STA format_buf-6   ;  and continue on to lower digits
+    STA format_buf+1   ;  and continue on to lower digits
 
 TrimZeros_5Digits:     ; etc
-    LDA format_buf-5
+    LDA format_buf+2
     CMP #$80
     BNE TrimZeros_RTS
     LDA #$FF
-    STA format_buf-5
+    STA format_buf+2
 
 TrimZeros_4Digits:
-    LDA format_buf-4
+    LDA format_buf+3
     CMP #$80
     BNE TrimZeros_RTS
     LDA #$FF
-    STA format_buf-4
+    STA format_buf+3
 
 TrimZeros_3Digits:
-    LDA format_buf-3
+    LDA format_buf+4
     CMP #$80
     BNE TrimZeros_RTS
     LDA #$FF
-    STA format_buf-3
+    STA format_buf+4
 
 TrimZeros_2Digits:
-    LDA format_buf-2
+    LDA format_buf+5
     CMP #$80
     BNE TrimZeros_RTS
     LDA #$FF
-    STA format_buf-2
+    STA format_buf+5
 
 TrimZeros_RTS:
     RTS
@@ -480,7 +480,7 @@ FormatNumber_6Digits:
     BPL @Loop             ; and loop to continue checking until we've checked all 9 digits
 
       LDX #$80                   ;  code reaches here if we went through all 9 digits and there was no match
-      STX format_buf-6           ; This means the number has no 6th digit -- so use the '0' character instead ($80)
+      STX format_buf+1           ; This means the number has no 6th digit -- so use the '0' character instead ($80)
       JMP FormatNumber_5Digits   ; And continue formatting by formatting for 5 digits
 
 @Equal:                   ; if the high byte was equal to the check, we need to compare the middle byte
@@ -510,7 +510,7 @@ FormatNumber_6Digits:
     TXA                   ; lastly, X is our desired digit to print - 1 (ie:  X=0 means we want to print "1")
     CLC                   ;  so move X to A, and add #$81 (digits start at tile $80)
     ADC #$81              ;  and store it to our output buffer
-    STA format_buf-6      ; afterwards, program flow moves seamlessly into the 5-digit format routine
+    STA format_buf+1      ; afterwards, program flow moves seamlessly into the 5-digit format routine
 
 
 FormatNumber_5Digits:         ; Flow in this routine is identical to the flow in
@@ -526,7 +526,7 @@ FormatNumber_5Digits:         ; Flow in this routine is identical to the flow in
     BPL @Loop
  
       LDX #$80
-      STX format_buf-5
+      STX format_buf+2
       JMP FormatNumber_4Digits
 
 @Equal:
@@ -556,7 +556,7 @@ FormatNumber_5Digits:         ; Flow in this routine is identical to the flow in
     TXA
     CLC
     ADC #$81
-    STA format_buf-5
+    STA format_buf+2
 
 
 FormatNumber_4Digits:     ; again... this routine is exactly the same as the above... so see that
@@ -572,7 +572,7 @@ FormatNumber_4Digits:     ; again... this routine is exactly the same as the abo
     BPL @Loop
 
       LDX #$80
-      STX format_buf-4
+      STX format_buf+3
       JMP FormatNumber_3Digits
 
 @Equal:
@@ -591,7 +591,7 @@ FormatNumber_4Digits:     ; again... this routine is exactly the same as the abo
     TXA
     CLC
     ADC #$81
-    STA format_buf-4
+    STA format_buf+3
 
 
 FormatNumber_3Digits:  ; again... more of the same
@@ -607,7 +607,7 @@ FormatNumber_3Digits:  ; again... more of the same
     BPL @Loop
 
       LDX #$80
-      STX format_buf-3
+      STX format_buf+4
       JMP FormatNumber_2Digits
 
 @Equal:
@@ -626,7 +626,7 @@ FormatNumber_3Digits:  ; again... more of the same
     TXA
     CLC
     ADC #$81
-    STA format_buf-3
+    STA format_buf+4
 
 
 FormatNumber_2Digits:   ; 2 digit numbers are done a bit differently... since they are only 1 byte in size
@@ -645,10 +645,10 @@ FormatNumber_2Digits:   ; 2 digit numbers are done a bit differently... since th
 
 @Done:                  ; here, we're done.  A is now the ones and X is the tens
     ORA #$80            ;  so OR with $80 and output the ones digit
-    STA format_buf-1
+    STA format_buf+6
     TXA                 ; then grab X
     ORA #$80            ; OR it with $80
-    STA format_buf-2    ; and output the tens digit
+    STA format_buf+5    ; and output the tens digit
     RTS                 ; and we're done!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2563,17 +2563,17 @@ DrawCharacterName:
     TAX                    ; put char index in X
 
     LDA ch_name, X         ; copy the character name to the format_buf
-    STA format_buf-4
+    STA format_buf+3
     LDA ch_name+1, X
-    STA format_buf-3
+    STA format_buf+4
     LDA ch_name+2, X
-    STA format_buf-2
+    STA format_buf+5
     LDA ch_name+3, X
-    STA format_buf-1
+    STA format_buf+6
 
-    LDA #<(format_buf-4)   ; set text_ptr to point to it
+    LDA #<(format_buf+3)   ; set text_ptr to point to it
     STA text_ptr
-    LDA #>(format_buf-4)
+    LDA #>(format_buf+3)
     STA text_ptr+1
 
     LDA #BANK_THIS         ; set banks required for DrawComplexString
@@ -2613,7 +2613,7 @@ NewGamePartyGeneration:
       BPL :-
       
     LDA #$00        ; This null-terminates the draw buffer for when the character's
-    STA format_buf+0         ;   name is drawn on the name input screen.  Why this is done here
+    STA format_buf+7         ;   name is drawn on the name input screen.  Why this is done here
                     ;   and not with the actual drawing makes no sense to me.
     
     
@@ -3109,13 +3109,13 @@ PtyGen_DrawOneText:
     LDA ptygen_class, X     ; get the selected class
     CLC
     ADC #$F0                ; add $F0 to select the class' "item name"
-    STA format_buf-1        ;  store that as 2nd byte in format string
+    STA format_buf+6        ;  store that as 2nd byte in format string
     LDA #$02                ; first byte in string is $02 -- the control code to
-    STA format_buf-2        ;  print an item name
+    STA format_buf+5        ;  print an item name
 
-    LDA #<(format_buf-2)    ; set the text pointer to point to the start of the 2-byte
+    LDA #<(format_buf+5)    ; set the text pointer to point to the start of the 2-byte
     STA text_ptr            ;  string we just constructed
-    LDA #>(format_buf-2)
+    LDA #>(format_buf+5)
     STA text_ptr+1
 
     LDA #BANK_THIS          ; set cur and ret banks (see DrawComplexString for why)
@@ -3129,22 +3129,22 @@ PtyGen_DrawOneText:
     TAX                     ; and restore our index
 
     LDA ptygen_name, X      ; next, copy over the 4-byte name of the character
-    STA format_buf-4        ;  over to the format buffer
+    STA format_buf+3        ;  over to the format buffer
     LDA ptygen_name+1, X
-    STA format_buf-3
+    STA format_buf+4
     LDA ptygen_name+2, X
-    STA format_buf-2
+    STA format_buf+5
     LDA ptygen_name+3, X
-    STA format_buf-1
+    STA format_buf+6
 
     LDA ptygen_name_x, X    ; set destination coords appropriately
     STA dest_x
     LDA ptygen_name_y, X
     STA dest_y
 
-    LDA #<(format_buf-4)    ; set pointer to start of 4-byte string
+    LDA #<(format_buf+3)    ; set pointer to start of 4-byte string
     STA text_ptr
-    LDA #>(format_buf-4)
+    LDA #>(format_buf+3)
     STA text_ptr+1
 
     LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
