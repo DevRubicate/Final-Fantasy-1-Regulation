@@ -42,8 +42,6 @@ GameStart:
     STA PPUCTRL
     STA PPUMASK
     
-    STA unk_FE                  ; ?? I don't think this is ever used
-    
     LDA #$08                    ; Sprites use pattern table at $1xxx
     STA soft2000
     STA NTsoft2000
@@ -11701,7 +11699,6 @@ BattleBox_vAXY:
 Battle_PPUOff:
     LDA #0
     STA a:soft2000     ; clear soft2000
-    STA a:unk_FE       ; ?? I don't think this is ever used
     STA PPUCTRL          ; disable NMIs
     STA PPUMASK          ; and turn off PPU
     RTS

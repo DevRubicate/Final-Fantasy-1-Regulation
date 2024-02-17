@@ -222,7 +222,7 @@ SECTIONZP "ZEROPAGE"
     RESZP respondrate,                      1 ; 1 bytes      ; $FA
     GAP                                     2
     RESZP NTsoft2000,                       1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
-    RESZP unk_FE,                           1 ; 1 bytes      ; $FE
+    GAP                                     1
     RESZP soft2000,                         0 ; 1 bytes      ; $FF
 
 SECTIONZP "SOUND"
