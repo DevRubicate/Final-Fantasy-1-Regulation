@@ -8163,8 +8163,3 @@ MinimapDecompress:
 
   @Exit:
     RTS
-
-  ; Unused space
-
-  .BYTE  0,0,0,0,  0,0,0,0,  0,0,0,0,  0,0,0,0
-  .BYTE  0,0,0,0,  0,0,0,0,  0,0,0,0,  0,0

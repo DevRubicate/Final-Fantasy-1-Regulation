@@ -14,6 +14,7 @@
 .import TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
+.import Test
 
 .export GameStart
 .export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
@@ -13755,26 +13756,6 @@ BattleRNG:
     
 WaitForVBlank_L: JMP WaitForVBlank
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  SwapPRG  [$FE1A :: 0x3FE2A]
-;;
-;;   Swaps so the desired bank of PRG ROM is visible in the $8000-$BFFF range
-;;
-;;  IN:   A = desired bank to swap to (00-0F)
-;;
-;;  OUT:  A = 0
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SwapPRG_L:  
-SwapPRG:  
-  STA actual_bank ; JIGS - see LongCall 
-  ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
-  ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
-  STA MMC5_PRG_BANK1   ; Swap to the desired page
-  LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
-  RTS    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13839,6 +13820,8 @@ OnReset:
     STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
 
     TXS                     ; transfer it to the Stack Pointer (resetting the SP)
+
+    CALL_BANK1 $0F, Test 
 
     JSR DisableAPU
     JMP GameStart           ; jump to the start of the game!
@@ -14145,80 +14128,100 @@ CallMinimapDecompress:
     LDA #BANK_MINIMAP
     JMP SwapPRG
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  SwapPRG  [$FE1A :: 0x3FE2A]
+;;
+;;   Swaps so the desired bank of PRG ROM is visible in the $8000-$BFFF range
+;;
+;;  IN:   A = desired bank to swap to (00-0F)
+;;
+;;  OUT:  A = 0
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Impl_Call_Bank0:
-;    ; Save A
-;    STA safecall_reg_a
-;    ; Save Y
-;    STY safecall_reg_y
-;
-;    ; Pull then push the stack to find the low address of our caller
-;    PLA
-;    STA TrampolineL
-;    CLC
-;    ADC #3 ; When we return we want to return right after the extra 3 byte data after the JSR instruction
-;
-;    ; Pull then push the stack to find the high address of our caller
-;    PLA
-;    STA TrampolineH
-;    ADC #0 ; If the previous ADC caused a carry we add it here
-;
-;    ; Save back the high address
-;    PHA
-;
-;    ; Save back the low address
-;    LDA TrampolineL
-;    ADC #3
-;    PHA
-;
-;    ; Save what page the bank is currently in
-;    LDA PRG_Bank0_Page
-;    PHA
-;
-;    ; Push this address to the stack so we can return here
-;    JSR +
-;    ; We just got back so time to rewind
-;
-;    ; Save A
-;    STA safecall_reg_a
-;
-;    ; Pull what page our bank used to be in and switch back
-;    PLA
-;    STA PRG_Bank0_Page
-;    STA MMC5_PRG_BANK0
-;
-;    ; Load A
-;    LDA safecall_reg_a
-;
-;    ; Return to orginal caller
-;    RTS
-;
-;    +
-;
-;    ; Read the low address we want to jump to and push it to the stack
-;    LDY #1
-;    LDA (TrampolineL), Y
-;    PHA
-;
-;    ; Read the high address we want to jump to and push it to the stack
-;    INY
-;    LDA (TrampolineL), Y
-;    PHA
-;
-;    ; Read what bank we are going to and switch to it
-;    INY
-;    LDA (TrampolineL), Y
-;    STA PRG_Bank0_Page
-;    STA MMC5_PRG_BANK0
-;
-;
-;    ; Load A
-;    LDA safecall_reg_a
-;    ; Load Y
-;    LDY safecall_reg_y
-;
-;    ; Activate the trampoline
-;    RTS
+SwapPRG:  
+  STA actual_bank ; JIGS - see LongCall 
+  ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
+  ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
+  STA current_bank1
+  STA MMC5_PRG_BANK1   ; Swap to the desired page
+  LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
+  RTS
+
+
+Impl_Call_Bank1:
+    ; Save A
+    STA safecall_reg_a
+    ; Save Y
+    STY safecall_reg_y
+
+    ; Pull then push the stack to find the low address of our caller
+    PLA
+    STA trampoline_low
+    CLC
+    ADC #3 ; When we return we want to return right after the extra 3 byte data after the JSR instruction
+
+    ; Pull then push the stack to find the high address of our caller
+    PLA
+    STA trampoline_high
+    ADC #0 ; If the previous ADC caused a carry we add it here
+
+    ; Save back the high address
+    PHA
+
+    ; Load back the low address
+    LDA trampoline_low
+    ADC #3
+    PHA
+
+    ; Save what page the bank is currently in
+    LDA current_bank1
+    PHA
+
+    ; Push this address to the stack so we can return here
+    JSR @jump
+    ; We just got back so time to rewind
+
+    ; Save A
+    STA safecall_reg_a
+
+    ; Pull what page our bank used to be in and switch back
+    PLA
+    STA current_bank1
+    STA MMC5_PRG_BANK1
+
+    ; Load A
+    LDA safecall_reg_a
+
+    ; Return to orginal caller
+    RTS
+
+    @jump:
+
+    ; Read the low address we want to jump to and push it to the stack
+    LDY #1
+    LDA (trampoline_low), Y
+    PHA
+
+    ; Read the high address we want to jump to and push it to the stack
+    INY
+    LDA (trampoline_low), Y
+    PHA
+
+    ; Read what bank we are going to and switch to it
+    INY
+    LDA (trampoline_low), Y
+    STA current_bank1
+    STA MMC5_PRG_BANK1
+
+    ; Load A
+    LDA safecall_reg_a
+    ; Load Y
+    LDY safecall_reg_y
+
+    ; Activate the trampoline
+    RTS
 
 .segment "VECTORS"
 

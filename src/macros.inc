@@ -26,9 +26,9 @@
 .endmacro
 
 
-.macro CALL_BANK0 _page, _address
-    JSR Impl_Call_Bank0
+.macro CALL_BANK1 _page, _address
+    JSR Impl_Call_Bank1
     .byte >(_address - 1)
     .byte <(_address - 1)
-    .byte (_page | %10000000)
+    .byte ((_page * 2) | %10000000)
 .endmacro

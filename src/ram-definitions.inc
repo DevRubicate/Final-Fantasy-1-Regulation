@@ -217,7 +217,10 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     GAP                                     1
     RESZP enCHRpage,                        1 ; 1 bytes     ; $6B
     RESZP altareffect,                      1 ; 1 bytes     ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
-    GAP                                     15
+    RESZP trampoline_low,                   1
+    RESZP trampoline_high,                  1
+    RESZP current_bank1,                    1
+    GAP                                     12
     RESZP dlgmusic_backup,                  1 ; 1 bytes     ; $7C  ; backup music track for restoring music after the dialogue box changes it
     RESZP dlgsfx,                           1 ; 1 bytes     ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
     RESZP sq2_sfx,                          1 ; 1 bytes     ; $7E

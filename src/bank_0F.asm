@@ -5,5 +5,16 @@
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
+.export Test
+
 BANK_THIS = $0F
 
+NOP
+NOP
+NOP
+
+
+Test:
+
+
+    RTS
