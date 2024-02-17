@@ -737,6 +737,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             eobbox_textid,                      1 ; $6AA7
     RES             tmp_6aa8,                           1 ; $6AA8
     RES             btl_animatingchar,                  1 ; $6AA9     ; the character currently being animated (0-3)
+    RES             tmp_6aaa,                           0 ; $6AAA
     RES             btlcurs,                            0 ; $6AAA
     RES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
     RES             btlcurs_max,                        0 ; $6AAB     ; highest value for the cursor
@@ -767,7 +768,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btltmp_targetlist,                  9 ; $6AEF     ; temporary buffer (9 entries) containing possible targets
     RES             tmp_6af8,                           0 ; $6AF8
     RES             btl_combatboxcount,                 1 ; $6AF8     ; the number of combat boxes that have been drawn
-    GAP                                                 1
+    RES             tmp_6af9,                           1 ; $6AF9
     RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
     RES             btl_unfmtcbtbox_buffer,             128 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
     RES             btlcmd_curchar,                     1 ; $6B7A     ; the current character inputting battle commands (0-3)
@@ -819,7 +820,10 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             temp_6c92,                          0 ; $6C92
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
-    RES             btltmp_attr,                        64 ; $6C94     ; $40 bytes of attribute data for the battle setup
+    RES             btltmp_attr,                        0 ; $6C94     ; $40 bytes of attribute data for the battle setup
+    GAP                                                 7
+    RES             tmp_6c9c,                           0 ; $6C9C
+    GAP                                                 57
     RES             btl_stringoutputbuf,                1 ; $6CD4 ; output buffer where decoded strings are printed
     GAP                                                 63
     RES             loop_counter,                       0 ; $6D14; action buffer?  $20 bytes?  contents for combat boxes are placed here?

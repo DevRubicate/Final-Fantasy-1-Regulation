@@ -1324,7 +1324,7 @@ Music_NewSong:
       STA PAPU_CTL1           ;  silence the squares and noise... and will eventually silence
       STA PAPU_CTL2           ;  triangle (next linear counter clock).  
       STA PAPU_TCR1
-      STA $400C
+      STA PAPU_NCTL1
 
   @PrimeChannel:
     LDA music_track       ; get the music track to play

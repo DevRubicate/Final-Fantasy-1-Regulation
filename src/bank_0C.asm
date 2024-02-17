@@ -1625,7 +1625,7 @@ PrepAndGetBattleMainCommand:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SelectPlayerTarget:
-    STA $6AF9                   ; backup the current character
+    STA tmp_6af9                   ; backup the current character
     
     LDY #$10                    ; Set the cursor positions
     : LDA lut_PlayerTargetCursorPos-1, Y
@@ -1670,7 +1670,7 @@ SelectPlayerTarget:
   @PushCurChar:
     LDA #16                 ; current char gets pushed left 16 pixels
     STA tmp_68b4
-    LDA $6AF9               ; Get the current char from backup (why doesn't it just use btlcmd_curchar?)
+    LDA tmp_6af9               ; Get the current char from backup (why doesn't it just use btlcmd_curchar?)
     
   @PushLeft:
     STA tmp_68b3               ; increment the character index.  WHY?!?! This doesn't make any sense and
@@ -3088,7 +3088,7 @@ lut_CharacterOAMOffset:
 FlashCharacterSprite:
     TAY
     LDA lut_CharacterOAMOffset, Y   ; get character's OAM offset
-    STA $6AAA                       ; back it up
+    STA tmp_6aaa                       ; back it up
     
     TAX                 ; X = OAM offset as source index
     LDY #$00            ; Y = loop counter and dest index 
@@ -3103,7 +3103,7 @@ FlashCharacterSprite:
     STA tmp_6bad           ; Main Loop counter
     
   @MainLoop:
-    LDX $6AAA           ; X = OAM offset
+    LDX tmp_6aaa           ; X = OAM offset
     LDY #$00            ; Y = inner loop counter
     
     LDA tmp_6bad

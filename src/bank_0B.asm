@@ -1829,7 +1829,6 @@ ChaosDeath_FadeNoise:
     LDA chaosdeath_screamcounter
     STA PAPU_NCTL1           ; write it to noise volume control
     LDA #$FF
-    STA $400D           ; (no effect)
     STA PAPU_NFREQ2     ; set length counter (make noise audible)
     LDA #$0F
     STA PAPU_NFREQ1     ; set tone -- lowest possible frequency resulting in a very low rumble.
@@ -2830,7 +2829,7 @@ DrawFormation_9Small:
     
     LDA #$00
     STA btltmp+2            ; default to use graphic 0
-    LDA $6BC0, Y            ; but check the high byte of the assigned graphic for this enemy
+    LDA btl_enemygfxplt, Y            ; but check the high byte of the assigned graphic for this enemy
     BPL :+                  ; if set...
       INC btltmp+2          ;    use graphic 1 instead
       
@@ -3115,8 +3114,8 @@ DrawFormation_Mix:
       LDA @lut_SmallEn_AtOffset, X
       TAX
       PLA
-      ORA $6C9C, X
-      STA $6C9C, X
+      ORA tmp_6c9c, X
+      STA tmp_6c9c, X
     
   @NextSmallEnemy:
       INC temp_6c92       ; increment actual index

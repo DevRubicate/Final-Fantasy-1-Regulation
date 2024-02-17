@@ -5428,8 +5428,8 @@ ScreenWipe_Close:
 ScreenWipe_Finalize:
     STA PPUMASK          ; turn on/off the PPU (Close turns it off, Open turns it on)
     LDA #0
-    STA $4002          ; then silence the Sq1 sound effect by setting its F-value to zero
-    STA $4003
+    STA PAPU_FT1          ; then silence the Sq1 sound effect by setting its F-value to zero
+    STA PAPU_CT1
 
     RTS                ; and exit
 
@@ -5550,10 +5550,10 @@ ScreenWipeFrame:
      ASL A              ;  as they only set the length counter).
      ROL tmp
      ASL A
-     STA $4002          ; then write that period to sq1's F value
+     STA PAPU_FT1          ; then write that period to sq1's F value
      ROL tmp
      LDA tmp
-     STA $4003          ; output F value is -N * 8 where 'N' is the visible scanlines
+     STA PAPU_CT1          ; output F value is -N * 8 where 'N' is the visible scanlines
 
   @Exit:
     RTS
