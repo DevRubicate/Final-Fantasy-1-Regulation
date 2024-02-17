@@ -3058,10 +3058,10 @@ RespondDelay_ClearCombatBoxes:
 
 RespondDelay:
     LDA btl_responddelay        ; get the delay
-    STA $6AD0                   ; stuff it in temp ram as loop counter
+    STA tmp_6ad0                   ; stuff it in temp ram as loop counter
     : JSR WaitForVBlank       ; wait that many frames
       JSR BattleUpdateAudio     ; updating audio each frame
-      DEC $6AD0
+      DEC tmp_6ad0
       BNE :-
     RTS
     
@@ -3093,7 +3093,7 @@ FlashCharacterSprite:
     TAX                 ; X = OAM offset as source index
     LDY #$00            ; Y = loop counter and dest index 
     : LDA oam, X
-      STA $6AAC, Y      ; copy all this character's sprite data to temp mem buffer
+      STA tmp_6aac, Y      ; copy all this character's sprite data to temp mem buffer
       INX
       INY
       CPY #6*4          ; 6 sprites * 4 bytes per sprite
@@ -3120,7 +3120,7 @@ FlashCharacterSprite:
     BEQ @NextIteration  ; (always branches)
   
   @ShowSpriteLoop:
-      LDA $6AAC, Y      ; show sprite by restoring original sprite data
+      LDA tmp_6aac, Y      ; show sprite by restoring original sprite data
       STA oam, X
       INX
       INY
@@ -5859,13 +5859,11 @@ DoDivision:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RandAX:
-    STA $68AF       ; 68AF is the 'lo' value
+    STA temporary_2       ; 68AF is the 'lo' value
     INX
-    STX $68B0       ; 68B0 is hi+1.  But this STX is totally unnecessary because this value is never used
-    
     TXA
     SEC
-    SBC $68AF       ; subtract to get the range.
+    SBC temporary_2       ; subtract to get the range.
     STA tmp68b6       ; 68B6 = range
     
     JSR BattleRNG
@@ -5874,7 +5872,7 @@ RandAX:
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
     CLC
-    ADC $68AF       ; + lo
+    ADC temporary_2       ; + lo
     
     RTS
     
@@ -6396,11 +6394,11 @@ DrawCombatBox_Attack:
     
     
   @Print:
-    STA $6D25                       ; write item ID
+    STA tmp_6d25                      ; write item ID
     LDA #$0E
-    STA $6D24                       ; preface it with 0E, the command to draw an attack (item) name
-    LDX #<$6D24
-    LDY #>$6D24                     ; get pointer to that string in YX
+    STA tmp_6d24                       ; preface it with 0E, the command to draw an attack (item) name
+    LDX #<tmp_6d24
+    LDY #>tmp_6d24                     ; get pointer to that string in YX
     
     INC btl_combatboxcount_alt      ; inc the combat box counter
     
@@ -6460,13 +6458,13 @@ DrawDamageCombatBox:
     LDY #$00
   @Loop:
       LDA @Data, Y      ; copy unformatted text to output buffer
-      STA $6D1C, Y
+      STA tmp_6d1c, Y
       INY
       DEX
       BNE @Loop
       
-    LDX #<$6D1C                     ; YX is a a pointer to our text buffer in RAM
-    LDY #>$6D1C
+    LDX #<tmp_6d1c                     ; YX is a a pointer to our text buffer in RAM
+    LDY #>tmp_6d1c
     INC btl_combatboxcount_alt      ; increment combat box counter
     LDA #$03                        ; combat box ID 3
     JMP DrawCombatBox_RestoreAXY    ; Draw the combat box and exit
@@ -6596,12 +6594,15 @@ BtlMag_PrintMagicMessage:
     BEQ @DelayAndExit               ; if 0, don't print anything.  Instead, just delay and exit
     
   @PrintMessage:
-    STA $6D19+1                     ; store ID of message to print
+    STA tmp_6d1a                     ; store ID of message to print
     LDA #$0F                        ; 0F = code to indicate we want to print a battle message.
-    STA $6D19                       ; It's assumed $6D19+2 was already zero'd for the terminator.
-    
-    LDX #<$6D19
-    LDY #>$6D19                     ; YA is pointer to the text to print
+    STA tmp_6d19
+    LDA #0
+    STA tmp_6d1b                    ; terminator
+
+
+    LDX #<tmp_6d19
+    LDY #>tmp_6d19                     ; YA is pointer to the text to print
     LDA #$04                        ; combat box 4 (battle message box)
     JSR DrawCombatBox             ; Draw it!
     
@@ -8929,7 +8930,7 @@ BtlMag_HandleAilmentChanges:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 GetEnemyStatPtr:
-    STY $6C87               ; back-up Y
+    STY tmp_6c87               ; back-up Y
     LDX #$14                ; multiply enemy index by $14  (number of bytes per enemy)
     JSR MultiplyXA
     
@@ -8941,7 +8942,7 @@ GetEnemyStatPtr:
     TAX
     PLA
     
-    LDY $6C87               ; restore Y
+    LDY tmp_6c87               ; restore Y
     RTS
 
 
@@ -8987,7 +8988,7 @@ RebuildEnemyRoster:
     
   @FillLoop:
       JSR ShouldAddEnemyToRoster    ; should we add this enemy to the roster?
-      LDA $6DB1
+      LDA tmp_6bd1
       BEQ :+                        ; if yes...
         LDA btl_enemyIDs, X         ; put the enemy in the roster
         STA btl_enemyroster, Y
@@ -9019,14 +9020,14 @@ DoesEnemyXExist:
 ;;  ShouldAddEnemyToRoster  [$BBCC :: 0x33BDC]
 ;;
 ;;  input:       X = enemy slot index
-;;  output:  $6DB1 = 0 if enemy should not be added to the roster
+;;  output:  tmp_6bd1 = 0 if enemy should not be added to the roster
 ;;                   1 if enemy should be added
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShouldAddEnemyToRoster:
     LDA #$00                ; clear output by default
-    STA $6DB1
+    STA tmp_6bd1
     
     TXA                     ; backup X,Y
     PHA
@@ -9046,7 +9047,7 @@ ShouldAddEnemyToRoster:
     
     ; If the enemy did not exist in the roster, then we should add it! 
     ;  set our output to 1, then exit
-    INC $6DB1
+    INC tmp_6bd1
     
   @Exit:
     PLA
@@ -9846,12 +9847,12 @@ UpdateBattleSFX_Noise:
       STA btlsfxnse_framectr    ; byte [2] if the frame length of this portion
       LDY #$00
       LDA (btlsfxnse_ptr), Y
-      STA $400C                 ; byte [0] is the volume setting
+      STA PAPU_NCTL1                 ; byte [0] is the volume setting
       INY
       LDA (btlsfxnse_ptr), Y
-      STA $400E                 ; byte [1] is the Freq/tone of the noise
+      STA PAPU_NFREQ1                 ; byte [1] is the Freq/tone of the noise
       LDA #$FF
-      STA $400F                 ; fixed value of FF used for length counter (keep noise playing for a long time)
+      STA PAPU_NFREQ2                 ; fixed value of FF used for length counter (keep noise playing for a long time)
       
       CLC                       ; add 8 to the noise pointer (even though we only used 3 bytes of data)
       LDA btlsfxnse_ptr         ;   (the other 5 bytes are the square sfx data?)

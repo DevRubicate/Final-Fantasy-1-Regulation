@@ -742,6 +742,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             btlcurs_x,                          1 ; $6AAA     ; battle cursor X position (menu position, not pixel position)
     RES             btlcurs_max,                        0 ; $6AAB     ; highest value for the cursor
     RES             btlcurs_y,                          1 ; $6AAB     ; battle cursor Y position (menu position, not pixel position)
+    RES             tmp_6aac,                           0 ; $6AAC
     RES             levelup_statupbuffer,               0 ; $6AAC     ; 5 bytes indicating which stats have been increased
     RES             btlcurs_positions,                  1 ; $6AAC     ; ?? bytes, 2 bytes per entry, each entry is the pixel coord of where the cursor should be drawn when its item is selected.
     GAP                                                 35
@@ -834,8 +835,15 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             explode_max_x,                      1 ; $6D16
     RES             explode_max_y,                      1 ; $6D17
     RES             explode_count,                      1 ; $6D18
+    RES             tmp_6d19,                           0 ; $6D19
     RES             btltmp_altmsgbuffer,                1 ; $6D19
-    GAP                                                 18
+    RES             tmp_6d1a,                           1 ; $6D1A
+    RES             tmp_6d1b,                           1 ; $6D1B
+    RES             tmp_6d1c,                           1 ; $6D1C
+    GAP                                                 7
+    RES             tmp_6d24,                           1 ; $CD24
+    RES             tmp_6d25,                           1 ; $CD25
+    GAP                                                 15
     RES             btltmp_attackerbuffer,              1 ; $6D2C
     GAP                                                 7
     RES             btl_palettes,                       32 ; $6D34   ; $20 bytes
@@ -858,7 +866,8 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 15
     RES             btlmag_playerhitsfx,                1 ; $6DA7     ; sound effect to play when magic hits player
     GAP                                                 8
-    RES             btltmp_smallslotpos,                1 ; $6DB0
+    RES             btltmp_smallslotpos,                1
+
 
 SECTION "MAPOBJ" ; $6F00 - $6F0E
     GAP                                                 3840
