@@ -5,12 +5,12 @@
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
-.export data_EnemyNames, PrepBattleVarsAndEnterBattle_L, lut_BattleRates, lut_BattleFormations, data_BattleMessages
-.export BattleOver_ProcessResult_L
+.export data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, lut_BattleFormations, data_BattleMessages
+.export BattleOver_ProcessResult
 .export data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
-.import Battle_ReadPPUData_L, Battle_WritePPUData_L, CallMusicPlay_L, WaitForVBlank_L, UndrawNBattleBlocks_L
-.import DrawCombatBox_L, BattleRNG_L, BattleCrossPageJump_L, BankC_CrossBankJumpList
+.import Battle_ReadPPUData, Battle_WritePPUData, CallMusicPlay, WaitForVBlank, UndrawNBattleBlocks
+.import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList
 
 BANK_THIS = $0B
 
@@ -237,7 +237,7 @@ DoCrossPageJump:
     ADC #>BankC_CrossBankJumpList
     STA btltmp+7
     LDA #$0C
-    JMP BattleCrossPageJump_L
+    JMP BattleCrossPageJump
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -600,7 +600,7 @@ ExitBattle:
     PLA                         ; current return address is to BattleLogicLoop in bank C
     PLA                         ; drop that -- new return address is to whatever called EnterBattle.
     LDA #$00                    ;   That is... when this routine exits, it will return to whoever called EnterBattle
-    JMP DoCrossPageJump         ; jump to ExitBattle_L in bank C
+    JMP DoCrossPageJump         ; jump to ExitBattle in bank C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -625,7 +625,7 @@ GameOver:
     JSR WaitForAnyInput                     ; wait for user to press any button
     JSR RespondDelay_UndrawAllCombatBoxes   ; then undraw "Party Perished" box
     LDA #$03                    ; Fade out, and restart the game
-    JMP DoCrossPageJump         ; jump to BattleFadeOutAndRestartGame_L
+    JMP DoCrossPageJump         ; jump to BattleFadeOutAndRestartGame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1012,7 +1012,7 @@ LvlUp_LevelUp:
       BNE @ApplyStatBonus       ;   (always branch)
     
     @StatUpRandomChance:        ; stat byte was clear
-      JSR BattleRNG_L           ; get a random number
+      JSR BattleRNG           ; get a random number
       AND #$03
       BEQ @IncreaseStat         ; 25% chance of increase
       LDA #$00                  ; otherwise, no increase (or rather, increase by 0)
@@ -1113,13 +1113,13 @@ LvlUp_LevelUp:
       LDA #$04
       LDX #<@displaybuffer
       LDY #>@displaybuffer
-      JSR DrawCombatBox_L           ; draw this string in combat box 4
+      JSR DrawCombatBox           ; draw this string in combat box 4
       
       JSR RespondDelay              ; wait a bit for them to read it
       JSR WaitForAnyInput           ; wait a bit more for the user to press something
       
       LDA #$01
-      JSR UndrawNBattleBlocks_L     ; then undraw the box we just drew
+      JSR UndrawNBattleBlocks     ; then undraw the box we just drew
       
   @DisplayLoop_Next:
     INC @displaymsgcode             ; inc msg code to refer to next stat name
@@ -1557,7 +1557,7 @@ RandAX:
     SBC $68AF       ; subtract to get the range.
     STA $68B6       ; 68B6 = range
     
-    JSR BattleRNG_L
+    JSR BattleRNG
     LDX $68B6
     JSR MultiplyXA  ; random()*range
     
@@ -1595,7 +1595,7 @@ DrawEOBCombatBox:
     TAY
     
     LDA $68B3               ; restore combo box ID in A
-    JSR DrawCombatBox_L     ; A = box ID, YX = pointer to string
+    JSR DrawCombatBox     ; A = box ID, YX = pointer to string
     
     INC btl_combatboxcount  ; count this combat box
     RTS                     ; and exit!
@@ -1611,7 +1611,7 @@ DrawEOBCombatBox:
 RespondDelay_UndrawAllCombatBoxes:
     JSR RespondDelay                ; this is all self explanitory...
     LDA btl_combatboxcount
-    JSR UndrawNBattleBlocks_L
+    JSR UndrawNBattleBlocks
     LDA #$00
     STA btl_combatboxcount
     RTS
@@ -1630,7 +1630,7 @@ RespondDelay:
     LDA btl_responddelay
     STA $6AD0               ; loop counter
   @Loop:
-      JSR WaitForVBlank_L   ; Do a frame
+      JSR WaitForVBlank   ; Do a frame
       JSR MusicPlay         ; update music
       DEC $6AD0             ; repeat for desired number of frames
       BNE @Loop
@@ -1649,7 +1649,7 @@ RespondDelay:
 WaitForAnyInput:
     JSR GetJoyInput         ; get input
     PHA                     ; back it up
-    JSR WaitForVBlank_L     ; wait a frame
+    JSR WaitForVBlank     ; wait a frame
     JSR MusicPlay           ; do music for that frame
     PLA                     ; get input
     BEQ WaitForAnyInput     ; keep looping if no buttons pressed
@@ -1673,7 +1673,7 @@ MusicPlay:
       LDA btl_followupmusic ;   ... load followup music
       STA a:music_track     ;   and play it   (not sure why this is necessary)
       
-  : JMP CallMusicPlay_L 
+  : JMP CallMusicPlay 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1695,7 +1695,7 @@ Battle_FlipAllChars:
   @Loop:
       JSR Battle_FlipCharSprite ; flip this character sprite
       
-      JSR WaitForVBlank_L       ; wait for a frame
+      JSR WaitForVBlank       ; wait for a frame
       LDA #>oam                 ;  so we can update OAM
       STA OAMDMA
       JSR MusicPlay             ; update music (since we waited a frame)
@@ -1859,7 +1859,7 @@ ChaosDeath:
     LDA #110
     STA $68B3           ;   loop down counter
   @WaitLoop:                ; wait for 110 frames (wait for the fanfare music to get 
-      JSR WaitForVBlank_L   ;   through the main jingle part)
+      JSR WaitForVBlank   ;   through the main jingle part)
       JSR MusicPlay
       DEC $68B3
       BNE @WaitLoop
@@ -1888,7 +1888,7 @@ ChaosDeath:
 
     LDY #$00                    ; Fill @tilerowtbl with randomness
   @TableFillLoop:
-      JSR BattleRNG_L
+      JSR BattleRNG
       STA @tilerowtbl, Y
       INY
       BNE @TableFillLoop
@@ -1945,7 +1945,7 @@ ChaosDeath:
         ADC #$00
         STA @ppuaddr+1
         
-        JSR WaitForVBlank_L         ; Wait for VBlank
+        JSR WaitForVBlank         ; Wait for VBlank
         
         LDA #$00
         JSR @SetPpuAddr         ; set ppu addr to low bitplane
@@ -1988,7 +1988,7 @@ ChaosDeath:
     LDA #120
     STA $9E                 ; 120 frames = 2 seconds
   @Wait2SecondLoop:
-      JSR WaitForVBlank_L
+      JSR WaitForVBlank
       LDA #$00
       : SEC                 ; small inner loop to burn cycles so that we don't call WaitForVBlank
         SBC #$01            ; immediately at the start of VBlank (even though that shouldn't be
@@ -2357,7 +2357,7 @@ PrepareEnemyFormation_Fiend:
   @RowLoop:
       LDA #$08
       STA btltmp+8              ; copy 8 bytes
-      JSR Battle_WritePPUData_L ; Do the PPU writing with the given params
+      JSR Battle_WritePPUData ; Do the PPU writing with the given params
       
       CLC
       LDA btltmp+4              ; add 8 to the source pointer to point to next row of tiles
@@ -2461,7 +2461,7 @@ PrepareEnemyFormation_Chaos:
       LDA #$0E
       STA btltmp+8              ; draw $0E tiles
       
-      JSR Battle_WritePPUData_L ; do the actual drawing for this row
+      JSR Battle_WritePPUData ; do the actual drawing for this row
       
       CLC                   ; add $0E to source pointer to point to next row
       LDA btltmp+4
@@ -3278,7 +3278,7 @@ ReadAttributesFromPPU:
     LDA #$40                ; read $40 bytes
     STA btltmp+8
     
-    JMP Battle_ReadPPUData_L    ; do the reading, and exit
+    JMP Battle_ReadPPUData    ; do the reading, and exit
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3307,7 +3307,7 @@ WriteAttributesToPPU:
     LDA #BANK_THIS          ; from this bank (although it's actually from RAM, so this
     STA btltmp+9            ;   isn't strictly necessary)
     
-    JSR Battle_WritePPUData_L   ; actually do the write, then exit
+    JSR Battle_WritePPUData   ; actually do the write, then exit
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3329,7 +3329,7 @@ DrawSmallEnemy:
     PHA
     TXA
     PHA                 ; backup A and X
-    JSR WaitForVBlank_L ; wait for VBlank
+    JSR WaitForVBlank ; wait for VBlank
     
     ; See which enemy graphic this tile is using.
     ;   Small enemy graphics start at tiles $12 and $22
@@ -3417,7 +3417,7 @@ DrawLargeEnemy:
     PHA
     TXA
     PHA
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     LDX #$32                ; image 0 starts at tile $32
     LDA btltmp+2
     BEQ :+

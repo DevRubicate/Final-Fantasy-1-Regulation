@@ -7,46 +7,25 @@
 
 .import MinimapDecompress
 .import EnterMinimap
-.import data_EnemyNames, PrepBattleVarsAndEnterBattle_L, lut_BattleRates, lut_BattleFormations, data_BattleMessages
+.import data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, lut_BattleFormations, data_BattleMessages
 .import lut_BattlePalettes
-.import EnterEndingScene, MusicPlay_L, EnterMiniGame, EnterBridgeScene_L, __Nasir_CRC_High_Byte
+.import EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .import PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .import TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
-.export GameStart_L
+.export GameStart
 .export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
 .export ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
-.export DrawBox_L, UpdateJoy_L, DrawPalette_L, CallMusicPlay_L, DrawComplexString_L
+.export DrawBox, UpdateJoy, DrawPalette, CallMusicPlay, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
-.export DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
-.export lut_RNG, SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L
-.export BattleWaitForVBlank_L, Battle_WritePPUData_L, Battle_ReadPPUData_L, CallMinimapDecompress
-.export DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
-.export BattleCrossPageJump_L, ClearBattleMessageBuffer_L
-
-;;;;
-;;
-;;  [$C000 :: 0x3C010]
-;;
-;;  This is a jump table of sorts.  Best I can figure is that the assembler the original developers used assembled
-;;    each bank seperately, and didn't have an advanced linker.  So instead of JMPing to arbitrary addresses that
-;;    could change as routines get moved around and stuff, other banks JSR to these routines which are at fixed,
-;;    easy to remember addresses -- and then these addresses just JMP to the proper routine.
-;;
-;;  With ca65 and more modern assemblers, this isn't necessary at all.  You can just JSR to the real routines directly
-;;    instead of these '_L' routines and save yourself 3 cycles.
-;;
-;;;;
-
-GameStart_L:          JMP GameStart
-DrawComplexString_L:  JMP DrawComplexString
-DrawBox_L:            JMP DrawBox
-CallMusicPlay_L:      JMP CallMusicPlay
-UpdateJoy_L:          JMP UpdateJoy
-DrawPalette_L:        JMP DrawPalette
+.export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
+.export lut_RNG, SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox, BattleRNG
+.export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData, CallMinimapDecompress
+.export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
+.export BattleCrossPageJump, ClearBattleMessageBuffer
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -78,7 +57,7 @@ GameStart:
     ;; Load some startup info
     
     LDA #BANK_STARTUPINFO       ; swap in bank containing some LUTs
-    JSR SwapPRG_L
+    JSR SwapPRG
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram
     : LDA lut_InitGameFlags, X      ; game flags page loaded from this table
@@ -115,12 +94,12 @@ GameStart:
       STA startintrocheck           ; This is how the game makes the distinction between cold boot and warm reset
       
       LDA #BANK_INTRO               ; If we just came in from a cold boot...
-      JSR SwapPRG_L                 ; swap in the intro story bank
+      JSR SwapPRG                 ; swap in the intro story bank
       JSR EnterIntroStory           ; And do the intro story!
       
       
   : LDA #BANK_TITLE                 ; Then swap in the title bank
-    JSR SwapPRG_L                   ; to do the title screen
+    JSR SwapPRG                   ; to do the title screen
     JSR EnterTitleScreen
     
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option
@@ -147,7 +126,7 @@ GameStart:
     
   @NewGame:
     LDA #BANK_PARTYGEN              ; swap in party generation bank
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR NewGamePartyGeneration      ; create a new party
     JSR NewGame_LoadStartingStats   ;   and set their starting stats
 
@@ -200,7 +179,7 @@ EnterOverworldLoop:
    ;;
 
   @Loop:  
-    JSR WaitForVBlank_L        ; wait for VBlank
+    JSR WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do sprite DMA
     STA OAMDMA
 
@@ -288,8 +267,8 @@ DoOWTransitions:
 
       JSR LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
       LDA #BANK_BRIDGESCENE
-      JSR SwapPRG_L          ; swap to bank containing bridge scene
-      JSR EnterBridgeScene_L ; do the bridge scene.
+      JSR SwapPRG          ; swap to bank containing bridge scene
+      JSR EnterBridgeScene ; do the bridge scene.
 
       LDA #$04
       JSR CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
@@ -304,7 +283,7 @@ DoOWTransitions:
       JSR CyclePalettes   ; cycle out the palette
 
       LDA #BANK_MENUS
-      JSR SwapPRG_L       ; swap to bank containing shops
+      JSR SwapPRG       ; swap to bank containing shops
       JSR EnterShop       ; and enter the shop!
       JMP EnterOW_PalCyc  ; then re-enter overworld
 
@@ -328,7 +307,7 @@ DoOWTransitions:
       JSR CyclePalettes   ; cycle out the palette
 
       LDA #BANK_MENUS
-      JSR SwapPRG_L       ; swap to bank containing menus
+      JSR SwapPRG       ; swap to bank containing menus
       JSR EnterMainMenu   ; and enter the main menu
       JMP EnterOW_PalCyc  ; then re-enter the overworld
 
@@ -346,13 +325,13 @@ DoOWTransitions:
 
       @Minimap:
         LDA #BANK_MINIMAP
-        JSR SwapPRG_L        ; swap to bank containing the minimap
+        JSR SwapPRG        ; swap to bank containing the minimap
         JSR EnterMinimap     ; do the minimap
         JMP EnterOW_PalCyc   ; then re-enter overworld
 
       @Lineup:
         LDA #BANK_MENUS
-        JSR SwapPRG_L        ; swap to bank containing menus
+        JSR SwapPRG        ; swap to bank containing menus
         JSR EnterLineupMenu  ; enter the lineup menu
         JMP EnterOW_PalCyc   ; then re-enter overworld
 
@@ -372,7 +351,7 @@ DoOWTransitions:
     JSR LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
 
     LDA btlformation
-    JSR EnterBattle_L      ; start the battle!
+    JSR EnterBattle      ; start the battle!
     JMP EnterOW_PalCyc     ; then re-enter overworld
 
 
@@ -381,7 +360,7 @@ DoOWTransitions:
     JSR ScreenWipe_Close    ; wipe the screen closed
 
     LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport data
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA tileprop+1          ; get the teleport ID
     AND #$3F                ;  remove the teleport/battle bits, leaving just the teleport ID
@@ -520,7 +499,7 @@ ProcessOWInput:
     JSR CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
     JSR LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
     LDA #BANK_MINIGAME
-    JSR SwapPRG_L        ; swap to bank containing minigame
+    JSR SwapPRG        ; swap to bank containing minigame
     JSR EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
       JSR MinigameReward ;  ... give them their reward
@@ -635,7 +614,7 @@ ProcessOWInput:
 
 LoadOWTilesetData:
     LDA #BANK_OWINFO
-    JSR SwapPRG_L       ; swap to bank containing OW tileset data
+    JSR SwapPRG       ; swap to bank containing OW tileset data
 
     LDA #0              ; set low bytes of
     STA tmp             ;  source pointer
@@ -1015,11 +994,6 @@ ClearZeroPage:
 
     RTS
 
-
- ;; Unused
-
-.BYTE $EA, $EA, $EA, $EA, $EA
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Disable APU  [$C469 :: 0x3C479]
@@ -1279,7 +1253,7 @@ GetBattleFormation:
                          ; (tmp) now points to lut_Domains+(domain*8)
 
     LDA #BANK_DOMAINS
-    JSR SwapPRG_L        ; swap to bank containing domain information
+    JSR SwapPRG        ; swap to bank containing domain information
 
     INC battlecounter    ; increment the battle counter
     LDX battlecounter    ; and put it in X
@@ -1597,16 +1571,16 @@ IsOnCanal:
 
 CallMusicPlay_NoSwap:
     LDA #BANK_MUSIC     ; swap to music bank (where MusicPlay is)
-    JSR SwapPRG_L
-    JMP MusicPlay_L     ; jump to it, and return (do not swap back)
+    JSR SwapPRG
+    JMP MusicPlay     ; jump to it, and return (do not swap back)
 
 
 CallMusicPlay:
     LDA #BANK_MUSIC     ; swap to music bank (for MusicPlay)
-    JSR SwapPRG_L
-    JSR MusicPlay_L     ; call MusicPlay
+    JSR SwapPRG
+    JSR MusicPlay     ; call MusicPlay
     LDA cur_bank        ; then swap back to previously supplied bank
-    JMP SwapPRG_L       ;   before returning
+    JMP SwapPRG       ;   before returning
 
 
 
@@ -1748,7 +1722,7 @@ PrepOverworld:
     STA NTsoft2000       ; record this as our soft2000
     STA soft2000
 
-    JSR WaitForVBlank_L       ; wait for a VBlank
+    JSR WaitForVBlank       ; wait for a VBlank
     JSR DrawMapPalette        ; before drawing the palette
     JSR SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
     LDA #0                    ;  .. but then immediately turn PPU off!
@@ -1759,7 +1733,7 @@ PrepOverworld:
     STA music_track           ;   to get the proper music track -- and play it
 
     LDA #BANK_BTLDATA     ; swap to battle rate bank and get the battle rate for the overworld
-    JSR SwapPRG_L         ;  (first entry in the table).  And record it to 'battlerate'.
+    JSR SwapPRG         ;  (first entry in the table).  And record it to 'battlerate'.
     LDA lut_BattleRates   ; However, this value goes unused because the battle rate for overworld
     STA battlerate        ; is hardcoded... so this is effectively useless for OW (it's used for SM, though).
 
@@ -1801,7 +1775,7 @@ EnterOW_PalCyc:
 
 NewGame_LoadStartingStats:
     LDA #BANK_STARTINGSTATS ; swap in bank containing starting stats
-    JSR SwapPRG_L
+    JSR SwapPRG
     
     LDX #$00                ; load up the starting stats for each character
     JSR @LoadStats
@@ -2111,7 +2085,7 @@ DoStandardMap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StandardMapLoop:
-    JSR WaitForVBlank_L        ; wait for VBlank
+    JSR WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do Sprite DMA
     STA OAMDMA
     JSR StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
@@ -2164,7 +2138,7 @@ StandardMapLoop:
     JSR CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
 
     LDA #BANK_MENUS         ; swap to menu bank
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR EnterShop           ; enter the shop
     JSR ReenterStandardMap  ;  then reenter the map
     JMP StandardMapLoop     ;  and continue looping
@@ -2186,13 +2160,13 @@ StandardMapLoop:
 
     JSR LoadBattleCHRPal    ; Load CHR and palettes for the battle
     LDA btlformation
-    JSR EnterBattle_L       ; start the battle!
+    JSR EnterBattle       ; start the battle!
     BCC :+                  ;  see if this battle was the end game battle
 
     @VictoryLoop:
       JSR LoadEpilogueSceneGFX
       LDA #BANK_ENDINGSCENE
-      JSR SwapPRG_L
+      JSR SwapPRG
       JSR EnterEndingScene
       JMP @VictoryLoop
 
@@ -2223,7 +2197,7 @@ StandardMapLoop:
 
     JSR ScreenWipe_Close    ; wipe the screen closed
     LDA #BANK_TELEPORTINFO  ; swap to the bank containing teleport info
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
 
@@ -2269,7 +2243,7 @@ StandardMapLoop:
 
     JSR ScreenWipe_Close    ; wipe the screen closed
     LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport dataa
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDX tileprop+1          ; get the teleport ID in X
     LDA lut_ExitTele_X, X   ;  get X coord
@@ -2308,7 +2282,7 @@ ProcessSMInput:
       STA dlgsfx             ;  and a few dialogue flags
       STA dlgflg_reentermap
 
-      JSR WaitForVBlank_L      ; wait for VBlank and keep music playing
+      JSR WaitForVBlank      ; wait for VBlank and keep music playing
       JSR CallMusicPlay_NoSwap ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
 
       LDA facing               ; use the direction the player is facing
@@ -2330,7 +2304,7 @@ ProcessSMInput:
         STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
 
         LDA #BANK_TALKTOOBJ ; swap to bank containing TalkToObject routine
-        JSR SwapPRG_L
+        JSR SwapPRG
         JSR TalkToObject    ; then talk to this object.
         JMP @DialogueBox
 
@@ -2346,7 +2320,7 @@ ProcessSMInput:
     @DialogueBox:
       JSR DrawDialogueBox     ; draw the dialogue box and containing text
 
-      JSR WaitForVBlank_L       ; wait a frame
+      JSR WaitForVBlank       ; wait a frame
       LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
       STA OAMDMA
       JSR SetSMScroll
@@ -2384,7 +2358,7 @@ ProcessSMInput:
       JSR CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
 
       LDA #BANK_MENUS
-      JSR SwapPRG_L
+      JSR SwapPRG
       JSR EnterMainMenu        ; enter the main menu
 
       JMP ReenterStandardMap   ; then reenter the map
@@ -2405,7 +2379,7 @@ ProcessSMInput:
       LDA #$02
       JSR CyclePalettes
       LDA #BANK_MENUS
-      JSR SwapPRG_L
+      JSR SwapPRG
       JSR EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
       JMP ReenterStandardMap
 
@@ -2855,7 +2829,7 @@ TalkToSMTile:
 
 LoadSMTilesetData:
     LDA #BANK_SMINFO          ; swap to bank containing desired info
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA #0
     STA tmp                   ; zero low bytes of source pointer
@@ -3717,7 +3691,7 @@ PrepStandardMap:
     STA NTsoft2000          ; and record as soft2000
     STA soft2000
 
-    JSR WaitForVBlank_L     ; wait for vblank
+    JSR WaitForVBlank     ; wait for vblank
     JSR DrawMapPalette      ; so we can draw the palette
     JSR SetSMScroll         ; set the scroll
 
@@ -3742,7 +3716,7 @@ PrepStandardMap:
     STA sm_player_y
 
     LDA #BANK_BTLDATA           ; swap to page containging battle rates
-    JSR SwapPRG_L
+    JSR SwapPRG
     LDX cur_map                 ; use current map to index the rate LUT
     LDA lut_BattleRates+1, X    ; get this map's rate (+1 because first entry is for overworld [unused])
     STA battlerate              ; and record it
@@ -3773,7 +3747,7 @@ PrepStandardMap:
 
 AssertNasirCRC:
     LDA #BANK_BRIDGESCENE        ; swap to bank containing the bridge scene (credits text)
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDY #$25                     ; going to sum $25+1 bytes
     LDX __Nasir_CRC_High_Byte    ; get the high byte of pointer
@@ -4111,7 +4085,7 @@ ScrollUpOneRow:
 
 LoadStandardMap:
     LDA #BANK_STANDARDMAPS
-    JSR SwapPRG_L     ; swap to bank containing start of standard maps
+    JSR SwapPRG     ; swap to bank containing start of standard maps
     LDA cur_map       ; get current map ID
     ASL A             ; double it, and throw it in X (to get index for pointer table)
     TAX
@@ -4130,7 +4104,7 @@ LoadStandardMap:
     AND #$03               ; mask out low 2 bits (gets bank number for start of this map)
     ORA #BANK_STANDARDMAPS ; Add standard map bank (use ORA to avoid unwanted carry from above ROLs)
     STA tmp+5              ; put bank number in temp ram for future reference
-    JSR SwapPRG_L          ; swap to desired bank
+    JSR SwapPRG          ; swap to desired bank
     LDA #<mapdata
     STA tmp+2
     LDA #>mapdata     ; set destination pointer to point to mapdata (start of decompressed map data in RAM).
@@ -4172,7 +4146,7 @@ LoadOWMapRow:
     BCS Map_RTS      ; if flag is set (in standard map), we're not in the overworld, so don't do anything -- just exit
 
     LDA #BANK_OWMAP  ;  swap to bank contianing overworld map
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA #>lut_OWPtrTbl ;  set (tmp+6) to the start of the pointers for the rows of the OW map.
     STA tmp+7          ;   we will then index this pointer table to get the pointer for the start of the row
@@ -4278,7 +4252,7 @@ DecompressMap:
     LDA tmp+5     ; get original bank number
     CLC
     ADC #$01      ; increment it by 1
-    JMP SwapPRG_L ; swap that new bank in and exit
+    JMP SwapPRG ; swap that new bank in and exit
     RTS           ; useless RTS (impossible to reach)
 
 
@@ -4903,7 +4877,7 @@ DrawDialogueBox:
 
       JSR PrepRowCol             ; prep map row/column graphics
       JSR PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
-      JSR WaitForVBlank_L        ; then wait for VBl
+      JSR WaitForVBlank        ; then wait for VBl
       JSR DrawMapRowCol          ; and draw what we just prepped
       JSR SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
       JSR CallMusicPlay_NoSwap   ; and update the music
@@ -4914,7 +4888,7 @@ DrawDialogueBox:
       BEQ :+                     ; if they're the same (drawing the top/last row)
         JSR PrepDialogueBoxAttr  ; ... then skip over dialogue box attribute prepping (dialogue box isn't visible top row)
 
-  :   JSR WaitForVBlank_L        ; then wait for VBl again
+  :   JSR WaitForVBlank        ; then wait for VBl again
       JSR DrawMapAttributes      ; and draw the attributes for this row
       JSR SetSMScroll            ; then set the scroll to keep rendering looking good
       JSR CallMusicPlay_NoSwap   ; and keep the music playing
@@ -5531,7 +5505,7 @@ ScreenWipeFrame_Prep:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScreenWipeFrame:
-    JSR WaitForVBlank_L          ; wait for VBlank
+    JSR WaitForVBlank          ; wait for VBlank
     JSR ScreenWipeFrame_Prep     ; then do prepwork for this frame
 
     LDX #10                  ; This loop "fine-tunes" the wait.  It works out to 1+5*X cycles
@@ -5646,7 +5620,7 @@ StartScreenWipe:
       INX
       BNE @Loop
 
-    JSR WaitForVBlank_L   ; then wait for VBlank
+    JSR WaitForVBlank   ; then wait for VBlank
     LDA #>oam             ; and do sprite DMA
     STA OAMDMA
 
@@ -5661,10 +5635,6 @@ StartScreenWipe:
 
     RTS                   ; exit
 
-
-;; unused/unreachable
-
-    JMP CallMusicPlay_NoSwap
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5904,7 +5874,7 @@ _DrawPalette_Norm:
 
 WaitVBlank_NoSprites:
     JSR ClearOAM              ; clear OAM
-    JSR WaitForVBlank_L       ; wait for VBlank
+    JSR WaitForVBlank       ; wait for VBlank
     LDA #>oam
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
@@ -5931,7 +5901,7 @@ LoadMapPalettes:
       BPL @Loop             ; loop until X wraps ($30 iterations)
 
     LDA #BANK_MAPMANPAL
-    JSR SwapPRG_L           ; swap to bank containing mapman palettes
+    JSR SwapPRG           ; swap to bank containing mapman palettes
 
     LDA ch_class            ; get lead party member's class
     ASL A                   ; double it, and put it in X
@@ -5969,7 +5939,7 @@ BattleTransition:
   ;; loop from $00 - $41
 
   @Loop:
-    JSR WaitForVBlank_L   ; wait for VBlank
+    JSR WaitForVBlank   ; wait for VBlank
     LDA mapflags          ; get map flags to see if this is OW or SM
     LSR A
     BCC @OW               ; fork appropriately
@@ -6113,7 +6083,7 @@ CyclePalettes:
       BEQ @Done               ; if cycling is complete, break out of this loop
 
   @NoStep:
-    JSR WaitForVBlank_L       ; wait for VBlank
+    JSR WaitForVBlank       ; wait for VBlank
     JSR PalCyc_DrawPalette    ; draw the new palette
     JSR PalCyc_SetScroll      ; set the scroll
     JSR CallMusicPlay_NoSwap  ; and update music  (all the typical frame work)
@@ -6133,7 +6103,7 @@ CyclePalettes:
       STA PPUMASK
 
 :   LDA #BANK_MENUS   ; swap to menus bank
-    JMP SwapPRG_L     ; and exit
+    JMP SwapPRG     ; and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6500,7 +6470,7 @@ AltarFrame:
                       ;  the unavoidable inperfection of the monochrome effect (unavoidable because
                       ;  you can't time the writes to the exact pixel no matter how careful you are)
 
-    JSR WaitForVBlank_L    ; wait for VBlank.  This returns ~37 cycles into VBlank
+    JSR WaitForVBlank    ; wait for VBlank.  This returns ~37 cycles into VBlank
     LDA #>oam         ; Do sprite DMA.  This burns another 513+2+4 cycles -- currently ~556 into VBl
     STA OAMDMA
 
@@ -6537,13 +6507,6 @@ WaitAltarScanline:   ; JSR to routine = 6 cycles
     NOP              ; +2 = 101
     NOP              ; +2 = 103
     RTS              ; +6 = 109
-
-
-
-;; unused NOPs
-    NOP
-    NOP
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6626,7 +6589,7 @@ PlaySFX_Error:
     RTS              ; then exit
 
   @Frame:
-    JSR WaitForVBlank_L    ; wait a frame
+    JSR WaitForVBlank    ; wait a frame
 
     LDA #%10001100    ;  50% duty, decay speed=%1100, no fixed volume, length enabled
     STA $4004
@@ -6688,7 +6651,7 @@ DrawDialogueString:
 
     LDA #BANK_DIALOGUE
     STA cur_bank          ; set cur_bank to bank containing dialogue text (for Music_Play)
-    JSR SwapPRG_L         ; and swap to that bank
+    JSR SwapPRG         ; and swap to that bank
 
     TXA                   ; get the string ID back
     ASL A                 ; double it (2 bytes per pointer)
@@ -6712,7 +6675,7 @@ DrawDialogueString:
     LDA #10
     STA tmp+7             ;  set precautionary counter to 10
 
-    JSR WaitForVBlank_L   ; wait for VBlank
+    JSR WaitForVBlank   ; wait for VBlank
 
     LDA box_x             ; copy placement coords (box_*) to dest coords (dest_*)
     STA dest_x
@@ -6771,7 +6734,7 @@ DrawDialogueString:
 
         JSR SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
         JSR CallMusicPlay    ; keep music playing
-        JSR WaitForVBlank_L  ; then wait another frame before continuing drawing
+        JSR WaitForVBlank  ; then wait another frame before continuing drawing
 
         LDA #10
         STA tmp+7            ; reload precautionary counter
@@ -6862,7 +6825,7 @@ DrawDialogueString:
     LDA #8
     STA tmp+7              ; reload precautionary counter (but with only 8 instead of 10?)
 
-    JSR WaitForVBlank_L    ; then wait for VBlank
+    JSR WaitForVBlank    ; then wait for VBlank
 
     LDA box_x              ; reset dest X coord to given placement coord
     STA dest_x
@@ -7120,7 +7083,7 @@ lut_ArmorSlots:
 
 OpenTreasureChest:
     LDA #BANK_TREASURE       ; swap to bank containing treasure chest info
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDX tileprop+1           ; put chest index in X
     LDA lut_Treasure, X      ; use it to get the contents of the chest
@@ -7357,12 +7320,12 @@ DrawComplexString_Exit:
     STA PPUSCROLL
     STA PPUSCROLL
     LDA ret_bank   ; swap back to original bank
-    JMP SwapPRG_L  ;   then return
+    JMP SwapPRG  ;   then return
 
 
 DrawComplexString:
     LDA cur_bank
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR CoordToNTAddr
 
   @StallAndDraw:
@@ -7442,7 +7405,7 @@ DrawComplexString:
     ;;; Control code $04 -- draws current gold
     JSR @Save               ; this is a substring we'll need to draw, so save 
     LDA #BANK_MENUS
-    JSR SwapPRG_L           ;  swap to menu bank (for "PrintGold" routine)
+    JSR SwapPRG           ;  swap to menu bank (for "PrintGold" routine)
     JSR PrintGold           ;  PrintGold to temp buffer
     JSR @StallAndDraw       ;  recursively call this routine to draw temp buffer
     JMP @Restore            ; then restore original string state and continue
@@ -7534,7 +7497,7 @@ DrawComplexString:
     TAX                    ;  temporarily put the code in X
     JSR @Save              ;  save string data (we'll be drawing a substring)
     LDA #BANK_MENUS
-    JSR SwapPRG_L          ;  swap to menu bank (has the PrintCharStat routine)
+    JSR SwapPRG          ;  swap to menu bank (has the PrintCharStat routine)
     TXA                    ;  put the stat code back in A
     JSR PrintCharStat      ;  print it to temp string buffer
     JSR @StallAndDraw      ; draw it to the screen
@@ -7683,7 +7646,7 @@ DrawComplexString:
 
     LDA #BANK_ITEMS
     STA cur_bank 
-    JSR SwapPRG_L         ; swap to BANK_ITEMS (contains item strings)
+    JSR SwapPRG         ; swap to BANK_ITEMS (contains item strings)
 
     TXA                   ; get item ID
     ASL A                 ; double it (for pointer table lookup)
@@ -7715,7 +7678,7 @@ DrawComplexString:
 :   JSR @Save            ; Save string info (item price is a substring)
     TAX                  ; put item ID in X temporarily
     LDA #BANK_MENUS
-    JSR SwapPRG_L        ; swap to bank (for PrintPrice routine)
+    JSR SwapPRG        ; swap to bank (for PrintPrice routine)
     TXA                  ; get back the item ID
     JSR PrintPrice       ; print the price to temp string buffer
     JSR @StallAndDraw    ; recursivly draw it
@@ -7752,7 +7715,7 @@ DrawComplexString:
     STA text_ptr+1
     LDA tmp_hi+2
     STA cur_bank
-    JSR SwapPRG_L      ; swap the data bank back in
+    JSR SwapPRG      ; swap the data bank back in
     JMP @Draw_NoStall  ;  and continue with text processing
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7963,7 +7926,7 @@ MenuCondStall:
       STA PPUSCROLL
 
       JSR CallMusicPlay    ;  Keep the music playing
-      JSR WaitForVBlank_L  ; then wait a frame
+      JSR WaitForVBlank  ; then wait a frame
 
 @Exit:
     RTS
@@ -8007,7 +7970,7 @@ EraseBox:
        STA PPUSCROLL
        STA PPUSCROLL
        JSR CallMusicPlay    ; call music play routine
-       JSR WaitForVBlank_L  ; and wait for vblank
+       JSR WaitForVBlank  ; and wait for vblank
 
    @NoStall:
      LDA PPUSTATUS          ; reset PPU toggle
@@ -8122,7 +8085,7 @@ AnimateAirshipLanding:
 ;;
 
 AirshipTransitionFrame:
-    JSR WaitForVBlank_L   ; wait for VBlank
+    JSR WaitForVBlank   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
     STA OAMDMA
 
@@ -8796,9 +8759,6 @@ lut_OWObjectSprTbl:
   .BYTE $04,$03, $06,$03, $05,$03, $07,$03     ; bridge
   .BYTE $08,$03, $0A,$03, $09,$03, $0B,$03     ; canal
 
-  .BYTE $00,$00, $00,$00, $00,$00, $00,$00     ; unused
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  UpdateAndDrawMapObjects  [$E4C7 :: 0x3E4D7]
@@ -9461,7 +9421,7 @@ LoadMapObjects:
     STA tmp+13            ;  tmp+12 now points to "lut_MapObjects + (cur_map * $30)"
 
     LDA #BANK_OBJINFO     ; swap to the bank containing map object information
-    JSR SwapPRG_L
+    JSR SwapPRG
 
   @Loop:
      LDY #0
@@ -9584,7 +9544,7 @@ LoadEpilogueSceneGFX:
     LDX #$08
     
     LDA #BANK_EPILOGUEGFX
-    JSR SwapPRG_L
+    JSR SwapPRG
     
     LDA #$00
     JSR CHRLoadToA
@@ -9625,7 +9585,7 @@ LoadBridgeSceneGFX:
     LDX #$08                 ; load 8 rows of tiles ($800 bytes)
 
     LDA #BANK_BRIDGEGFX      ; swap to bank containing the graphics
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA #$00                 ; destination address = ppu $0000
     JSR CHRLoadToA           ; load 8 rows of tiles to ppu $0000
@@ -9677,14 +9637,14 @@ LoadShopCHRPal:
 
 LoadSMCHR:                     ; standard map -- does not any palettes
     LDA #BANK_MAPCHR
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR LoadPlayerMapmanCHR
     JSR LoadTilesetAndMenuCHR
     JMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     LDA #BANK_MAPCHR
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR LoadOWBGCHR
     JSR LoadPlayerMapmanCHR
     JMP LoadOWObjectCHR
@@ -9820,7 +9780,7 @@ CHRLoad_Cont:
 
 LoadTilesetAndMenuCHR:
     LDA #BANK_TILESETCHR
-    JSR SwapPRG_L     ; swap to bank containing tileset CHR
+    JSR SwapPRG     ; swap to bank containing tileset CHR
     LDA #0
     STA tmp           ; set low byte of src pointer to $00
     LDA cur_tileset   ; get current tileset
@@ -9848,7 +9808,7 @@ LoadTilesetAndMenuCHR:
 
 LoadMenuCHR:
     LDA #BANK_MENUCHR
-    JSR SwapPRG_L    ; swap to bank containing menu chr
+    JSR SwapPRG    ; swap to bank containing menu chr
     LDA #$88
     STA tmp+1        ; source address = $8800 (note:  low byte not explicitly set)
     LDX #8           ; 8 rows to load
@@ -9900,7 +9860,7 @@ LoadMapObjCHR:
 
   @ObjLoop:
     LDA #BANK_OBJINFO  ; swap to bank containing object info
-    JSR SwapPRG_L
+    JSR SwapPRG
     LDA (tmp+4), Y       ; get object ID
     TAX                  ; put it in X
     LDA lut_MapObjGfx, X ; index to get graphic ID based on object ID
@@ -9911,7 +9871,7 @@ LoadMapObjCHR:
     STA tmp              ; CHR source pointer (tmp) now = lut_MapObjCHR + (graphic_id * $100)
 
     LDA #BANK_MAPCHR
-    JSR SwapPRG_L    ; swap to bank containing mapman CHR
+    JSR SwapPRG    ; swap to bank containing mapman CHR
     TYA              ; back up obj source index by pushing it to the stack
     PHA
     LDY #0           ; clear Y for upcoming CHR loading loop
@@ -9942,7 +9902,7 @@ LoadMapObjCHR:
 
 LoadShopBGCHRPalettes:
     LDA #BANK_MENUCHR  ; swap to bank containing shop CHR
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA #<lut_ShopCHR
     STA tmp
@@ -9977,7 +9937,7 @@ LoadShopBGCHRPalettes:
 
 LoadBattleBGCHRAndPalettes:
     LDA #BANK_OWINFO              ; Swap to BANK_OWINFO
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDX ow_tile                   ; Get last OW tile we stepped on
     LDA lut_BtlBackdrops, X       ; Use it as an index to get the backdrop ID
@@ -10010,7 +9970,7 @@ LoadBattleBGCHRAndPalettes:
     STA tmp+5         ; and put it in $15.  (tmp+4) now points to lut_BattleFormations+(formation * 16)
 
     LDA #BANK_BTLDATA ; swap to required bank
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDY #0
     LDA (tmp+4), Y   ; load Enemy CHR page ID from Battle formation data
@@ -10069,7 +10029,7 @@ LoadBattleBGCHRPointers:
        LDA #BANK_BATTLECHR+1 ; and indiate second bank of Battle BG CHR
 
 @FinishUp:
-    JSR SwapPRG_L     ; Swap in indicated bank
+    JSR SwapPRG     ; Swap in indicated bank
     LDA #$00          ;  and set low byte of pointer to 0
     STA tmp
     RTS               ;  and exit!
@@ -10092,7 +10052,7 @@ LoadBattleBGCHRPointers:
 LoadMenuBGCHRAndPalettes:
     JSR LoadBattleBGCHRAndPalettes   ; Load Battle BG and palettes.
     LDA #BANK_ORBCHR                 ;     This is mainly for menu related CHR and palettes
-    JSR SwapPRG_L                    ; Swap to Bank D
+    JSR SwapPRG                    ; Swap to Bank D
     LDX #$02                         ; we want 2 rows of tiles
     LDA #<lut_OrbCHR                 ; from source address lut_OrbCHR
     STA tmp
@@ -10120,7 +10080,7 @@ LoadMenuBGCHRAndPalettes:
 
 LoadBatSprCHRPalettes_NewGame:
     LDA #BANK_BTLCHR
-    JSR SwapPRG_L  ; Swap to bank 9
+    JSR SwapPRG  ; Swap to bank 9
     LDA PPUSTATUS      ; Reset PPU Addr Toggle
     LDA #$10
     STA PPUADDR      ;  set dest PPU Addr to $1000
@@ -10142,7 +10102,7 @@ LoadBatSprCHRPalettes_NewGame:
 
 LoadBatSprCHRPalettes:
     LDA #BANK_BTLCHR
-    JSR SwapPRG_L  ; swap to bank 9
+    JSR SwapPRG  ; swap to bank 9
     LDA PPUSTATUS      ; reset ppu addr toggle
     LDA #$10
     STA PPUADDR      ; set dest ppu addr to $1000
@@ -10166,7 +10126,7 @@ LoadBatSprCHRPalettes:
 :     JSR CHRLoad_Cont   ; load cursor and other battle related CHR
       JSR LoadBattleSpritePalettes  ; load palettes for these sprites
       LDA #BANK_MENUS
-      JMP SwapPRG_L      ; and swap to bank E on exit
+      JMP SwapPRG      ; and swap to bank E on exit
 
 @LoadClass:
     ASL A               ; double class index (each class has 2 rows of tiles)
@@ -10223,7 +10183,7 @@ LoadBorderPalette_Black:
 
 LoadShopTypeAndPalette:
     LDA #BANK_BACKDROPPAL
-    JSR SwapPRG_L        ; Swap to bank
+    JSR SwapPRG        ; Swap to bank
 
     LDX shop_id          ; Get Shop ID, use it to index and get shop type
     LDA lut_ShopTypes, X
@@ -10288,7 +10248,7 @@ lut_ShopPalettes:
 
 LoadBattleBackdropPalette:
      LDA #BANK_OWINFO         ; Swap to required bank
-     JSR SwapPRG_L
+     JSR SwapPRG
      LDX ow_tile              ; Get last OW tile stepped on
      LDA lut_BtlBackdrops, X  ; use it to index and get battle backdrop ID
      AND #$0F                 ; multiply ID by 4
@@ -10545,10 +10505,6 @@ lutCursor2x2SpriteTable:
   .BYTE $01, $03      ; UR sprite = tile 1, palette 3
   .BYTE $03, $03      ; DR sprite = tile 3, palette 3
 
-
-  ;;  Unused byte
-  .BYTE $FF
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Load Price   [$ECB9 :: 0x3ECC9]
@@ -10572,7 +10528,7 @@ LoadPrice:
     STA tmp+3                  ; store as high byte of pointer at tmp+3
 
     LDA #BANK_ITEMPRICES
-    JSR SwapPRG_L  ; swap to bank D (for item prices)
+    JSR SwapPRG  ; swap to bank D (for item prices)
 
     LDY #0         ; zero Y (our source index)
     LDA (tmp+2), Y ; get low byte of price
@@ -10585,7 +10541,7 @@ LoadPrice:
     STA tmp+2       ; 3rd byte is always 0 (no item costs more that 65535)
 
     LDA #BANK_MENUS ; swap back to bank E
-    JMP SwapPRG_L   ; and return
+    JMP SwapPRG   ; and return
 
 
 
@@ -10638,7 +10594,7 @@ DrawEquipMenuStrings:
     STA dest_y
 
     LDA #BANK_ITEMS
-    JSR SwapPRG_L                ; swap to the bank containing the item strings
+    JSR SwapPRG                ; swap to the bank containing the item strings
 
     LDA #$FF                     ; fill first 2 bytes of the string with blank spaces (tile FF)
     STA str_buf+$10              ; later, these spaces will be replaced with "E-" if the item
@@ -10700,7 +10656,7 @@ DrawEquipMenuStrings:
     LDA #BANK_MENUS              ; once all names are drawn
     STA cur_bank                 ; set cur and ret banks (not necessary?) to the MENUS bank
     STA ret_bank
-    JSR SwapPRG_L                ; then swap back to that bank
+    JSR SwapPRG                ; then swap back to that bank
     RTS                          ; and return
 
 
@@ -10735,7 +10691,7 @@ lut_EquipStringPositions:
 
 UnadjustEquipStats:
     LDA #BANK_EQUIPSTATS    ; Swap to bank containing equipment stats
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA equipoffset         ; get the equipment offset (weapon or armor offset)
     STA equipmenu_tmp       ;  and back it up in equipmenu_tmp.  This is our editable source index
@@ -10770,7 +10726,7 @@ UnadjustEquipStats:
     BCC @Loop                 ; keep looping until source index wraps (wraps after 4 characters)
 
     LDA #BANK_MENUS           ; then restore the menu bank, and exit
-    JMP SwapPRG_L
+    JMP SwapPRG
 
   ;; local subroutine
   ;;   subtracts a weapon's hit and dmg bonus from the character's stats
@@ -10846,7 +10802,7 @@ UnadjustEquipStats:
 
 ReadjustEquipStats:
     LDA #BANK_EQUIPSTATS     ; swap to bank containing equipment stats
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA equipoffset          ; get the equipment offset
     STA equipmenu_tmp        ; and put it in equipmenu_tmp -- this is our runtime source index
@@ -10882,7 +10838,7 @@ ReadjustEquipStats:
     BCC @Loop                ; and keep looping until it wraps (4 iterations -- all 4 chars)
 
     LDA #BANK_MENUS          ; then swap back to MENUS bank
-    JMP SwapPRG_L            ;   and exit
+    JMP SwapPRG            ;   and exit
 
   ;; local subroutine
   ;;   adds a weapon's hit and dmg bonus to the character's stats
@@ -11135,7 +11091,7 @@ DrawItemBox:
     LDA #BANK_MENUS    ; set the return bank to BANK_MENUS.
     STA ret_bank       ;   this is required for DrawComplexString (called below)
     LDA #BANK_ITEMS    ; swap to BANK_ITEMS (bank containing item names)
-    JSR SwapPRG_L
+    JSR SwapPRG
 
     LDA lut_ItemNamePtrTbl, X   ; get the pointer to this item name
     STA tmp                     ;  and put it in (tmp)
@@ -11164,7 +11120,7 @@ DrawItemBox:
        STA tmp                 ;  put the qty in tmp
        LDA #BANK_MENUS
        STA ret_bank            ; set return bank again (unnecessary -- was already done above)
-       JSR SwapPRG_L           ; also swap to BANK_MENUS (for PrintNumber routines)
+       JSR SwapPRG           ; also swap to BANK_MENUS (for PrintNumber routines)
        JSR PrintNumber_2Digit  ; print the 2 digit number
 
        LDA format_buf-2        ; copy the printed 2 digit number from the format buffer
@@ -11386,9 +11342,9 @@ SetBattlePPUAddr:
 
 Battle_WritePPUData:
     LDA btltmp+9                ; swap in the desired bank
-    JSR SwapPRG_L
+    JSR SwapPRG
     
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     JSR SetBattlePPUAddr        ; use btltmp+6,7 to set PPU addr
     
     LDY #$00                    ; Y is loop up-counter
@@ -11402,7 +11358,7 @@ Battle_WritePPUData:
       BNE @Loop
       
     LDA battle_bank             ; swap battle_bank back in
-    JSR SwapPRG_L
+    JSR SwapPRG
     
     LDA #$00                    ; reset scroll before exiting
     STA PPUMASK
@@ -11427,7 +11383,7 @@ Battle_WritePPUData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 Battle_ReadPPUData:
-    JSR WaitForVBlank_L         ; Wait for VBlank
+    JSR WaitForVBlank         ; Wait for VBlank
     JSR SetBattlePPUAddr        ; Set given PPU Address to read from
     LDA PPUDATA                   ; Throw away buffered byte
     LDY #$00
@@ -11440,7 +11396,7 @@ Battle_ReadPPUData:
       BNE @Loop
       
     LDA battle_bank             ; swap back to desired battle bank, then exit
-    JMP SwapPRG_L
+    JMP SwapPRG
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11453,7 +11409,7 @@ Battle_ReadPPUData:
 
 BattleCrossPageJump:
     STA battle_bank
-    JSR SwapPRG_L
+    JSR SwapPRG
     JMP (btltmp+6)
 
 
@@ -11474,14 +11430,14 @@ BattleCrossPageJump:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterBattle:
-    JSR WaitForVBlank_L       ; wait for VBlank and do Sprite DMA
+    JSR WaitForVBlank       ; wait for VBlank and do Sprite DMA
     LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
     STA OAMDMA                 ;  off at this point
 
   ;; Load formation data to buffer in RAM
 
     LDA #BANK_BTLDATA         ; here we load the battle formation data
-    JSR SwapPRG_L             ; swap to the bank containing that data
+    JSR SwapPRG             ; swap to the bank containing that data
     LDA a:btlformation        ; get the formation ID
     AND #$7F                  ; remove the 'Formation B' bit to get the raw formation ID
     LDX #0                    ;  mulitply the formation ID by 16 (shift by 4) and rotate
@@ -11580,7 +11536,7 @@ EnterBattle:
       BNE @PalLoop            ; all $20 bytes
 
     LDA #BANK_BTLPALETTES     ; then swap to the bank containing the battle palettes
-    JSR SwapPRG_L             ;   (for enemies)
+    JSR SwapPRG             ;   (for enemies)
 
     LDA btlform_plts          ; use the formation data to get the ID of the palettes to load
     LDY #4                    ;   load the first one into the 2nd palette slot ($xxx4)
@@ -11607,7 +11563,7 @@ EnterBattle:
   ;; Clear the '$FF' tile so it's fully transparent instead of
   ;;   fully solid (normally is innards of box body)
 
-    JSR WaitForVBlank_L     ; wait for VBlank again  (why!  PPU is off!)
+    JSR WaitForVBlank     ; wait for VBlank again  (why!  PPU is off!)
     LDX #>$0FF0
     LDA #<$0FF0             ;  set PPU addr to $0FF0 (CHR for tile $FF)
     JSR SetPPUAddr_XA
@@ -11621,8 +11577,8 @@ EnterBattle:
 
     LDA #BANK_BATTLE        ; swap in the battle bank
     STA battle_bank
-    JSR SwapPRG_L
-    JMP PrepBattleVarsAndEnterBattle_L            ; and jump to battle routine!
+    JSR SwapPRG
+    JMP PrepBattleVarsAndEnterBattle            ; and jump to battle routine!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11710,7 +11666,7 @@ Battle_PlayerBox:
     STX a:box_ht       ; and height to 7
 
     JSR Battle_PPUOff  ; turn off the PPU
-    JSR DrawBox_L      ; draw the box
+    JSR DrawBox        ; draw the box
 
     PLA                ; restore backed up A, X
     TAX
@@ -11732,7 +11688,7 @@ BattleBox_vAXY:
     STX a:box_wd
     STY a:box_ht
     JSR Battle_PPUOff   ; turn the PPU off
-    JMP DrawBox_L       ; then draw the box
+    JMP DrawBox         ; then draw the box
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11814,7 +11770,7 @@ BattleScreenShake:
       BNE :-            ; flow into doing another frame
     
   @Frame:
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     JMP BattleUpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11880,7 +11836,7 @@ BattleUpdateAudio_FixedBank:
     BPL :+
       LDA btl_followupmusic
       STA a:music_track
-:   JMP CallMusicPlay_L
+:   JMP CallMusicPlay
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11894,7 +11850,7 @@ BattleUpdateAudio_FixedBank:
 BattleWaitForVBlank:
     LDA btl_soft2000
     STA a:soft2000
-    JMP WaitForVBlank_L
+    JMP WaitForVBlank
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13479,7 +13435,7 @@ DrawBattleString_ControlCode:
     
   @PrintAttackName:     ; code:  0E
     LDA #BANK_ITEMS
-    JSR SwapPRG_L
+    JSR SwapPRG
     LDA btl_attacker                ; check the attacker.  If the high bit is set (it's a player).
     BMI @PrintAttackName_AsItem     ; Player special attacks are always items (or spells, which are stored with items)
     
@@ -13549,7 +13505,7 @@ BattleDrawLoadSubSrcPtr:
 
 DrawBattleMessage:
     LDA #BANK_BTLMESSAGES
-    JSR SwapPRG_L
+    JSR SwapPRG
     LDA #>(data_BattleMessages - 2)     ; -2 because battle message is 1-based
     LDX #<(data_BattleMessages - 2)
     JSR BattleDrawLoadSubSrcPtr
@@ -13640,7 +13596,7 @@ DrawEntityName:
 DrawEnemyName:
     PHA                     ; back up enemy ID
     LDA #BANK_ENEMYNAMES
-    JSR SwapPRG_L           ; swap in bank with enemy names
+    JSR SwapPRG           ; swap in bank with enemy names
     PLA                     ; get enemy ID
     ASL A                   ; *2 to use as index
     TAX
@@ -13697,7 +13653,7 @@ DrawBattleSubString:
     
   @Exit:
     LDA battle_bank                 ; swap back to battle bank
-    JMP SwapPRG_L                   ;   and exit
+    JMP SwapPRG                   ;   and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13726,23 +13682,6 @@ DrawBattle_IncSrcPtr:
     BNE :+
       INC btldraw_src+1
   : RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  UNUSED_DrawBattle_IncSrcPtr  [$FCBB :: 0x3FCCB]
-;;
-;;  Incremenets the sub source pointer by 1 for the Battle Drawing routine(s)
-;;
-;;  Does not appear to be used by anywhere in the game.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UNUSED_DrawBattle_IncSrcPtr:
-    INC btldraw_subsrc
-    BNE :+
-      INC btldraw_subsrc+1
-  : RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13816,10 +13755,6 @@ BattleRNG:
   @Scramble_lut:
     .INCBIN "bin/0F_FCF1_rngtable.bin"
 
-    
-;; Unused space
-    .BYTE 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0
-    
     
 WaitForVBlank_L: JMP WaitForVBlank
 
@@ -13911,7 +13846,7 @@ OnReset:
     TXS            ; transfer it to the Stack Pointer (resetting the SP)
 
     JSR DisableAPU
-    JMP GameStart_L    ; jump to the start of the game!
+    JMP GameStart    ; jump to the start of the game!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -14003,12 +13938,6 @@ ClearBGPalette:
     STA PPUADDR   ; the PPU addr pointing to palettes because this can cause different colors to be drawn when the PPU
     RTS         ;  is off.  But why they change to $3F00 first is beyond me....
 
-
-; Unused space
-  .BYTE 1,1,1,1, 1,1,1,1
-  .BYTE 1,1,1,1, 1,1,1,1
-  .BYTE 1,1,1,1, 1,1,1
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Dialogue_CoverSprites_VBl  [$FF02 :: 0x3FF12]
@@ -14044,7 +13973,7 @@ Dialogue_CoverSprites_VBl:
 
     BNE @Loop          ; keep looping until all sprites examined
 
-    JMP WaitForVBlank_L   ; then wait for VBlank, and exit
+    JMP WaitForVBlank   ; then wait for VBlank, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14080,10 +14009,6 @@ DimBatSprPalettes:
     BNE @Loop          ; and keep looping until it reaches 0 (only 7 iterations because color 0 is transparent)
     CPY #$01           ; set C if Y is nonzero (to indicate some colors are not yet black)
     RTS                ; then exit
-
-; unused space
-  .BYTE 0,0,0,0
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -14155,17 +14080,12 @@ BackUpBatSprPalettes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PaletteFrame:
-    JSR WaitForVBlank_L      ; Wait for VBlank
-    JSR DrawPalette_L        ; then update the palette
+    JSR WaitForVBlank        ; Wait for VBlank
+    JSR DrawPalette          ; then update the palette
     LDA #0                   ; reset the scroll
     STA PPUSCROLL
     STA PPUSCROLL
-    JMP CallMusicPlay_L      ; update music engine, then exit
-
-
-; unused space
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-
+    JMP CallMusicPlay       ; update music engine, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -14191,9 +14111,6 @@ FadeOutBatSprPalettes:
     RTS                         ; exit once palette is all black
 
 
- ; unused space
-  .BYTE 0,0,0,0
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Fade In Battle Sprite Palettes [$FFA8 :: 0x3FFB8]
@@ -14215,8 +14132,6 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
     RTS
 
- ; unused space
-  .BYTE 0,0,0,0,0,0,0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14230,25 +14145,11 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
 CallMinimapDecompress:
     LDA #BANK_OWMAP
-    JSR SwapPRG_L
+    JSR SwapPRG
     JSR MinimapDecompress
     LDA #BANK_MINIMAP
-    JMP SwapPRG_L
+    JMP SwapPRG
 
-
-
-; Unused space
-
-  .BYTE $FF, $ED, $FF, $FF
-  .BYTE $FF, $FF, $FF, $FF
-  .BYTE $FF, $FF, $FF, $FF
-  .BYTE $FF, $FF, $FF, $FF
-  .BYTE $FF, $1E, $FF, $00
-  .BYTE $00, $00
-  .BYTE "FINAL FANTASY"     ; <- FFHackster will make sure that is a 'Y'
-  .BYTE $43, $70, $00, $00  ;  if it isn't, it won't allow the user to open the ROM
-  .BYTE $48, $04, $01, $0C
-  .BYTE $C3, $FF
 
 .segment "VECTORS"
 

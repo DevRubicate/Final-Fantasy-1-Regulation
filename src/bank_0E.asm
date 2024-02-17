@@ -5,13 +5,13 @@
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
-.import GameStart_L
+.import GameStart
 .import lut_IntroStoryText
 .import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
-.import DrawOBSprite, DrawCursor, WaitForVBlank_L, DrawBox, LoadMenuCHRPal, LoadPrice
+.import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -98,7 +98,7 @@ IntroStory_Joy:
     AND #BTN_START        ; see if start was pressed
     BNE :+                ;  if not, just exit
       RTS
-:   JMP GameStart_L       ; if it was pressed, restart game (brings up title screen)
+:   JMP GameStart       ; if it was pressed, restart game (brings up title screen)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1897,7 +1897,7 @@ EnterLineupMenu:
 
     JSR DrawBox                 ; draw box (coords/dims previously filled)
     JSR DrawLineupMenuNames     ; draw names of all the characters
-    JSR WaitForVBlank_L         ; wait for VBlank
+    JSR WaitForVBlank         ; wait for VBlank
     JSR DrawPalette             ; and draw the palette
 
     LDA #$55
@@ -1927,7 +1927,7 @@ EnterLineupMenu:
   ;; Then start the main loop
 
   @MainLoop:
-    JSR WaitForVBlank_L         ; wait for VBlank
+    JSR WaitForVBlank         ; wait for VBlank
 
     LDA #>oam
     STA OAMDMA                   ; do sprite DMA
@@ -2643,7 +2643,7 @@ NewGamePartyGeneration:
     JSR PtyGen_DrawScreen       ; Draw the screen one more time
     JSR ClearOAM                ; Clear OAM
     JSR PtyGen_DrawChars        ; Redraw char sprites
-    JSR WaitForVBlank_L         ; Do a frame
+    JSR WaitForVBlank         ; Do a frame
     LDA #>oam                   ;   with a proper OAM update
     STA OAMDMA
     
@@ -2948,7 +2948,7 @@ PtyGen_Frame:
     JSR PtyGen_DrawChars
     JSR PtyGen_DrawCursor
 
-    JSR WaitForVBlank_L    ; VBlank and DMA
+    JSR WaitForVBlank    ; VBlank and DMA
     LDA #>oam
     STA OAMDMA
 
@@ -2971,7 +2971,7 @@ CharName_Frame:
     JSR ClearOAM           ; wipe OAM then draw the cursor
     JSR CharName_DrawCursor
 
-    JSR WaitForVBlank_L    ; VBlank and DMA
+    JSR WaitForVBlank    ; VBlank and DMA
     LDA #>oam
     STA OAMDMA
 
@@ -3548,7 +3548,7 @@ EnterTitleScreen:
     STA spr_y
     JSR DrawCursor
 
-    JSR WaitForVBlank_L     ; Wait for VBlank
+    JSR WaitForVBlank     ; Wait for VBlank
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
     JSR TitleScreen_DrawRespondRate
@@ -3874,7 +3874,7 @@ IntroStory_WriteAttr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IntroStory_Frame:
-    JSR WaitForVBlank_L        ; wait for VBlank
+    JSR WaitForVBlank        ; wait for VBlank
     JSR IntroStory_WriteAttr   ; then do the attribute updates
     JSR DrawPalette            ; and draw the animating palette
 
@@ -4335,7 +4335,7 @@ EnterShop_Inn:
 
     JSR ClearOAM                ; clear OAM (to remove the cursor)
     JSR DrawShopPartySprites    ; draw the party
-    JSR WaitForVBlank_L         ; then wait for VBlank before
+    JSR WaitForVBlank         ; then wait for VBlank before
     LDA #>oam                   ;   performing sprite DMA
     STA OAMDMA                   ; all of this is to remove the cursor graphic without doing a real frame
 
@@ -4741,7 +4741,7 @@ ClinicBuildNameString:
 ;;  both are identical, only the latter does not draw the cursor.
 ;;
 ;;    Note the inefficiency here.  Both routines meet up after they call
-;;  music play, but they COULD meet up just before the call to WaitForVBlank_L
+;;  music play, but they COULD meet up just before the call to WaitForVBlank
 ;;  since the code in both is identical at that point.
 ;;
 ;;    Strangely, NEITHER routine clears joy_a or joy_b, which means the shop
@@ -4753,7 +4753,7 @@ ShopFrame:
     JSR ClearOAM               ; clear OAM
     JSR DrawShopPartySprites   ; draw the party sprites
     JSR DrawShopCursor         ; and the cursor
-    JSR WaitForVBlank_L        ; the wait for VBlank
+    JSR WaitForVBlank        ; the wait for VBlank
 
     LDA #>oam
     STA OAMDMA                  ; do sprite DMA
@@ -4769,7 +4769,7 @@ ShopFrame:
 ShopFrameNoCursor:
     JSR ClearOAM               ; do all the same things as above, in the same order
     JSR DrawShopPartySprites   ;  only do not draw the cursor
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     LDA #>oam
     STA OAMDMA
     LDA #BANK_THIS
@@ -7820,7 +7820,7 @@ DrawMainMenuCharSprites:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MenuFrame:
-    JSR WaitForVBlank_L    ; wait for VBlank
+    JSR WaitForVBlank    ; wait for VBlank
     LDA #>oam              ; Do sprite DMA (update the 'real' OAM)
     STA OAMDMA
 
@@ -8095,7 +8095,7 @@ TurnMenuScreenOn_ClearOAM:
                              ;  then just do the normal stuff
 
 TurnMenuScreenOn:
-    JSR WaitForVBlank_L      ; wait for VBlank (don't want to turn the screen on midway through the frame)
+    JSR WaitForVBlank      ; wait for VBlank (don't want to turn the screen on midway through the frame)
     LDA #>oam                ; do Sprite DMA
     STA OAMDMA
     JSR DrawPalette          ; draw/apply the current palette
@@ -9240,7 +9240,7 @@ lut_ArmorTypes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EquipMenuFrame:
-    JSR WaitForVBlank_L     ; wait for VBlank
+    JSR WaitForVBlank     ; wait for VBlank
     LDA #>oam
     STA OAMDMA               ; do sprite DMA
     JSR UpdateEquipMenuModeAttrib   ; update mode attributes (useless, see this routine for why)

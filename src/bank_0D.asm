@@ -5,11 +5,11 @@
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
-.export EnterEndingScene, MusicPlay_L, EnterMiniGame, EnterBridgeScene_L, __Nasir_CRC_High_Byte
+.export EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .export lut_IntroStoryText
 
-.import DrawComplexString_L, DrawBox_L, UpdateJoy_L, DrawPalette_L
-.import WaitForVBlank_L, lut_RNG
+.import DrawComplexString, DrawBox, UpdateJoy, DrawPalette
+.import WaitForVBlank, lut_RNG
 
 BANK_THIS = $0D
 
@@ -213,7 +213,7 @@ DrawFancyTheEndGraphic:
     STA @ppuaddr+1          ; set @ppu addr to $0800
     
   @ClearCHRLoop:
-        JSR WaitForVBlank_L     ; wait for VBlank
+        JSR WaitForVBlank     ; wait for VBlank
         
         LDA @ppuaddr+1          ; set ppu addr
         STA PPUADDR
@@ -266,7 +266,7 @@ DrawFancyTheEndGraphic:
     STA @loopctr
     
   @FillNTLoop:
-        JSR WaitForVBlank_L         ; vblank
+        JSR WaitForVBlank         ; vblank
 
         LDA @ppuaddr+1              ; ppu addr
         STA PPUADDR
@@ -303,7 +303,7 @@ DrawFancyTheEndGraphic:
     ; Since there are only $13 bytes of attribute data, this can all
     ;  be done in 1 frame
     
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     
     LDA #>$23CA                 ; attributes written to $23CA
     STA PPUADDR
@@ -327,8 +327,8 @@ DrawFancyTheEndGraphic:
     LDA #$16
     STA cur_pal+2               ; red (not used?)
     
-    JSR WaitForVBlank_L
-    JSR DrawPalette_L
+    JSR WaitForVBlank
+    JSR DrawPalette
     JSR TheEnd_EndVblank
     
     ;
@@ -346,7 +346,7 @@ DrawFancyTheEndGraphic:
       INX
       BNE :-
       
-    JSR WaitForVBlank_L         ; since that loop took a bit of time -- do a frame just to keep
+    JSR WaitForVBlank         ; since that loop took a bit of time -- do a frame just to keep
     JSR TheEnd_EndVblank        ;   the music going without interruption.
     
     
@@ -485,7 +485,7 @@ DrawFancyTheEndGraphic:
     BNE @FillLoop_Next          ; if it was, we're done filling, as we've hit the "left wall"
     
     ; Otherwise... we want to draw this pixel to fill!
-    JSR WaitForVBlank_L             ; have to draw in VBlank
+    JSR WaitForVBlank             ; have to draw in VBlank
     
     LDA lut_TheEndPixelMasks, X     ; get pixel mask again
     ORA (@fillram), Y               ; update RAM
@@ -529,7 +529,7 @@ DrawFancyTheEndGraphic:
 
 TheEnd_MoveAndSet:
     JSR TheEnd_MovePos          ; self explanitory
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     
     LDX theend_x
     LDY theend_y
@@ -550,7 +550,7 @@ TheEnd_EndVblank:
     LDA #$00
     STA PPUSCROLL
     STA PPUSCROLL
-    JMP MusicPlay_L
+    JMP MusicPlay
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -860,7 +860,7 @@ EnterMiniGame:
     LDA #$0A
     STA box_wd
     STA box_ht
-    JSR DrawBox_L
+    JSR DrawBox
 
     ;; here we start loading CHR for the minigame.  There are 16 sliding puzzle pieces in CHR
     ;;  one is blank (no number), and the others are numbered 1-15.  Each sliding puzzle piece
@@ -965,10 +965,10 @@ EnterMiniGame:
    ;
 
     JSR ClearOAM_BankD       ; clear OAM
-    JSR WaitForVBlank_L      ; then once in VBlank...
+    JSR WaitForVBlank      ; then once in VBlank...
     LDA #>oam
     STA OAMDMA                ; do sprite DMA
-    JSR DrawPalette_L        ; and load up the palette
+    JSR DrawPalette        ; and load up the palette
 
     LDA soft2000             ; the load up soft2000 (resets NT scroll)
     STA PPUCTRL
@@ -1003,10 +1003,10 @@ EnterMiniGame:
 
 MiniGameLoop:
     INC framecounter              ; increment the frame counter to keep animations working
-    JSR WaitForVBlank_L           ; wait for vblank
+    JSR WaitForVBlank           ; wait for vblank
     LDA #>oam
     STA OAMDMA                     ; do sprite DMA
-    JSR MusicPlay_L               ; keep music playing
+    JSR MusicPlay               ; keep music playing
     JSR DrawAllPuzzlePieces       ; draw all the puzzle pieces
     JSR MiniGame_ProcessInput     ; and refresh and process input!
 
@@ -1158,11 +1158,11 @@ MiniGame_CheckVictory:
   ; are never redrawn.  DMA occurs, but the oam buffer is never changed.
 
   @Loop:
-    JSR WaitForVBlank_L     ; Wait for VBlank
+    JSR WaitForVBlank     ; Wait for VBlank
     LDA #>oam
     STA OAMDMA               ; do sprite DMA
-    JSR DrawPalette_L       ; update the palette
-    JSR MusicPlay_L         ; call the music play routine (Probably shouldn't be done until after scroll set -- but doesn't matter)
+    JSR DrawPalette       ; update the palette
+    JSR MusicPlay         ; call the music play routine (Probably shouldn't be done until after scroll set -- but doesn't matter)
 
     LDA #0                  ; THEN set scroll.  Note that if the music routine takes too long, this could theoretically
     STA PPUSCROLL               ; cause the screen to bork... however DrawPalette resets the scroll to zero anyway due to
@@ -1233,7 +1233,7 @@ lut_PuzzleStart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MiniGame_ProcessInput:
-    JSR UpdateJoy_L      ; update joypad info
+    JSR UpdateJoy      ; update joypad info
 
     LDA joy              ; get joy data
     AND #$0F             ; isolate directonal buttons
@@ -1281,7 +1281,7 @@ MiniGame_ProcessInput:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  Another little _L jump table  [$B000 :: 0x37010]
+;;  Another little  jump table  [$B000 :: 0x37010]
 ;;
 
 MusicPlay_L:    JMP MusicPlay
@@ -2136,7 +2136,7 @@ lut_EnvPatterns:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  EnterBridgeScene_L  [$B800 :: 0x37810]
+;;  EnterBridgeScene  [$B800 :: 0x37810]
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2185,15 +2185,15 @@ EnterEndingScene:
     STA box_wd
     LDA #$0C
     STA box_ht
-    JSR DrawBox_L
+    JSR DrawBox
 
     JSR Story_OpenShutters      ; Do the shutter opening effect to reveal the empty story box
 
     JSR DrawFancyTheEndGraphic  ; Do the fancy "The End" drawing effect
 
   @FinalLoop:              ; then the game is over!
-    JSR WaitForVBlank_L    ; simply wait endlessly... FOREVER  **THERE IS NO ESCAPE**
-    JSR MusicPlay_L        ;   but keep the music playing by calling MusicPlay every frame
+    JSR WaitForVBlank    ; simply wait endlessly... FOREVER  **THERE IS NO ESCAPE**
+    JSR MusicPlay        ;   but keep the music playing by calling MusicPlay every frame
     JMP @FinalLoop
 
 
@@ -2337,9 +2337,9 @@ Bridge_StartPPU:
 
 
   _Story_StartPPU:
-    JSR WaitForVBlank_L    ; wait for VBlank
+    JSR WaitForVBlank    ; wait for VBlank
     LDX #0                 ; zero X (completely pointless)
-    JSR DrawPalette_L      ; draw the palette
+    JSR DrawPalette      ; draw the palette
 
     LDA #$0A
     STA PPUMASK              ; turn on BG rendering (but leave sprites disabled)
@@ -2382,7 +2382,7 @@ Story_DoPage:
     LDA #$0C
     STA box_ht
 
-    JSR DrawBox_L            ; draw the box (erases contents)
+    JSR DrawBox            ; draw the box (erases contents)
     JSR Story_DrawText       ; draw this page of story text / credits
     JSR Story_OpenShutters   ; do the open shutter effect
     JSR Story_Wait           ; wait for user to read the text
@@ -2413,9 +2413,9 @@ Story_Wait:
     STA joy_b
 
   @Loop:
-    JSR WaitForVBlank_L    ; wait for VBlank
-    JSR MusicPlay_L        ; keep music playing
-    JSR UpdateJoy_L        ; update joypad data
+    JSR WaitForVBlank    ; wait for VBlank
+    JSR MusicPlay        ; keep music playing
+    JSR UpdateJoy        ; update joypad data
 
     LDA story_dropinput    ; see if we're to drop (ignore) user input
     BNE @CountFrame        ; if we are, skip ahead to @CountFrame
@@ -2459,7 +2459,7 @@ Story_CloseShutters:
     LDA #$00         ; set soft2000 so remainder of previous frame has shutters opened
     STA soft2000
 
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     JSR WaitForShutterStart
 
     LDA #$07
@@ -2495,7 +2495,7 @@ Story_CloseShutters:
 
   ;; here, timing sensitive code is complete
 
-    JSR MusicPlay_L
+    JSR MusicPlay
 
     INC framecounter
     LDA framecounter
@@ -2539,7 +2539,7 @@ Story_OpenShutters:
     STA soft2000         ;  graphics).  This leaves the shutter closed for the remainder of the previous
                          ;  frame.
 
-    JSR WaitForVBlank_L          ; wait for VBlank
+    JSR WaitForVBlank          ; wait for VBlank
     JSR WaitForShutterStart      ; then wait for the PPU to reach approx. shutter start time
 
     LDA #$07             ; A is our down counter, that counts how many different shutters
@@ -2615,7 +2615,7 @@ Story_OpenShutters:
   ;;   are complete
   ;;
 
-    JSR MusicPlay_L    ; keep the music playing
+    JSR MusicPlay    ; keep the music playing
 
     INC framecounter   ; increment the fame counter
     LDA framecounter   ; and check the low bit
@@ -2849,7 +2849,7 @@ Story_DrawText:
     LDA lut_StoryText+1, X
     STA text_ptr+1
 
-    JMP DrawComplexString_L ; and draw it at a complex string.  Then exit
+    JMP DrawComplexString ; and draw it at a complex string.  Then exit
 
 
 __Nasir_CRC_High_Byte = @NasirCRCHighByte+2   ; unimportant to this routine -- has to do with CRC check
@@ -2871,8 +2871,8 @@ Story_EndFrame:
     STA PPUSCROLL             ; reset scroll
     STA PPUSCROLL
 
-    JSR MusicPlay_L       ; play the music
-    JSR WaitForVBlank_L   ; and wait for VBlank
+    JSR MusicPlay       ; play the music
+    JSR WaitForVBlank   ; and wait for VBlank
     RTS                   ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3154,10 +3154,10 @@ MiniGame_AnimateSlide:
                            ;  the puzzle pieces 1 pixel each iteration.
   @AnimateLoop:
     PHA                    ; back up loop counter
-    JSR WaitForVBlank_L    ; wait for VBlank
+    JSR WaitForVBlank    ; wait for VBlank
     LDA #>oam              ; do sprite DMA
     STA OAMDMA
-    JSR MusicPlay_L        ; and play the music
+    JSR MusicPlay        ; and play the music
 
     LDA mg_slidespr        ; then slide the sprites of each tile being moved 1 pixel
     JSR @SlideTile         ;   in the desired direction

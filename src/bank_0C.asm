@@ -5,12 +5,12 @@
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
 
-.import GameStart_L
-.import CallMusicPlay_L
-.import SwapBtlTmpBytes_L, FormatBattleString_L, BattleScreenShake_L, DrawBattleMagicBox_L, BattleRNG_L, BattleWaitForVBlank_L
-.import DrawCombatBox_L, DrawBattleItemBox_L, DrawDrinkBox_L, UndrawNBattleBlocks_L, DrawCommandBox_L, DrawRosterBox_L
-.import BattleCrossPageJump_L, WaitForVBlank_L, ClearBattleMessageBuffer_L
-.import BattleOver_ProcessResult_L
+.import GameStart
+.import CallMusicPlay
+.import SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox, BattleRNG, BattleWaitForVBlank
+.import DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
+.import BattleCrossPageJump, WaitForVBlank, ClearBattleMessageBuffer
+.import BattleOver_ProcessResult
 
 .export lut_BattlePalettes, BankC_CrossBankJumpList
 
@@ -177,7 +177,7 @@ FinishBattlePrepAndFadeIn:
     LDA #$0E
     STA btl_soft2001
     
-    JSR ClearBattleMessageBuffer_L
+    JSR ClearBattleMessageBuffer
     JSR BattleFadeIn
     
     LDA #$1E
@@ -205,7 +205,7 @@ FinishBattlePrepAndFadeIn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitFrames_BattleResult:
-    JSR WaitForVBlank_L     ; wait a frame
+    JSR WaitForVBlank     ; wait a frame
     
     LDA #$00                ; burn a bunch of CPU time -- presumably so that 
     : SEC                   ;  WaitForVBlank isn't called again so close to start of
@@ -238,13 +238,13 @@ CheckForEndOfBattle:
     BNE :+
       JSR PlayFanfareAndCheer   ; play fanfare music and do cheering animation
       
-  : LDA #<BattleOver_ProcessResult_L    ; For all non-zero battle results, the battle is over
+  : LDA #<BattleOver_ProcessResult    ; For all non-zero battle results, the battle is over
     STA btltmp+6                        ; Hand off control to another routine in bank B
-    LDA #>BattleOver_ProcessResult_L
+    LDA #>BattleOver_ProcessResult
     STA btltmp+7
     
     LDA #$0B
-    JMP BattleCrossPageJump_L
+    JMP BattleCrossPageJump
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -256,7 +256,7 @@ BattleFadeOutAndRestartGame:
     JSR BattleFadeOut
     PLA                 ; drop the return address (this is pointless, because GameStart resets the
     PLA                 ;  stack pointer anyway)
-    JMP GameStart_L     ; then jump to GameStart, which returns the user to the title screen.
+    JMP GameStart     ; then jump to GameStart, which returns the user to the title screen.
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -456,8 +456,8 @@ Battle_AfterFadeIn:
 
 BattleLogicLoop:
     JSR RebuildEnemyRoster          ; Rebuild the roster in case some enemies died
-    JSR DrawRosterBox_L             ; Draw the roster box
-    JSR DrawCommandBox_L            ; and the command box
+    JSR DrawRosterBox             ; Draw the roster box
+    JSR DrawCommandBox            ; and the command box
     JSR UpdateSprites_BattleFrame   ; then do a frame with updated battle sprites
     
     LDY #$1C
@@ -492,7 +492,7 @@ BattleLogicLoop:
     ;;  Once all commands are input
     
     LDA #$02                    ; undraw the Roster and Battle menu battle blocks.
-    JSR UndrawNBattleBlocks_L
+    JSR UndrawNBattleBlocks
     
     ; And then do the actual combat!
   BattleLogicLoop_DoCombat:     ; alternative entry point for when the party is surprised
@@ -684,7 +684,7 @@ BattleSubMenu_Magic:
     
     PHA                             ; backup A/B button press
     LDA #$01
-    JSR UndrawNBattleBlocks_L       ; undraw the magic box
+    JSR UndrawNBattleBlocks       ; undraw the magic box
     PLA                             ; restore A/B state
     
     CMP #$02
@@ -841,12 +841,12 @@ BattleSubMenu_Drink:
       JSR DoNothingMessageBox   ; show the 'Nothing' box
       JMP CancelBattleAction    ; then cancel
     
-  : JSR DrawDrinkBox_L          ; otherwise (have at least 1 potion), draw the drink box
+  : JSR DrawDrinkBox          ; otherwise (have at least 1 potion), draw the drink box
   
     JSR MenuSelection_Drink     ; get menu selection from the player  
     PHA                         ; backup the A/B button press
     LDA #$01
-    JSR UndrawNBattleBlocks_L   ; undraw the drink menu
+    JSR UndrawNBattleBlocks   ; undraw the drink menu
     PLA
     CMP #$02
     BNE :+                      ; was B pressed to get out of the drink menu?
@@ -926,12 +926,12 @@ BattleSubMenu_Item:
       JSR DoNothingMessageBox       ; Show the "nothing" box
       JMP CancelBattleAction        ; And cancel this battle action
       
-  : JSR DrawBattleItemBox_L         ; Draw the item box
+  : JSR DrawBattleItemBox         ; Draw the item box
     JSR MenuSelection_Item          ; and run the logic for selecting an item
     
     PHA                             ; backup A/B state
     LDA #$01
-    JSR UndrawNBattleBlocks_L       ; undraw the item box
+    JSR UndrawNBattleBlocks       ; undraw the item box
     PLA                             ; restore A/B state
     
     CMP #$02
@@ -1006,14 +1006,14 @@ DoNothingMessageBox:
     LDA #$04                    ; Draw the "Nothing" combat box
     LDX #<data_NothingText
     LDY #>data_NothingText
-    JSR DrawCombatBox_L
+    JSR DrawCombatBox
     
   @InputLoop:                   ; Wait for the player to provide
       JSR DoFrame_WithInput     ;   ANY input
     BEQ @InputLoop
     
     LDA #$01                    ; then undraw the "Nothing" box and exit
-    JMP UndrawNBattleBlocks_L
+    JMP UndrawNBattleBlocks
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1131,7 +1131,7 @@ BattleUpdatePPU:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleFrame:
-    JSR BattleWaitForVBlank_L   ; Wait for VBlank 
+    JSR BattleWaitForVBlank   ; Wait for VBlank 
     LDA PPUSTATUS
     LDA #>oam
     STA OAMDMA                   ; Do OAM DMA
@@ -1184,7 +1184,7 @@ BattleClearVariableSprite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_WithInput:
-    JSR BattleRNG_L     ; generate a number and throw it away (makes RNG less predictable -- sorta)
+    JSR BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
     
     LDY #$01            ; strobe the controllers
     STY $4016
@@ -2035,7 +2035,7 @@ MenuSelection_Magic:
     LDA #$00
     STA $6AF8                   ; set page number to 0 (draw top page of magic box)
     
-    JSR DrawBattleMagicBox_L    ; draw it!
+    JSR DrawBattleMagicBox    ; draw it!
     JMP @MenuSelection          ; pointless jump, as this code immediately follws
     
 @MenuSelection:
@@ -2128,8 +2128,8 @@ MenuSelection_Magic:
       RTS                       ; page 1 = do nothing
   : INC $6AF8                   ; page 0 = inc to page 1
     LDA #$01
-    JSR UndrawNBattleBlocks_L   ; undraw the page 0 magic box
-    JSR DrawBattleMagicBox_L    ; draw the page 1 magic box
+    JSR UndrawNBattleBlocks   ; undraw the page 0 magic box
+    JSR DrawBattleMagicBox    ; draw the page 1 magic box
   @NormalMove_Down:
     INC btlcurs_y
     RTS
@@ -2144,8 +2144,8 @@ MenuSelection_Magic:
       RTS                       ; page 0?  exit
   : DEC $6AF8                   ; page 1?  move to page 0, and redraw it
     LDA #$01
-    JSR UndrawNBattleBlocks_L
-    JSR DrawBattleMagicBox_L
+    JSR UndrawNBattleBlocks
+    JSR DrawBattleMagicBox
   @NormalMove_Up:
     DEC btlcurs_y
     RTS
@@ -2927,7 +2927,7 @@ DoMagicFlash:
     JMP DoFrame_UpdatePalette
     
   @FrameNoPaletteChange:
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     JSR BattleUpdatePPU
   ; JMP BattleUpdateAudio  ; <- code flows into this routine
     
@@ -2946,7 +2946,7 @@ BattleUpdateAudio:
     BPL :+                  ; if the high bit of the music track is set (indicating the current song is finished)...
       LDA btl_followupmusic ;   then play the followup music
       STA a:music_track
-:   JSR CallMusicPlay_L     ; Call music playback to keep it playing
+:   JSR CallMusicPlay     ; Call music playback to keep it playing
     JMP UpdateBattleSFX     ; and update sound effects to keep them playing
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3026,7 +3026,7 @@ PrepareAndDrawSimpleCombatBox:
     INC btl_combatboxcount      ; count this combat box
     
     PLA                         ; restore combat box ID in A
-    JMP DrawCombatBox_L         ; draw the combat box!
+    JMP DrawCombatBox         ; draw the combat box!
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3053,7 +3053,7 @@ lut_UnformattedCombatBoxBuffer:
 RespondDelay_ClearCombatBoxes:
     JSR RespondDelay            ; respond rate wait
     LDA btl_combatboxcount
-    JSR UndrawNBattleBlocks_L   ; clear all combat boxes
+    JSR UndrawNBattleBlocks   ; clear all combat boxes
     LDA #$00
     STA btl_combatboxcount      ; zero combat box count
     RTS
@@ -3070,7 +3070,7 @@ RespondDelay_ClearCombatBoxes:
 RespondDelay:
     LDA btl_responddelay        ; get the delay
     STA $6AD0                   ; stuff it in temp ram as loop counter
-    : JSR WaitForVBlank_L       ; wait that many frames
+    : JSR WaitForVBlank       ; wait that many frames
       JSR BattleUpdateAudio     ; updating audio each frame
       DEC $6AD0
       BNE :-
@@ -3902,7 +3902,7 @@ Battle_PlayerTryUnstun:
     
     JSR PrepCharStatPointers            ; Get pointers to stats
     
-    JSR BattleRNG_L
+    JSR BattleRNG
     AND #$03                            ; random [0,3]
     BEQ :+                              ; unstun if 0 (25% chance)
       LDA #BTLMSG_PARALYZED_B               ; otherwise, if nonzero, stay stunned
@@ -4442,7 +4442,7 @@ DoPhysicalAttack:
   @EnemyAttackingPlayer:
     LDA #$01
     JSR PlayBattleSFX           ; play the "boom bash" sound effect
-    JSR BattleScreenShake_L     ; do the 'screen shake' animation
+    JSR BattleScreenShake     ; do the 'screen shake' animation
     
     LDA btl_defender_ailments
     AND #AIL_DEAD | AIL_STONE
@@ -4603,7 +4603,7 @@ DoPhysicalAttack:
       LDA #$01                          ; draw it in combat box 1
       LDX #<(btl_unfmtcbtbox_buffer + $10)
       LDY #>(btl_unfmtcbtbox_buffer + $10)
-      JSR DrawCombatBox_L
+      JSR DrawCombatBox
       
       INC btl_combatboxcount            ; inc box counter
       
@@ -4635,7 +4635,7 @@ DoPhysicalAttack:
     LDA #$03                            ; output either damage or "Missed!"
     LDX #<(btl_unfmtcbtbox_buffer + $30);  to the #3 combat box
     LDY #>(btl_unfmtcbtbox_buffer + $30)
-    JSR DrawCombatBox_L
+    JSR DrawCombatBox
     INC btl_combatboxcount              ; and inc combatbox count
     
     LDA battle_critsconnected
@@ -4804,7 +4804,7 @@ DrawBtlMsg_ClearIt:
     JSR RespondDelay                ; Wait
     DEC btl_combatboxcount          ; Then dec the combat box count to erase the battle message
     LDA #$01
-    JMP UndrawNBattleBlocks_L       ; and undraw the battle message
+    JMP UndrawNBattleBlocks       ; and undraw the battle message
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4931,7 +4931,7 @@ DrawCharacterStatus:
     
     LDX #<$6B5E                 ; YX = pointer to our "<name><ailment>" string to be formatted
     LDY #>$6B5E
-    JSR FormatBattleString_L    ; format it (printed to btl_stringoutputbuf).  Note again that
+    JSR FormatBattleString    ; format it (printed to btl_stringoutputbuf).  Note again that
                                 ;  FormatBattleString creates an interleaved string.
     
     LDA $685E                   ; use a LUT to get the target PPU address at which to draw this
@@ -4942,7 +4942,7 @@ DrawCharacterStatus:
     LDA lut_CharStatusPPUAddr+1, Y
     STA $89                     ; put the target PPU address at $88,89
     
-    JSR WaitForVBlank_L         ; since we're about to do some drawing, wait for VBlank
+    JSR WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
     LDA PPUSTATUS                   ; clear toggle
     
             ; remember at this point, btl_stringoutputbuf contains our "<name><ailment>" string
@@ -5060,7 +5060,7 @@ lut_CharStatusPPUAddr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoMiniFrame:
-    JSR WaitForVBlank_L
+    JSR WaitForVBlank
     JMP BattleUpdateAudio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5111,7 +5111,7 @@ UpdateVariablePalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_UpdatePalette:
-    JSR BattleWaitForVBlank_L       ; wait for VBlank
+    JSR BattleWaitForVBlank       ; wait for VBlank
     
     LDA #$3F            ; set PPU addr to point to palettes
     STA PPUADDR
@@ -5170,7 +5170,7 @@ BattleFadeIn:
     STA PPUMASK                   ; including disabling rendering, though since btl_soft2001 has
                                 ;   rendering enabled, rendering will be re-enabled when palettes are updated
     
-    JSR WaitForVBlank_L         ; wait for VBlank
+    JSR WaitForVBlank         ; wait for VBlank
     LDA PPUSTATUS
     LDA #>oam
     STA OAMDMA                   ; Do DMA (clearing actual PPU OAM)
@@ -5890,7 +5890,7 @@ RandAX:
     SBC $68AF       ; subtract to get the range.
     STA $68B6       ; 68B6 = range
     
-    JSR BattleRNG_L
+    JSR BattleRNG
     LDX $68B6
     JSR MultiplyXA  ; random()*range
     
@@ -6291,7 +6291,7 @@ ClearAllCombatBoxes:
     LDA btl_combatboxcount_alt  ; undraw all counted combat boxes
     BEQ :+
     BMI :+
-      JSR UndrawNBattleBlocks_L
+      JSR UndrawNBattleBlocks
   : LDA #$00
     STA btl_combatboxcount_alt  ; zero the counter
     
@@ -6340,7 +6340,7 @@ RespondDelay_UndrawAllBut2Boxes:
       CMP #$03
       BCC @Done                     ; if there are < 3 blocks, we're done
       LDA #$01
-      JSR UndrawNBattleBlocks_L     ; otherwise, undraw one
+      JSR UndrawNBattleBlocks     ; otherwise, undraw one
       DEC btl_combatboxcount_alt    ; and loop (always branches)
       BNE @Loop
       
@@ -6460,7 +6460,7 @@ DrawCombatBox_Defender:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawCombatBox_RestoreAXY:
-    JSR DrawCombatBox_L
+    JSR DrawCombatBox
     JMP RestoreAXY
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6546,10 +6546,10 @@ ShowAltBattleMessage:
     LDY #>btltmp_altmsgbuffer
     LDA #$04                    ; combat box 4 is the bottom battle message box
     
-    JSR DrawCombatBox_L         ; show the box
+    JSR DrawCombatBox         ; show the box
     JSR RespondDelay            ; wait
     LDA #$01
-    JSR UndrawNBattleBlocks_L   ; hide the box
+    JSR UndrawNBattleBlocks   ; hide the box
     
     JMP RestoreAXY              ; restore & exit
     
@@ -6625,12 +6625,12 @@ BtlMag_PrintMagicMessage:
     LDX #<$6D19
     LDY #>$6D19                     ; YA is pointer to the text to print
     LDA #$04                        ; combat box 4 (battle message box)
-    JSR DrawCombatBox_L             ; Draw it!
+    JSR DrawCombatBox             ; Draw it!
     
     JSR RespondDelay                ; Wait a bit so they can read it
     
     LDA #$01
-    JSR UndrawNBattleBlocks_L       ; Undraw it!
+    JSR UndrawNBattleBlocks       ; Undraw it!
     JMP RestoreAXY                  ; Then restore and exit!
     
   @DelayAndExit:
@@ -6694,7 +6694,7 @@ Battle_DoEnemyTurn:
     BNE @Asleep                     ;  if yes, jump ahead to asleep code                    
         
         ;; Otherwise, they are paralyzed
-    JSR BattleRNG_L         ; random number between [0,255]
+    JSR BattleRNG         ; random number between [0,255]
     CMP #25                 ; if that number is less than 25 (less than 10% chance)
     BCS :+                  ; then the paralysis is cured:
       LDA #~AIL_STUN
@@ -6736,7 +6736,7 @@ Battle_DoEnemyTurn:
     BPL @EnemyActive_AndNotConfused     ; if clear, jump ahead to EnemyActive_AndNotConfused.  Otherwise...
     
     ; If enemy is confused:
-    JSR BattleRNG_L                     ; random [0,$FF]
+    JSR BattleRNG                     ; random [0,$FF]
     CMP #$40
     BCS :+                              ; cured if < $40  (25% chance)
       LDA #~AIL_CONF
@@ -6998,7 +6998,7 @@ GetRandomPlayerTarget:
       LDA #$00
       STA btl_randomplayer  ; zero output
       
-      JSR BattleRNG_L       ; get a random number
+      JSR BattleRNG       ; get a random number
       CMP #$20
       BCS :+
         INC $6BCF           ; inc target if < $20
@@ -9141,7 +9141,7 @@ DoExplosionEffect:
 DrawEnemyEffect:
     LDA btl_defender
     PHA
-    JSR SwapBtlTmpBytes_L
+    JSR SwapBtlTmpBytes
     LDX btl_battletype
     BNE :+
       JMP DrawEnemyEffect_9Small          ; 9small formation
@@ -9185,7 +9185,7 @@ DrawEnemyEffect:
     STA $6D16
     
   @EraseLoop:
-      JSR WaitForVBlank_L           ; Vblank
+      JSR WaitForVBlank           ; Vblank
       LDA $6D16                     ; Set PPU Addr
       STA PPUADDR
       LDA $6D15
@@ -9222,7 +9222,7 @@ DrawEnemyEffect:
 
 VBlank_SetPPUAddr:
     PHA                         ; backup A
-    JSR WaitForVBlank_L         ; VBlank
+    JSR WaitForVBlank         ; VBlank
     LDA btltmp+$B               ; set ppu addr
     STA PPUADDR
     LDA btltmp+$A
@@ -9531,13 +9531,13 @@ DrawEnemyEffect_Mix:
 ;;
 ;;  SwapBtlTmpBytes_Local  [$BDD8 :: 0x33DE8]
 ;;
-;;    wtf why does this exist?  Why not just call SwapBtlTmpBytes_L directly?
+;;    wtf why does this exist?  Why not just call SwapBtlTmpBytes directly?
 ;;  This makes no sense.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwapBtlTmpBytes_Local:
-    JMP SwapBtlTmpBytes_L
+    JMP SwapBtlTmpBytes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9589,7 +9589,7 @@ DrawExplosions:
       DEY
       BNE :-
       
-    JSR WaitForVBlank_L     ; Do one more frame
+    JSR WaitForVBlank     ; Do one more frame
     LDA #>oam               ; so we can update sprite data in the PPU
     STA OAMDMA
     JMP BattleUpdateAudio   ; update audio since we did a frame
@@ -9647,7 +9647,7 @@ DrawExplosion_Frame:
       DEX
       BNE :-
       
-    JSR WaitForVBlank_L         ; do a frame
+    JSR WaitForVBlank         ; do a frame
     LDA #>oam                   ; where OAM is updated
     STA OAMDMA
     JMP BattleUpdateAudio       ; update music/sfx during this frame as well

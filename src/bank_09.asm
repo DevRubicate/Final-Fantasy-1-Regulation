@@ -6,7 +6,7 @@
 .include "src/ram-definitions.inc"
 
 .export EnterMinimap
-.import CallMinimapDecompress, UpdateJoy_L, CallMusicPlay_L, DrawPalette_L, WaitForVBlank_L
+.import CallMinimapDecompress, UpdateJoy, CallMusicPlay, DrawPalette, WaitForVBlank
 
 .INCBIN "bin/bank_09_data.bin"
 
@@ -4198,7 +4198,7 @@ Minimap_DrawTitleCHR:
                              ;  out over 16 frames
 
   @FrameLoop:
-    JSR WaitForVBlank_L      ; wait for VBlank
+    JSR WaitForVBlank      ; wait for VBlank
     LDY #0                   ; Y will be loop counter/index
 
     @SmallLoop:
@@ -4480,7 +4480,7 @@ Minimap_DrawDecorCHR:
                              ;  out over 16 frames
 
   @FrameLoop:
-    JSR WaitForVBlank_L      ; wait for VBlank
+    JSR WaitForVBlank      ; wait for VBlank
     LDY #0                   ; Y will be loop counter/index
 
     @SmallLoop:
@@ -4664,11 +4664,11 @@ lut_MinimapDecorCHRDest_hi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MinimapFrame:
-    JSR WaitForVBlank_L    ; wait for VBlank
+    JSR WaitForVBlank    ; wait for VBlank
     LDA #>oam              ; Sprite DMA
     STA OAMDMA
 
-    JSR DrawPalette_L      ; draw the palette
+    JSR DrawPalette      ; draw the palette
     LDA #$1E               ; turn PPU on
     STA PPUMASK
 
@@ -4679,12 +4679,12 @@ MinimapFrame:
     LDA #$E8
     STA PPUSCROLL
 
-    JSR CallMusicPlay_L    ; keep the music playing
+    JSR CallMusicPlay    ; keep the music playing
 
     LDA #0
     STA joy_a              ; clear A and B button catchers
     STA joy_b
-    JSR UpdateJoy_L        ; then update joypad data
+    JSR UpdateJoy        ; then update joypad data
 
     INC framecounter       ; inc the frame counter
 
@@ -4721,7 +4721,7 @@ Minimap_DrawRows:
 
     @MainLoop:
       LDX mm_pixrow          ; put row in X -- X will be the loop up counter and source index
-      JSR WaitForVBlank_L    ; wait for VBlank
+      JSR WaitForVBlank    ; wait for VBlank
 
       @RowLoop:
         LDA minimap_ptr+1    ; set PPU address
@@ -4990,11 +4990,11 @@ Minimap_FillNTPal:
    ;  Do last minute PPU stuff before exiting
    ;
 
-    JSR WaitForVBlank_L   ; wait for VBlank
+    JSR WaitForVBlank   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
     STA OAMDMA
 
-    JSR DrawPalette_L     ; draw the palette
+    JSR DrawPalette     ; draw the palette
 
     LDA soft2000
     STA PPUCTRL             ; set NT scroll and pattern page assignments
