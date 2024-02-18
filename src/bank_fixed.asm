@@ -14,7 +14,9 @@
 .import TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
-.import Test
+.import EnvironmentStartupRoutine
+; bank_1E.asm
+.import ResetRAM
 
 .export GameStart
 .export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
@@ -50,7 +52,6 @@ GameStart:
     LDX #$FF                    ; reset stack pointer
     TXS
     
-    LDA #0                      ; (pointless LDA)
     JSR DisableAPU              ; Silence/disable all audio
     
     ;; Load some startup info
@@ -11281,30 +11282,6 @@ lut_DTE1:
 lut_RNG:
     .INCBIN "bin/0F_F100_rngtable.bin"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Another of those lovely pseudo-jump tables  [$F200 :: 0x3F210]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterBattle_L:              JMP EnterBattle
-Battle_WritePPUData_L:      JMP Battle_WritePPUData
-Battle_ReadPPUData_L:       JMP Battle_ReadPPUData
-BattleCrossPageJump_L:      JMP BattleCrossPageJump
-ClearBattleMessageBuffer_L: JMP ClearBattleMessageBuffer
-UndrawNBattleBlocks_L:      JMP UndrawNBattleBlocks
-DrawRosterBox_L:            JMP DrawRosterBox
-DrawCommandBox_L:           JMP DrawCommandBox
-DrawCombatBox_L:            JMP DrawCombatBox
-DrawBattleMagicBox_L:       JMP DrawBattleMagicBox
-BattleWaitForVBlank_L:      JMP BattleWaitForVBlank
-DrawBattleItemBox_L:        JMP DrawBattleItemBox
-DrawDrinkBox_L:             JMP DrawDrinkBox
-BattleRNG_L:                JMP BattleRNG
-BattleScreenShake_L:        JMP BattleScreenShake
-FormatBattleString_L:       JMP FormatBattleString
-SwapBtlTmpBytes_L:          JMP SwapBtlTmpBytes
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Set Battle PPU Addr  [$F233 :: 0x3F243]
@@ -13768,34 +13745,10 @@ WaitForVBlank_L: JMP WaitForVBlank
 
 OnReset:
     SEI                     ; Set Interrupt flag (prevent IRQs from occuring)
-   
-    LDA #0    
-    LDX #0
-   @ResetRAM:
-    STA $0000, X
-    STA $0200, X
-    STA $0300, X
-    STA $0400, X
-    STA $0500, X
-    STA $0600, X
-    STA $0700, X
-    INX
-    BNE @ResetRAM
-
-    STA PPUCTRL             ; Disable NMIs
-    LDA #$06
-    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
-    CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
-
-    LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
-  @Loop: 
-      BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
-      BPL @Loop             ;  failure to do this will result in the PPU basically not working
-      DEX
-      BNE @Loop
-
+    
     ; MMC5
-      
+    LDX #0
+    TXS                     ; transfer it to the Stack Pointer (resetting the SP)
     STX MMC5_PCM_MODE_IRQ   ; Disable MMC5 PCM and IRQs
     STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
     STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
@@ -13804,7 +13757,7 @@ OnReset:
     STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
     STX MMC5_CHR_BANK7      ; Swap in first CHR Page
     INX                     ; 01
-    STX MMC5_PRG_MODE       ; 16k PRG-RAM swap
+    STX MMC5_PRG_MODE       ; set MMC5 to 16k PRG mode
     STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
     INX                     ; 02
     STX MMC5_RAM_PROTECT_1  ; Allow writing to PRG-RAM A
@@ -13816,12 +13769,22 @@ OnReset:
 
     LDA #0
     STA PAPU_MODCTL         ; disble DMC IRQs
+    STA PPUCTRL             ; Disable NMIs
     LDA #$C0
     STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
 
-    TXS                     ; transfer it to the Stack Pointer (resetting the SP)
+    LDA #$06
+    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
+    CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
 
-    CALL_BANK1 $0F, Test 
+    LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
+  @Loop: 
+      BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
+      BPL @Loop             ;  failure to do this will result in the PPU basically not working
+      DEX
+      BNE @Loop
+
+    CALL ResetRAM
 
     JSR DisableAPU
     JMP GameStart           ; jump to the start of the game!
