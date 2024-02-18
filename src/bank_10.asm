@@ -6,11 +6,26 @@
 .include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
-.import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
+.import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, SetOWScroll_PPUOn, ClearOAM, CallMusicPlay_NoSwap
 
-.export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects
+.export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawSMSprites  [$E40F :: 0x3E41F]
+;;
+;;    Draws all sprites for standard maps, and updates/animates
+;;  map objects (townspeople, etc).
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+DrawSMSprites:
+    LDY #1
+    CALL DrawPlayerMapmanSprite    ; draw the player mapman sprite (on foot -- no ship/airship/etc)
+    CALL UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -429,3 +444,541 @@ lut_PlayerMapmanSprTbl:
   .BYTE $04,$00, $07,$41, $05,$00, $06,$41   ; facing up,    frame 1
   .BYTE $00,$00, $02,$01, $01,$00, $03,$01   ; facing down,  frame 0
   .BYTE $00,$00, $03,$41, $01,$00, $02,$41   ; facing down,  frame 1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw OW Sprites   [$E225 :: 0x3E235]
+;;
+;;    Draws all sprites for the overworld
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+DrawOWSprites:
+    LDY vehicle            ; put current vehicle in Y
+    CPY #$08
+    BEQ @InAirship         ; check to see if the player is in the airship
+    CPY #$04
+    BEQ @InShip            ; or the ship
+    CPY #$02
+    BEQ @InCanoe           ; or the canoe
+                           ; if none of those, they're on foot.
+
+  @OnFoot:
+    CALL DrawPlayerMapmanSprite  ; draw the mapman sprite
+
+    LDA inforest         ; check to see if we're in the forest
+    BEQ @NotInForest     ; if not, skip ahead
+
+      LDA sprindex       ; if we are in a forest... hide the bottom half of the player by
+      SEC                ;   getting the sprite index
+      SBC #$0C           ; subtract $C and put it in X (this will point it to the 
+      TAX                ;   2nd of the 4 8x8 sprites drawn -- DL player mapman sprite)
+
+      LDA #$F4           ; new Y coord = $F4 (offscreen -- removes the sprite)
+      STA oam+$00, X     ;  hide DL sprite
+      STA oam+$08, X     ;  hide DR sprite
+
+  @NotInForest:
+    LDA airship_vis      ; check airship visibility
+    BEQ @HideAirship     ; if not visible, skip ahead and don't draw the airship
+
+    CMP #$1F             ; if visibility = $1F -- airship is fully visible
+    BCS @ShowAirship     ; so skip ahead and draw it
+                         ;  otherwise the airship is "flashing" because you just
+                         ;  raised it with the floater.
+    INC airship_vis      ; increment the visibility counter
+    LSR A                ; shift bit 1 into C
+    LSR A                ;  and only draw it if bit 1 is clear
+    BCS @HideAirship     ;  effectively toggles visibility every 2 frames to make it flash
+
+  @ShowAirship:
+    CALL DrawOWObj_Airship
+  @HideAirship:
+    CALL DrawOWObj_Ship
+    JUMP DrawOWObj_BridgeCanal
+
+  @InAirship:                    ; if in the airship, draw everything normally
+    CALL DrawPlayerMapmanSprite   ;  except do NOT draw the airship
+    CALL DrawOWObj_Ship
+    JUMP DrawOWObj_BridgeCanal
+
+  @InShip:                       ; same deal if in ship -- don't draw the ship
+    CALL DrawOWObj_BridgeCanal    ; but also... draw the bridge and canal OVER the mapman sprite
+    LDY #$04                     ;   this makes it so the ship goes under the bridge rather than over
+    CALL DrawPlayerMapmanSprite   ; reload Y with the vehicle (4=ship) before calling this
+    JUMP DrawOWObj_Airship
+
+  @InCanoe:                      ; canoe is nothing special.. just draw all the sprites
+    CALL DrawPlayerMapmanSprite
+    CALL DrawOWObj_Ship
+    CALL DrawOWObj_Airship
+    JUMP DrawOWObj_BridgeCanal
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Overworld Object routines  [$E373 :: 0x3E383]
+;;
+;;    Each of these routines draws a certain overworld object
+;;  at its current coords.  There are three distinct routines, one for the
+;;  ship, one for the airship, and one for both the bridge and canal.
+;;
+;;    Note that the ship/airship are for when those items are not acting
+;;  as the current vehicle (ie:  it's the docked ship, and the landed airship --
+;;  when the vehicle is not in use).
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ ;;
+ ;;  Ship
+ ;;
+
+DrawOWObj_Ship:
+    LDA ship_vis            ; get ship visibility flag
+    BEQ DrawOWObj_Exit      ; if zero, ship isn't available yet -- so don't draw it
+
+    LDX ship_x              ; get x coord in X
+    LDY ship_y              ; get y coord in Y
+    CALL ConvertOWToSprite   ; convert those coords to sprite coords
+    BCS DrawOWObj_Exit      ; if sprite out of bounds, don't draw it
+
+    LDA #0
+    STA tmp                 ; no additional offset to sprite table
+    LDA #$20                ; tile additive of $20 (ship graphics)
+    JUMP Draw2x2Vehicle      ; draw the vehicle, and exit
+
+ ;;
+ ;;  Airship
+ ;;
+
+DrawOWObj_Airship:
+    LDA airship_vis         ; get airship visibility flag
+    BEQ DrawOWObj_Exit      ; if zero, airship isn't available yet -- so don't draw it
+
+    LDX airship_x           ; get x coord in X
+    LDY airship_y           ; and y coord in Y
+    CALL ConvertOWToSprite   ; convert those coords to sprite coords
+    BCS DrawOWObj_Exit      ; if sprite out of bounds, don't draw it
+
+    LDA #0
+    STA tmp                 ; no additional offset to sprite table
+    LDA #$38                ; tile additive of $38 (airship graphics)
+    JUMP Draw2x2Vehicle      ; draw the vehicle, and exit
+
+ ;;
+ ;;  a common exit shared by these routines
+ ;;
+
+DrawOWObj_Exit:
+    RTS
+
+ ;;
+ ;;  Bridge and Canal
+ ;;
+
+DrawOWObj_BridgeCanal:
+    LDA bridge_vis          ; check if bridge is visible
+    BEQ @Canal              ; if not.. skip it and proceed to canal
+
+    LDX bridge_x            ; get and convert X,Y coords
+    LDY bridge_y
+    CALL ConvertOWToSprite
+    BCS @Canal              ; if out of bounds, skip to canal
+
+    LDA #$08                ; otherwise, draw with table offset $08 (bridge)
+    CALL @Draw               ;  then proceed to canal
+
+  @Canal:
+    LDA canal_vis           ; if not visible
+    BEQ DrawOWObj_Exit      ;    exit
+
+    LDX canal_x
+    LDY canal_y
+    CALL ConvertOWToSprite
+    BCS DrawOWObj_Exit      ; if coords are out of bounds, exit
+
+    LDA #$10                ; otherwise, draw iwth table offset $10 (canal)
+
+  @Draw:
+    CLC
+    ADC #<lut_OWObjectSprTbl  ; add table offset (in A) to low byte of table
+    STA tmp                   ; and store in our pointer
+    LDA #>lut_OWObjectSprTbl
+    ADC #0
+    STA tmp+1                 ; include carry in high byte of pointer
+
+    LDA #$10                  ; set the tile additive to $10
+    STA tmp+2
+
+    JUMP Draw2x2Sprite         ; draw the sprite, and return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  OW object sprite table  [$E4A7 :: 0x3E4B7]
+;;
+;;    Same, but for the misc overworld objects (airship shadow, bridge, and canal)
+;;  Only one 8-byte table per object, since facing isn't applicable, and there's
+;;  no animation involved
+;;
+;;    Really.. the game SHOULD'VE just used 1 8-byte table... since all 3 tables
+;;  are identical except for the tile ID used (but that can be adjusted with the
+;;  tile additive -- I mean that's exactly what it's for, right?)
+;;
+;;    Also, somewhat stupidly, the tile IDs in these tables aren't even correct.
+;;  to get the right graphics you have to use a tile additive of $10
+
+lut_OWObjectSprTbl:
+  .BYTE $00,$03, $02,$03, $01,$03, $03,$03     ; airship shadow
+  .BYTE $04,$03, $06,$03, $05,$03, $07,$03     ; bridge
+  .BYTE $08,$03, $0A,$03, $09,$03, $0B,$03     ; canal
+
+
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw 2x2 Vehicle  [$E2DE :: 0x3E2EE]
+;;
+;;  IN:  tmp         = sprite table pointer offset
+;;       spr_x,spr_y = sprite coords
+;;       A           = tile additive (Draw2x2Vehicle only)
+;;       tmp+2       = tile additive (Draw2x2Vehicle_Set only)
+;;
+;;    The tile additive should be one of the following to draw the desired vehicle:
+;;   canoe   = $50
+;;   ship    = $20
+;;   airship = $38
+;;
+;;    The two entry points just look for the tile additive in different places.  Other
+;;  than that, they're the same
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Draw2x2Vehicle:
+    STA tmp+2                 ; store tile additive (in A) to tmp+2
+                              ;  then proceed to 'Set' version of routine
+
+Draw2x2Vehicle_Set:
+    LDA tmp                   ; add low byte of sprite table
+    CLC                       ; to our offset
+    ADC #<lut_VehicleSprTbl
+    STA tmp                   ; and store as low byte of our pointer
+
+    LDA #>lut_VehicleSprTbl   ; then inclue any carry in the high byte of our pointer
+    ADC #0
+    STA tmp+1
+
+    JUMP Draw2x2Sprite         ; draw the 2x2 sprite, then exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Vehicle mapman sprite tables  [$E467 :: 0x3E477]
+;;
+;;    Same as above, but for OW vehicles (canoe, ship, airship)
+;;
+;;    Tile IDs in this table are not usable as-is.  For proper vehicle
+;;  tiles to be drawn, the following additives must be used:
+;;
+;;   canoe   = $50
+;;   ship    = $20
+;;   airship = $38
+
+
+lut_VehicleSprTbl:
+  .BYTE $11,$42, $13,$42, $10,$42, $12,$42   ; R 0
+  .BYTE $15,$42, $17,$42, $14,$42, $16,$42   ; R 1
+  .BYTE $10,$02, $12,$02, $11,$02, $13,$02   ; L 0
+  .BYTE $14,$02, $16,$02, $15,$02, $17,$02   ; L 1
+  .BYTE $00,$02, $02,$02, $01,$02, $03,$02   ; U 0
+  .BYTE $04,$02, $06,$02, $05,$02, $07,$02   ; U 1
+  .BYTE $08,$02, $0A,$02, $09,$02, $0B,$02   ; D 0
+  .BYTE $0C,$02, $0E,$02, $0D,$02, $0F,$02   ; D 1
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Convert Overworld Coord to Sprite Coord   [$E3DF :: 0x3E3EF]
+;;
+;;     Converts X/Y overworld map coords to X/Y sprite coords based
+;;  on the current scroll.
+;;
+;;  IN:   X, Y
+;;
+;;  OUT:  spr_x, spr_y
+;;                   C = set if sprite is not visible on current screen
+;;                       clear if visible
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvertOWToSprite:
+    TYA                 ; put the Y coord in A
+    SEC
+    SBC ow_scroll_y     ; subtract the current ow scroll
+    CMP #$10            ; see if result is >= $10
+    BCS @OutOfBounds    ; if it is -- out of bounds
+
+    ASL A               ; multiply that tile by 16
+    ASL A               ;   to get the pixel (16 pixels per tile)
+    ASL A
+    ASL A
+
+    CLC                 ; CLEAR carry (subtract an additional 1 in the folling SBC)
+                        ;   this is because NES sprites are drawn 1 scanline below their specified
+                        ;   Y coord.
+
+    SBC move_ctr_y      ; then subtract the Y move counter (fine Y scroll)
+    CMP #$EC            ; if >= $EF, out of bounds
+    BCS @OutOfBounds
+
+    STA spr_y           ; otherwise, Y coord is in bounds.  record it
+                        ;   then do the same for X...
+
+    TXA                 ; put X coord in A
+    SEC
+    SBC ow_scroll_x     ; subtract OW scroll
+    CMP #$10            ; out of bounds if >= $10
+    BCS @OutOfBounds
+
+    ASL A               ; multiply by 16
+    ASL A
+    ASL A
+    ASL A
+
+    SEC                 ; SEC (no additional 1 this time)
+    SBC move_ctr_x      ; subtract fine X scroll
+    BCC @OutOfBounds    ; if that moved the sprite off the left of the screen, out of bounds
+
+    CMP #$F8            ; otherwise, if >= $F8
+    BCS @OutOfBounds    ;  out of bounds
+
+    STA spr_x           ; otherwise.. in bounds!  record X coord
+    CLC                 ; CLC to indicate in bounds
+    RTS                 ; and exit
+
+  @OutOfBounds:
+    SEC                 ; SEC to indicate out of bounds
+    RTS                 ; and exit
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawMMV_Canoe    [$E2DC :: 0x3E2EC]
+;;
+;;    Support routine for DrawPlayerMapmanSprite.  Draws the canoe MapMan Vehicle (MMV)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawMMV_Canoe:
+    LDA #$50          ; tile additive = $50 (canoe graphics)
+             ; flows seamlessly into Draw2x2Vehicle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawMMV_Ship    [$E2D5 :: 0x3E2E5]
+;;
+;;    Support routine for DrawPlayerMapmanSprite.  Draws the ship MapMan Vehicle (MMV)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawMMV_Ship:
+    LDA #$20
+    STA tmp+2               ; tile additive = $20 (ship graphics)
+    JUMP Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Player Mapman sprite  [$E281 :: 0x3E291]
+;;
+;;    Draws the mapman sprite for the player.  Handles animations
+;;  and vehicle changes as well.
+;;
+;;  IN:  Y = current vehicle.  ('vehicle' var in RAM is not used by this routine -- this
+;;                               is so standard maps can override it)
+;;
+;;    Note that this routine branches to support routines... so those support routines
+;;  must be stored nearby this one.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+DrawPlayerMapmanSprite:
+    LDA #$70
+    STA spr_x              ; set X coord to $70 (7 tiles from left of screen)
+
+    LDA lut_VehicleSprY, Y ; get proper Y coord from LUT (different vehicles have different Y coords)
+
+    CPY #$08
+    BNE @NotAirship      ; see if vehicle is airship.  If it is...
+
+      STA spr_y          ; record Y coord
+      LDA framecounter   ; use framecounter as animator (propellers always spinning)
+      ASL A              ; double the frame counter to make animation quicker (each pic lasts 4 frames)
+      JUMP @SetFacing     ; jump ahead to facing code
+
+
+  @NotAirship:           ; if not airship..
+      STA spr_y          ; record Y
+      LDA move_ctr_x     ; use X move counter as animator (second half of step is a different pic)
+      BNE @SetFacing     ; if X counter is nonzero (moving left/right), use it, otherwise
+      LDA move_ctr_y     ;   use Y coord instead
+
+  @SetFacing:
+    AND #$08             ; mask out bit 3 of animation source.  This determines which of the two
+                         ;  pics to draw
+
+    LDX facing                           ; put facing in X
+    ORA lut_VehicleFacingSprTblOffset, X ; use it as index to get sprite table offset
+    STA tmp                              ; store sprite table offset in tmp (low byte of spr tbl pointer)
+
+    CPY #$01           ; Check vehicle to see if they're on foot
+    BNE @notOnFoot
+    JUMP DrawMMV_OnFoot
+
+    @notOnFoot:
+    CPY #$02           ; or in the canoe
+    BEQ DrawMMV_Canoe
+
+    CPY #$04           ; or in the ship
+    BEQ DrawMMV_Ship
+
+       ; if none of those, it's the airship!
+    LDA #$38
+    STA tmp+2               ; tile additive = $38 (airship graphics)
+    CALL Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
+          
+            ; then flow seamlessly into DrawAirshipShadow
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Airship Shadow  [$E2B8 :: 0x3E2C8]
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawAirshipShadow:
+    LDA framecounter         ; get frame counter
+    LSR A                    ; shift low bit into C
+    BCC @Exit                ; if low bit clear, draw nothing (exit)
+                             ;  this results in the shadow being drawn every other frame, which
+                             ;  how it "flickers"
+    LDA #$6F
+    STA spr_y                ; Y coord = $6F
+    LDA #$70
+    STA spr_x                ; X coord = $70
+
+    LDA #$10
+    STA tmp+2                ; tile additive = $10 (airship shadow graphics)
+
+    LDA #<lut_OWObjectSprTbl ; and get OW Object sprite table pointer
+    STA tmp
+    LDA #>lut_OWObjectSprTbl
+    STA tmp+1
+
+    JUMP Draw2x2Sprite        ; then draw the 2x2 sprite and exit
+
+  @Exit:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Vehicle facing table offset  [$E417 :: 0x3E427]
+;;
+;;    The value in this table gets added to the pointer of the sprite table to use
+;; when drawing mapman/vehicle sprites (the tables themselves are stored just below).
+;;
+;;   In short... a different table is used to draw a sprite based on which direction
+;; it's facing.  This table indicates which of those tables to use.
+;;
+;;   right = +$00
+;;   left  = +$10
+;;   down  = +$30
+;;   up    = +$20
+;;
+;;   'facing' is used as the index for this table.  Normally, this is only either
+;;  1, 2, 4, or 8... but could be anywhere between 0-F if the player is pressing
+;;  multiple directions at once.  In calculations for determining facing, low bits
+;;  are given priority (ie:  if you're pressing up+right, you'll move right because
+;;  right is bit 0).  To have the images match this priority, this table has been
+;;  built appropriately
+
+lut_VehicleFacingSprTblOffset:
+  .BYTE $00,$00,$10,$00,$30,$00,$10,$00,$20,$00,$10,$00,$30,$00,$10,$00
+ ;       R   R   L   R   D   R   L   R   U   R   L   R   D   R   L   R   ; direction used
+ ;       -   r   l   rl  d   rd  ld rld  u   ru  lu rlu  du rdu ldu rldu ; directions being pressed (lowest bits take priority)
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Vehicle sprite Y coord LUT  [$E36A :: 0x3E37A]
+;;
+;;     Many of these bytes are unused/padding.
+
+lut_VehicleSprY:
+  .BYTE     $6C
+  .BYTE $6C               ; on foot
+  .BYTE $6F,$6F           ; canoe
+  .BYTE $6F,$6F,$6F,$6F   ; ship
+  .BYTE $4F               ; airship
+    ;    ^^  used column
+
+
+
+;;
+;;  AirshipTransitionFrame  [$E1E1 :: 0x3E1F1]
+;;    Does a frame during airship transitions (landing/taking off)
+;;
+
+AirshipTransitionFrame:
+    CALL WaitForVBlank   ; wait for VBlank
+    LDA #>oam             ; then do sprite DMA
+    STA OAMDMA
+
+    LDA framecounter      ; increment the frame counter by 1
+    CLC                   ;   (why doesn't it just use INC?)
+    ADC #$01
+    STA framecounter
+
+    CALL SetOWScroll_PPUOn     ; Set Scroll
+    CALL ClearOAM              ; Clear OAM
+    CALL CallMusicPlay_NoSwap  ; And call music play
+
+    LDA #$70
+    STA spr_x          ; draw the airship at x coord=$70 (same column that player is drawn)
+
+    LDA tmp+10
+    STA spr_y          ; get Y coord from our current animation (in tmp+10)
+
+    LDA framecounter   ; use the frame counter to handle propeller animation
+    AND #$08           ;  each image lasts for 8 frames
+    STA tmp            ; store this as the table offset
+
+    LDA #$38           ; tile additive = $38  (airship graphics)
+    CALL Draw2x2Vehicle ; draw the 2x2 vehicle (airship)
+    CALL DrawAirshipShadow       ; then draw the airship shadow
+    CALL DrawOWObj_Ship          ;  and ship
+    CALL DrawOWObj_BridgeCanal   ;  and bridge/canal
+
+    LDA #%00111000
+    STA PAPU_NCTL1            ; set noise volume to 8
+
+    LDA framecounter     ; use framecounter as frequency for noise
+    STA PAPU_NFREQ1            ;   this will result in a the pitch starting high, then quickly sweeping
+                         ;   downward, then becoming very high again.  Repeating that pattern very
+                         ;   quickly (cycles through all pitches once every 16 frames)
+                         ; also will switch between "shhhhh" long mode and "bzzzzz" short mode every
+                         ;  128 frames
+
+    LDA #0               ; write to last noise reg just to prime the length counter
+    STA PAPU_NFREQ2            ;  ensures noise will be audible
+
+    RTS                  ; frame is complete!  Exit
+
+
+
+
