@@ -3600,6 +3600,7 @@ GetEnemyStatPtr:
 ;;  Epilogue/Bridge scene CHR and NT  [$A800 :: 0x2E810]
 ;;
 ;;
+.align $100
 
 data_EpilogueCHR:
   .INCBIN "bin/0B_A800_endingbridge_chrnt.bin"
