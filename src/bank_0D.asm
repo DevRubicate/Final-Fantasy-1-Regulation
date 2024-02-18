@@ -2981,7 +2981,7 @@ lut_CreditsText:
   .INCBIN "bin/0D_BB00_credittext.bin"
 
 
- ; $BB8E -- unknown/unused?  very, very strange.  More space for credit text?
+ ; $BB8E -- item prices start at BC00, so there are some bytes part of the credit text here
   .INCBIN "bin/0D_BB8E_unknown.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

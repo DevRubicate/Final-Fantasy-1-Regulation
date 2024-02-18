@@ -18,18 +18,19 @@
 .import BattleRNG
 ; bank_10.asm
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-
 ; bank_1E.asm
 .import ResetRAM, SetRandomSeed, GetRandom
+; bank_11.asm
+.import OpenTreasureChest, AddGPToParty, LoadPrice
 
-
+.export SwapPRG
 .export GameStart
-.export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
-.export ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
+.export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
+.export ClearOAM, DrawPalette, CallMusicPlay, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, CallMusicPlay, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
-.export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
+.export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData, CallMinimapDecompress
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
@@ -2063,7 +2064,7 @@ MinigameReward:
     LDA #0
     STA tmp+2
 
-    JUMP AddGPToParty
+    FARJUMP AddGPToParty
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2816,7 +2817,7 @@ TalkToSMTile:
       LDA #DLGID_EMPTYTC      ; select "The Chest is empty" text, and exit
       RTS
 
-:   JUMP OpenTreasureChest     ; otherwise, open the chest
+:   FARJUMP OpenTreasureChest     ; otherwise, open the chest
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6994,257 +6995,6 @@ lut_NTRowStartHi:
   .BYTE $23,$23,$23,$23,$23,$23,$23,$23
 
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Find Empty Weapon Slot  [$DD34 :: 0x3DD44]
-;;
-;;    Finds the first available weapon slot in the party.
-;;
-;;  OUT:  C = clear if there is an empty slot, set if there are no empty slots
-;;        X = index (from ch_stats) of the available slot (if any available)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindEmptyWeaponSlot:
-    LDY #0             ; Y is our loop counter
-   @Loop:
-     LDX lut_WeaponSlots, Y ; load up the index to the next weapon slot
-     LDA ch_stats, X        ; then get the weapon in that slot
-     BEQ @FoundSlot         ; if zero (empty slot), we found our empty slot
-
-     INY               ; otherwise slot is occupied -- increase loop counter
-     CPY #16           ; and loop until all 16 slots checked
-     BCC @Loop
-
-    RTS                ; if all 16 slots checked, and no empty slot found, return (C is set
-                       ;  here because above BCC would have failed -- so no need for SEC)
-
-  @FoundSlot:
-    CLC                ; CLC to indicate a slot is found
-    RTS                ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Find Empty Armor Slot  [$DD46 :: 0x3DD56]
-;;
-;;    Finds first available armor slot.  Identical to above FindEmptyWeaponSlot 
-;;  routine, except it is for armor instead of weapons.  See that routine for comments
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindEmptyArmorSlot:
-    LDY #0
-  @Loop:
-      LDX lut_ArmorSlots, Y
-      LDA ch_stats, X
-      BEQ @FoundSlot
-      INY
-      CPY #16
-      BCC @Loop
-
-    RTS
-
-  @FoundSlot:
-    CLC
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LUTs of Weapon/Armor slots by index  [$DD58 :: 0x3DD68]
-;;
-;;    Used by above routines to find all weapon/armor slots quickly
-;;  with a zero based index
-
-lut_WeaponSlots:
-  .BYTE <ch_weapons+$00, <ch_weapons+$01, <ch_weapons+$02, <ch_weapons+$03
-  .BYTE <ch_weapons+$40, <ch_weapons+$41, <ch_weapons+$42, <ch_weapons+$43
-  .BYTE <ch_weapons+$80, <ch_weapons+$81, <ch_weapons+$82, <ch_weapons+$83
-  .BYTE <ch_weapons+$C0, <ch_weapons+$C1, <ch_weapons+$C2, <ch_weapons+$C3
-
-lut_ArmorSlots:
-  .BYTE <ch_armor+$00, <ch_armor+$01, <ch_armor+$02, <ch_armor+$03
-  .BYTE <ch_armor+$40, <ch_armor+$41, <ch_armor+$42, <ch_armor+$43
-  .BYTE <ch_armor+$80, <ch_armor+$81, <ch_armor+$82, <ch_armor+$83
-  .BYTE <ch_armor+$C0, <ch_armor+$C1, <ch_armor+$C2, <ch_armor+$C3
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Open Treasure Chest  [$DD78 :: 0x3DD88]
-;;
-;;    Opens a treasure chest, gives the item to the party (if possible), marks
-;;  the chest as open, and sets 'dlgsfx' appropriately (for TC jingle or key item
-;;  fanfare)
-;;
-;;  IN:  tileprop+1 = ID of the chest (2nd byte of tile properties)
-;;           dlgsfx = assumed to be zero
-;;
-;;  OUT:          A = dialogue text ID to print
-;;           dlgsfx = sound effect to play 1=key item fanfare, 2=tc jingle
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OpenTreasureChest:
-    LDA #BANK_TREASURE       ; swap to bank containing treasure chest info
-    CALL SwapPRG
-
-    LDX tileprop+1           ; put chest index in X
-    LDA lut_Treasure, X      ; use it to get the contents of the chest
-    STA dlg_itemid           ; record that as the item id so it can be printed in the dialogue box
-
-    CMP #TCITYPE_WEPSTART    ; see if the ID is >= weapon_ids
-    BCS @NotItem             ; if it is, it's not an item -- branch ahead
-
-  ;;
-  ;; Chest contains an item
-  ;;
-
-    TAX                      ; put item ID in X
-    LDA items, X             ; see how many of this item the player has
-    CMP #99                  ; see if they have >= 99
-    BCS :+
-      INC items, X           ; give them one of this item -- but only if they have < 99
-
-:   LDX tileprop+1           ; re-get the chest index
-    LDA game_flags, X        ; set the game flag for this chest to mark it as opened
-    ORA #GMFLG_TCOPEN        ;  note that the chest is opened even if you didn't get the item because you had
-    STA game_flags, X        ;  too many.  That is arguably BUGGED.
-
-    LDA dlg_itemid               ; get the item ID again
-    CMP #item_qty_start - items  ; see if it's a qty item (normal item -- not key item)
-    BCC :+
-      INC dlgsfx                 ; if >= qty_start, this is not a key item.  set dlgsfx to 2 (normal TC jingle)
-:   INC dlgsfx                   ;  otherwise only set it to 1 (key item fanfare)
-
-    LDA #DLGID_TCGET             ; put the treasure chest dialogue ID in A before exiting!
-    RTS
-
-  ;; jumps here if chest doesn't have a normal item
-  @NotItem:                  ; if not a normal item....
-    CMP #TCITYPE_ARMSTART    ; see if item is a weapon by seeing if it's < armor start
-    BCS @NotWeapon           ; if not... jump ahead
-
-  ;; 
-  ;; Chest contains a weapon
-  ;;
-
-    SEC                      ; subtract to convert the item ID to a 1-based weapon index
-    SBC #TCITYPE_WEPSTART-1  ;  don't make it zero based because zero is an empty slot
-    STA tmp                  ; store the equip index in temp RAM
-
-    CALL FindEmptyWeaponSlot  ; Find an available slot to place this weapon in
-    BCS @TooFull             ;  if there are no available slots, jump to 'Too Full' message
-                             ; otherwise, equipment get
-
-  ;;
-  ;; General stuff for all non-normal items
-  ;;
-
-  @EquipmentGet:
-    LDA tmp                  ; get previously tmp'd equipment ID
-    STA ch_stats, X          ; add it to the previously found empty slot
-                             ;  then continue on to mark the chest as open
-
-  @OpenChest:
-    LDX tileprop+1           ; get the ID of this chest
-    LDA game_flags, X        ; flip on the TCOPEN flag to mark this TC as open
-    ORA #GMFLG_TCOPEN
-    STA game_flags, X
-
-    INC dlgsfx               ; set dlgsfx to 2 to play the TC jingle
-    INC dlgsfx
-
-    LDA #DLGID_TCGET         ; and select "In This chest you found..." text
-    RTS
-
-  @TooFull:                  ; If too full...
-    LDA #DLGID_CANTCARRY     ; select "You can't carry any more" text
-    RTS
-
-  ;; jumps here if chest doesn't have a normal item or a weapon
-  @NotWeapon:
-    CMP #TCITYPE_GPSTART     ; see if item is armor by seeing if it's < gp start
-    BCS @Gold                ; if not... jump ahead
-
-  ;;
-  ;; Chest contains armor
-  ;;
-
-    SEC                      ; subtract to convert the item ID to a 1-based armor index
-    SBC #TCITYPE_ARMSTART-1
-    STA tmp                  ; tmp it for @EquipmentGet
-
-    CALL FindEmptyArmorSlot   ; Find an empty slot to put this armor
-    BCS @TooFull             ; if there isn't one, @TooFull
-    BCC @EquipmentGet        ; otherwise, @EquipmentGet  (always branches)
-
-  ;;
-  ;; jumps here if chest doesn't have normal item / weapon / armor
-  ;; only thing left that can be in a chest is gold
-  ;;
-
-  @Gold:
-    CALL LoadPrice            ; get the price of the item (the amount of gold in the chest)
-    CALL AddGPToParty         ; add that price to the party's GP
-    JUMP @OpenChest           ; then mark the chest as open, and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Add GP To Party  [$DDEA :: 0x3DDFA]
-;;
-;;  IN:  tmp - tmp+2 = GP to give to party
-;;
-;;  BUGGED -- theoretically, it is possible for this routine to allow
-;;   you to go over the maximum ammount of gold if you add a large enough number.
-;;
-;;     After CMPing the high byte of your gold against the maximum, it
-;;  only does a BCC (which is only a less than check).  It proceeds to check the middle
-;;  bytes EVEN IF the high byte of gold is GREATER than the high byte of the max.  This
-;;  means that numbers such as 1065535 will not appear to be over the maximum when, in
-;;  fact, they are.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddGPToParty:
-    LDA gold        ; Add the 3 bytes of GP to the
-    CLC             ;  party's gold total
-    ADC tmp
-    STA gold
-    LDA gold+1
-    ADC tmp+1
-    STA gold+1
-    LDA gold+2
-    ADC tmp+2
-    STA gold+2
-
-    CMP #^1000000   ; see if high byte is over maximum
-    BCC @Exit       ; if gold_high < max_high, exit
-
-    LDA gold+1
-    CMP #>1000000   ; check middle bytes
-    BCC @Exit       ; if gold < max, exit
-    BEQ @CheckLow   ; if gold = max, check low bytes
-    BCS @Max        ; if gold > max, over maximum
-
-  @CheckLow:
-    LDA gold
-    CMP #<1000000   ; check low bytes
-    BCC @Exit       ; if gold < max, exit
-
-  @Max:
-    LDA #<999999    ; replace gold with maximum
-    STA gold
-    LDA #>999999
-    STA gold+1
-    LDA #^999999
-    STA gold+2
-
-  @Exit:
-    RTS
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Complex String   [$DE29 :: 0x3DE39]
@@ -9559,44 +9309,6 @@ lutCursor2x2SpriteTable:
   .BYTE $02, $03      ; DL sprite = tile 2, palette 3
   .BYTE $01, $03      ; UR sprite = tile 1, palette 3
   .BYTE $03, $03      ; DR sprite = tile 3, palette 3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Price   [$ECB9 :: 0x3ECC9]
-;;
-;;   Loads the price of a desired item and stores it at $10-12
-;;
-;;  IN:   A            = ID of item to fetch price of
-;;
-;;  OUT:  tmp to tmp+2 = price of item
-;;        *            = BANK_MENUS swapped in
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-LoadPrice:
-    ASL A        ; double item index (2 bytes per price)
-    STA tmp+2    ; store low byte in $12
-
-    LDA #>(lut_ItemPrices>>1)  ; high byte of pointer, but load it right-shifted by 1
-    ROL A                      ; and rotate it left by 1 in order to catch carry from above shifting
-    STA tmp+3                  ; store as high byte of pointer at tmp+3
-
-    LDA #BANK_ITEMPRICES
-    CALL SwapPRG  ; swap to bank D (for item prices)
-
-    LDY #0         ; zero Y (our source index)
-    LDA (tmp+2), Y ; get low byte of price
-    STA tmp
-    INY
-    LDA (tmp+2), Y ; and high byte
-    STA tmp+1
-
-    LDA #0
-    STA tmp+2       ; 3rd byte is always 0 (no item costs more that 65535)
-
-    LDA #BANK_MENUS ; swap back to bank E
-    JUMP SwapPRG   ; and return
 
 
 
@@ -13086,8 +12798,6 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
     RTS
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Call Minimap Decompress [$FFC0 :: 0x3FFD0]
@@ -13189,8 +12899,6 @@ Impl_FARJUMP:
 
     ; Activate the trampoline
     RTS
-
-
 
 Impl_FARCALL:
     ; Save A

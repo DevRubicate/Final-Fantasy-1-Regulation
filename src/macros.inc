@@ -31,7 +31,7 @@
 .endmacro
 
 .macro JUMP _address
-    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARCALL instead"
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARJUMP instead"
     JMP _address
 .endmacro
 
@@ -51,3 +51,6 @@
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
+.macro DEBUG
+    ;assert(0)
+.endmacro

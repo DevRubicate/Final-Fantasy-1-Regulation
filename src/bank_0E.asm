@@ -4,6 +4,7 @@
 .include "src/constants.inc"
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
+.include "src/global-import.inc"
 
 .import GameStart
 .import lut_IntroStoryText
@@ -116,10 +117,6 @@ TitleScreen_Music:
     RTS
 
 
- ;; unused space
-
-  .BYTE 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0
-  .BYTE 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -301,7 +298,7 @@ PrintCharStat:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrintPrice:
-    JSR LoadPrice             ; just load the price
+    FARCALL LoadPrice             ; just load the price
     JMP PrintNumber_5Digit    ; and print it as 5-digits!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1244,7 +1241,7 @@ Talk_Smith:
       RTS
 
   @HaveAdamant:             ; otherwise, make the sword!
-    JSR FindEmptyWeaponSlot ; find an empty slot
+    FARCALL FindEmptyWeaponSlot ; find an empty slot
     BCS @WontFit            ; if no empty slot, sword won't fit
 
      LDA #WPNID_XCALBUR     ; put the XCalbur in the previously found slot
@@ -4150,7 +4147,7 @@ EnterShop_Equip:
     LDA #0
     STA tmp+2
 
-    JSR AddGPToParty       ; give that money to the party
+    FARCALL AddGPToParty       ; give that money to the party
     JSR DrawShopGoldBox    ; redraw the gold box to reflect changes
     JMP EquipShop_Loop     ; and jump back to loop
 
@@ -5613,7 +5610,7 @@ DrawShopBuyItemConfirm:
     STA text_ptr+1
 
     LDA shop_curitem      ; get the current item
-    JSR LoadPrice         ; load its price (gets put in tmp, tmp+1)
+    FARCALL LoadPrice         ; load its price (gets put in tmp, tmp+1)
 
     LDA tmp               ; copy the price to shop_curprice
     STA shop_curprice
@@ -5677,7 +5674,7 @@ DrawShopSellItemConfirm:
     JSR DrawShopDialogueBox  ; draw " Gold OK?" dialogue -- all the text except the actual price
     PLA                      ; pull the previously pushed item ID (would make more sense to just LDA it here)
 
-    JSR LoadPrice            ; load the price of this item
+    FARCALL LoadPrice            ; load the price of this item
     LSR tmp+1                ; then divide that price by 2 to get the sale price
     ROR tmp
 
