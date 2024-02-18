@@ -4,12 +4,14 @@
 .include "src/constants.inc"
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
+.include "src/global-import.inc"
 
 .export EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .export lut_IntroStoryText
 
 .import DrawComplexString, DrawBox, UpdateJoy, DrawPalette
-.import WaitForVBlank, lut_RNG
+.import WaitForVBlank
+.import GetRandom
 
 BANK_THIS = $0D
 
@@ -73,7 +75,7 @@ MiniGame_ShufflePuzzle:
 
 :   INC framecounter    ; otherwise, increment the frame counter
     LDY framecounter    ; and use it as a seed to get a random number from the RNG lut
-    LDA lut_RNG, Y
+    CALL GetRandom
 
     AND #$03               ; mask out the low bits so we have a random number between 0-3.
     TAY                    ;  this is the direction from which we're going to slide a piece into the empty slot
@@ -133,9 +135,6 @@ MiniGame_ShufflePuzzle:
     .BYTE 1, -1, 4, -4
 
 
-
- ; unused
-  .BYTE 3,3,3,3,3,3,3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -679,9 +678,6 @@ lut_TheEndPixelMasks        = lut_TheEndPixelPosition_X   + $50 ; $A771
 
   .INCBIN "bin/0D_A681_theendluts.bin"
 
-  
-; $A779 -- unused
-  .BYTE $1F, $3F, $7F, $7F, $7C, $78, $78
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

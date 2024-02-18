@@ -17,7 +17,7 @@
 .import EnvironmentStartupRoutine
 .import BattleRNG
 ; bank_1E.asm
-.import ResetRAM
+.import ResetRAM, SetRandomSeed, GetRandom
 
 .export GameStart
 .export DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
@@ -26,7 +26,7 @@
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
-.export lut_RNG, SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
+.export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData, CallMinimapDecompress
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump, ClearBattleMessageBuffer
@@ -58,6 +58,8 @@ GameStart:
     
     ;; Load some startup info
     
+    CALL SetRandomSeed
+
     LDA #BANK_STARTUPINFO       ; swap in bank containing some LUTs
     JSR SwapPRG
     
@@ -1258,8 +1260,7 @@ GetBattleFormation:
     JSR SwapPRG        ; swap to bank containing domain information
 
     INC battlecounter    ; increment the battle counter
-    LDX battlecounter    ; and put it in X
-    LDA lut_RNG, X       ; use it as seed to get a random number
+    CALL GetRandom
 
     AND #$3F                    ; drop the 2 high bits of the random number
     TAX                         ; and put in X
@@ -1307,8 +1308,7 @@ BattleStepRNG:
     STA battlestep_sign
 
   @Done:
-    LDX battlestep         ; put battlestep in X
-    LDA lut_RNG, X         ; use it to get a random number from the LUT
+    CALL GetRandom
     RTS                    ; and exit
 
 
@@ -11264,18 +11264,6 @@ lut_DTE1:
   .BYTE $A8,$B1,$B2,$AB,  $B6,$A4,$A8,$AB,  $FF,$FF,$B5,$AF,  $B2,$AA,$A6,$B2
   .BYTE $90,$BC,$B2,$B5,  $AF,$FF,$FF,$A6,  $96,$B7,$A9,$B8,  $BC,$B7,$AF,$FF
   .BYTE $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  RNG scrambling lookup table  [$F100 :: 0x3F110]
-;;
-;;    This table is $100 bytes in size, and simply consists of every number
-;;  between $00-FF in a scrambled order.  This is used in some of the random
-;;  number generators in the game to make the output seem more scrambled/random
-;;
-
-lut_RNG:
-    .INCBIN "bin/0F_F100_rngtable.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

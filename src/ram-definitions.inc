@@ -952,3 +952,7 @@ SECTION "MINIMAP2" ; $7000 - $7580
 SECTION "THEEND" ; $6800 - $6F00
     GAP                                                 2048
     RES             theend_drawbuf,                     1792 ; $6800    ; $700 bytes!
+
+
+SECTION "EXTRA" ; $5C00 - $5FFF
+    RES             rng_seed,               2
