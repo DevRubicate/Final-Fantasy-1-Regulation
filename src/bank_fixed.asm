@@ -15,6 +15,7 @@
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 .import EnvironmentStartupRoutine
+.import BattleRNG
 ; bank_1E.asm
 .import ResetRAM
 
@@ -25,10 +26,11 @@
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .export SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
-.export lut_RNG, SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox, BattleRNG
+.export lut_RNG, SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData, CallMinimapDecompress
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump, ClearBattleMessageBuffer
+.export Impl_Call_Bank1
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11722,10 +11724,10 @@ BattleScreenShake:
   @Loop:
       JSR @Stall2Frames ; wait 2 frames
       
-      JSR BattleRNG
+      CALL BattleRNG
       AND #$03          ; get a random number betwee 0-3
       STA PPUSCROLL         ; use as X scroll
-      JSR BattleRNG
+      CALL BattleRNG
       AND #$03          ; another random number
       STA PPUSCROLL         ; for Y scroll
       
@@ -13705,30 +13707,7 @@ SwapBtlTmpBytes:
     PLA
     RTS
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleRNG  [$FCE7 :: 0x3FCF7]
-;;
-;;    This routine is basically like C's 'rand()' function.  It updates an RNG state (btl_rngstate), and uses
-;;  That state to produce a random 8-bit value.
-;;
-;;    To generate the value, it simply runs the state through a scrambling lut.  What's strange is that it uses
-;;  it's own LUT and not the LUT at $F100.  Why it has 2 separate luts to do the same thing is beyond me.
-;;
-;;    IMPORTANT NOTE!!!!  ChaosDeath in bank B assumes that calling this routine 256 times consecutively will
-;;  produce every value between 00,FF.  As a result, this RNG must not have a period longer than 256.  This
-;;  means a more complex RNG cannot really be implemented here.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BattleRNG:
-    LDX btl_rngstate
-    INC btl_rngstate
-    LDA @Scramble_lut, X
-    RTS
-    
-  @Scramble_lut:
-    .INCBIN "bin/0F_FCF1_rngtable.bin"
 
     
 WaitForVBlank_L: JMP WaitForVBlank

@@ -11,8 +11,11 @@
 .import DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .import BattleCrossPageJump, WaitForVBlank, ClearBattleMessageBuffer
 .import BattleOver_ProcessResult
+.import Impl_Call_Bank1
 
 .export lut_BattlePalettes, BankC_CrossBankJumpList
+
+
 
 
 BANK_THIS = $0C
@@ -1175,7 +1178,7 @@ BattleClearVariableSprite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_WithInput:
-    JSR BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
+    CALL BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
     
     LDY #$01            ; strobe the controllers
     STY JOYPAD
@@ -3880,7 +3883,7 @@ Battle_PlayerTryUnstun:
     
     JSR PrepCharStatPointers            ; Get pointers to stats
     
-    JSR BattleRNG
+    CALL BattleRNG
     AND #$03                            ; random [0,3]
     BEQ :+                              ; unstun if 0 (25% chance)
       LDA #BTLMSG_PARALYZED_B               ; otherwise, if nonzero, stay stunned
@@ -5866,7 +5869,7 @@ RandAX:
     SBC temporary_2       ; subtract to get the range.
     STA temp_68b6       ; 68B6 = range
     
-    JSR BattleRNG
+    CALL BattleRNG
     LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
@@ -6671,7 +6674,7 @@ Battle_DoEnemyTurn:
     BNE @Asleep                     ;  if yes, jump ahead to asleep code                    
         
         ;; Otherwise, they are paralyzed
-    JSR BattleRNG         ; random number between [0,255]
+    CALL BattleRNG         ; random number between [0,255]
     CMP #25                 ; if that number is less than 25 (less than 10% chance)
     BCS :+                  ; then the paralysis is cured:
       LDA #~AIL_STUN
@@ -6713,7 +6716,7 @@ Battle_DoEnemyTurn:
     BPL @EnemyActive_AndNotConfused     ; if clear, jump ahead to EnemyActive_AndNotConfused.  Otherwise...
     
     ; If enemy is confused:
-    JSR BattleRNG                     ; random [0,$FF]
+    CALL BattleRNG                     ; random [0,$FF]
     CMP #$40
     BCS :+                              ; cured if < $40  (25% chance)
       LDA #~AIL_CONF
@@ -6968,7 +6971,7 @@ GetRandomPlayerTarget:
       LDA #$00
       STA btl_randomplayer  ; zero output
       
-      JSR BattleRNG       ; get a random number
+      CALL BattleRNG       ; get a random number
       CMP #$20
       BCS :+
         INC temp_6bcf           ; inc target if < $20

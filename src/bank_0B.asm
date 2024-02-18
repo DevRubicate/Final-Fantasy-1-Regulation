@@ -12,6 +12,8 @@
 .import Battle_ReadPPUData, Battle_WritePPUData, CallMusicPlay, WaitForVBlank, UndrawNBattleBlocks
 .import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList
 
+.import Impl_Call_Bank1
+
 BANK_THIS = $0B
 
 ;; Battle Domains  [$8000 :: 0x2C010]
@@ -1011,7 +1013,7 @@ LvlUp_LevelUp:
       BNE @ApplyStatBonus       ;   (always branch)
     
     @StatUpRandomChance:        ; stat byte was clear
-      JSR BattleRNG           ; get a random number
+      CALL BattleRNG           ; get a random number
       AND #$03
       BEQ @IncreaseStat         ; 25% chance of increase
       LDA #$00                  ; otherwise, no increase (or rather, increase by 0)
@@ -1548,7 +1550,7 @@ RandAX:
     SBC temporary_2       ; subtract to get the range.
     STA temp_68b6       ; 68B6 = range
     
-    JSR BattleRNG
+    CALL BattleRNG
     LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
@@ -1869,7 +1871,7 @@ ChaosDeath:
 
     LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness
   @TableFillLoop:
-      JSR BattleRNG
+      CALL BattleRNG
       STA chaosdeath_tilerowtbl, Y
       INY
       BNE @TableFillLoop
