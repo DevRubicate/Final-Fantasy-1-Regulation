@@ -1013,7 +1013,7 @@ LvlUp_LevelUp:
       BNE @ApplyStatBonus       ;   (always branch)
     
     @StatUpRandomChance:        ; stat byte was clear
-      CALL BattleRNG           ; get a random number
+      FARCALL BattleRNG           ; get a random number
       AND #$03
       BEQ @IncreaseStat         ; 25% chance of increase
       LDA #$00                  ; otherwise, no increase (or rather, increase by 0)
@@ -1550,7 +1550,7 @@ RandAX:
     SBC temporary_2       ; subtract to get the range.
     STA temp_68b6       ; 68B6 = range
     
-    CALL BattleRNG
+    FARCALL BattleRNG
     LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
@@ -1871,7 +1871,7 @@ ChaosDeath:
 
     LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness
   @TableFillLoop:
-      CALL BattleRNG
+      FARCALL BattleRNG
       STA chaosdeath_tilerowtbl, Y
       INY
       BNE @TableFillLoop

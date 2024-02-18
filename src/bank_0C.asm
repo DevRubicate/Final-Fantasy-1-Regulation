@@ -1178,7 +1178,7 @@ BattleClearVariableSprite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_WithInput:
-    CALL BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
+    FARCALL BattleRNG     ; generate a number and throw it away (makes RNG less predictable -- sorta)
     
     LDY #$01            ; strobe the controllers
     STY JOYPAD
@@ -3883,7 +3883,7 @@ Battle_PlayerTryUnstun:
     
     JSR PrepCharStatPointers            ; Get pointers to stats
     
-    CALL BattleRNG
+    FARCALL BattleRNG
     AND #$03                            ; random [0,3]
     BEQ :+                              ; unstun if 0 (25% chance)
       LDA #BTLMSG_PARALYZED_B               ; otherwise, if nonzero, stay stunned
@@ -5869,7 +5869,7 @@ RandAX:
     SBC temporary_2       ; subtract to get the range.
     STA temp_68b6       ; 68B6 = range
     
-    CALL BattleRNG
+    FARCALL BattleRNG
     LDX temp_68b6
     JSR MultiplyXA  ; random()*range
     
@@ -6674,7 +6674,7 @@ Battle_DoEnemyTurn:
     BNE @Asleep                     ;  if yes, jump ahead to asleep code                    
         
         ;; Otherwise, they are paralyzed
-    CALL BattleRNG         ; random number between [0,255]
+    FARCALL BattleRNG         ; random number between [0,255]
     CMP #25                 ; if that number is less than 25 (less than 10% chance)
     BCS :+                  ; then the paralysis is cured:
       LDA #~AIL_STUN
@@ -6716,7 +6716,7 @@ Battle_DoEnemyTurn:
     BPL @EnemyActive_AndNotConfused     ; if clear, jump ahead to EnemyActive_AndNotConfused.  Otherwise...
     
     ; If enemy is confused:
-    CALL BattleRNG                     ; random [0,$FF]
+    FARCALL BattleRNG                     ; random [0,$FF]
     CMP #$40
     BCS :+                              ; cured if < $40  (25% chance)
       LDA #~AIL_CONF
@@ -6971,7 +6971,7 @@ GetRandomPlayerTarget:
       LDA #$00
       STA btl_randomplayer  ; zero output
       
-      CALL BattleRNG       ; get a random number
+      FARCALL BattleRNG       ; get a random number
       CMP #$20
       BCS :+
         INC temp_6bcf           ; inc target if < $20

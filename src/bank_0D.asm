@@ -75,7 +75,7 @@ MiniGame_ShufflePuzzle:
 
 :   INC framecounter    ; otherwise, increment the frame counter
     LDY framecounter    ; and use it as a seed to get a random number from the RNG lut
-    CALL GetRandom
+    FARCALL GetRandom
 
     AND #$03               ; mask out the low bits so we have a random number between 0-3.
     TAY                    ;  this is the direction from which we're going to slide a piece into the empty slot

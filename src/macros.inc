@@ -26,9 +26,15 @@
 .endmacro
 
 
-.macro CALL _address
+.macro FARCALL _address
+    .assert .bank(*) <> .bank(_address), error, "FARCALL: Address on the same bank, use CALL instead"
     JSR Impl_Call_Bank1
     .byte >(_address - 1)
     .byte <(_address - 1)
     .byte ((<.bank(_address)) * 2) | %10000000
+.endmacro
+
+.macro CALL _address
+    .assert .bank(*) = .bank(_address), error, "CALL: Address on different bank, use FARCALL instead"
+    JSR _address
 .endmacro
