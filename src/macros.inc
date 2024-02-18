@@ -25,16 +25,29 @@
     .assert >* = >lbl, warning, "Noncritical timing loop crosses page boundary"
 .endmacro
 
+.macro CALL _address
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, error, "CALL: Address on different bank, use FARCALL instead"
+    JSR _address
+.endmacro
+
+.macro JUMP _address
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, error, "JUMP: Address on different bank, use FARCALL instead"
+    JMP _address
+.endmacro
 
 .macro FARCALL _address
-    .assert .bank(*) <> .bank(_address), error, "FARCALL: Address on the same bank, use CALL instead"
-    JSR Impl_Call_Bank1
+    .assert .bank(_address) <> .bank(*), error, "FARCALL: Address reachable without a bankswitch, use CALL instead"
+    JSR Impl_FARCALL
     .byte >(_address - 1)
     .byte <(_address - 1)
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
-.macro CALL _address
-    .assert .bank(*) = .bank(_address), error, "CALL: Address on different bank, use FARCALL instead"
-    JSR _address
+.macro FARJUMP _address
+    .assert .bank(_address) <> .bank(*), error, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
+    JSR Impl_FARJUMP
+    .byte >(_address - 1)
+    .byte <(_address - 1)
+    .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
+

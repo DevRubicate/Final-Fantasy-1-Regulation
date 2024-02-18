@@ -4,6 +4,7 @@
 .include "src/constants.inc"
 .include "src/macros.inc"
 .include "src/ram-definitions.inc"
+.include "src/global-import.inc"
 
 .export data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, lut_BattleFormations, data_BattleMessages
 .export BattleOver_ProcessResult
@@ -12,7 +13,6 @@
 .import Battle_ReadPPUData, Battle_WritePPUData, CallMusicPlay, WaitForVBlank, UndrawNBattleBlocks
 .import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList
 
-.import Impl_Call_Bank1
 
 BANK_THIS = $0B
 
