@@ -3066,9 +3066,9 @@ DrawFormation_Mix:
     LDA #$00
     STA temp_6bcf           ; The small enemy index (0-5)
     LDA #$02
-    STA temp_6c92           ; The actual enemy index (2-7 for small enemies)
+    STA temp_6c91           ; The actual enemy index (2-7 for small enemies)
   @SmallEnemyAttrLoop:
-      LDX temp_6c92
+      LDX temp_6c91
       LDA btl_enemyIDs, X
       CMP #$FF
       BEQ @NextSmallEnemy   ; if this enemy doesn't exist, skip it
@@ -3102,7 +3102,7 @@ DrawFormation_Mix:
       
     ;; Do all the same for bottom half of enemy
     ;;  A=05 if using palette 1, A=0A if using palette 2
-      LDX temp_6c92
+      LDX temp_6c91
       LDA btl_enemygfxplt, X
       AND #$01
       BEQ :+
@@ -3120,9 +3120,9 @@ DrawFormation_Mix:
       STA tmp_6c9c, X
     
   @NextSmallEnemy:
-      INC temp_6c92       ; increment actual index
+      INC temp_6c91       ; increment actual index
       INC temp_6bcf       ; and small enemy index
-      LDA temp_6c92
+      LDA temp_6c91
       CMP #$09        ; keep looping until we do all ?9? enemies (it should only be 8, since the 9th enemy will always be blank)
       BNE @SmallEnemyAttrLoop
     
@@ -3165,11 +3165,11 @@ DrawFormation_Mix:
   @DrawSmallEnemies:
     ; Same idea as the attributes here
     LDA #$02
-    STA temp_6c92       ; 6C91 is the 'actual' index  (0-7)
+    STA temp_6c91       ; 6C91 is the 'actual' index  (0-7)
     LDA #$00
     STA temp_6bcf       ; 6BCF is 2* the 'small' index (0,2,4,6,8,A) - used to index  @lut_SmallEn_DrawPos
   @DrawSmallLoop:
-      LDX temp_6c92
+      LDX temp_6c91
       LDA btl_enemyIDs, X           ; see if this enemy exists
       CMP #$FF
       BNE :+
@@ -3192,8 +3192,8 @@ DrawFormation_Mix:
       
       JSR DrawSmallEnemy
   @DrawNextSmallEnemy:
-      INC temp_6c92             ; inc actual index and loop until all small enemies drawn
-      LDA temp_6c92
+      INC temp_6c91             ; inc actual index and loop until all small enemies drawn
+      LDA temp_6c91
       CMP #$09
       BNE @DrawSmallLoop
       

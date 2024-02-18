@@ -834,8 +834,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             tmp_6c8e,                           1 ; $6C8E
     RES             btlmag_magicsource,                 1 ; $6C8F ; 0=magic, 1=drink, 2=item
     RES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of 
-    GAP                                                 1
-    RES             temp_6c92,                          0 ; $6C92
+    RES             temp_6c91,                          1 ; $6C91
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
     RES             btltmp_attr,                        0 ; $6C94     ; $40 bytes of attribute data for the battle setup
