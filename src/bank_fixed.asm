@@ -11265,13 +11265,6 @@ lut_DTE1:
   .BYTE $90,$BC,$B2,$B5,  $AF,$FF,$FF,$A6,  $96,$B7,$A9,$B8,  $BC,$B7,$AF,$FF
   .BYTE $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
 
-;;
-;;  ???  F0F0
-;;   could this be remnants of removed code/data?
-;;
-  .BYTE $0A,$FE,$20,$00,$BC,$68,$4C,$03,$FE,$00,$00,$00,$00,$00,$0A,$03
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  RNG scrambling lookup table  [$F100 :: 0x3F110]
