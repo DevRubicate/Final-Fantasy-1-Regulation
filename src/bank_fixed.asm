@@ -58,14 +58,14 @@ GameStart:
     LDX #$FF                    ; reset stack pointer
     TXS
     
-    JSR DisableAPU              ; Silence/disable all audio
+    CALL DisableAPU              ; Silence/disable all audio
     
     ;; Load some startup info
     
     FARCALL SetRandomSeed
 
     LDA #BANK_STARTUPINFO       ; swap in bank containing some LUTs
-    JSR SwapPRG
+    CALL SwapPRG
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram
     : LDA lut_InitGameFlags, X      ; game flags page loaded from this table
@@ -102,19 +102,19 @@ GameStart:
       STA startintrocheck           ; This is how the game makes the distinction between cold boot and warm reset
       
       LDA #BANK_INTRO               ; If we just came in from a cold boot...
-      JSR SwapPRG                 ; swap in the intro story bank
+      CALL SwapPRG                 ; swap in the intro story bank
       JSR EnterIntroStory           ; And do the intro story!
       
       
   : LDA #BANK_TITLE                 ; Then swap in the title bank
-    JSR SwapPRG                   ; to do the title screen
+    CALL SwapPRG                   ; to do the title screen
     JSR EnterTitleScreen
     
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option
     
     ; Otherwise, they selected "Continue"...
 
-    JSR VerifyChecksum              ; Then verify checksum to ensure save game integrity
+    CALL VerifyChecksum              ; Then verify checksum to ensure save game integrity
     BCS @NewGame                    ;  if it failed, do a new game
     
     ; Continue saved game
@@ -129,18 +129,18 @@ GameStart:
       STA unsram+$300, X
       INX
       BNE :-
-    JMP @Begin                      ; Then begin the game
+    JUMP @Begin                      ; Then begin the game
     
     
   @NewGame:
     LDA #BANK_PARTYGEN              ; swap in party generation bank
-    JSR SwapPRG
+    CALL SwapPRG
     JSR NewGamePartyGeneration      ; create a new party
     JSR NewGame_LoadStartingStats   ;   and set their starting stats
 
     ; New Game and Continue meet here -- actually start up the game
   @Begin:
-    JSR ClearZeroPage               ; clear Zero Page for good measure
+    CALL ClearZeroPage               ; clear Zero Page for good measure
     
     LDA unsram_ow_scroll_x          ; fetch OW scroll from unsram
     STA ow_scroll_x
@@ -151,7 +151,7 @@ GameStart:
     STA vehicle_next                ;   this always be 'on-foot'?)
     STA vehicle
     
-  ; JMP DoOverworld                 ; <- Flow into DoOverworld!
+  ; JUMP DoOverworld                 ; <- Flow into DoOverworld!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -162,10 +162,10 @@ GameStart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoOverworld:
-    JSR PrepOverworld       ; do all overworld preparation
-    JSR ScreenWipe_Open     ; then do the screen wipe effect
+    CALL PrepOverworld       ; do all overworld preparation
+    CALL ScreenWipe_Open     ; then do the screen wipe effect
                             ; then enter the overworld loop
-  ; JMP EnterOverworldLoop  ; <- flow into
+  ; JUMP EnterOverworldLoop  ; <- flow into
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,18 +180,18 @@ EnterOverworldLoop:
     LDX #$FF            ; purge stack and wipe the stack pointer so it points to top of stack
     TXS                 ;   overworld loop is the de-facto "top" of all gameflow.
 
-    JSR GetOWTile       ; get the current overworld tile information
+    CALL GetOWTile       ; get the current overworld tile information
 
    ;;
    ;; THE overworld loop
    ;;
 
   @Loop:  
-    JSR WaitForVBlank        ; wait for VBlank
+    CALL WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do sprite DMA
     STA OAMDMA
 
-    JSR OverworldMovement      ; do any pending movement animations and whatnot
+    CALL OverworldMovement      ; do any pending movement animations and whatnot
                                ;   also does any required map drawing and updates
                                ;   the scroll appropriately
 
@@ -203,22 +203,22 @@ EnterOverworldLoop:
     ADC #0
     STA framecounter+1
 
-    JSR CallMusicPlay_NoSwap   ; Keep the music playing
+    CALL CallMusicPlay_NoSwap   ; Keep the music playing
 
     LDA mapdraw_job            ; check to see if drawjob number 1 is pending
     CMP #1
     BNE :+
-      JSR PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
+      CALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
 
 :   LDA move_speed             ; check to see if the player is currently moving
     BNE :+                     ; if not....
       LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
       STA vehicle
-      JSR DoOWTransitions      ; check for any transitions that need to be done
-      JSR ProcessOWInput       ; process overworld input
+      CALL DoOWTransitions      ; check for any transitions that need to be done
+      CALL ProcessOWInput       ; process overworld input
 
-:   JSR ClearOAM           ; clear OAM
-    JSR DrawOWSprites      ; and draw all overworld sprites
+:   CALL ClearOAM           ; clear OAM
+    CALL DrawOWSprites      ; and draw all overworld sprites
 
     LDA vehicle       ; Get currnt vehicle
     AND #$0C          ; isolate ship and airship bits
@@ -233,7 +233,7 @@ EnterOverworldLoop:
     STA PAPU_NCTL1         ;  as the one desribed in AirshipTransitionFrame  (see that routine
     LDA framecounter  ;  for details).  Only difference here is that the framecounter
     ASL A             ;  is doubled -- which means the sound effect cycles twice as fast,
-    JMP @PlaySFX      ;  so it sounds like the propellers are spinning faster.
+    JUMP @PlaySFX      ;  so it sounds like the propellers are spinning faster.
 
   @ShipSFX:
     LDA framecounter  ; get frame counter
@@ -251,7 +251,7 @@ EnterOverworldLoop:
     STA PAPU_NFREQ1         ; write specified frequency
     LDA #0
     STA PAPU_NFREQ2         ; write to last noise reg to reload length counter and get channel started
-    JMP @Loop         ; then jump back to loop
+    JUMP @Loop         ; then jump back to loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -271,29 +271,29 @@ DoOWTransitions:
     BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
 
       LDA #0
-      JSR CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
+      CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
 
-      JSR LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
+      CALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
       LDA #BANK_BRIDGESCENE
-      JSR SwapPRG          ; swap to bank containing bridge scene
+      CALL SwapPRG          ; swap to bank containing bridge scene
       JSR EnterBridgeScene ; do the bridge scene.
 
       LDA #$04
-      JSR CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
-      JMP EnterOW_PalCyc  ; then re-enter overworld
+      CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
+      JUMP EnterOW_PalCyc  ; then re-enter overworld
 
   @SkipBridgeScene:
     LDA entering_shop     ; see if we're entering a shop (caravan)
     BEQ @SkipShop         ; if not... skip it
 
-      JSR GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
+      CALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
       LDA #$00
-      JSR CyclePalettes   ; cycle out the palette
+      CALL CyclePalettes   ; cycle out the palette
 
       LDA #BANK_MENUS
-      JSR SwapPRG       ; swap to bank containing shops
+      CALL SwapPRG       ; swap to bank containing shops
       JSR EnterShop       ; and enter the shop!
-      JMP EnterOW_PalCyc  ; then re-enter overworld
+      JUMP EnterOW_PalCyc  ; then re-enter overworld
 
   @SkipShop:
     BIT tileprop+1      ; check properties of tile we just moved to
@@ -310,14 +310,14 @@ DoOWTransitions:
       STA joy_start       ; clear start button catcher
       STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
 
-      JSR GetOWTile       ; get overworld tile (needed for some items, like the Floater)
+      CALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
       LDA #$00
-      JSR CyclePalettes   ; cycle out the palette
+      CALL CyclePalettes   ; cycle out the palette
 
       LDA #BANK_MENUS
-      JSR SwapPRG       ; swap to bank containing menus
+      CALL SwapPRG       ; swap to bank containing menus
       JSR EnterMainMenu   ; and enter the main menu
-      JMP EnterOW_PalCyc  ; then re-enter the overworld
+      JUMP EnterOW_PalCyc  ; then re-enter the overworld
 
   @SkipStart:
     LDA joy_select        ; check to see if they pressed select
@@ -325,7 +325,7 @@ DoOWTransitions:
 
       LDA #$00            ; otherwise... if they did press select..
       STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
-      JSR CyclePalettes   ; cycle out the palette
+      CALL CyclePalettes   ; cycle out the palette
 
       LDA joy
       AND #$40            ; see if the B button is being held down
@@ -333,15 +333,15 @@ DoOWTransitions:
 
       @Minimap:
         LDA #BANK_MINIMAP
-        JSR SwapPRG        ; swap to bank containing the minimap
+        CALL SwapPRG        ; swap to bank containing the minimap
         JSR EnterMinimap     ; do the minimap
-        JMP EnterOW_PalCyc   ; then re-enter overworld
+        JUMP EnterOW_PalCyc   ; then re-enter overworld
 
       @Lineup:
         LDA #BANK_MENUS
-        JSR SwapPRG        ; swap to bank containing menus
+        CALL SwapPRG        ; swap to bank containing menus
         JSR EnterLineupMenu  ; enter the lineup menu
-        JMP EnterOW_PalCyc   ; then re-enter overworld
+        JUMP EnterOW_PalCyc   ; then re-enter overworld
 
   @Exit:
    RTS
@@ -349,26 +349,26 @@ DoOWTransitions:
 
 
   @Battle:
-    JSR GetOWTile          ; Get overworld tile (needed for battle backdrop)
-    JSR BattleTransition   ; Do the flashy transition effect
+    CALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
+    CALL BattleTransition   ; Do the flashy transition effect
 
     LDA #$00
     STA PPUMASK              ; turn off the PPU
     STA PAPU_EN              ; and APU
 
-    JSR LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
+    CALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
 
     LDA btlformation
-    JSR EnterBattle      ; start the battle!
-    JMP EnterOW_PalCyc     ; then re-enter overworld
+    CALL EnterBattle      ; start the battle!
+    JUMP EnterOW_PalCyc     ; then re-enter overworld
 
 
   @Teleport:
-    JSR GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
-    JSR ScreenWipe_Close    ; wipe the screen closed
+    CALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
+    CALL ScreenWipe_Close    ; wipe the screen closed
 
     LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport data
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA tileprop+1          ; get the teleport ID
     AND #$3F                ;  remove the teleport/battle bits, leaving just the teleport ID
@@ -396,9 +396,9 @@ DoOWTransitions:
     LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
     STA inroom
 
-    JSR DoStandardMap       ; then JSR to the standard map code.  This JSR will only return
+    CALL DoStandardMap       ; then CALL to the standard map code.  This CALL will only return
                             ;  if/when the player warps out of the map.  At which point...
-    JMP DoOverworld         ; we jump to reload and start the overworld all over again.
+    JUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -432,7 +432,7 @@ FlyAirship:
     LDA #$46
     STA music_track      ; change music track to $46 (airship music)
 
-    JMP AnimateAirshipTakeoff    ; do the takeoff animation, then exit
+    JUMP AnimateAirshipTakeoff    ; do the takeoff animation, then exit
 
   @Exit:
     RTS
@@ -469,7 +469,7 @@ ProcessOWInput:
       RTS             ; and exit (ignore all input until vehchgpause is zero)
 
   @NoVehPause:
-    JSR UpdateJoy    ; update joypad data
+    CALL UpdateJoy    ; update joypad data
 
     LDA joy
     AND #$0F         ; check directional buttons
@@ -504,17 +504,17 @@ ProcessOWInput:
     BNE @Exit          ; if not... exit
 
     LDA #0                  ; otherwise... they activated the minigame!
-    JSR CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
-    JSR LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
+    CALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
+    CALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
     LDA #BANK_MINIGAME
-    JSR SwapPRG        ; swap to bank containing minigame
+    CALL SwapPRG        ; swap to bank containing minigame
     JSR EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
-      JSR MinigameReward ;  ... give them their reward
+      CALL MinigameReward ;  ... give them their reward
 
 :   LDA #$04             ; cycle palettes out from the minigame screen
-    JSR CyclePalettes    ; code=4 (zero scroll, cycle out)
-    JMP EnterOW_PalCyc   ; then re-enter overworld
+    CALL CyclePalettes    ; code=4 (zero scroll, cycle out)
+    JUMP EnterOW_PalCyc   ; then re-enter overworld
   @Exit:
     RTS
 
@@ -534,13 +534,13 @@ ProcessOWInput:
     BEQ @MoveCanoe
 
   @MoveOnFoot:         ; otherwise we're on foot
-    JSR OWCanMove      ; see if they can move in given direction
+    CALL OWCanMove      ; see if they can move in given direction
     BCC @StartMove     ;  if yes, start the move
 
     LDA #0
     STA tileprop+1     ; otherwise, zero tileprop+1 so no battle occurs
 
-    JSR IsOnBridge     ; see if they're stepping on the bridge/canal
+    CALL IsOnBridge     ; see if they're stepping on the bridge/canal
     BCS @Foot_NoBridge ; if they aren't on the bridge, skip ahead
 
      LDA bridgescene   ; if they are on a bridge... see if the bridge scene has already happened
@@ -549,9 +549,9 @@ ProcessOWInput:
      BNE @StartMove    ; then start moving (always branches)
 
     @Foot_NoBridge:    ; if they weren't on the bridge
-      JSR BoardCanoe   ; see if they can board the canoe to get to the next tile
+      CALL BoardCanoe   ; see if they can board the canoe to get to the next tile
       BCC @StartMove   ;   if they can, start the move
-      JSR BoardShip    ; otherwise see if they can board the ship
+      CALL BoardShip    ; otherwise see if they can board the ship
       BCS @CantMove    ;   if not, they can't move
                        ; otherwise (can board ship), flow into @StartMove
 
@@ -560,22 +560,22 @@ ProcessOWInput:
     LDA joy               ; get joy
     AND #$0F              ; isolate the direction(s) they're pressing (ie, where they're trying to move)
     STA facing            ; set that as our facing
-    JMP StartMapMove      ; then start the map move!  and exit
+    JUMP StartMapMove      ; then start the map move!  and exit
 
   @LandAirship:        ; Here when attempting to land the airship
-    JMP LandAirship
+    JUMP LandAirship
 
 
   @MoveShip:           ; Here if trying to move when in the ship
-    JSR OWCanMove      ; see if they can move in desired direction
+    CALL OWCanMove      ; see if they can move in desired direction
     BCS @Ship_NoMove   ; if they can't... jump ahead
 
-     JSR IsOnCanal       ; if they can... check to see if the canal is blocking them
+     CALL IsOnCanal       ; if they can... check to see if the canal is blocking them
      BCS @StartMove      ; if it isn't, start moving
-     JMP @CantMove       ; otherwise, prevent them from moving
+     JUMP @CantMove       ; otherwise, prevent them from moving
 
     @Ship_NoMove:        ; if they couldn't normally move on the ship...
-      JSR BoardCanoe     ; see if they can board the canoe to move
+      CALL BoardCanoe     ; see if they can board the canoe to move
       BCC @StartMove     ; if yes... start moving
 
       LDA tileprop            ; otherwise, get tile properties
@@ -583,8 +583,8 @@ ProcessOWInput:
       CMP #OWTP_DOCKSHIP      ;   AND that you can dock the ship here
       BNE @CantMove           ; if can't dock ship or can't walk on foot -- then can't move
 
-      JSR UnboardBoat_Abs     ; otherwise, unboard the ship
-      JMP @StartMove          ; and start moving
+      CALL UnboardBoat_Abs     ; otherwise, unboard the ship
+      JUMP @StartMove          ; and start moving
 
 
   @CantMove:
@@ -595,13 +595,13 @@ ProcessOWInput:
 
 
   @MoveCanoe:           ; if in canoe
-    JSR OWCanMove       ; see if they can move
+    CALL OWCanMove       ; see if they can move
     BCC @StartMove      ; if yes... move
 
-    JSR UnboardBoat     ; otherwise, see if they can unboard the canoe and proceed on foot
+    CALL UnboardBoat     ; otherwise, see if they can unboard the canoe and proceed on foot
     BCC @StartMove      ; if yes, move!
 
-    JSR BoardShip       ; otherwise, see if they can board the ship
+    CALL BoardShip       ; otherwise, see if they can board the ship
     BCC @StartMove      ; if yes, do it!
     BCS @CantMove       ; otherwise, can't move (always branches)
 
@@ -622,7 +622,7 @@ ProcessOWInput:
 
 LoadOWTilesetData:
     LDA #BANK_OWINFO
-    JSR SwapPRG       ; swap to bank containing OW tileset data
+    CALL SwapPRG       ; swap to bank containing OW tileset data
 
     LDA #0              ; set low bytes of
     STA tmp             ;  source pointer
@@ -664,12 +664,12 @@ OverworldMovement:
     LDA move_speed        ; check movement speed
     BEQ SetOWScroll_PPUOn ; if zero (we're not moving), just set the scroll and exit
 
-    JSR OW_MovePlayer     ; otherwise... process party movement
+    CALL OW_MovePlayer     ; otherwise... process party movement
 
     LDA vehicle           ; check the current vehicle
     CMP #$01              ; are they on foot?
     BNE :+                ; if not, just exit
-      JMP MapPoisonDamage ; if they are... distribute poison damage
+      JUMP MapPoisonDamage ; if they are... distribute poison damage
 :   RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -726,10 +726,10 @@ SetOWScroll:
 OWMove_Right:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      JSR DoMapDrawJob     ; otherwise, do the job
+      CALL DoMapDrawJob     ; otherwise, do the job
 
   @NoJob:
-    JSR SetOWScroll_PPUOn  ; turn on PPU, set scroll
+    CALL SetOWScroll_PPUOn  ; turn on PPU, set scroll
 
     LDA move_ctr_x         ; add movement speed
     CLC                    ;  to our X move counter
@@ -767,10 +767,10 @@ OWMove_Right:
 OWMove_Left:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      JSR DoMapDrawJob     ; otherwise... do the job
+      CALL DoMapDrawJob     ; otherwise... do the job
 
   @NoJob:
-    JSR SetOWScroll_PPUOn  ; set scroll and turn PPU on
+    CALL SetOWScroll_PPUOn  ; set scroll and turn PPU on
 
     LDA move_ctr_x         ; get the move counter.  If zero, we need to move one tile to left
     BNE @NoTileChg         ;   otherwise we don't need to change tiles
@@ -844,7 +844,7 @@ OW_MovePlayer:
     BCS OWMove_Left     ; moving left
     LSR A
     BCS OWMove_Down     ; moving down
-    JMP OWMove_Up       ; moving up
+    JUMP OWMove_Up       ; moving up
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -866,10 +866,10 @@ OWMove_Down:
     BNE @NoJob          ; if not 8 pixels between the move... don't do the job
 
   @Job:
-    JSR DoMapDrawJob       ; do the map drawing job, then proceed normally
+    CALL DoMapDrawJob       ; do the map drawing job, then proceed normally
 
   @NoJob:
-    JSR SetOWScroll_PPUOn  ; turn the PPU on, and set the appropriate overworld scroll
+    CALL SetOWScroll_PPUOn  ; turn the PPU on, and set the appropriate overworld scroll
 
     LDA move_ctr_y         ; get the Y move counter
     CLC
@@ -916,10 +916,10 @@ OWMove_Up:
     BNE @NoJob
 
   @Job:
-    JSR DoMapDrawJob
+    CALL DoMapDrawJob
 
   @NoJob:
-    JSR SetOWScroll_PPUOn  ; turn PPU on and set scroll
+    CALL SetOWScroll_PPUOn  ; turn PPU on and set scroll
 
     LDA move_ctr_y         ; get move counter
     BNE @NoTileChg         ; if it's zero, we need to change tiles.  Otherwise, skip ahead
@@ -1067,17 +1067,17 @@ OWCanMove:
   @Up:
     LDX #7        ; for each direction, put x-coord add in X, and y-coord add in Y
     LDY #7-1      ; these will be added to the map scroll to determine player position.
-    JMP @Calc     ; Player is always 7 tiles from left, and 7 tiles from top of screen
+    JUMP @Calc     ; Player is always 7 tiles from left, and 7 tiles from top of screen
                   ; -- so base is 7.  For up, you'd add one less to Y (to move up one tile)
   @Down:          ;  and so on for each directon.
     LDX #7
     LDY #7+1
-    JMP @Calc
+    JUMP @Calc
 
   @Right:
     LDX #7+1
     LDY #7
-    JMP @Calc
+    JUMP @Calc
 
   @Left:
     LDX #7-1
@@ -1165,7 +1165,7 @@ OWCanMove:
        LDA #3            ;   ... 3 / 256 chance instead  (more infrequent battles at sea)
 
 :   STA tmp              ; store chance of battle in tmp
-    JSR BattleStepRNG    ; get a random number for battle steps
+    CALL BattleStepRNG    ; get a random number for battle steps
     CMP tmp              ; compare it to our chance
     BCC @DoEncounter     ; if the random number < our odds -- do a random encounter
 
@@ -1202,7 +1202,7 @@ OWCanMove:
 
     AND #$01             ; isolate bit 1
     ORA #$40             ; and add $40 to it  (ie:  domain $40 for upper half of map, $41 for lower half)
-    JMP GetBattleFormation
+    JUMP GetBattleFormation
 
   @SeaDomain:
     LDA #$42                ; all of the world's sea uses the same domain:  $42
@@ -1231,7 +1231,7 @@ OWCanMove:
     ORA tmp            ; OR with column for the desired domain.
                        ;  A is now the desired domain number
 
-              ; no JMP or RTS -- flow seamlessly into GetBattleFormation
+              ; no JUMP or RTS -- flow seamlessly into GetBattleFormation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1241,7 +1241,7 @@ OWCanMove:
 ;;
 ;;  IN:   A = domain ID
 ;;
-;;  OUT:  C = cleared (this is so OWCanMove can JMP to this rather than having to JSR to it)
+;;  OUT:  C = cleared (this is so OWCanMove can JUMP to this rather than having to CALL to it)
 ;;        btlformation = formation ID to engage in
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1261,7 +1261,7 @@ GetBattleFormation:
                          ; (tmp) now points to lut_Domains+(domain*8)
 
     LDA #BANK_DOMAINS
-    JSR SwapPRG        ; swap to bank containing domain information
+    CALL SwapPRG        ; swap to bank containing domain information
 
     INC battlecounter    ; increment the battle counter
     FARCALL GetRandom
@@ -1575,16 +1575,16 @@ IsOnCanal:
 
 CallMusicPlay_NoSwap:
     LDA #BANK_MUSIC     ; swap to music bank (where MusicPlay is)
-    JSR SwapPRG
+    CALL SwapPRG
     JMP MusicPlay     ; jump to it, and return (do not swap back)
 
 
 CallMusicPlay:
     LDA #BANK_MUSIC     ; swap to music bank (for MusicPlay)
-    JSR SwapPRG
+    CALL SwapPRG
     JSR MusicPlay     ; call MusicPlay
     LDA cur_bank        ; then swap back to previously supplied bank
-    JMP SwapPRG       ;   before returning
+    JUMP SwapPRG       ;   before returning
 
 
 
@@ -1640,7 +1640,7 @@ LandAirship:
     LDA #0
     STA joy_a           ; erase A button catcher
 
-    JSR AnimateAirshipLanding  ; do the animation of the airship landing
+    CALL AnimateAirshipLanding  ; do the animation of the airship landing
 
     LDA ow_scroll_x     ; get X scroll
     CLC
@@ -1662,7 +1662,7 @@ LandAirship:
     LDA tileset_prop, X          ; get that tile's properties
     AND #$08                     ; see if landing the airship on this tile is legal
     BEQ :+                       ; if not....
-      JSR AnimateAirshipTakeoff  ; .... animate to have the airship take off again
+      CALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
       RTS                        ;      and exit
 
 :   LDA ow_scroll_x     ; otherwise (legal land)
@@ -1712,10 +1712,10 @@ PrepOverworld:
     STA joy_select
     STA mapflags        ; zeroing map flags indicates we're on the overworld map
 
-    JSR LoadOWCHR           ; load up necessary CHR
-    JSR LoadOWTilesetData   ; the tileset
-    JSR LoadMapPalettes     ; palettes
-    JSR DrawFullMap         ; then draw the map
+    CALL LoadOWCHR           ; load up necessary CHR
+    CALL LoadOWTilesetData   ; the tileset
+    CALL LoadMapPalettes     ; palettes
+    CALL DrawFullMap         ; then draw the map
 
     LDA ow_scroll_x      ; get ow scroll X
     AND #$10             ; isolate the '16' bit (nametable bit)
@@ -1726,9 +1726,9 @@ PrepOverworld:
     STA NTsoft2000       ; record this as our soft2000
     STA soft2000
 
-    JSR WaitForVBlank       ; wait for a VBlank
-    JSR DrawMapPalette        ; before drawing the palette
-    JSR SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
+    CALL WaitForVBlank       ; wait for a VBlank
+    CALL DrawMapPalette        ; before drawing the palette
+    CALL SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
     LDA #0                    ;  .. but then immediately turn PPU off!
     STA PPUMASK                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
 
@@ -1737,7 +1737,7 @@ PrepOverworld:
     STA music_track           ;   to get the proper music track -- and play it
 
     LDA #BANK_BTLDATA     ; swap to battle rate bank and get the battle rate for the overworld
-    JSR SwapPRG         ;  (first entry in the table).  And record it to 'battlerate'.
+    CALL SwapPRG         ;  (first entry in the table).  And record it to 'battlerate'.
     LDA lut_BattleRates   ; However, this value goes unused because the battle rate for overworld
     STA battlerate        ; is hardcoded... so this is effectively useless for OW (it's used for SM, though).
 
@@ -1764,10 +1764,10 @@ PrepOverworld:
 
 
 EnterOW_PalCyc:
-    JSR PrepOverworld       ; do all necessary overworld preparation
+    CALL PrepOverworld       ; do all necessary overworld preparation
     LDA #$01
-    JSR CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
-    JMP EnterOverworldLoop  ; then enter the overworld loop
+    CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
+    JUMP EnterOverworldLoop  ; then enter the overworld loop
 
 
 
@@ -1779,16 +1779,16 @@ EnterOW_PalCyc:
 
 NewGame_LoadStartingStats:
     LDA #BANK_STARTINGSTATS ; swap in bank containing starting stats
-    JSR SwapPRG
+    CALL SwapPRG
     
     LDX #$00                ; load up the starting stats for each character
-    JSR @LoadStats
+    CALL @LoadStats
     LDX #$40
-    JSR @LoadStats
+    CALL @LoadStats
     LDX #$80
-    JSR @LoadStats
+    CALL @LoadStats
     LDX #$C0
-  ; JMP @LoadStats
+  ; JUMP @LoadStats
     
 
   @LoadStats:
@@ -1853,7 +1853,7 @@ NewGame_LoadStartingStats:
 ;;  otherwise HP would rapidly drain (1 HP per frame) from just the player standing stationary on
 ;;  the tile.
 ;;
-;;    This routine branches (not JMP!) to AssignMapTileDamage, so it must be somewhere near that routine.
+;;    This routine branches (not JUMP!) to AssignMapTileDamage, so it must be somewhere near that routine.
 ;;  Seems odd that it does that -- it's like it just lets this routine be interrupted by MapPoisonDamage
 ;;  for whatever reason.
 ;;
@@ -2062,7 +2062,7 @@ MinigameReward:
     LDA #0
     STA tmp+2
 
-    JMP AddGPToParty
+    JUMP AddGPToParty
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2075,9 +2075,9 @@ MinigameReward:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoStandardMap:
-    JSR EnterStandardMap     ; load and prep map stuff
+    CALL EnterStandardMap     ; load and prep map stuff
                              ;  then flow seamlessly into StandardMapLoop
-     ; no JMP or RTS
+     ; no JUMP or RTS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2089,10 +2089,10 @@ DoStandardMap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 StandardMapLoop:
-    JSR WaitForVBlank        ; wait for VBlank
+    CALL WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do Sprite DMA
     STA OAMDMA
-    JSR StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
+    CALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
                                ;   this also sets the scroll
     LDA framecounter
     CLC                        ; increment the two byte frame counter
@@ -2102,12 +2102,12 @@ StandardMapLoop:
     ADC #0
     STA framecounter+1
 
-    JSR CallMusicPlay_NoSwap   ; keep music playing
+    CALL CallMusicPlay_NoSwap   ; keep music playing
 
     LDA mapdraw_job            ; check the map draw job
     CMP #1                     ;  if the next job is to draw attributes
     BNE :+                     ;  then we need to prep them here so they're ready for
-      JSR PrepAttributePos     ;  drawing next frame
+      CALL PrepAttributePos     ;  drawing next frame
 
 :   LDA move_speed             ; check the player's movement speed to see if they're in motion
     BNE @Continue              ;  if they are, skip over input and some other checks, and just continue to next
@@ -2116,7 +2116,7 @@ StandardMapLoop:
             ;  a move this frame
       LDA altareffect       ; do the altar effect if its flag is set
       BEQ :+
-        JSR DoAltarEffect
+        CALL DoAltarEffect
 
 :     LDA entering_shop     ; jump ahead to shop code if entering a shop
       BNE @Shop
@@ -2124,28 +2124,28 @@ StandardMapLoop:
       LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
       AND #TP_TELE_MASK | TP_BATTLEMARKER
       BEQ :+
-        JMP @TeleOrBattle
+        JUMP @TeleOrBattle
 
-:     JSR ProcessSMInput    ; if none of those things -- process input, and continue
+:     CALL ProcessSMInput    ; if none of those things -- process input, and continue
   @Continue:
-    JSR ClearOAM            ; clear OAM
-    JSR DrawSMSprites       ; and draw all sprites
-    JMP StandardMapLoop     ; then keep looping
+    CALL ClearOAM            ; clear OAM
+    CALL DrawSMSprites       ; and draw all sprites
+    JUMP StandardMapLoop     ; then keep looping
 
 
 
   @Shop:
-    JSR GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
+    CALL GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
     LDA #0                  ;   this seems totally useless to do here
     STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
     LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
-    JSR CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
+    CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
 
     LDA #BANK_MENUS         ; swap to menu bank
-    JSR SwapPRG
+    CALL SwapPRG
     JSR EnterShop           ; enter the shop
-    JSR ReenterStandardMap  ;  then reenter the map
-    JMP StandardMapLoop     ;  and continue looping
+    CALL ReenterStandardMap  ;  then reenter the map
+    JUMP StandardMapLoop     ;  and continue looping
 
   ;; here if the player is to teleport, or to start a fight
   @TeleOrBattle:
@@ -2153,34 +2153,34 @@ StandardMapLoop:
     BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
 
    ;;  Otherwise, here, this is a BATTLE
-    JSR GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
+    CALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
     LDA #0
     STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
-    JSR BattleTransition    ; do the battle transition effect
+    CALL BattleTransition    ; do the battle transition effect
 
     LDA #0                  ; then kill PPU, APU
     STA PPUMASK
     STA PAPU_EN
 
-    JSR LoadBattleCHRPal    ; Load CHR and palettes for the battle
+    CALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
     LDA btlformation
-    JSR EnterBattle       ; start the battle!
+    CALL EnterBattle       ; start the battle!
     BCC :+                  ;  see if this battle was the end game battle
 
     @VictoryLoop:
-      JSR LoadEpilogueSceneGFX
+      CALL LoadEpilogueSceneGFX
       LDA #BANK_ENDINGSCENE
-      JSR SwapPRG
+      CALL SwapPRG
       JSR EnterEndingScene
-      JMP @VictoryLoop
+      JUMP @VictoryLoop
 
-:   JSR ReenterStandardMap  ; if this was just a normal battle, reenter the map
-    JMP StandardMapLoop     ; and resume the loop
+:   CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
+    JUMP StandardMapLoop     ; and resume the loop
 
 
   @TeleOrWarp:              ; code reaches here if we're teleporting or warping
     BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-      JSR ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
+      CALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
       RTS                   ;   will either go to the overworld loop, or to one "layer" up in this SM loop
 
   @Teleport:
@@ -2199,9 +2199,9 @@ StandardMapLoop:
     LDA cur_tileset
     PHA
 
-    JSR ScreenWipe_Close    ; wipe the screen closed
+    CALL ScreenWipe_Close    ; wipe the screen closed
     LDA #BANK_TELEPORTINFO  ; swap to the bank containing teleport info
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
 
@@ -2224,7 +2224,7 @@ StandardMapLoop:
     LDA lut_Tilesets, X     ; the tileset for this map
     STA cur_tileset
 
-    JSR DoStandardMap       ; JSR to DoStandardMap -- which runs a NEW instance of this loop
+    CALL DoStandardMap       ; CALL to DoStandardMap -- which runs a NEW instance of this loop
                             ;  this will only return if/when the player WARPs back to this floor
     PLA                     ; and which point we pull all the above stuff we pushed
     STA cur_tileset         ;  to return to the position we were at before the normal teleport
@@ -2237,7 +2237,7 @@ StandardMapLoop:
     PLA
     STA sm_scroll_x
 
-    JMP DoStandardMap       ; then JMP to DoStandardMap to reload everything that needs reloading
+    JUMP DoStandardMap       ; then JUMP to DoStandardMap to reload everything that needs reloading
                             ;   and do the map loop
 
 @ExitTeleport:
@@ -2245,9 +2245,9 @@ StandardMapLoop:
     BNE ProcessSMInput      ;   unless the battle marker bit was set, too -- in which case just jump
                             ;   over to input processing (should never happen)
 
-    JSR ScreenWipe_Close    ; wipe the screen closed
+    CALL ScreenWipe_Close    ; wipe the screen closed
     LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport dataa
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDX tileprop+1          ; get the teleport ID in X
     LDA lut_ExitTele_X, X   ;  get X coord
@@ -2260,7 +2260,7 @@ StandardMapLoop:
     SBC #7
     STA ow_scroll_y
 
-    JMP DoOverworld         ; then jump to the overworld
+    JUMP DoOverworld         ; then jump to the overworld
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2286,19 +2286,19 @@ ProcessSMInput:
       STA dlgsfx             ;  and a few dialogue flags
       STA dlgflg_reentermap
 
-      JSR WaitForVBlank      ; wait for VBlank and keep music playing
-      JSR CallMusicPlay_NoSwap ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
+      CALL WaitForVBlank      ; wait for VBlank and keep music playing
+      CALL CallMusicPlay_NoSwap ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
 
       LDA facing               ; use the direction the player is facing
-      JSR GetSMTargetCoords    ;  as the direction to get SM target coords
+      CALL GetSMTargetCoords    ;  as the direction to get SM target coords
 
-      JSR CanTalkToMapObject   ; see if there's a map object at those target coords
+      CALL CanTalkToMapObject   ; see if there's a map object at those target coords
       STX talkobj              ; store the index to that object (if any) in talkobj
       PHP                      ; back up the C flag (whether or not there was an object to talk to)
 
       LDA #4*4                    ; redraw all map objects starting at the 4th sprite
       STA sprindex                ;  this will cause the object we're talking to (if any) to face the player
-      JSR DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
+      CALL DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
 
       PLP                ; restore C flag
       LDX talkobj        ; and index of object to talk to
@@ -2308,13 +2308,13 @@ ProcessSMInput:
         STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
 
         LDA #BANK_TALKTOOBJ ; swap to bank containing TalkToObject routine
-        JSR SwapPRG
+        CALL SwapPRG
         JSR TalkToObject    ; then talk to this object.
-        JMP @DialogueBox
+        JUMP @DialogueBox
 
 
       @TalkToTile:          ; if there was no object to talk to....
-        JSR TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
+        CALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
         LDX #0              ; clear tile properties (prevent unwanted teleport/battle)
         STX tileprop
 
@@ -2322,21 +2322,21 @@ ProcessSMInput:
      ;; text ID we need to draw
 
     @DialogueBox:
-      JSR DrawDialogueBox     ; draw the dialogue box and containing text
+      CALL DrawDialogueBox     ; draw the dialogue box and containing text
 
-      JSR WaitForVBlank       ; wait a frame
+      CALL WaitForVBlank       ; wait a frame
       LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
       STA OAMDMA
-      JSR SetSMScroll
+      CALL SetSMScroll
       LDA #$1E
       STA PPUMASK
-      JSR CallMusicPlay_NoSwap
+      CALL CallMusicPlay_NoSwap
 
-      JSR ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
+      CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
 
       LDA dlgflg_reentermap     ; check the reenter map flag
       BEQ :+
-        JMP ReenterStandardMap  ; ... and reenter map if set
+        JUMP ReenterStandardMap  ; ... and reenter map if set
 
 :     LDA #0            ; then clear A, Start and Select button catchers
       STA joy_a
@@ -2357,15 +2357,15 @@ ProcessSMInput:
       LDA #0
       STA joy_start            ; clear start button catcher
 
-      JSR GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
+      CALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
       LDA #$02
-      JSR CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
+      CALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
 
       LDA #BANK_MENUS
-      JSR SwapPRG
+      CALL SwapPRG
       JSR EnterMainMenu        ; enter the main menu
 
-      JMP ReenterStandardMap   ; then reenter the map
+      JUMP ReenterStandardMap   ; then reenter the map
 
   ;; if neither A nor Start pressed... jumps here to check select
 
@@ -2377,20 +2377,20 @@ ProcessSMInput:
  ;; Select button pressed
  ;;
 
-      JSR GetSMTilePropNow     ; do all the same stuff as when start is pressed.
+      CALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
       LDA #0                   ;   though I don't know why you'd need to get the now tile properties...
       STA joy_select
       LDA #$02
-      JSR CyclePalettes
+      CALL CyclePalettes
       LDA #BANK_MENUS
-      JSR SwapPRG
+      CALL SwapPRG
       JSR EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
-      JMP ReenterStandardMap
+      JUMP ReenterStandardMap
 
   ;; A, Start, Select -- none of them pressed.  Now check directional buttons
 
 @CheckDirection:
-    JSR UpdateJoy       ; update joy data
+    CALL UpdateJoy       ; update joy data
     LDA joy             ; get updated data, and isolate the directional buttons
     AND #$0F
     BNE @Move           ; if any buttons down, move in that direction
@@ -2398,9 +2398,9 @@ ProcessSMInput:
       RTS
   @Move:
       STA facing           ; record directions pressed as our new facing direction
-      JSR CanPlayerMoveSM  ; check to see if the player can move that way
+      CALL CanPlayerMoveSM  ; check to see if the player can move that way
       BCS @Exit            ; if not... exit
-      JMP StartMapMove     ; otherwise... start them moving that direction, and exit
+      JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2415,11 +2415,11 @@ ProcessSMInput:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CanPlayerMoveSM:
-    JSR GetSMTargetCoords      ; get target coords (coords which player is attempting to move to)
-    JSR IsObjectInPath         ; see if a map object is in their path
+    CALL GetSMTargetCoords      ; get target coords (coords which player is attempting to move to)
+    CALL IsObjectInPath         ; see if a map object is in their path
     BCS @CantMove              ; if yes... path is blocked -- can't move
 
-    JSR GetSMTileProperties        ; otherwise, get the properties of the tile they're moving to
+    CALL GetSMTileProperties        ; otherwise, get the properties of the tile they're moving to
     LDA tileprop
     AND #TP_SPEC_MASK | TP_NOMOVE  ; mask out special and NOMOVE bits
     CMP #TP_NOMOVE                 ; if all special bits clear, and NOMOVE bit is set
@@ -2656,15 +2656,15 @@ GetSMTargetCoords:
   @Up:
     LDX #7         ; load x additive into X, and y additive into Y
     LDY #7-1       ; scroll + 7 is where the player is, so scroll + 7-1 would
-    JMP @Done      ; be up one tile from the player, etc.
+    JUMP @Done      ; be up one tile from the player, etc.
   @Down:
     LDX #7
     LDY #7+1
-    JMP @Done
+    JUMP @Done
   @Right:
     LDX #7+1
     LDY #7
-    JMP @Done
+    JUMP @Done
   @Left:
     LDX #7-1
     LDY #7
@@ -2789,7 +2789,7 @@ GetSMTileProperties:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TalkToSMTile:
-    JSR GetSMTileProperties   ; get the properties of the tile at the given coords
+    CALL GetSMTileProperties   ; get the properties of the tile at the given coords
 
     LDA tileprop              ; get 1st property byte
     AND #TP_SPEC_MASK         ;  see if its special bits indicate it's a treasure chest
@@ -2815,7 +2815,7 @@ TalkToSMTile:
       LDA #DLGID_EMPTYTC      ; select "The Chest is empty" text, and exit
       RTS
 
-:   JMP OpenTreasureChest     ; otherwise, open the chest
+:   JUMP OpenTreasureChest     ; otherwise, open the chest
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2833,7 +2833,7 @@ TalkToSMTile:
 
 LoadSMTilesetData:
     LDA #BANK_SMINFO          ; swap to bank containing desired info
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA #0
     STA tmp                   ; zero low bytes of source pointer
@@ -2849,7 +2849,7 @@ LoadSMTilesetData:
     LDA #>tileset_data        ; set high byte of dest pointer to point to tileset_data
     STA tmp+3
 
-    JSR Copy256               ; load 256 byte of tile properties (incs dest pointer)
+    CALL Copy256               ; load 256 byte of tile properties (incs dest pointer)
 
  ; load tileset TSA
 
@@ -2858,9 +2858,9 @@ LoadSMTilesetData:
     ADC #>lut_SMTilesetTSA    ; set high byte of src pointer to lut_SMTilesetTSA+(tileset*512)
     STA tmp+1                 ;  512 bytes of TSA data per tileset
 
-    JSR Copy256               ; copy the first 256 bytes of tsa data
+    CALL Copy256               ; copy the first 256 bytes of tsa data
     INC tmp+1                 ; inc src pointer
-    JSR Copy256               ; and copy the second 256 bytes of tsa data
+    CALL Copy256               ; and copy the second 256 bytes of tsa data
 
  ; load tileset attributes
 
@@ -2953,21 +2953,21 @@ StandardMapMovement:
     LDA #$1E
     STA PPUMASK             ; turn the PPU on
 
-    JSR RedrawDoor        ; redraw an opening/closing door if necessary
+    CALL RedrawDoor        ; redraw an opening/closing door if necessary
 
     LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
 
     LDA move_speed        ; see if the player is moving
     BEQ SetSMScroll       ; if not, just skip ahead and set the scroll
                           ; the rest of this is only done during movement
-      JSR SM_MovePlayer     ; Move the player in the desired direction
-      JSR MapPoisonDamage   ; do poison damage
+      CALL SM_MovePlayer     ; Move the player in the desired direction
+      CALL MapPoisonDamage   ; do poison damage
 
       LDA tileprop          ; get the properties for this tile
       AND #TP_SPEC_MASK     ; mask out the special bits
       CMP #TP_SPEC_DAMAGE   ; see if it's a damage tile (frost/lava)
       BNE :+                ; if it is...
-        JMP MapTileDamage   ;  ... do map tile damage
+        JUMP MapTileDamage   ;  ... do map tile damage
   :   RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3017,10 +3017,10 @@ SetSMScroll:
 SMMove_Right:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      JSR DoMapDrawJob     ; otherwise, do the job
+      CALL DoMapDrawJob     ; otherwise, do the job
 
   @NoJob:
-    JSR SetSMScroll        ; set scroll
+    CALL SetSMScroll        ; set scroll
 
     LDA move_ctr_x         ; add movement speed
     CLC                    ;  to our X move counter
@@ -3059,10 +3059,10 @@ SMMove_Right:
 SMMove_Left:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      JSR DoMapDrawJob     ; otherwise... do the job
+      CALL DoMapDrawJob     ; otherwise... do the job
 
   @NoJob:
-    JSR SetSMScroll        ; set scroll
+    CALL SetSMScroll        ; set scroll
 
     LDA move_ctr_x         ; get the move counter.  If zero, we need to move one tile to left
     BNE @NoTileChg         ;   otherwise we don't need to change tiles
@@ -3113,7 +3113,7 @@ SM_MovePlayer:
     BCS SMMove_Left     ; moving left
     LSR A
     BCS SMMove_Down     ; moving down
-    JMP SMMove_Up       ; moving up
+    JUMP SMMove_Up       ; moving up
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3135,10 +3135,10 @@ SMMove_Down:
     BNE @NoJob          ; if not 8 pixels between the move... don't do the job
 
   @Job:
-    JSR DoMapDrawJob       ; do the map drawing job, then proceed normally
+    CALL DoMapDrawJob       ; do the map drawing job, then proceed normally
 
   @NoJob:
-    JSR SetSMScroll        ; set SM scroll
+    CALL SetSMScroll        ; set SM scroll
 
     LDA move_ctr_y         ; get the Y move counter
     CLC
@@ -3189,10 +3189,10 @@ SMMove_Up:
     BNE @NoJob
 
   @Job:
-    JSR DoMapDrawJob
+    CALL DoMapDrawJob
 
   @NoJob:
-    JSR SetSMScroll        ; set scroll
+    CALL SetSMScroll        ; set scroll
 
     LDA move_ctr_y         ; get move counter
     BNE @NoTileChg         ; if it's zero, we need to change tiles.  Otherwise, skip ahead
@@ -3268,14 +3268,14 @@ SMMove_Battle:
     LDA tileprop+1         ; check the secondary property byte to see which battle to do
     BPL @Spiked            ; if high bit is clear, this is a spiked tile (forced battle)
                            ;   otherwise... it's a random encounter
-    JSR BattleStepRNG      ; get a pseudo-random number from the battle step RNG
+    CALL BattleStepRNG      ; get a pseudo-random number from the battle step RNG
     CMP battlerate         ; if that number is >= the battle rate for this map...
     BCS @Done              ;  ... then there's no battle
 
       LDA cur_map             ; otherwise, begin a random encounter
       CLC                     ;  get the current map, and add 8*8 to it to get past the
       ADC #8*8                ;  overworld domains.
-      JSR GetBattleFormation  ; Get the battle formation from this map's domain
+      CALL GetBattleFormation  ; Get the battle formation from this map's domain
       LDA #TP_BATTLEMARKER    ; then set the battle marker bit in the tileprop byte, so that a
       STA tileprop            ;   battle is triggered.
 
@@ -3400,9 +3400,9 @@ SMMove_CloseRoom:
     BPL SMMove_OK     ; if we're not, just move normally
     EOR #$84          ; otherwise, clear the inroom flag, and set the 'exiting' flag
     STA inroom        ; record that so the room will be exited
-    JSR PlayDoorSFX   ; play the door sound effect
+    CALL PlayDoorSFX   ; play the door sound effect
 
-    ; no JMP or RTS -- code continues on to SMMove_OK
+    ; no JUMP or RTS -- code continues on to SMMove_OK
     ;  note the game doesn't set doorppuaddr here even though closing the door
     ;  will require redrawing.  This is because it depends on the fact that doorppuaddr
     ;  has not changed from the last time the door has opened (so the game draws to the
@@ -3455,7 +3455,7 @@ SMMove_Door:
     ASL inroom           ; shift the inroom flag (high bit) into C
     STA inroom           ; then write the door bits to inroom to mark that we're opening a door (or locked door)
     BCS :+               ; if the inroom flag was previously cleared (coming from outside a room)...
-      JSR PlayDoorSFX    ;  ... play the door sound effect
+      CALL PlayDoorSFX    ;  ... play the door sound effect
 
 :   LDA scroll_y         ; get the Y scroll for drawing
     CLC
@@ -3492,7 +3492,7 @@ SMMove_Door:
     STA doorppuaddr            ;  PPU address of the desired tile to redraw
     LDA lut_2xNTRowStartHi, X  ;  record this address to doorppuaddr
     STA doorppuaddr+1
-    JMP @CheckShop
+    JUMP @CheckShop
 
   @NT2400:
     AND #$0F                   ; for the NT at $2400, do the same thing, but first clear that
@@ -3547,17 +3547,17 @@ RedrawDoor:
   @LockedClose:
     LDA #$00                   ; new inroom status ($00 because we're leaving rooms)
     LDX #MAPTILE_LOCKEDDOOR    ; tile we're to draw
-    JMP @Redraw                ; redraw it
+    JUMP @Redraw                ; redraw it
 
   @NormalClose:
     LDA #$00                   ; same...
     LDX #MAPTILE_CLOSEDDOOR    ; but use normal closed door tile instead of the locked door tile
-    JMP @Redraw
+    JUMP @Redraw
 
   @LockedOpen:
     LDA #$82                   ; $82 indicates inroom, but shows outroom sprites (locked rooms)
     LDX #MAPTILE_OPENDOOR
-    JMP @Redraw
+    JUMP @Redraw
 
   @NormalOpen:
     LDA #$81                   ; $81 indicates inroom and shows inroom sprites (normal rooms)
@@ -3586,7 +3586,7 @@ RedrawDoor:
     LDA tsa_dr, X
     STA PPUDATA
 
-    JMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
+    JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
 
 
@@ -3618,10 +3618,10 @@ PlayDoorSFX:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterStandardMap:
-    JSR LoadStandardMapAndObjects   ; decompress the map, load objects
-    JSR PrepStandardMap             ; draw it, do other prepwork
-    JSR AssertNasirCRC              ; do the NASIR CRC
-    JMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
+    CALL LoadStandardMapAndObjects   ; decompress the map, load objects
+    CALL PrepStandardMap             ; draw it, do other prepwork
+    CALL AssertNasirCRC              ; do the NASIR CRC
+    JUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3635,9 +3635,9 @@ EnterStandardMap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReenterStandardMap:
-    JSR PrepStandardMap   ; do map preparation stuff (redraw, etc)
+    CALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
     LDA #$03              ; then do palette cycling effect code 3 (standard map -- cycling in)
-    JMP CyclePalettes     ;  and exit
+    JUMP CyclePalettes     ;  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3653,8 +3653,8 @@ LoadStandardMapAndObjects:
     STA PPUCTRL             ; disable NMIs
     STA PPUMASK             ; turn off PPU
 
-    JSR LoadStandardMap   ; decompress the map
-    JSR LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
+    CALL LoadStandardMap   ; decompress the map
+    CALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
     RTS                   ; exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3681,10 +3681,10 @@ PrepStandardMap:
     STA tileprop+1
     STA entering_shop
 
-    JSR LoadSMCHR           ; load all the necessary CHR
-    JSR LoadSMTilesetData   ; load tileset and TSA data
-    JSR LoadMapPalettes     ; load palettes
-    JSR DrawFullMap         ; draw the map onto the screen
+    CALL LoadSMCHR           ; load all the necessary CHR
+    CALL LoadSMTilesetData   ; load tileset and TSA data
+    CALL LoadMapPalettes     ; load palettes
+    CALL DrawFullMap         ; draw the map onto the screen
 
     LDA sm_scroll_x         ; get the map x scroll
     AND #$10                ; isolate the odd NT bit
@@ -3695,9 +3695,9 @@ PrepStandardMap:
     STA NTsoft2000          ; and record as soft2000
     STA soft2000
 
-    JSR WaitForVBlank     ; wait for vblank
-    JSR DrawMapPalette      ; so we can draw the palette
-    JSR SetSMScroll         ; set the scroll
+    CALL WaitForVBlank     ; wait for vblank
+    CALL DrawMapPalette      ; so we can draw the palette
+    CALL SetSMScroll         ; set the scroll
 
     LDA #0                  ; turn PPU off (but it's already off!)
     STA PPUMASK
@@ -3720,12 +3720,12 @@ PrepStandardMap:
     STA sm_player_y
 
     LDA #BANK_BTLDATA           ; swap to page containging battle rates
-    JSR SwapPRG
+    CALL SwapPRG
     LDX cur_map                 ; use current map to index the rate LUT
     LDA lut_BattleRates+1, X    ; get this map's rate (+1 because first entry is for overworld [unused])
     STA battlerate              ; and record it
 
-    JMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
+    JUMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
 
  ;; the LUT containing the music tracks for each tileset
 
@@ -3744,14 +3744,14 @@ PrepStandardMap:
 ;;
 ;;    It is called when you enter any standard map, and if the checksum fails, the game simply
 ;;  crashes.  However the routine is easily defeated by simply RTSing out of it immediately (or
-;;  removing the JSR to it)
+;;  removing the CALL to it)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 AssertNasirCRC:
     LDA #BANK_BRIDGESCENE        ; swap to bank containing the bridge scene (credits text)
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDY #$25                     ; going to sum $25+1 bytes
     LDX __Nasir_CRC_High_Byte    ; get the high byte of pointer
@@ -3799,7 +3799,7 @@ DrawFullMap:
      CLC
      ADC #15
      STA ow_scroll_y
-     JMP @StartLoop
+     JUMP @StartLoop
 
   @SM:
      LDA sm_scroll_y     ; same, but add to sm scroll
@@ -3813,11 +3813,11 @@ DrawFullMap:
     STA facing           ; have the player face upwards (for purposes of following loop)
 
    @Loop:
-      JSR StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
-      JSR DrawMapRowCol      ; then draw the row that just got prepped
-      JSR PrepAttributePos   ; prep attributes for that row
-      JSR DrawMapAttributes  ; and draw them
-      JSR ScrollUpOneRow     ; then force a scroll upward one row
+      CALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
+      CALL DrawMapRowCol      ; then draw the row that just got prepped
+      CALL PrepAttributePos   ; prep attributes for that row
+      CALL DrawMapAttributes  ; and draw them
+      CALL ScrollUpOneRow     ; then force a scroll upward one row
 
       LDA scroll_y           ; check scroll_y
       BNE @Loop              ; and loop until it reaches 0 again (15 iterations)
@@ -3905,7 +3905,7 @@ StartMapMove:
     ORA #$02
     STA mapflags
 
-    JSR PrepRowCol       ; and prep the column
+    CALL PrepRowCol       ; and prep the column
 
   @Finalize:
     LDA #$02
@@ -3939,7 +3939,7 @@ StartMapMove:
     SEC
     SBC #1               ; and subtract 1 from the mapdraw column (one tile left of screen)
 
-    JMP @Horizontal
+    JUMP @Horizontal
 
 
   @Down:
@@ -3960,7 +3960,7 @@ StartMapMove:
 
     SEC                  ; subtract the $F we just added (dumb)
     SBC #$0F
-    JMP @Vertical
+    JUMP @Vertical
 
   @Up:
     LDA sm_scroll_y      ; same idea as @Down
@@ -3992,9 +3992,9 @@ StartMapMove:
     AND #~$02            ; to indicate we want to draw a row
     STA mapflags
 
-    JSR LoadOWMapRow     ; need to decompress a new row when moving vertically on the OW map
-    JSR PrepRowCol       ; then prep the row
-    JMP @Finalize        ; and jump to @Finalize to do final stuff
+    CALL LoadOWMapRow     ; need to decompress a new row when moving vertically on the OW map
+    CALL PrepRowCol       ; then prep the row
+    JUMP @Finalize        ; and jump to @Finalize to do final stuff
 
 
     RTS                  ; useless RTS (impossible to reach)
@@ -4030,11 +4030,11 @@ DoMapDrawJob:
     RTS                 ; if job was neither of those, do nothing and just exit
 
   @Tiles:
-    JSR DrawMapRowCol       ; draw a row or column of tiles
+    CALL DrawMapRowCol       ; draw a row or column of tiles
     RTS                     ;  and exit
 
   @Attributes:
-    JSR DrawMapAttributes   ; draw attributes
+    CALL DrawMapAttributes   ; draw attributes
     RTS                     ;  and exit
 
 
@@ -4060,7 +4060,7 @@ ScrollUpOneRow:
     AND #$3F            ; and wrap where needed
     STA sm_scroll_y
 
-    JMP @Finalize
+    JUMP @Finalize
 
   @OW:
     LDA ow_scroll_y     ; if OW, subtract 1 from ow_scroll
@@ -4089,7 +4089,7 @@ ScrollUpOneRow:
 
 LoadStandardMap:
     LDA #BANK_STANDARDMAPS
-    JSR SwapPRG     ; swap to bank containing start of standard maps
+    CALL SwapPRG     ; swap to bank containing start of standard maps
     LDA cur_map       ; get current map ID
     ASL A             ; double it, and throw it in X (to get index for pointer table)
     TAX
@@ -4108,12 +4108,12 @@ LoadStandardMap:
     AND #$03               ; mask out low 2 bits (gets bank number for start of this map)
     ORA #BANK_STANDARDMAPS ; Add standard map bank (use ORA to avoid unwanted carry from above ROLs)
     STA tmp+5              ; put bank number in temp ram for future reference
-    JSR SwapPRG          ; swap to desired bank
+    CALL SwapPRG          ; swap to desired bank
     LDA #<mapdata
     STA tmp+2
     LDA #>mapdata     ; set destination pointer to point to mapdata (start of decompressed map data in RAM).
     STA tmp+3         ; (tmp+2) is now the dest pointer, (tmp) is now the source pointer
-    JMP DecompressMap ; start decompressing the map
+    JUMP DecompressMap ; start decompressing the map
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4150,7 +4150,7 @@ LoadOWMapRow:
     BCS Map_RTS      ; if flag is set (in standard map), we're not in the overworld, so don't do anything -- just exit
 
     LDA #BANK_OWMAP  ;  swap to bank contianing overworld map
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA #>lut_OWPtrTbl ;  set (tmp+6) to the start of the pointers for the rows of the OW map.
     STA tmp+7          ;   we will then index this pointer table to get the pointer for the start of the row
@@ -4177,7 +4177,7 @@ LoadOWMapRow:
     STA tmp+2        ;   where 'x' is the low 4 bits of the row number
                      ;  (tmp+2) is now our dest pointer for the row
 
-           ; no RTS or JMP -- code seamlessly runs into DecompressMap
+           ; no RTS or JUMP -- code seamlessly runs into DecompressMap
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4209,7 +4209,7 @@ DecompressMap:
       INC tmp+1     ;    low byte of src pointer wrapped, so inc high byte
       BIT tmp+1     ;    check to see if high byte went over $BF (crossed bank boundary)
       BVC @TileRun  ;    if it didn't, proceed to TileRun
-      JSR @NextBank ;    otherwise, we need to swap in the next bank, first
+      CALL @NextBank ;    otherwise, we need to swap in the next bank, first
 
   @TileRun:
     LDA (tmp), Y    ;   get next src byte (length of run)
@@ -4231,7 +4231,7 @@ DecompressMap:
         INC tmp+3         ;   inc high byte of dest pointer
  :    INC tmp             ;   inc low byte of src pointer
       BNE DecompressMap   ;   if it didn't wrap, jump back to main map loading loop
-      JMP @IncSrcHigh     ;   otherwise (did wrap), need to increment the high byte of the source pointer
+      JUMP @IncSrcHigh     ;   otherwise (did wrap), need to increment the high byte of the source pointer
 
   @SingleTile:
     STA (tmp+2), Y       ;  write tile to dest buffer
@@ -4245,18 +4245,18 @@ DecompressMap:
     INC tmp+1            ;  increment high byte of source pointer
     BIT tmp+1            ;  check to see if we've reached end of PRG bank (BIT will set V if the value is >= $C0)
     BVC DecompressMap    ;  if we haven't, just continue with map decompression
-    JSR @NextBank        ;  otherwise swap in the next bank
-    JMP DecompressMap    ;  and continue decompression
+    CALL @NextBank        ;  otherwise swap in the next bank
+    JUMP DecompressMap    ;  and continue decompression
 
 ;; NextBank local subroutine
-;;  called via JSR when a map crosses a bank boundary (so a new bank needs to be swapped in)
+;;  called via CALL when a map crosses a bank boundary (so a new bank needs to be swapped in)
 @NextBank:
     LDA #>$8000   ; reset high byte of source pointer to start of the bank:  $8000
     STA tmp+1
     LDA tmp+5     ; get original bank number
     CLC
     ADC #$01      ; increment it by 1
-    JMP SwapPRG ; swap that new bank in and exit
+    JUMP SwapPRG ; swap that new bank in and exit
     RTS           ; useless RTS (impossible to reach)
 
 
@@ -4379,7 +4379,7 @@ PrepRowCol:
        STA tmp+2         ;  and write back
        ORA mapdraw_x     ; OR with current column number
        STA tmp           ; write low byte with column to
-       JMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
+       JUMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
 
 @DoOverworld:
    LDA mapdraw_y ; get the row number
@@ -4489,7 +4489,7 @@ DrawMapRowCol:
       ASL A               ; double column number
       ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
       STA tmp
-      JMP @DetermineRowOrCol
+      JUMP @DetermineRowOrCol
 
   @UseNT2400:     ; if column >= $10 (use NT $2400)
       AND #$0F            ; mask low bits
@@ -4507,7 +4507,7 @@ DrawMapRowCol:
     LDA mapflags          ; find out if we're moving drawing a row or column
     AND #$02
     BEQ @DoRow
-    JMP @DoColumn
+    JUMP @DoColumn
 
 
    ;;
@@ -4728,7 +4728,7 @@ PrepAttributePos:
        INY              ; inc our dest counter
        CPY #$10         ; and loop until we've prepped all 16 columns
        BCS @Exit
-       JMP @Loop
+       JUMP @Loop
 
 @IncByColumn:
        LDA mapdraw_nty  ; get current row to draw
@@ -4741,7 +4741,7 @@ PrepAttributePos:
        INY              ; inc our dest counter
        CPY #$0F         ; and loop until we've prepped all 15 rows in this column
        BCS @Exit
-       JMP @Loop
+       JUMP @Loop
 
 @Exit: 
     RTS
@@ -4879,23 +4879,23 @@ DrawDialogueBox:
       EOR #$10           ; toggle the NT bit so it draws "offscreen"
       STA mapdraw_ntx    ; and that is our target NT address
 
-      JSR PrepRowCol             ; prep map row/column graphics
-      JSR PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
-      JSR WaitForVBlank        ; then wait for VBl
-      JSR DrawMapRowCol          ; and draw what we just prepped
-      JSR SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
-      JSR CallMusicPlay_NoSwap   ; and update the music
+      CALL PrepRowCol             ; prep map row/column graphics
+      CALL PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
+      CALL WaitForVBlank        ; then wait for VBl
+      CALL DrawMapRowCol          ; and draw what we just prepped
+      CALL SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
+      CALL CallMusicPlay_NoSwap   ; and update the music
 
-      JSR PrepAttributePos       ; then prep attribute position data
+      CALL PrepAttributePos       ; then prep attribute position data
       LDA mapdraw_nty            ; get dest NT address
       CMP scroll_y               ; compare it to the screen scroll
       BEQ :+                     ; if they're the same (drawing the top/last row)
-        JSR PrepDialogueBoxAttr  ; ... then skip over dialogue box attribute prepping (dialogue box isn't visible top row)
+        CALL PrepDialogueBoxAttr  ; ... then skip over dialogue box attribute prepping (dialogue box isn't visible top row)
 
-  :   JSR WaitForVBlank        ; then wait for VBl again
-      JSR DrawMapAttributes      ; and draw the attributes for this row
-      JSR SetSMScroll            ; then set the scroll to keep rendering looking good
-      JSR CallMusicPlay_NoSwap   ; and keep the music playing
+  :   CALL WaitForVBlank        ; then wait for VBl again
+      CALL DrawMapAttributes      ; and draw the attributes for this row
+      CALL SetSMScroll            ; then set the scroll to keep rendering looking good
+      CALL CallMusicPlay_NoSwap   ; and keep the music playing
 
       LDA mapdraw_nty            ; do the same check as above (see if this is the top/last row)
       CMP scroll_y
@@ -4925,7 +4925,7 @@ DrawDialogueBox:
     STA menustall       ;  doesn't check it
 
     PLA                      ; then pull the dialogue text ID that was pushed at the start of the routine
-    JMP DrawDialogueString   ; draw it, then exit!
+    JUMP DrawDialogueString   ; draw it, then exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4982,39 +4982,39 @@ PrepDialogueBoxRow:
     STA tmp
     LDA #$FF           ; tile $FF for all other tiles in the row (inner box graphic / empty space)
     STA tmp+1
-    JSR DlgBoxPrep_UL  ;  prep UL tiles
+    CALL DlgBoxPrep_UL  ;  prep UL tiles
 
     LDA #$FB           ; $FB as rightmost tile in row (right box graphic)
     STA tmp
-    JSR DlgBoxPrep_UR  ;  prep UR tiles
+    CALL DlgBoxPrep_UR  ;  prep UR tiles
 
-    JSR DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
-    JMP DlgBoxPrep_DR  ;   and exit
+    CALL DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
+    JUMP DlgBoxPrep_DR  ;   and exit
 
   @TopRow:
     LDA #$F7           ; use tile $F7 for the leftmost tile in the row (UL box graphic)
     STA tmp
     LDA #$F8           ; use tile $F8 for every other tile in the row (top box graphic)
     STA tmp+1
-    JSR DlgBoxPrep_UL  ;  prep the UL tiles
+    CALL DlgBoxPrep_UL  ;  prep the UL tiles
 
     LDA #$F9           ; use tile $F9 for the rightmost tile in the row (UR box graphic)
     STA tmp
-    JSR DlgBoxPrep_UR  ;  prep the UR tiles
+    CALL DlgBoxPrep_UR  ;  prep the UR tiles
 
-    JSR DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
-    JMP DlgBoxPrep_DR  ;   and exit
+    CALL DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
+    JUMP DlgBoxPrep_DR  ;   and exit
 
   @BottomRow:
     LDA #$FC           ; use tile $FC for the leftmost tile in the row (DL box graphic)
     STA tmp
     LDA #$FD           ; use tile $FD for every other tile in the row (bottom box graphic)
     STA tmp+1
-    JSR DlgBoxPrep_UL  ;  prep the UL tiles
+    CALL DlgBoxPrep_UL  ;  prep the UL tiles
 
     LDA #$FE           ; use tile $FE for the rightmost tile in the row (DR box graphic)
     STA tmp
-    JMP DlgBoxPrep_UR  ;  prep the UR tiles and exit
+    JUMP DlgBoxPrep_UR  ;  prep the UR tiles and exit
 
                  ; notice that for the bottom row, the border graphics are drawn on the
                  ; top half of the tile, and that the bottom half of the tile is not changed.
@@ -5143,7 +5143,7 @@ ShowDialogueBox:
     LDA #53
     STA sq2_sfx            ; indicate sq2 is going to be playing a sound effect for the next 53 frames
     LDA #$8E
-    JSR DialogueBox_Sfx    ; and play the "upward sweep" sound effect that plays when the dialogue box opened.
+    CALL DialogueBox_Sfx    ; and play the "upward sweep" sound effect that plays when the dialogue box opened.
 
     LDA soft2000           ; get the onscreen NT
     EOR #$01               ; toggle the NT bit to make it the offscreen NT (where the dialogue box is drawn)
@@ -5155,7 +5155,7 @@ ShowDialogueBox:
      ; open the dialogue box
 
    @OpenLoop:
-      JSR DialogueBox_Frame; do a frame
+      CALL DialogueBox_Frame; do a frame
 
       LDA tmp+11
       CLC
@@ -5182,8 +5182,8 @@ ShowDialogueBox:
   ; if you have a direction held.
 
   @WaitForButton_1:           ;  The loop that waits for the direction to lift
-    JSR DialogueBox_Frame   ; Do a frame
-    JSR UpdateJoy           ; update joypad data
+    CALL DialogueBox_Frame   ; Do a frame
+    CALL UpdateJoy           ; update joypad data
     LDA joy_a               ; check A button
     BNE @ExitDialogue       ; and exit if A pressed
 
@@ -5199,8 +5199,8 @@ ShowDialogueBox:
     BNE @WaitForButton_1    ; and continue first loop until they're all lifted
 
   @WaitForButton_2:           ;  The loop that waits for a direciton to press
-    JSR DialogueBox_Frame   ; exactly the same as above loop
-    JSR UpdateJoy
+    CALL DialogueBox_Frame   ; exactly the same as above loop
+    CALL UpdateJoy
     LDA joy_a
     BNE @ExitDialogue
 
@@ -5226,8 +5226,8 @@ ShowDialogueBox:
     LDA music_track         ;   we need to wait for it to end.  check the music track
     CMP #$81                ; and see if it's $81 (sfx over)
     BEQ @SfxIsDone          ; if it is, break out of this loop
-      JSR DialogueBox_Frame   ; otherwise, keep doing frames
-      JMP @WaitForSfx         ; and loop until the sfx is done
+      CALL DialogueBox_Frame   ; otherwise, keep doing frames
+      JUMP @WaitForSfx         ; and loop until the sfx is done
 
   @SfxIsDone:
     LDA dlgmusic_backup     ; once the sfx is done restore the music track to the backup value
@@ -5241,10 +5241,10 @@ ShowDialogueBox:
     LDA #37
     STA sq2_sfx            ; indicate that sq2 is to be playing a sfx for the next 37 frames
     LDA #$95
-    JSR DialogueBox_Sfx    ; and start the downward sweep sound effect you hear when you close the dialogue box
+    CALL DialogueBox_Sfx    ; and start the downward sweep sound effect you hear when you close the dialogue box
 
   @CloseLoop:
-      JSR DialogueBox_Frame; do a frame
+      CALL DialogueBox_Frame; do a frame
 
       LDA tmp+11        ; subtract 3 from the dialogue visibility scanline (move it 3 lines up
       SEC               ;    retracting box visibility)
@@ -5271,7 +5271,7 @@ ShowDialogueBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DialogueBox_Frame:
-    JSR Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
+    CALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
     LDA #>oam          ; do sprite DMA
     STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
 
@@ -5302,7 +5302,7 @@ DialogueBox_Frame:
                            ;   mean the last visible dialogue box line is 8+N  -- where N is tmp+11)
 
   @ScanlineLoop:
-    JSR WaitScanline       ; burn the desired number of scanlines
+    CALL WaitScanline       ; burn the desired number of scanlines
     DEX
     BNE @ScanlineLoop
 
@@ -5313,7 +5313,7 @@ DialogueBox_Frame:
 
     LDA soft2000                   ; so get the normal "onscreen" NT
     STA PPUCTRL                      ; and set it
-    JMP CallMusicPlay_NoSwap       ; then call the Music Play routine and exit
+    JUMP CallMusicPlay_NoSwap       ; then call the Music Play routine and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5369,7 +5369,7 @@ DialogueBox_Sfx:
  ;;
 
 ScreenWipe_Open:
-    JSR StartScreenWipe     ; do screen wipe prepwork
+    CALL StartScreenWipe     ; do screen wipe prepwork
 
     LDA #122+11             ; start the wipe at scanline 122 (just below the center of the screen
     STA tmp+4               ;  -- it probably should've been 120)
@@ -5377,7 +5377,7 @@ ScreenWipe_Open:
     STA tmp+5
 
   @Loop:
-      JSR ScreenWipeFrame   ; do a frame with these wipe params
+      CALL ScreenWipeFrame   ; do a frame with these wipe params
 
       LDA tmp+4             ; move the opened part up by subtracting 2 from the start scanline
       SEC
@@ -5393,14 +5393,14 @@ ScreenWipe_Open:
       BCC @Loop             ;  lines off the top and bottom)
 
     LDA #$1E                ; then jump to the finalization with A=1E (PPU On)
-    JMP ScreenWipe_Finalize
+    JUMP ScreenWipe_Finalize
 
  ;;
  ;; ScreenWipe_Close  [$D701 :: 0x3D711]
  ;;
 
 ScreenWipe_Close:
-    JSR StartScreenWipe     ; do screen wipe prepwork
+    CALL StartScreenWipe     ; do screen wipe prepwork
 
     LDA #10+11              ; start the wipe at scanline 10 
     STA tmp+4
@@ -5409,7 +5409,7 @@ ScreenWipe_Close:
                             ;  wipe will be centered on the screen
 
   @Loop:
-      JSR ScreenWipeFrame   ; do a frame with these wipe params
+      CALL ScreenWipeFrame   ; do a frame with these wipe params
 
       LDA tmp+4             ; move the top portion of the wipe down by
       CLC                   ;  adding 2 to the start line
@@ -5447,7 +5447,7 @@ ScreenWipe_Finalize:
 ;;  Does Sprite DMA, draws the palette, and sets the scroll.
 ;;
 ;;    In addition to doing these somewhat ordinary tasks... the routine takes
-;;  a more or less fixed amount of time.  If JSR'd to immediately after waiting
+;;  a more or less fixed amount of time.  If CALL'd to immediately after waiting
 ;;  for VBlank, this routine should exit approximately ~1105 cycles into VBlank
 ;;  (~9.7 scanlines into VBlank -- about 11 scanlines before onscreen rendering starts)
 ;;  Timing here isn't super-critical.  However drastic changes in the length
@@ -5459,13 +5459,13 @@ ScreenWipeFrame_Prep:
     LDA #>oam           ; do sprite DMA
     STA OAMDMA           ;  (friendly reminder:  sprite DMA burns 513 cycles)
 
-    JSR DrawMapPalette  ; draw the palette
+    CALL DrawMapPalette  ; draw the palette
 
     LDA mapflags        ; see if we're on the overworld or standard map
     LSR A
     BCS :+
-      JMP SetOWScroll   ; and set scroll appropriately
-:   JMP SetSMScroll     ;  then exit
+      JUMP SetOWScroll   ; and set scroll appropriately
+:   JUMP SetSMScroll     ;  then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5503,14 +5503,14 @@ ScreenWipeFrame_Prep:
 ;;    then you could potentially mess up the timing for this routine, causing the wipe to occur
 ;;  offcenter.  If that happens, you can tweak the first '@InitialWait' loop in this routine
 ;;  to sort of resync it again.  You can also modify what the game writes to tmp+4 in routines
-;;  which JSR to here in order to tweak the timing (tmp+4 would make big changes, @InitialWait would
+;;  which CALL to here in order to tweak the timing (tmp+4 would make big changes, @InitialWait would
 ;;  make minor changes)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScreenWipeFrame:
-    JSR WaitForVBlank          ; wait for VBlank
-    JSR ScreenWipeFrame_Prep     ; then do prepwork for this frame
+    CALL WaitForVBlank          ; wait for VBlank
+    CALL ScreenWipeFrame_Prep     ; then do prepwork for this frame
 
     LDX #10                  ; This loop "fine-tunes" the wait.  It works out to 1+5*X cycles
     @InitialWait:            ;  so you can change the value X loads here to increase/decrease
@@ -5525,7 +5525,7 @@ ScreenWipeFrame:
     STA PPUMASK
     LDX tmp+4                ; wait for tmp+4 scanlines
     @WaitLines_Off:
-      JSR WaitScanline
+      CALL WaitScanline
       DEX
       BNE @WaitLines_Off
     PAGECHECK @WaitLines_Off
@@ -5534,7 +5534,7 @@ ScreenWipeFrame:
     STA PPUMASK
     LDX tmp+5                ; wait for tmp+5 scanlines
     @WaitLines_On:
-      JSR WaitScanline
+      CALL WaitScanline
       DEX
       BNE @WaitLines_On
     PAGECHECK @WaitLines_On
@@ -5570,7 +5570,7 @@ ScreenWipeFrame:
 ;;
 ;;    JSRing to this routine eats up exactly 109 cycles 2 times out of 3, and 108
 ;;  cycles 1 time out of 3.  So it effectively eats 108.6667 cycles.  This includes
-;;  the JSR.  When placed inside a simple 'DEX/BNE' loop (DEX+BNE = 5 cycles), it
+;;  the CALL.  When placed inside a simple 'DEX/BNE' loop (DEX+BNE = 5 cycles), it
 ;;  burns 113.6667 cycles, which is EXACTLY one scanline.
 ;;
 ;;    This is used as a timing mechanism for some PPU effects like the screen
@@ -5618,13 +5618,13 @@ WaitScanline:
 
 StartScreenWipe:
     LDA #$F8           ; clears OAM to hide sprites during the screen wipe
-    LDX #0             ;   why on earth doesn't this just JSR to ClearOAM?  x_x
+    LDX #0             ;   why on earth doesn't this just CALL to ClearOAM?  x_x
   @Loop:
       STA oam, X
       INX
       BNE @Loop
 
-    JSR WaitForVBlank   ; then wait for VBlank
+    CALL WaitForVBlank   ; then wait for VBlank
     LDA #>oam             ; and do sprite DMA
     STA OAMDMA
 
@@ -5655,8 +5655,8 @@ StartScreenWipe:
 
 
 UpdateJoy:
-    JSR ReadJoypadData
-    JSR ProcessJoyButtons
+    CALL ReadJoypadData
+    CALL ProcessJoyButtons
     RTS
 
 
@@ -5832,7 +5832,7 @@ DrawPalette:
     LDA #$00
     STA PPUADDR
     LDX #$00        ; set X to zero (our source index)
-    JMP _DrawPalette_Norm   ; and copy the normal palette
+    JUMP _DrawPalette_Norm   ; and copy the normal palette
 
 DrawMapPalette:
     LDA PPUSTATUS       ; Reset PPU Toggle
@@ -5877,8 +5877,8 @@ _DrawPalette_Norm:
 
 
 WaitVBlank_NoSprites:
-    JSR ClearOAM              ; clear OAM
-    JSR WaitForVBlank       ; wait for VBlank
+    CALL ClearOAM              ; clear OAM
+    CALL WaitForVBlank       ; wait for VBlank
     LDA #>oam
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
@@ -5905,7 +5905,7 @@ LoadMapPalettes:
       BPL @Loop             ; loop until X wraps ($30 iterations)
 
     LDA #BANK_MAPMANPAL
-    JSR SwapPRG           ; swap to bank containing mapman palettes
+    CALL SwapPRG           ; swap to bank containing mapman palettes
 
     LDA ch_class            ; get lead party member's class
     ASL A                   ; double it, and put it in X
@@ -5943,16 +5943,16 @@ BattleTransition:
   ;; loop from $00 - $41
 
   @Loop:
-    JSR WaitForVBlank   ; wait for VBlank
+    CALL WaitForVBlank   ; wait for VBlank
     LDA mapflags          ; get map flags to see if this is OW or SM
     LSR A
     BCC @OW               ; fork appropriately
 
   @SM:
-      JSR SetSMScroll         ; set SM scroll if SM
-      JMP @Continue
+      CALL SetSMScroll         ; set SM scroll if SM
+      JUMP @Continue
   @OW:
-      JSR SetOWScroll_PPUOn   ; or OW scroll if OW
+      CALL SetOWScroll_PPUOn   ; or OW scroll if OW
 
   @Continue:
     LDA tmp+12       ; get loop counter
@@ -5988,7 +5988,7 @@ BattleTransition:
     STA PPUMASK        ; turn off the PPU
     STA PAPU_EN        ;  and APU
 
-    JMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
+    JUMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6072,9 +6072,9 @@ PalCyc_DrawPalette:
 
 CyclePalettes:
     STA palcyc_mode           ; record the mode
-    JSR WaitVBlank_NoSprites  ; wait for VBlank, and kill all sprites
-    JSR PalCyc_SetScroll      ; set the scroll
-    JSR PalCyc_GetInitialPal  ; load up the initial palette
+    CALL WaitVBlank_NoSprites  ; wait for VBlank, and kill all sprites
+    CALL PalCyc_SetScroll      ; set the scroll
+    CALL PalCyc_GetInitialPal  ; load up the initial palette
 
     LDA #$01                  ; A will be a make-shift frame counter
   @Loop:
@@ -6082,20 +6082,20 @@ CyclePalettes:
     AND #$03                  ; mask low bits, and only take a step through the cycle
     BNE @NoStep               ;   if zero (once every 4 frames)
 
-      JSR PalCyc_Step         ; if a 4th frame, take a step through the cycle
+      CALL PalCyc_Step         ; if a 4th frame, take a step through the cycle
       CPY #0                  ; check to see if Y is zero (cycling is complete)
       BEQ @Done               ; if cycling is complete, break out of this loop
 
   @NoStep:
-    JSR WaitForVBlank       ; wait for VBlank
-    JSR PalCyc_DrawPalette    ; draw the new palette
-    JSR PalCyc_SetScroll      ; set the scroll
-    JSR CallMusicPlay_NoSwap  ; and update music  (all the typical frame work)
+    CALL WaitForVBlank       ; wait for VBlank
+    CALL PalCyc_DrawPalette    ; draw the new palette
+    CALL PalCyc_SetScroll      ; set the scroll
+    CALL CallMusicPlay_NoSwap  ; and update music  (all the typical frame work)
 
     PLA                       ; pull the frame counter
     CLC
     ADC #1                    ; and add 1 to it
-    JMP @Loop                 ; and keep looping until cycling is complete
+    JUMP @Loop                 ; and keep looping until cycling is complete
 
 
   @Done:
@@ -6107,7 +6107,7 @@ CyclePalettes:
       STA PPUMASK
 
 :   LDA #BANK_MENUS   ; swap to menus bank
-    JMP SwapPRG     ; and exit
+    JUMP SwapPRG     ; and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6148,13 +6148,13 @@ PalCyc_SetScroll:
     BNE @Do_SM           ; and branch appropriately
 
   @Do_OW:
-    JSR SetOWScroll_PPUOn  ; set overworld scroll
+    CALL SetOWScroll_PPUOn  ; set overworld scroll
     LDA #$0A
     STA PPUMASK              ; disable sprites
     RTS                    ; exit
 
   @Do_SM:
-    JSR SetSMScroll      ; set standard map scroll
+    CALL SetSMScroll      ; set standard map scroll
     LDA #$0A
     STA PPUMASK            ; disable sprites
     RTS                  ; exit
@@ -6175,7 +6175,7 @@ PalCyc_GetInitialPal:
     LSR A               ; shift 'reverse' bit into C
     BCC @CopyPal        ; if reverse bit is clear (cycling out), just copy the current palette and exit
 
-      JSR @CopyPal      ; otherwise (reverse), copy the palettes, but then do more work...
+      CALL @CopyPal      ; otherwise (reverse), copy the palettes, but then do more work...
       DEX               ; X=$0F after this DEX (CopyPal sets it to $10)
                         ;  we're going to use it as a loop down counter, from $0F through $00.
 
@@ -6377,18 +6377,18 @@ DoAltarEffect:
     LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
 
 @MainLoop:
-    JSR AltarFrame         ; do a frame and sync to desired raster time
+    CALL AltarFrame         ; do a frame and sync to desired raster time
 
     LDX tmp                ; delay 'tmp' scanlines
     @LinesDelay:
-      JSR WaitAltarScanline
+      CALL WaitAltarScanline
       DEX
       BNE @LinesDelay
           PAGECHECK @LinesDelay
 
     LDX tmp+1              ; then illuminate 'tmp+1' scanlines
     @LinesIllum:
-      JSR DoAltarScanline
+      CALL DoAltarScanline
       DEX
       BNE @LinesIllum
           PAGECHECK @LinesIllum
@@ -6413,7 +6413,7 @@ DoAltarEffect:
 
     LDA #1              ; otherwise (< 32 scanline delay), beam has reached top (but not quite top of screen)
     STA tmp+2           ; switch the phase over so that it starts retracting the beam.
-    JMP @MainLoop       ; and continue looping
+    JUMP @MainLoop       ; and continue looping
 
   @RetractBeam:
     LDA tmp+1           ; to retract the beam, simply reduce the number of illuminated lines by 2
@@ -6474,7 +6474,7 @@ AltarFrame:
                       ;  the unavoidable inperfection of the monochrome effect (unavoidable because
                       ;  you can't time the writes to the exact pixel no matter how careful you are)
 
-    JSR WaitForVBlank    ; wait for VBlank.  This returns ~37 cycles into VBlank
+    CALL WaitForVBlank    ; wait for VBlank.  This returns ~37 cycles into VBlank
     LDA #>oam         ; Do sprite DMA.  This burns another 513+2+4 cycles -- currently ~556 into VBl
     STA OAMDMA
 
@@ -6498,7 +6498,7 @@ AltarFrame:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WaitAltarScanline:   ; JSR to routine = 6 cycles
+WaitAltarScanline:   ; CALL to routine = 6 cycles
     LDY #18          ; +2 = 8
   @Loop:
      DEY
@@ -6528,7 +6528,7 @@ WaitAltarScanline:   ; JSR to routine = 6 cycles
 
 
 DoAltarScanline:
-    LDY #10         ; 8 cycs (JSR=6 + LDY=2)
+    LDY #10         ; 8 cycs (CALL=6 + LDY=2)
    @Loop:
       DEY
       BNE @Loop     ; 5 cyc loop * 10 iterations - 1 = 49 cycs for loop.  49+8 = 57 cycs
@@ -6541,15 +6541,15 @@ DoAltarScanline:
     LDY #$1E        ; +2 = 65
     NOP             ; +2 = 67
     NOP             ; +2 = 69
-    JSR @Burn12     ; +12= 81
-    JSR @Burn12     ; +12= 93
+    CALL @Burn12     ; +12= 81
+    CALL @Burn12     ; +12= 93
     NOP             ; +2 = 95
     NOP             ; +2 = 97
     NOP             ; +2 = 99
     STY PPUMASK       ; +4 = 103 -- monochrome turned off 103 cycs in
                     ;   following RTS makes this routine 109 cycles long
 
-  @Burn12:          ; the routine JSRs here to burn 12 cycles (JSR+RTS = 12 cycs)
+  @Burn12:          ; the routine JSRs here to burn 12 cycles (CALL+RTS = 12 cycs)
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6582,7 +6582,7 @@ PlaySFX_Error:
 
     LDY #$0F         ; loop 16 times
   @Loop:
-      JSR @Frame     ; do a frame
+      CALL @Frame     ; do a frame
       DEY            ; dec Y
       BPL @Loop      ; and repeat until Y wraps
 
@@ -6593,7 +6593,7 @@ PlaySFX_Error:
     RTS              ; then exit
 
   @Frame:
-    JSR WaitForVBlank    ; wait a frame
+    CALL WaitForVBlank    ; wait a frame
 
     LDA #%10001100    ;  50% duty, decay speed=%1100, no fixed volume, length enabled
     STA PAPU_CTL2
@@ -6647,7 +6647,7 @@ PlaySFX_Error:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawDialogueString_Done:
-    JSR SetSMScroll       ; when done drawing, simply reset the scroll
+    CALL SetSMScroll       ; when done drawing, simply reset the scroll
     RTS                   ; and exit
 
 DrawDialogueString:
@@ -6655,7 +6655,7 @@ DrawDialogueString:
 
     LDA #BANK_DIALOGUE
     STA cur_bank          ; set cur_bank to bank containing dialogue text (for Music_Play)
-    JSR SwapPRG         ; and swap to that bank
+    CALL SwapPRG         ; and swap to that bank
 
     TXA                   ; get the string ID back
     ASL A                 ; double it (2 bytes per pointer)
@@ -6667,7 +6667,7 @@ DrawDialogueString:
       STA text_ptr
       LDA lut_DialoguePtrTbl+1, X
       STA text_ptr+1
-      JMP @PtrLoaded                   ; then jump ahead
+      JUMP @PtrLoaded                   ; then jump ahead
 
     @HiTbl:
       LDA lut_DialoguePtrTbl+$100, X   ; same, but read from 2nd half of pointer table
@@ -6679,13 +6679,13 @@ DrawDialogueString:
     LDA #10
     STA tmp+7             ;  set precautionary counter to 10
 
-    JSR WaitForVBlank   ; wait for VBlank
+    CALL WaitForVBlank   ; wait for VBlank
 
     LDA box_x             ; copy placement coords (box_*) to dest coords (dest_*)
     STA dest_x
     LDA box_y
     STA dest_y
-    JSR SetPPUAddrToDest  ; then set the PPU address appropriately
+    CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
   @Loop:
     LDY #0                       ; zero Y for indexing
@@ -6713,8 +6713,8 @@ DrawDialogueString:
 
       AND #$1F             ; then mask with $1F.  If result is zero, it means we're crossing an NT boundary
       BNE @Loop            ;  if not zero, just continue looping
-        JSR SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
-        JMP @Loop             ;  then jump back to loop
+        CALL SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
+        JUMP @Loop             ;  then jump back to loop
 
 
    @DTE:                 ; if byte fetched was a DTE code ($1A-79)
@@ -6725,25 +6725,25 @@ DrawDialogueString:
 
       LDA lut_DTE1, X    ; get the first byte in the DTE pair
       STA PPUDATA          ; and draw it
-      JSR @IncDest       ; update PPU dest address
+      CALL @IncDest       ; update PPU dest address
 
       PLA                ; restore DTE code
       TAX                ; and put it in X again (X was corrupted by @IncDest call)
       LDA lut_DTE2, X    ; get second byte in DTE pair
       STA PPUDATA          ; draw it
-      JSR @IncDest       ; and update PPU address again
+      CALL @IncDest       ; and update PPU address again
 
       DEC tmp+7            ; decrement cautionary counter
       BNE @Loop            ; if it hasn't expired yet, keep drawing.  Otherwise...
 
-        JSR SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
-        JSR CallMusicPlay    ; keep music playing
-        JSR WaitForVBlank  ; then wait another frame before continuing drawing
+        CALL SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
+        CALL CallMusicPlay    ; keep music playing
+        CALL WaitForVBlank  ; then wait another frame before continuing drawing
 
         LDA #10
         STA tmp+7            ; reload precautionary counter
-        JSR SetPPUAddrToDest ; and set PPU address appropriately
-        JMP @Loop            ; then resume drawing
+        CALL SetPPUAddrToDest ; and set PPU address appropriately
+        JUMP @Loop            ; then resume drawing
 
   @ControlCode:          ; if the byte fetched was a control code ($01-19)
     CMP #$03             ; was the code $03?
@@ -6764,7 +6764,7 @@ DrawDialogueString:
       LDA #>(format_buf+3)
       STA text_ptr+1
 
-      JMP @Loop            ; and continue printing (to print the name, then quit)
+      JUMP @Loop            ; and continue printing (to print the name, then quit)
 
 
   @Code_Not03:           ; Control codes other than $03
@@ -6786,7 +6786,7 @@ DrawDialogueString:
         LDA lut_ItemNamePtrTbl, X    ; load pointer from first half if ID <= $7F
         STA text_ptr
         LDA lut_ItemNamePtrTbl+1, X
-        JMP @ItemPtrLoaded
+        JUMP @ItemPtrLoaded
 
       @ItemHiTbl:
         LDA lut_ItemNamePtrTbl+$100, X   ; or from 2nd half if ID >= $80
@@ -6795,18 +6795,18 @@ DrawDialogueString:
 
       @ItemPtrLoaded:
       STA text_ptr+1
-      JSR @Loop            ; once pointer is loaded, JSR to the @Loop to draw the item name
+      CALL @Loop            ; once pointer is loaded, CALL to the @Loop to draw the item name
 
       PLA                  ; then restore the original string pointer by pulling it from the stack
       STA text_ptr+1
       PLA
       STA text_ptr
 
-      JMP @Loop            ; and continue drawing the rest of the string
+      JUMP @Loop            ; and continue drawing the rest of the string
 
   @Code_Not02_03:          ; all other control codes besides 02 and 03
-    JSR @LineBreak         ; just do a line break
-    JMP @Loop              ; then continue
+    CALL @LineBreak         ; just do a line break
+    JUMP @Loop              ; then continue
 
 
 @IncDest:                  ; called by DTE bytes to increment the dest address by 1 column
@@ -6818,18 +6818,18 @@ DrawDialogueString:
 
     AND #$1F               ; then check the low 5 bits.  If they're zero, we just crossed an NT boundary
     BNE :+
-      JMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
+      JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
 :   RTS                    ; then return
 
 
 @LineBreak:                ; wait a frame between each line break to help ensure we stay in VBlank
-    JSR SetSMScroll        ; set the scroll
-    JSR CallMusicPlay      ; and keep music playing
+    CALL SetSMScroll        ; set the scroll
+    CALL CallMusicPlay      ; and keep music playing
 
     LDA #8
     STA tmp+7              ; reload precautionary counter (but with only 8 instead of 10?)
 
-    JSR WaitForVBlank    ; then wait for VBlank
+    CALL WaitForVBlank    ; then wait for VBlank
 
     LDA box_x              ; reset dest X coord to given placement coord
     STA dest_x
@@ -6842,7 +6842,7 @@ DrawDialogueString:
       SBC #30
 :   STA dest_y
 
-    JMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
+    JUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6934,7 +6934,7 @@ CoordToNTAddr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawImageRect:
-    JSR CoordToNTAddr    ; convert the given destination to a usable PPU address
+    CALL CoordToNTAddr    ; convert the given destination to a usable PPU address
     LDY #0               ; zero our source index, Y
 
     LDA dest_ht          ; get our height
@@ -7087,7 +7087,7 @@ lut_ArmorSlots:
 
 OpenTreasureChest:
     LDA #BANK_TREASURE       ; swap to bank containing treasure chest info
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDX tileprop+1           ; put chest index in X
     LDA lut_Treasure, X      ; use it to get the contents of the chest
@@ -7133,7 +7133,7 @@ OpenTreasureChest:
     SBC #TCITYPE_WEPSTART-1  ;  don't make it zero based because zero is an empty slot
     STA tmp                  ; store the equip index in temp RAM
 
-    JSR FindEmptyWeaponSlot  ; Find an available slot to place this weapon in
+    CALL FindEmptyWeaponSlot  ; Find an available slot to place this weapon in
     BCS @TooFull             ;  if there are no available slots, jump to 'Too Full' message
                              ; otherwise, equipment get
 
@@ -7175,7 +7175,7 @@ OpenTreasureChest:
     SBC #TCITYPE_ARMSTART-1
     STA tmp                  ; tmp it for @EquipmentGet
 
-    JSR FindEmptyArmorSlot   ; Find an empty slot to put this armor
+    CALL FindEmptyArmorSlot   ; Find an empty slot to put this armor
     BCS @TooFull             ; if there isn't one, @TooFull
     BCC @EquipmentGet        ; otherwise, @EquipmentGet  (always branches)
 
@@ -7185,9 +7185,9 @@ OpenTreasureChest:
   ;;
 
   @Gold:
-    JSR LoadPrice            ; get the price of the item (the amount of gold in the chest)
-    JSR AddGPToParty         ; add that price to the party's GP
-    JMP @OpenChest           ; then mark the chest as open, and exit
+    CALL LoadPrice            ; get the price of the item (the amount of gold in the chest)
+    CALL AddGPToParty         ; add that price to the party's GP
+    JUMP @OpenChest           ; then mark the chest as open, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7324,18 +7324,18 @@ DrawComplexString_Exit:
     STA PPUSCROLL
     STA PPUSCROLL
     LDA ret_bank   ; swap back to original bank
-    JMP SwapPRG  ;   then return
+    JUMP SwapPRG  ;   then return
 
 
 DrawComplexString:
     LDA cur_bank
-    JSR SwapPRG
-    JSR CoordToNTAddr
+    CALL SwapPRG
+    CALL CoordToNTAddr
 
   @StallAndDraw:
     LDA menustall     ; check to see if we need to stall
     BEQ @Draw_NoStall ; if not, skip over stall call
-    JSR MenuCondStall ;   this isn't really necessary, since MenuCondStall checks menustall already
+    CALL MenuCondStall ;   this isn't really necessary, since MenuCondStall checks menustall already
 
   @Draw_NoStall:
     LDY #0            ; zero Y -- we don't want to use it as an index.  Rather, the pointer is updated
@@ -7369,7 +7369,7 @@ DrawComplexString:
   @noDTE:
     STA PPUDATA         ; draw the character as-is
     INC ppu_dest      ; increment dest PPU address
-    JMP @Draw_NoStall ; and repeat the process until terminated
+    JUMP @Draw_NoStall ; and repeat the process until terminated
 
 
    ; Jumps here for control codes.  Start comparing to see which control code this actually is
@@ -7391,28 +7391,28 @@ DrawComplexString:
     LDA ppu_dest+1
     ADC #0         ; catch any carry for the high byte
     STA ppu_dest+1
-    JMP @StallAndDraw   ; continue processing text
+    JUMP @StallAndDraw   ; continue processing text
 
 
 @Code_02to19:
     CMP #$02        ; is control code $02?
     BNE :+
-      JMP @Code_02  ; if it is, jump to its handler
+      JUMP @Code_02  ; if it is, jump to its handler
 
 :   CMP #$03        ; otherwise... is it $03?
     BNE :+
-      JMP @Code_03  ; if it is, jump to 03's handler
+      JUMP @Code_03  ; if it is, jump to 03's handler
 
 :   CMP #$04        ; otherwise... 04?
     BNE @Code05to19
 
     ;;; Control code $04 -- draws current gold
-    JSR @Save               ; this is a substring we'll need to draw, so save 
+    CALL @Save               ; this is a substring we'll need to draw, so save 
     LDA #BANK_MENUS
-    JSR SwapPRG           ;  swap to menu bank (for "PrintGold" routine)
+    CALL SwapPRG           ;  swap to menu bank (for "PrintGold" routine)
     JSR PrintGold           ;  PrintGold to temp buffer
-    JSR @StallAndDraw       ;  recursively call this routine to draw temp buffer
-    JMP @Restore            ; then restore original string state and continue
+    CALL @StallAndDraw       ;  recursively call this routine to draw temp buffer
+    JUMP @Restore            ; then restore original string state and continue
 
 
 @Code05to19:
@@ -7422,7 +7422,7 @@ DrawComplexString:
                      ; codes $14 and up default to single line break
 @SingleLineBreak:    ; reached by control codes $05-0F and $14-19
     LDX #$20         ; these control codes all just do a single line break
-    JMP @LineBreak   ;  afaik, $05 is the only single line break used by the game.. the other
+    JUMP @LineBreak   ;  afaik, $05 is the only single line break used by the game.. the other
                      ;  control codes are probably invalid and just line break by default
 
 @Code05to13:
@@ -7459,13 +7459,13 @@ DrawComplexString:
       LDA ch_name+3, X
       STA format_buf+6
 
-      JSR @Save              ; need to draw a substring, so save current string
+      CALL @Save              ; need to draw a substring, so save current string
       LDA #<(format_buf+3)   ; set string source pointer to temp buffer
       STA text_ptr
       LDA #>(format_buf+3)
       STA text_ptr+1
-      JSR @Draw_NoStall      ; recursively draw it
-      JMP @Restore           ; then restore original string and continue
+      CALL @Draw_NoStall      ; recursively draw it
+      JUMP @Restore           ; then restore original string and continue
 
 
 @StatCode_Over00:
@@ -7477,7 +7477,7 @@ DrawComplexString:
       LDA ch_class, X  ; get character's class
       CLC              ; add #$F0 (start of class names)
       ADC #$F0         ; draw it (yes I know, class names are not items, but they're stored with items)
-      JMP @DrawItem
+      JUMP @DrawItem
 
 @StatCode_Over01:
     CMP #$02
@@ -7488,7 +7488,7 @@ DrawComplexString:
       LDA ch_ailments, X    ; out-of-battle ailment ID
       CLC                   ; add #$FC (start of ailment names)
       ADC #$FC              ; draw it (not an item, but with item names)
-      JMP @DrawItem
+      JUMP @DrawItem
 
 @StatCode_Over02:
     CMP #$0C
@@ -7499,13 +7499,13 @@ DrawComplexString:
 
   @DrawCharStat:           ; this paticular stat code is going to be handled in a routine in another bank
     TAX                    ;  temporarily put the code in X
-    JSR @Save              ;  save string data (we'll be drawing a substring)
+    CALL @Save              ;  save string data (we'll be drawing a substring)
     LDA #BANK_MENUS
-    JSR SwapPRG          ;  swap to menu bank (has the PrintCharStat routine)
+    CALL SwapPRG          ;  swap to menu bank (has the PrintCharStat routine)
     TXA                    ;  put the stat code back in A
     JSR PrintCharStat      ;  print it to temp string buffer
-    JSR @StallAndDraw      ; draw it to the screen
-    JMP @Restore           ; restore original string data and continue
+    CALL @StallAndDraw      ; draw it to the screen
+    JUMP @Restore           ; restore original string data and continue
 
 
 @StatCode_0Cto2B:
@@ -7545,7 +7545,7 @@ DrawComplexString:
 
   @WeaponArmor:          ; above weapon and armor codes reach here with A containing
       STA tmp+1          ;  the string index to draw.  Write that index to tmp+1
-      JMP @DrawEquipment_BUGGED ;  and jump to equipment drawing (BUGGED)
+      JUMP @DrawEquipment_BUGGED ;  and jump to equipment drawing (BUGGED)
 
 @StatCode_14to2B:     ;; Stat Codes $14-2B -- magic
     SEC
@@ -7570,9 +7570,9 @@ DrawComplexString:
 
       CLC             ; add our level+text index to the current spell
       ADC tmp         ;  previously stored in tmp
-      JMP @DrawItem   ; and jump to @DrawItem
+      JUMP @DrawItem   ; and jump to @DrawItem
 
-:   JMP @StallAndDraw ; jumps here when spell=0.  Simply do nothing and continue with string processing
+:   JUMP @StallAndDraw ; jumps here when spell=0.  Simply do nothing and continue with string processing
 
     ;; Magic conversion LUT [$DF90 :: 0x3DFA0]
     ;;  each character has 24 spells (8 levels * 3 spells per level).  However these 24 spells
@@ -7598,7 +7598,7 @@ DrawComplexString:
 @DrawEquipment_BUGGED:
     LDA tmp              ; get weapon/armor ID
     BNE :+               ; if it's zero...
-      JMP @Draw_NoStall  ; draw nothing -- continue with normal text processing
+      JUMP @Draw_NoStall  ; draw nothing -- continue with normal text processing
 
 :   BMI @isEquipped    ; if high bit set, we need to draw the "E-"
       LDX #$FF         ; otherwise... (not equipped), just draw spaces
@@ -7635,7 +7635,7 @@ DrawComplexString:
     INC ppu_dest    ; inc dest PPU address
     LDA tmp         ;  get weapon/armor ID   (but this is wrong -- should be tmp+1)
     AND #$7F        ;  mask off the equip bit  (but this is wrong)
-    JMP @DrawItem   ;  and draw the string.  But that's wrong!  It probably meant to draw tmp+1 (the item string index)
+    JUMP @DrawItem   ;  and draw the string.  But that's wrong!  It probably meant to draw tmp+1 (the item string index)
 
     ;;; Control Code $02 -- draws an item name
   @Code_02:
@@ -7645,12 +7645,12 @@ DrawComplexString:
       INC text_ptr+1      ;   and inc high byte if low byte wrapped
 
   @DrawItem:
-    JSR @Save             ; drawing an item requires a substring.  Save current string
+    CALL @Save             ; drawing an item requires a substring.  Save current string
     TAX                   ; put item ID in X temporarily
 
     LDA #BANK_ITEMS
     STA cur_bank 
-    JSR SwapPRG         ; swap to BANK_ITEMS (contains item strings)
+    CALL SwapPRG         ; swap to BANK_ITEMS (contains item strings)
 
     TXA                   ; get item ID
     ASL A                 ; double it (for pointer table lookup)
@@ -7660,7 +7660,7 @@ DrawComplexString:
       LDA lut_ItemNamePtrTbl, X   ;  if item ID was < $80... read pointer from first half of pointer table
       STA text_ptr                ;  low byte of pointer
       LDA lut_ItemNamePtrTbl+1, X ;  high byte of pointer (will be written after jump)
-      JMP @itemGo
+      JUMP @itemGo
 
   @itemHigh:                         ; item high -- if item ID was >= $80
       LDA lut_ItemNamePtrTbl+$100, X ;  load pointer from second half of pointer table
@@ -7669,8 +7669,8 @@ DrawComplexString:
 
   @itemGo:
     STA text_ptr+1        ; finally write high byte of pointer
-    JSR @Draw_NoStall     ; recursively draw the substring
-    JMP @Restore          ; then restore original string and continue
+    CALL @Draw_NoStall     ; recursively draw the substring
+    JUMP @Restore          ; then restore original string and continue
 
     ;;;; Control Code $03 -- prints an item price
   @Code_03:
@@ -7679,14 +7679,14 @@ DrawComplexString:
     BNE :+
       INC text_ptr+1     ; inc high byte if low byte wrapped
 
-:   JSR @Save            ; Save string info (item price is a substring)
+:   CALL @Save            ; Save string info (item price is a substring)
     TAX                  ; put item ID in X temporarily
     LDA #BANK_MENUS
-    JSR SwapPRG        ; swap to bank (for PrintPrice routine)
+    CALL SwapPRG        ; swap to bank (for PrintPrice routine)
     TXA                  ; get back the item ID
     JSR PrintPrice       ; print the price to temp string buffer
-    JSR @StallAndDraw    ; recursivly draw it
-    JMP @Restore         ; then restore original string state and continue
+    CALL @StallAndDraw    ; recursivly draw it
+    JUMP @Restore         ; then restore original string state and continue
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7697,7 +7697,7 @@ DrawComplexString:
 ;;  before doing that, and then calls the 'restore' routine after it's done
 ;;
 ;;    Note that Restore does not RTS, but rather JMPs back to the text
-;;  loop explicitly -- therefore you should JMP to it.. not JSR to it.
+;;  loop explicitly -- therefore you should JUMP to it.. not CALL to it.
 ;;
 ;;    Note I'm still using local labels here ... this is still part of DrawComplexString  x_x
 ;;
@@ -7719,8 +7719,8 @@ DrawComplexString:
     STA text_ptr+1
     LDA tmp_hi+2
     STA cur_bank
-    JSR SwapPRG      ; swap the data bank back in
-    JMP @Draw_NoStall  ;  and continue with text processing
+    CALL SwapPRG      ; swap the data bank back in
+    JUMP @Draw_NoStall  ;  and continue with text processing
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7749,7 +7749,7 @@ DrawBox:
     STA dest_x
     LDA box_y
     STA dest_y
-    JSR CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
+    CALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
     LDA box_wd        ; Get width of box
     SEC
     SBC #$02          ; subtract 2 to get width of "innards" (minus left and right borders)
@@ -7759,12 +7759,12 @@ DrawBox:
     SBC #$02
     STA tmp+11        ;  put new height in temp ram
 
-    JSR DrawBoxRow_Top    ; Draw the top row of the box
+    CALL DrawBoxRow_Top    ; Draw the top row of the box
 @Loop:                    ; Loop to draw all inner rows
-      JSR DrawBoxRow_Mid  ;   draw inner row
+      CALL DrawBoxRow_Mid  ;   draw inner row
       DEC tmp+11          ;   decrement our adjusted height
       BNE @Loop           ;   loop until expires
-    JSR DrawBoxRow_Bot    ; Draw bottom row
+    CALL DrawBoxRow_Bot    ; Draw bottom row
 
     LDA soft2000          ; reset some PPU info
     STA PPUCTRL
@@ -7797,7 +7797,7 @@ DrawBox:
 
 
 DrawBoxRow_Mid:
-    JSR MenuCondStall  ; do the conditional stall
+    CALL MenuCondStall  ; do the conditional stall
     LDA PPUSTATUS          ; reset PPU toggle
     LDA ppu_dest+1
     STA PPUADDR          ; Load up desired PPU address
@@ -7840,7 +7840,7 @@ DrawBoxRow_Mid:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBoxRow_Bot:
-    JSR MenuCondStall   ; Do the conditional stall
+    CALL MenuCondStall   ; Do the conditional stall
     LDA PPUSTATUS           ; Reset PPU Toggle
     LDA ppu_dest+1      ;  and load up PPU Address
     STA PPUADDR
@@ -7876,7 +7876,7 @@ DrawBoxRow_Bot:
 
 
 DrawBoxRow_Top:
-    JSR MenuCondStall   ; Do the conditional stall
+    CALL MenuCondStall   ; Do the conditional stall
     LDA PPUSTATUS           ; reset PPU toggle
     LDA ppu_dest+1
     STA PPUADDR           ; set PPU Address appropriately
@@ -7929,8 +7929,8 @@ MenuCondStall:
       STA PPUSCROLL            ;  scroll inside menus is always 0
       STA PPUSCROLL
 
-      JSR CallMusicPlay    ;  Keep the music playing
-      JSR WaitForVBlank  ; then wait a frame
+      CALL CallMusicPlay    ;  Keep the music playing
+      CALL WaitForVBlank  ; then wait a frame
 
 @Exit:
     RTS
@@ -7960,7 +7960,7 @@ EraseBox:
     SEC
     SBC #$01           ;  and write that to dest_y
     STA dest_y         ;  this puts dest_y to the last row
-    JSR CoordToNTAddr  ; fill ppu_dest appropriately
+    CALL CoordToNTAddr  ; fill ppu_dest appropriately
     LDA box_ht         ; get the box height
     STA tmp+11         ; and put it in temp RAM (will be down counter for loop)
 
@@ -7973,8 +7973,8 @@ EraseBox:
        LDA #0
        STA PPUSCROLL
        STA PPUSCROLL
-       JSR CallMusicPlay    ; call music play routine
-       JSR WaitForVBlank  ; and wait for vblank
+       CALL CallMusicPlay    ; call music play routine
+       CALL WaitForVBlank  ; and wait for vblank
 
    @NoStall:
      LDA PPUSTATUS          ; reset PPU toggle
@@ -8037,7 +8037,7 @@ AnimateAirshipTakeoff:
     STA tmp+10           ; start Y coord for airship at $6F
 
     @Loop:
-      JSR AirshipTransitionFrame   ; do a frame
+      CALL AirshipTransitionFrame   ; do a frame
 
       LDA framecounter
       AND #$01
@@ -8063,7 +8063,7 @@ AnimateAirshipLanding:
     STA tmp+10           ; start the Y coord for the airship at $4F
 
     @Loop:
-      JSR AirshipTransitionFrame    ; do a frame
+      CALL AirshipTransitionFrame    ; do a frame
 
       LDA framecounter   ; check low bit of frame counter
       AND #$01
@@ -8089,7 +8089,7 @@ AnimateAirshipLanding:
 ;;
 
 AirshipTransitionFrame:
-    JSR WaitForVBlank   ; wait for VBlank
+    CALL WaitForVBlank   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
     STA OAMDMA
 
@@ -8098,9 +8098,9 @@ AirshipTransitionFrame:
     ADC #$01
     STA framecounter
 
-    JSR SetOWScroll_PPUOn     ; Set Scroll
-    JSR ClearOAM              ; Clear OAM
-    JSR CallMusicPlay_NoSwap  ; And call music play
+    CALL SetOWScroll_PPUOn     ; Set Scroll
+    CALL ClearOAM              ; Clear OAM
+    CALL CallMusicPlay_NoSwap  ; And call music play
 
     LDA #$70
     STA spr_x          ; draw the airship at x coord=$70 (same column that player is drawn)
@@ -8113,11 +8113,11 @@ AirshipTransitionFrame:
     STA tmp            ; store this as the table offset
 
     LDA #$38           ; tile additive = $38  (airship graphics)
-    JSR Draw2x2Vehicle ; draw the 2x2 vehicle (airship)
+    CALL Draw2x2Vehicle ; draw the 2x2 vehicle (airship)
 
-    JSR DrawAirshipShadow       ; then draw the airship shadow
-    JSR DrawOWObj_Ship          ;  and ship
-    JSR DrawOWObj_BridgeCanal   ;  and bridge/canal
+    CALL DrawAirshipShadow       ; then draw the airship shadow
+    CALL DrawOWObj_Ship          ;  and ship
+    CALL DrawOWObj_BridgeCanal   ;  and bridge/canal
 
     LDA #%00111000
     STA PAPU_NCTL1            ; set noise volume to 8
@@ -8154,7 +8154,7 @@ DrawOWSprites:
                            ; if none of those, they're on foot.
 
   @OnFoot:
-    JSR DrawPlayerMapmanSprite  ; draw the mapman sprite
+    CALL DrawPlayerMapmanSprite  ; draw the mapman sprite
 
     LDA inforest         ; check to see if we're in the forest
     BEQ @NotInForest     ; if not, skip ahead
@@ -8182,27 +8182,27 @@ DrawOWSprites:
     BCS @HideAirship     ;  effectively toggles visibility every 2 frames to make it flash
 
   @ShowAirship:
-    JSR DrawOWObj_Airship
+    CALL DrawOWObj_Airship
   @HideAirship:
-    JSR DrawOWObj_Ship
-    JMP DrawOWObj_BridgeCanal
+    CALL DrawOWObj_Ship
+    JUMP DrawOWObj_BridgeCanal
 
   @InAirship:                    ; if in the airship, draw everything normally
-    JSR DrawPlayerMapmanSprite   ;  except do NOT draw the airship
-    JSR DrawOWObj_Ship
-    JMP DrawOWObj_BridgeCanal
+    CALL DrawPlayerMapmanSprite   ;  except do NOT draw the airship
+    CALL DrawOWObj_Ship
+    JUMP DrawOWObj_BridgeCanal
 
   @InShip:                       ; same deal if in ship -- don't draw the ship
-    JSR DrawOWObj_BridgeCanal    ; but also... draw the bridge and canal OVER the mapman sprite
+    CALL DrawOWObj_BridgeCanal    ; but also... draw the bridge and canal OVER the mapman sprite
     LDY #$04                     ;   this makes it so the ship goes under the bridge rather than over
-    JSR DrawPlayerMapmanSprite   ; reload Y with the vehicle (4=ship) before calling this
-    JMP DrawOWObj_Airship
+    CALL DrawPlayerMapmanSprite   ; reload Y with the vehicle (4=ship) before calling this
+    JUMP DrawOWObj_Airship
 
   @InCanoe:                      ; canoe is nothing special.. just draw all the sprites
-    JSR DrawPlayerMapmanSprite
-    JSR DrawOWObj_Ship
-    JSR DrawOWObj_Airship
-    JMP DrawOWObj_BridgeCanal
+    CALL DrawPlayerMapmanSprite
+    CALL DrawOWObj_Ship
+    CALL DrawOWObj_Airship
+    JUMP DrawOWObj_BridgeCanal
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8232,7 +8232,7 @@ DrawPlayerMapmanSprite:
       STA spr_y          ; record Y coord
       LDA framecounter   ; use framecounter as animator (propellers always spinning)
       ASL A              ; double the frame counter to make animation quicker (each pic lasts 4 frames)
-      JMP @SetFacing     ; jump ahead to facing code
+      JUMP @SetFacing     ; jump ahead to facing code
 
 
   @NotAirship:           ; if not airship..
@@ -8263,7 +8263,7 @@ DrawPlayerMapmanSprite:
        ; if none of those, it's the airship!
     LDA #$38
     STA tmp+2               ; tile additive = $38 (airship graphics)
-    JSR Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
+    CALL Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
           
             ; then flow seamlessly into DrawAirshipShadow
 
@@ -8309,7 +8309,7 @@ DrawAirshipShadow:
 DrawMMV_Ship:
     LDA #$20
     STA tmp+2               ; tile additive = $20 (ship graphics)
-    JMP Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
+    JUMP Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8399,13 +8399,13 @@ DrawOWObj_Ship:
 
     LDX ship_x              ; get x coord in X
     LDY ship_y              ; get y coord in Y
-    JSR ConvertOWToSprite   ; convert those coords to sprite coords
+    CALL ConvertOWToSprite   ; convert those coords to sprite coords
     BCS DrawOWObj_Exit      ; if sprite out of bounds, don't draw it
 
     LDA #0
     STA tmp                 ; no additional offset to sprite table
     LDA #$20                ; tile additive of $20 (ship graphics)
-    JMP Draw2x2Vehicle      ; draw the vehicle, and exit
+    JUMP Draw2x2Vehicle      ; draw the vehicle, and exit
 
  ;;
  ;;  Airship
@@ -8417,13 +8417,13 @@ DrawOWObj_Airship:
 
     LDX airship_x           ; get x coord in X
     LDY airship_y           ; and y coord in Y
-    JSR ConvertOWToSprite   ; convert those coords to sprite coords
+    CALL ConvertOWToSprite   ; convert those coords to sprite coords
     BCS DrawOWObj_Exit      ; if sprite out of bounds, don't draw it
 
     LDA #0
     STA tmp                 ; no additional offset to sprite table
     LDA #$38                ; tile additive of $38 (airship graphics)
-    JMP Draw2x2Vehicle      ; draw the vehicle, and exit
+    JUMP Draw2x2Vehicle      ; draw the vehicle, and exit
 
  ;;
  ;;  a common exit shared by these routines
@@ -8442,11 +8442,11 @@ DrawOWObj_BridgeCanal:
 
     LDX bridge_x            ; get and convert X,Y coords
     LDY bridge_y
-    JSR ConvertOWToSprite
+    CALL ConvertOWToSprite
     BCS @Canal              ; if out of bounds, skip to canal
 
     LDA #$08                ; otherwise, draw with table offset $08 (bridge)
-    JSR @Draw               ;  then proceed to canal
+    CALL @Draw               ;  then proceed to canal
 
   @Canal:
     LDA canal_vis           ; if not visible
@@ -8454,7 +8454,7 @@ DrawOWObj_BridgeCanal:
 
     LDX canal_x
     LDY canal_y
-    JSR ConvertOWToSprite
+    CALL ConvertOWToSprite
     BCS DrawOWObj_Exit      ; if coords are out of bounds, exit
 
     LDA #$10                ; otherwise, draw iwth table offset $10 (canal)
@@ -8549,7 +8549,7 @@ ConvertOWToSprite:
 
 DrawSMSprites:
     LDY #1
-    JSR DrawPlayerMapmanSprite    ; draw the player mapman sprite (on foot -- no ship/airship/etc)
+    CALL DrawPlayerMapmanSprite    ; draw the player mapman sprite (on foot -- no ship/airship/etc)
     FARJUMP UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8734,7 +8734,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+5                ; then write it back
 
-    JSR CanMapObjMove        ; test to see if moving to this new pos is legal
+    CALL CanMapObjMove        ; test to see if moving to this new pos is legal
     BCS @CantStep            ; if check failed (step illegal), can't step here, so just exit
 
     LDA tmp+5                ; otherwise step is legal
@@ -8755,7 +8755,7 @@ MapObjectMove:
 :     LDA #<lut_2x2MapObj_Down   ; reaches here if not a bat.  Just load up the pointer
       STA mapobj_tsaptr, X       ;  to the downward 2x2 tsa table
       LDA #>lut_2x2MapObj_Down
-      JMP @StepDone              ; then jump ahead to final cleanup stuff
+      JUMP @StepDone              ; then jump ahead to final cleanup stuff
 
  ;; jumps here if the attempted move was illegal
 
@@ -8771,7 +8771,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+5
 
-    JSR CanMapObjMove
+    CALL CanMapObjMove
     BCS @CantStep
 
     LDA tmp+5
@@ -8796,7 +8796,7 @@ MapObjectMove:
 :     LDA #<lut_2x2MapObj_Up
       STA mapobj_tsaptr, X
       LDA #>lut_2x2MapObj_Up
-      JMP @StepDone
+      JUMP @StepDone
 
 
   ;; jumps here if trying to move left or right
@@ -8813,7 +8813,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+4
 
-    JSR CanMapObjMove
+    CALL CanMapObjMove
     BCS @CantStep
 
     LDA tmp+4
@@ -8830,7 +8830,7 @@ MapObjectMove:
       LDA #<lut_2x2MapObj_Left
       STA mapobj_tsaptr, X
       LDA #>lut_2x2MapObj_Left
-      JMP @StepDone
+      JUMP @StepDone
 
 
 
@@ -8842,7 +8842,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+4
 
-    JSR CanMapObjMove
+    CALL CanMapObjMove
     BCS @CantStep
 
     LDA tmp+4
@@ -9019,12 +9019,12 @@ LoadMapObjects:
     STA tmp+13            ;  tmp+12 now points to "lut_MapObjects + (cur_map * $30)"
 
     LDA #BANK_OBJINFO     ; swap to the bank containing map object information
-    JSR SwapPRG
+    CALL SwapPRG
 
   @Loop:
      LDY #0
      LDA (tmp+12), Y          ; read the object ID from source buffer
-     JSR LoadSingleMapObject  ; load the object
+     CALL LoadSingleMapObject  ; load the object
 
      LDA tmp+12           ; add 3 to the source pointer to look at the next map object
      CLC
@@ -9142,21 +9142,21 @@ LoadEpilogueSceneGFX:
     LDX #$08
     
     LDA #BANK_EPILOGUEGFX
-    JSR SwapPRG
+    CALL SwapPRG
     
     LDA #$00
-    JSR CHRLoadToA
+    CALL CHRLoadToA
     
     LDX #4
     LDA #$20
-    JSR CHRLoadToA
+    CALL CHRLoadToA
     
     LDA #>data_EpilogueNT
     STA tmp+1
     LDX #4
-    JSR CHRLoad_Cont
+    CALL CHRLoad_Cont
     
-    JMP LoadMenuCHR
+    JUMP LoadMenuCHR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9183,16 +9183,16 @@ LoadBridgeSceneGFX:
     LDX #$08                 ; load 8 rows of tiles ($800 bytes)
 
     LDA #BANK_BRIDGEGFX      ; swap to bank containing the graphics
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA #$00                 ; destination address = ppu $0000
-    JSR CHRLoadToA           ; load 8 rows of tiles to ppu $0000
+    CALL CHRLoadToA           ; load 8 rows of tiles to ppu $0000
 
                         ; now this is a little tricky.  It uses the CHR loading routine
                         ;    to load NT data instead of CHR
     LDX #4              ; 4 rows of tiles = $400 bytes (1 full NT)
     LDA #$20            ; destination address = ppu PPUCTRL! (nametable)
-    JSR CHRLoadToA      ; so this fills the whole nametable with NT data
+    CALL CHRLoadToA      ; so this fills the whole nametable with NT data
                         ;  stored at lut_BridgeGFX + $800 (+$800 because of the 8 rows of
                         ;  tiles that were copied previously)
 
@@ -9200,11 +9200,11 @@ LoadBridgeSceneGFX:
     STA tmp+1
 
     LDX #4              ; and set X to 4 again so we draw another $400 bytes (full NT)
-    JSR CHRLoad_Cont    ; draw the SAME nametable.  This makes the nametables at
+    CALL CHRLoad_Cont    ; draw the SAME nametable.  This makes the nametables at
                         ;  PPUCTRL and $2400 identical!  This is used for visual effects
 
 
-    JMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
+    JUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
                         ;  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9218,34 +9218,34 @@ LoadBridgeSceneGFX:
 
 
 LoadNewGameCHRPal:
-    JSR LoadMenuBGCHRAndPalettes
-    JMP LoadBatSprCHRPalettes_NewGame
+    CALL LoadMenuBGCHRAndPalettes
+    JUMP LoadBatSprCHRPalettes_NewGame
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
-    JSR LoadBattleBGCHRAndPalettes
-    JMP LoadBatSprCHRPalettes
+    CALL LoadBattleBGCHRAndPalettes
+    JUMP LoadBatSprCHRPalettes
 
 LoadMenuCHRPal:                ; does not load 'lit orb' palette, or the two middle palettes ($03C0-03CB)
-    JSR LoadMenuBGCHRAndPalettes
-    JMP LoadBatSprCHRPalettes
+    CALL LoadMenuBGCHRAndPalettes
+    JUMP LoadBatSprCHRPalettes
 
 LoadShopCHRPal:
-    JSR LoadShopBGCHRPalettes
-    JMP LoadBatSprCHRPalettes
+    CALL LoadShopBGCHRPalettes
+    JUMP LoadBatSprCHRPalettes
 
 LoadSMCHR:                     ; standard map -- does not any palettes
     LDA #BANK_MAPCHR
-    JSR SwapPRG
-    JSR LoadPlayerMapmanCHR
-    JSR LoadTilesetAndMenuCHR
-    JMP LoadMapObjCHR
+    CALL SwapPRG
+    CALL LoadPlayerMapmanCHR
+    CALL LoadTilesetAndMenuCHR
+    JUMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     LDA #BANK_MAPCHR
-    JSR SwapPRG
-    JSR LoadOWBGCHR
-    JSR LoadPlayerMapmanCHR
-    JMP LoadOWObjectCHR
+    CALL SwapPRG
+    CALL LoadOWBGCHR
+    CALL LoadPlayerMapmanCHR
+    JUMP LoadOWObjectCHR
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9267,7 +9267,7 @@ LoadPlayerMapmanCHR:
                     ;    This points to mapman graphics for that class
     LDX #1          ; X=1  (load 1 row of tiles)
     LDA #$10        ; A=$10 (high byte of dest address:  $1000)
-    JMP CHRLoadToA  ; jump to CHR loader
+    JUMP CHRLoadToA  ; jump to CHR loader
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9287,7 +9287,7 @@ LoadOWObjectCHR:
     STA tmp+1
     LDX #$06         ; 6 rows to load
     LDA #$11         ; dest address is $1100
-    JMP CHRLoadToA
+    JUMP CHRLoadToA
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9305,7 +9305,7 @@ LoadOWBGCHR:
     STA tmp+1        ; source address is $8000
     LDX #$10         ; 16 rows to load (full pattern table)
     LDA #0           ; dest address is $0000
-    JMP CHRLoadToA
+    JUMP CHRLoadToA
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9331,7 +9331,7 @@ CHRLoadToA:
     LDA #0
     STA PPUADDR   ; write low byte:  0
 
-          ; no JMP or RTS -- seamlessly runs into CHRLoad
+          ; no JUMP or RTS -- seamlessly runs into CHRLoad
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9378,7 +9378,7 @@ CHRLoad_Cont:
 
 LoadTilesetAndMenuCHR:
     LDA #BANK_TILESETCHR
-    JSR SwapPRG     ; swap to bank containing tileset CHR
+    CALL SwapPRG     ; swap to bank containing tileset CHR
     LDA #0
     STA tmp           ; set low byte of src pointer to $00
     LDA cur_tileset   ; get current tileset
@@ -9389,9 +9389,9 @@ LoadTilesetAndMenuCHR:
     STA tmp+1
     LDA #0            ; dest address = $0000
     LDX #8            ; 8 rows to load
-    JSR CHRLoadToA
+    CALL CHRLoadToA
 
-          ;  no JMP or RTS -- seamlessly runs into LoadMenuCHR
+          ;  no JUMP or RTS -- seamlessly runs into LoadMenuCHR
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9406,12 +9406,12 @@ LoadTilesetAndMenuCHR:
 
 LoadMenuCHR:
     LDA #BANK_MENUCHR
-    JSR SwapPRG    ; swap to bank containing menu chr
+    CALL SwapPRG    ; swap to bank containing menu chr
     LDA #$88
     STA tmp+1        ; source address = $8800 (note:  low byte not explicitly set)
     LDX #8           ; 8 rows to load
     LDA #8           ; dest address = $0800
-    JMP CHRLoadToA
+    JUMP CHRLoadToA
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9458,7 +9458,7 @@ LoadMapObjCHR:
 
   @ObjLoop:
     LDA #BANK_OBJINFO  ; swap to bank containing object info
-    JSR SwapPRG
+    CALL SwapPRG
     LDA (tmp+4), Y       ; get object ID
     TAX                  ; put it in X
     LDA lut_MapObjGfx, X ; index to get graphic ID based on object ID
@@ -9469,7 +9469,7 @@ LoadMapObjCHR:
     STA tmp              ; CHR source pointer (tmp) now = lut_MapObjCHR + (graphic_id * $100)
 
     LDA #BANK_MAPCHR
-    JSR SwapPRG    ; swap to bank containing mapman CHR
+    CALL SwapPRG    ; swap to bank containing mapman CHR
     TYA              ; back up obj source index by pushing it to the stack
     PHA
     LDY #0           ; clear Y for upcoming CHR loading loop
@@ -9500,7 +9500,7 @@ LoadMapObjCHR:
 
 LoadShopBGCHRPalettes:
     LDA #BANK_MENUCHR  ; swap to bank containing shop CHR
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA #<lut_ShopCHR
     STA tmp
@@ -9509,9 +9509,9 @@ LoadShopBGCHRPalettes:
 
     LDA #$00           ; dest PPU address = $0000
     LDX #$08           ; 8 rows to load
-    JSR CHRLoadToA     ; load them up  (loads all shop related CHR
-    JSR LoadMenuCHR    ;  then load up all menu related CHR (font/borders/etc)
-    JSR LoadShopTypeAndPalette   ; load shop palettes and type
+    CALL CHRLoadToA     ; load them up  (loads all shop related CHR
+    CALL LoadMenuCHR    ;  then load up all menu related CHR (font/borders/etc)
+    CALL LoadShopTypeAndPalette   ; load shop palettes and type
 
        ; LoadShopTypeAndPalette doesn't load the palettes for the title
        ;  and money boxes -- so load those up here
@@ -9535,14 +9535,14 @@ LoadShopBGCHRPalettes:
 
 LoadBattleBGCHRAndPalettes:
     LDA #BANK_OWINFO              ; Swap to BANK_OWINFO
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDX ow_tile                   ; Get last OW tile we stepped on
     LDA lut_BtlBackdrops, X       ; Use it as an index to get the backdrop ID
-    JSR LoadBattleBGCHRPointers   ; Swap in desired bank, and set up pointers to battle backdrop
+    CALL LoadBattleBGCHRPointers   ; Swap in desired bank, and set up pointers to battle backdrop
     LDA #$00                      ; Dest address = $0000
     LDX #$01                      ; Load 1 row of tiles
-    JSR CHRLoadToA                ; Load up the CHR
+    CALL CHRLoadToA                ; Load up the CHR
 
   @Loop:                  ; Battle backdrops are actually 1 row + 2 tiles ($12 tiles)
       LDA (tmp), Y        ;   so loop to load another 2 tiles ($20 bytes)
@@ -9568,7 +9568,7 @@ LoadBattleBGCHRAndPalettes:
     STA tmp+5         ; and put it in $15.  (tmp+4) now points to lut_BattleFormations+(formation * 16)
 
     LDA #BANK_BTLDATA ; swap to required bank
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDY #0
     LDA (tmp+4), Y   ; load Enemy CHR page ID from Battle formation data
@@ -9576,12 +9576,12 @@ LoadBattleBGCHRAndPalettes:
     LDY #$20         ; set Y to #$20, so that CHR loading will continue 2 tiles into the row
     STA enCHRpage    ; put Enemy CHR page ID in enCHRpage (for future use?)
 
-    JSR LoadBattleBGCHRPointers    ; load pointers for Enemy CHR
+    CALL LoadBattleBGCHRPointers    ; load pointers for Enemy CHR
     INC tmp+1                      ; increment high byte of pointer (enemy CHR starts 1 row in, before that is battle backdrop)
     LDX #$07                       ; load 7 rows
-    JSR CHRLoad_Cont               ;   continue CHR loading from Y=$20
-    JSR LoadMenuCHR                ; load CHR for font/menu/etc
-    JMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
+    CALL CHRLoad_Cont               ;   continue CHR loading from Y=$20
+    CALL LoadMenuCHR                ; load CHR for font/menu/etc
+    JUMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9615,7 +9615,7 @@ LoadBattleBGCHRPointers:
        ORA #$80       ; and OR with $80 to get the high byte of the pointer
        STA tmp+1
        LDA #BANK_BATTLECHR   ; and indicate first bank of Battle BG CHR
-       JMP @FinishUp
+       JUMP @FinishUp
 
 @SecondBank:
        AND #$07       ; subtract 8 by masking
@@ -9627,7 +9627,7 @@ LoadBattleBGCHRPointers:
        LDA #BANK_BATTLECHR+1 ; and indiate second bank of Battle BG CHR
 
 @FinishUp:
-    JSR SwapPRG     ; Swap in indicated bank
+    CALL SwapPRG     ; Swap in indicated bank
     LDA #$00          ;  and set low byte of pointer to 0
     STA tmp
     RTS               ;  and exit!
@@ -9648,17 +9648,17 @@ LoadBattleBGCHRPointers:
 
 
 LoadMenuBGCHRAndPalettes:
-    JSR LoadBattleBGCHRAndPalettes   ; Load Battle BG and palettes.
+    CALL LoadBattleBGCHRAndPalettes   ; Load Battle BG and palettes.
     LDA #BANK_ORBCHR                 ;     This is mainly for menu related CHR and palettes
-    JSR SwapPRG                    ; Swap to Bank D
+    CALL SwapPRG                    ; Swap to Bank D
     LDX #$02                         ; we want 2 rows of tiles
     LDA #<lut_OrbCHR                 ; from source address lut_OrbCHR
     STA tmp
     LDA #>lut_OrbCHR
     STA tmp+1
     LDA #$06                         ; dest ppu address $0600
-    JSR CHRLoadToA                   ; load up desired CHR (this is the ORB graphics that appear in the upper-left corner of main menu
-    JMP LoadBorderPalette_Blue       ; Load up the blue border palette for menus
+    CALL CHRLoadToA                   ; load up desired CHR (this is the ORB graphics that appear in the upper-left corner of main menu
+    JUMP LoadBorderPalette_Blue       ; Load up the blue border palette for menus
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9678,7 +9678,7 @@ LoadMenuBGCHRAndPalettes:
 
 LoadBatSprCHRPalettes_NewGame:
     LDA #BANK_BTLCHR
-    JSR SwapPRG  ; Swap to bank 9
+    CALL SwapPRG  ; Swap to bank 9
     LDA PPUSTATUS      ; Reset PPU Addr Toggle
     LDA #$10
     STA PPUADDR      ;  set dest PPU Addr to $1000
@@ -9691,16 +9691,16 @@ LoadBatSprCHRPalettes_NewGame:
     STA tmp
 
     LDX #2*6       ;  12 rows (2 rows per class * 6 classes)
-    JSR CHRLoad    ; Load up the CHR
+    CALL CHRLoad    ; Load up the CHR
     
     LDA #>(lut_BatObjCHR + $400)  ; change source pointer to bottom half of cursor and related CHR
     STA tmp+1
     LDX #$04                      ; load 4 rows (bottom half)
-    JMP :+                        ; skip ahead to the part of the next routine that loads cursor CHR
+    JUMP :+                        ; skip ahead to the part of the next routine that loads cursor CHR
 
 LoadBatSprCHRPalettes:
     LDA #BANK_BTLCHR
-    JSR SwapPRG  ; swap to bank 9
+    CALL SwapPRG  ; swap to bank 9
     LDA PPUSTATUS      ; reset ppu addr toggle
     LDA #$10
     STA PPUADDR      ; set dest ppu addr to $1000
@@ -9708,23 +9708,23 @@ LoadBatSprCHRPalettes:
     STA PPUADDR
     STA tmp           ; clear low byte of source pointer
     LDA ch_class      ; get character 1's class
-    JSR @LoadClass    ;  load it
+    CALL @LoadClass    ;  load it
     LDA ch_class+$40  ; character 2's
-    JSR @LoadClass
+    CALL @LoadClass
     LDA ch_class+$80  ; character 3's
-    JSR @LoadClass
+    CALL @LoadClass
     LDA ch_class+$C0  ; character 4's
-    JSR @LoadClass
+    CALL @LoadClass
     LDA #>lut_BatObjCHR  ; once all character's class graphics are loaded
     STA tmp+1            ;   change source pointer to $A800  (start of cursor and related battle CHR)
     LDX #$08             ; signal to load 8 rows
 
        ; above two routines both merge here
 
-:     JSR CHRLoad_Cont   ; load cursor and other battle related CHR
-      JSR LoadBattleSpritePalettes  ; load palettes for these sprites
+:     CALL CHRLoad_Cont   ; load cursor and other battle related CHR
+      CALL LoadBattleSpritePalettes  ; load palettes for these sprites
       LDA #BANK_MENUS
-      JMP SwapPRG      ; and swap to bank E on exit
+      JUMP SwapPRG      ; and swap to bank E on exit
 
 @LoadClass:
     ASL A               ; double class index (each class has 2 rows of tiles)
@@ -9732,7 +9732,7 @@ LoadBatSprCHRPalettes:
     ADC #>lut_BatSprCHR ; add high byte of the source pointer
     STA tmp+1
     LDX #$02            ; signal to load 2 rows
-    JMP CHRLoad         ; and load them!
+    JUMP CHRLoad         ; and load them!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9781,7 +9781,7 @@ LoadBorderPalette_Black:
 
 LoadShopTypeAndPalette:
     LDA #BANK_BACKDROPPAL
-    JSR SwapPRG        ; Swap to bank
+    CALL SwapPRG        ; Swap to bank
 
     LDX shop_id          ; Get Shop ID, use it to index and get shop type
     LDA lut_ShopTypes, X
@@ -9790,8 +9790,8 @@ LoadShopTypeAndPalette:
     ASL A
     ASL A
     ORA #$40             ; *4 and add $40 to get offset to required backdrop palette
-    JSR LoadBackdropPalette     ; get the backdrop palette loaded
-    JMP LoadBorderPalette_Blue  ; and the border palette loaded
+    CALL LoadBackdropPalette     ; get the backdrop palette loaded
+    JUMP LoadBorderPalette_Blue  ; and the border palette loaded
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9846,13 +9846,13 @@ lut_ShopPalettes:
 
 LoadBattleBackdropPalette:
      LDA #BANK_OWINFO         ; Swap to required bank
-     JSR SwapPRG
+     CALL SwapPRG
      LDX ow_tile              ; Get last OW tile stepped on
      LDA lut_BtlBackdrops, X  ; use it to index and get battle backdrop ID
      AND #$0F                 ; multiply ID by 4
      ASL A
      ASL A                    ; and load up the palette
-     JMP LoadBackdropPalette
+     JUMP LoadBackdropPalette
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9865,15 +9865,15 @@ LoadBattleBackdropPalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleBGPalettes:
-    JSR LoadBattleBackdropPalette
-    JMP LoadBorderPalette_Black
+    CALL LoadBattleBackdropPalette
+    JUMP LoadBorderPalette_Black
 
     ;; Faux routine -- same as above but gives the menus a blue background instead of black
     ;;   I do not believe this code is ever used by the game
 
 Faux_LoadBattleBGPalettes:
-    JSR LoadBattleBackdropPalette
-    JMP LoadBorderPalette_Blue
+    CALL LoadBattleBackdropPalette
+    JUMP LoadBorderPalette_Blue
 
 
 
@@ -9981,7 +9981,7 @@ DrawOBSprite:
     ADC tmp               ;  tmp is now the start of the tiles which make up this sprite
     STA tmp               ;  and tmp+1 is the palette to use
 
-    ;; no JMP or RTS -- code seamlessly runs into DrawSimple2x3Sprite
+    ;; no JUMP or RTS -- code seamlessly runs into DrawSimple2x3Sprite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10124,7 +10124,7 @@ LoadPrice:
     STA tmp+3                  ; store as high byte of pointer at tmp+3
 
     LDA #BANK_ITEMPRICES
-    JSR SwapPRG  ; swap to bank D (for item prices)
+    CALL SwapPRG  ; swap to bank D (for item prices)
 
     LDY #0         ; zero Y (our source index)
     LDA (tmp+2), Y ; get low byte of price
@@ -10137,7 +10137,7 @@ LoadPrice:
     STA tmp+2       ; 3rd byte is always 0 (no item costs more that 65535)
 
     LDA #BANK_MENUS ; swap back to bank E
-    JMP SwapPRG   ; and return
+    JUMP SwapPRG   ; and return
 
 
 
@@ -10190,7 +10190,7 @@ DrawEquipMenuStrings:
     STA dest_y
 
     LDA #BANK_ITEMS
-    JSR SwapPRG                ; swap to the bank containing the item strings
+    CALL SwapPRG                ; swap to the bank containing the item strings
 
     LDA #$FF                     ; fill first 2 bytes of the string with blank spaces (tile FF)
     STA str_buf+$10              ; later, these spaces will be replaced with "E-" if the item
@@ -10241,7 +10241,7 @@ DrawEquipMenuStrings:
   @NotEquipped:
     LDA #<(str_buf+$10)          ; finally load the low byte of our text pointer
     STA text_ptr                 ;  why this isn't done above with the high byte is beyond me
-    JSR DrawComplexString        ; then draw the complex string
+    CALL DrawComplexString        ; then draw the complex string
 
     PLA                          ; pull the main loop counter
     CLC
@@ -10252,7 +10252,7 @@ DrawEquipMenuStrings:
     LDA #BANK_MENUS              ; once all names are drawn
     STA cur_bank                 ; set cur and ret banks (not necessary?) to the MENUS bank
     STA ret_bank
-    JSR SwapPRG                ; then swap back to that bank
+    CALL SwapPRG                ; then swap back to that bank
     RTS                          ; and return
 
 
@@ -10287,7 +10287,7 @@ lut_EquipStringPositions:
 
 UnadjustEquipStats:
     LDA #BANK_EQUIPSTATS    ; Swap to bank containing equipment stats
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA equipoffset         ; get the equipment offset (weapon or armor offset)
     STA equipmenu_tmp       ;  and back it up in equipmenu_tmp.  This is our editable source index
@@ -10299,21 +10299,21 @@ UnadjustEquipStats:
 
     LDA ch_stats, X         ; get 1st piece of equipment
     BPL :+                  ; high bit set = equipped.  If equipped... 
-      JSR @Adjust           ;   adjust stats for it
+      CALL @Adjust           ;   adjust stats for it
 
 :   LDA ch_stats+1, X       ; then do same for 2nd piece
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
 :   LDA ch_stats+2, X       ; and 3rd
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
 :   LDA ch_stats+3, X       ; and 4th
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
-:   JSR UnadjustBBEquipStats  ; do a few adjustments for BB/MAs... or zero absorb
+:   CALL UnadjustBBEquipStats  ; do a few adjustments for BB/MAs... or zero absorb
 
     LDA equipmenu_tmp         ; add $40 to the source index (look at next character)
     CLC
@@ -10322,7 +10322,7 @@ UnadjustEquipStats:
     BCC @Loop                 ; keep looping until source index wraps (wraps after 4 characters)
 
     LDA #BANK_MENUS           ; then restore the menu bank, and exit
-    JMP SwapPRG
+    JUMP SwapPRG
 
   ;; local subroutine
   ;;   subtracts a weapon's hit and dmg bonus from the character's stats
@@ -10398,7 +10398,7 @@ UnadjustEquipStats:
 
 ReadjustEquipStats:
     LDA #BANK_EQUIPSTATS     ; swap to bank containing equipment stats
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA equipoffset          ; get the equipment offset
     STA equipmenu_tmp        ; and put it in equipmenu_tmp -- this is our runtime source index
@@ -10410,21 +10410,21 @@ ReadjustEquipStats:
 
     LDA ch_stats, X          ; get first piece of equipment
     BPL :+                   ; if equipped....
-      JSR @Adjust            ;   adjust for its stats
+      CALL @Adjust            ;   adjust for its stats
 
 :   LDA ch_stats+1, X        ; do the same for all 4 pieces of equipment
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
 :   LDA ch_stats+2, X
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
 :   LDA ch_stats+3, X
     BPL :+
-      JSR @Adjust
+      CALL @Adjust
 
-:   JSR ReadjustBBEquipStats ; adjust for special BB/MA properties
+:   CALL ReadjustBBEquipStats ; adjust for special BB/MA properties
 
     LDA equipmenu_tmp        ; add $40 to our source index (move to next char)
     CLC
@@ -10434,7 +10434,7 @@ ReadjustEquipStats:
     BCC @Loop                ; and keep looping until it wraps (4 iterations -- all 4 chars)
 
     LDA #BANK_MENUS          ; then swap back to MENUS bank
-    JMP SwapPRG            ;   and exit
+    JUMP SwapPRG            ;   and exit
 
   ;; local subroutine
   ;;   adds a weapon's hit and dmg bonus to the character's stats
@@ -10628,7 +10628,7 @@ DrawItemBox:
     STA box_ht
     LDA #BANK_MENUS
     STA cur_bank
-    JSR DrawBox
+    CALL DrawBox
 
     INC dest_y       ; inc the dest row by 1 and the dest col by 2
     INC dest_x       ;  but this is utterly pointless because dest_x and dest_y
@@ -10687,7 +10687,7 @@ DrawItemBox:
     LDA #BANK_MENUS    ; set the return bank to BANK_MENUS.
     STA ret_bank       ;   this is required for DrawComplexString (called below)
     LDA #BANK_ITEMS    ; swap to BANK_ITEMS (bank containing item names)
-    JSR SwapPRG
+    CALL SwapPRG
 
     LDA lut_ItemNamePtrTbl, X   ; get the pointer to this item name
     STA tmp                     ;  and put it in (tmp)
@@ -10716,7 +10716,7 @@ DrawItemBox:
        STA tmp                 ;  put the qty in tmp
        LDA #BANK_MENUS
        STA ret_bank            ; set return bank again (unnecessary -- was already done above)
-       JSR SwapPRG           ; also swap to BANK_MENUS (for PrintNumber routines)
+       CALL SwapPRG           ; also swap to BANK_MENUS (for PrintNumber routines)
        JSR PrintNumber_2Digit  ; print the 2 digit number
 
        LDA format_buf+5        ; copy the printed 2 digit number from the format buffer
@@ -10740,9 +10740,9 @@ DrawItemBox:
     LDA lutItemBoxStrPos+1, X   ; these are the coords at which to draw this item name
     STA dest_y
 
-    JSR DrawComplexString  ; finally actually call DrawComplexString to draw the item name
+    CALL DrawComplexString  ; finally actually call DrawComplexString to draw the item name
     INC cursor             ; increment our loop counter to draw the next item
-    JMP @DrawItemLoop      ; and continue looping
+    JUMP @DrawItemLoop      ; and continue looping
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10783,7 +10783,7 @@ SortEquipmentList:
     LDX equipoffset  ; put the equip offset in X for indexing
 
    @Loop:
-      JSR @SortOne   ; sort one char's inventory
+      CALL @SortOne   ; sort one char's inventory
 
       TXA            ; move the index to A
       CLC
@@ -10895,10 +10895,10 @@ SetBattlePPUAddr:
 
 Battle_WritePPUData:
     LDA btltmp+9                ; swap in the desired bank
-    JSR SwapPRG
+    CALL SwapPRG
     
-    JSR WaitForVBlank
-    JSR SetBattlePPUAddr        ; use btltmp+6,7 to set PPU addr
+    CALL WaitForVBlank
+    CALL SetBattlePPUAddr        ; use btltmp+6,7 to set PPU addr
     
     LDY #$00                    ; Y is loop up-counter
     LDX btltmp+8                ; X is loop down-counter
@@ -10911,7 +10911,7 @@ Battle_WritePPUData:
       BNE @Loop
       
     LDA battle_bank             ; swap battle_bank back in
-    JSR SwapPRG
+    CALL SwapPRG
     
     LDA #$00                    ; reset scroll before exiting
     STA PPUMASK
@@ -10936,8 +10936,8 @@ Battle_WritePPUData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 Battle_ReadPPUData:
-    JSR WaitForVBlank         ; Wait for VBlank
-    JSR SetBattlePPUAddr        ; Set given PPU Address to read from
+    CALL WaitForVBlank         ; Wait for VBlank
+    CALL SetBattlePPUAddr        ; Set given PPU Address to read from
     LDA PPUDATA                   ; Throw away buffered byte
     LDY #$00
     LDX btltmp+8                ; btltmp+8 is number of bytes to read
@@ -10949,7 +10949,7 @@ Battle_ReadPPUData:
       BNE @Loop
       
     LDA battle_bank             ; swap back to desired battle bank, then exit
-    JMP SwapPRG
+    JUMP SwapPRG
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10962,7 +10962,7 @@ Battle_ReadPPUData:
 
 BattleCrossPageJump:
     STA battle_bank
-    JSR SwapPRG
+    CALL SwapPRG
     JMP (btltmp+6)
 
 
@@ -10983,14 +10983,14 @@ BattleCrossPageJump:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterBattle:
-    JSR WaitForVBlank       ; wait for VBlank and do Sprite DMA
+    CALL WaitForVBlank       ; wait for VBlank and do Sprite DMA
     LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
     STA OAMDMA                 ;  off at this point
 
   ;; Load formation data to buffer in RAM
 
     LDA #BANK_BTLDATA         ; here we load the battle formation data
-    JSR SwapPRG             ; swap to the bank containing that data
+    CALL SwapPRG             ; swap to the bank containing that data
     LDA a:btlformation        ; get the formation ID
     AND #$7F                  ; remove the 'Formation B' bit to get the raw formation ID
     LDX #0                    ;  mulitply the formation ID by 16 (shift by 4) and rotate
@@ -11023,12 +11023,12 @@ EnterBattle:
 
     LDA #0
     STA a:menustall           ; disable menu stalling
-    JSR Battle_PPUOff         ; turn PPU off
+    CALL Battle_PPUOff         ; turn PPU off
     LDA PPUSTATUS                 ; reset PPU toggle
 
     LDX #>PPUCTRL
     LDA #<PPUCTRL
-    JSR SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
+    CALL SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
 
     LDY #8                    ; loops to clear $0800 bytes of NT data (both nametables)
   @ClearNT_OuterLoop:
@@ -11046,30 +11046,30 @@ EnterBattle:
     STA a:box_x         ; with dims 16,18
     LDX #16             ;  this is the box housing the enemies (big box on the left)
     LDY #18
-    JSR BattleBox_vAXY
+    CALL BattleBox_vAXY
 
     LDA #17             ; box at 17,1
     STA a:box_x         ; with dims 8,16
     LDA #1              ;  this is the box housing the player sprites (box on right)
     LDX #8
     LDY #18
-    JSR BattleBox_vAXY
+    CALL BattleBox_vAXY
 
     LDA #25               ; draw the four boxes that will house player stats
     LDX #21               ; draw them from the bottom up so that top boxes appear to lay over
-    JSR Battle_PlayerBox  ;  top of the bottom boxes
+    CALL Battle_PlayerBox  ;  top of the bottom boxes
     LDX #15
-    JSR Battle_PlayerBox
+    CALL Battle_PlayerBox
     LDX #9
-    JSR Battle_PlayerBox
+    CALL Battle_PlayerBox
     LDX #3
-    JSR Battle_PlayerBox
+    CALL Battle_PlayerBox
 
   ;; Draw Attribute Table
 
     LDX #>$23C0
     LDA #<$23C0
-    JSR SetPPUAddr_XA     ; set PPU Address to $23C0 (start of attribute table)
+    CALL SetPPUAddr_XA     ; set PPU Address to $23C0 (start of attribute table)
     LDX #0
   @AttrLoop:
       LDA lut_BtlAttrTbl, X   ; copy over attribute bytes
@@ -11089,37 +11089,37 @@ EnterBattle:
       BNE @PalLoop            ; all $20 bytes
 
     LDA #BANK_BTLPALETTES     ; then swap to the bank containing the battle palettes
-    JSR SwapPRG             ;   (for enemies)
+    CALL SwapPRG             ;   (for enemies)
 
     LDA btlform_plts          ; use the formation data to get the ID of the palettes to load
     LDY #4                    ;   load the first one into the 2nd palette slot ($xxx4)
-    JSR LoadBattlePalette
+    CALL LoadBattlePalette
     LDA btlform_plts+1        ;   and the second one into the 3rd slot ($xxx8)
     LDY #8
-    JSR LoadBattlePalette
+    CALL LoadBattlePalette
 
   ;; Draw the battle backdrop
 
     LDA #<$2042                 ; draw the first row of the backdrop
     LDY #0<<2                   ;  to $2042
-    JSR DrawBattleBackdropRow
+    CALL DrawBattleBackdropRow
     LDA #<$2062                 ; then at $2062
     LDY #1<<2                   ;   draw the next row
-    JSR DrawBattleBackdropRow
+    CALL DrawBattleBackdropRow
     LDA #<$2082                 ; etc
     LDY #2<<2
-    JSR DrawBattleBackdropRow
+    CALL DrawBattleBackdropRow
     LDA #<$20A2
     LDY #3<<2
-    JSR DrawBattleBackdropRow   ; 4 rows total
+    CALL DrawBattleBackdropRow   ; 4 rows total
 
   ;; Clear the '$FF' tile so it's fully transparent instead of
   ;;   fully solid (normally is innards of box body)
 
-    JSR WaitForVBlank     ; wait for VBlank again  (why!  PPU is off!)
+    CALL WaitForVBlank     ; wait for VBlank again  (why!  PPU is off!)
     LDX #>$0FF0
     LDA #<$0FF0             ;  set PPU addr to $0FF0 (CHR for tile $FF)
-    JSR SetPPUAddr_XA
+    CALL SetPPUAddr_XA
 
     LDA #0
     LDX #$10
@@ -11130,7 +11130,7 @@ EnterBattle:
 
     LDA #BANK_BATTLE        ; swap in the battle bank
     STA battle_bank
-    JSR SwapPRG
+    CALL SwapPRG
     JMP PrepBattleVarsAndEnterBattle            ; and jump to battle routine!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11147,19 +11147,19 @@ EnterBattle:
 
 DrawBattleBackdropRow:
     LDX #$20
-    JSR SetPPUAddr_XA    ; set PPU address to $20nn where A=nn
+    CALL SetPPUAddr_XA    ; set PPU address to $20nn where A=nn
 
     STY btltmp+10        ; record tile additive for future use
     LDY #14
     STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
-    JSR @Section         ; draw first section
+    CALL @Section         ; draw first section
 
     LDA PPUDATA            ; inc the PPU address by 2 to skip over those two bars of
     LDA PPUDATA            ;  the box boundaries.
 
     LDY #6               ; do 6 columns for the second section
     STY btltmp+11
-    JMP @Section         ; draw second section and exit
+    JUMP @Section         ; draw second section and exit
 
 
   @Section:
@@ -11218,8 +11218,8 @@ Battle_PlayerBox:
     INX
     STX a:box_ht       ; and height to 7
 
-    JSR Battle_PPUOff  ; turn off the PPU
-    JSR DrawBox        ; draw the box
+    CALL Battle_PPUOff  ; turn off the PPU
+    CALL DrawBox        ; draw the box
 
     PLA                ; restore backed up A, X
     TAX
@@ -11240,8 +11240,8 @@ BattleBox_vAXY:
     STA a:box_y         ; just dump A,X,Y to box_y, box_wd, and box_ht
     STX a:box_wd
     STY a:box_ht
-    JSR Battle_PPUOff   ; turn the PPU off
-    JMP DrawBox         ; then draw the box
+    CALL Battle_PPUOff   ; turn the PPU off
+    JUMP DrawBox         ; then draw the box
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11297,7 +11297,7 @@ BattleScreenShake:
     LDA #$06
     STA loop_counter           ; loop down counter.  6*2 = 12 frames  (2 frames per loop)
   @Loop:
-      JSR @Stall2Frames ; wait 2 frames
+      CALL @Stall2Frames ; wait 2 frames
       
       FARCALL BattleRNG
       AND #$03          ; get a random number betwee 0-3
@@ -11309,11 +11309,11 @@ BattleScreenShake:
       DEC loop_counter
       BNE @Loop
     
-    JMP Battle_UpdatePPU_UpdateAudio_FixedBank  ; 1 more frame (with reset scroll)
+    JUMP Battle_UpdatePPU_UpdateAudio_FixedBank  ; 1 more frame (with reset scroll)
     
     
   @Stall2Frames:
-    JSR @Frame          ; do 1 frame
+    CALL @Frame          ; do 1 frame
     LDX #$00            ; wait around -- presumably so we don't try
     : NOP               ;   to wait during VBlank (even though that wouldn't
       NOP               ;   be a problem anyway)
@@ -11322,8 +11322,8 @@ BattleScreenShake:
       BNE :-            ; flow into doing another frame
     
   @Frame:
-    JSR WaitForVBlank
-    JMP BattleUpdateAudio_FixedBank
+    CALL WaitForVBlank
+    JUMP BattleUpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11371,7 +11371,7 @@ Battle_UpdatePPU_UpdateAudio_FixedBank:
     LDA #$00            ; reset scroll
     STA PPUSCROLL
     STA PPUSCROLL
-  ; JMP BattleUpdateAudio_FixedBank  ; <- flow continues to this routine
+  ; JUMP BattleUpdateAudio_FixedBank  ; <- flow continues to this routine
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11388,7 +11388,7 @@ BattleUpdateAudio_FixedBank:
     BPL :+
       LDA btl_followupmusic
       STA a:music_track
-:   JMP CallMusicPlay
+:   JUMP CallMusicPlay
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11402,7 +11402,7 @@ BattleUpdateAudio_FixedBank:
 BattleWaitForVBlank:
     LDA btl_soft2000
     STA a:soft2000
-    JMP WaitForVBlank
+    JUMP WaitForVBlank
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11429,7 +11429,7 @@ BattleDrawMessageBuffer:
     LDA #$0C
     STA tmp_68b9               ; loop down-counter ($0C rows)
   @Loop:
-      JSR Battle_DrawMessageRow_VBlank  ; draw a row
+      CALL Battle_DrawMessageRow_VBlank  ; draw a row
       
       LDA btl_tmpvar1           ; add $20 to the source pointer to draw next row
       CLC
@@ -11447,7 +11447,7 @@ BattleDrawMessageBuffer:
       ADC #$00
       STA btl_tmpvar4
       
-      JSR Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
+      CALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
       
       DEC tmp_68b9         ; loop for each row
       BNE @Loop
@@ -11467,7 +11467,7 @@ BattleDrawMessageBuffer:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_DrawMessageRow_VBlank:
-    JSR BattleWaitForVBlank
+    CALL BattleWaitForVBlank
     
 Battle_DrawMessageRow:
     LDA btl_tmpvar4
@@ -11509,11 +11509,11 @@ BattleDrawMessageBuffer_Reverse:
     STA tmp_68b9               ;    = $C rows
     
   @Loop:
-      JSR Battle_DrawMessageRow_VBlank  ; draw a row
-      JSR @AdjustPointers               ; move ptrs to prev row
-      JSR Battle_DrawMessageRow         ; draw another one
-      JSR @AdjustPointers               ; move ptrs again
-      JSR Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
+      CALL Battle_DrawMessageRow_VBlank  ; draw a row
+      CALL @AdjustPointers               ; move ptrs to prev row
+      CALL Battle_DrawMessageRow         ; draw another one
+      CALL @AdjustPointers               ; move ptrs again
+      CALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
       
       DEC tmp_68b9
       BNE @Loop         ; loop until all rows drawn
@@ -11649,7 +11649,7 @@ DrawBattleBox_Row:
 DrawBattleBox:
     LDX btl_msgdraw_x           ; get X,Y coords of box
     LDY btl_msgdraw_y
-    JSR GetBattleMessagePtr
+    CALL GetBattleMessagePtr
     STX btl_varI                     ; put in btl_varI,btl_varJ, this is our destination pointer
     STY btl_varJ
     
@@ -11659,7 +11659,7 @@ DrawBattleBox:
     STA btltmp_boxcenter
     LDA #$F9
     STA btltmp_boxright
-    JSR DrawBattleBox_Row
+    CALL DrawBattleBox_Row
     
     LDA btl_msgdraw_height      ; get the height of the box
     SEC
@@ -11673,7 +11673,7 @@ DrawBattleBox:
     LDA #$FB
     STA btltmp_boxright
   @Loop:
-      JSR DrawBattleBox_Row
+      CALL DrawBattleBox_Row
       DEC temp_68b6
       BNE @Loop
       
@@ -11683,7 +11683,7 @@ DrawBattleBox:
     STA btltmp_boxcenter
     LDA #$FE
     STA btltmp_boxright
-    JSR DrawBattleBox_Row
+    CALL DrawBattleBox_Row
     
     RTS
 
@@ -11719,7 +11719,7 @@ DrawBattleBox_FetchBlock:
       INY
       CPY #$05
       BNE :-
-  ; JMP DrawBattleBox_Exit          ; <- flow into it
+  ; JUMP DrawBattleBox_Exit          ; <- flow into it
     
     
 DrawBattleBox_Exit:
@@ -11761,16 +11761,16 @@ DrawBattleBox_Exit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBattleBoxAndText:
-    JSR DrawBattleBox_FetchBlock        ; get the first box block
-    JSR DrawBattleBox                   ; use it to draw the box
+    CALL DrawBattleBox_FetchBlock        ; get the first box block
+    CALL DrawBattleBox                   ; use it to draw the box
   @Loop:
-      JSR DrawBattleBox_NextBlock       ; move to next block (text block)
+      CALL DrawBattleBox_NextBlock       ; move to next block (text block)
       LDY #$00
       LDA (btldraw_blockptrstart), Y    ; if the header byte is zero
       BEQ DrawBattleBox_Exit            ; exit
-      JSR DrawBattleBox_FetchBlock      ; otherwise, fetch the block
-      JSR DrawBattleString              ; and use it to draw text
-      JMP @Loop                         ; keep going until null terminator is found
+      CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
+      CALL DrawBattleString              ; and use it to draw text
+      JUMP @Loop                         ; keep going until null terminator is found
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11817,8 +11817,8 @@ ClearBattleMessageBuffer:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBlockBuffer:
-    JSR DrawBattleBoxAndText        ; Render blocks to the msg buffer
-    JSR BattleDrawMessageBuffer     ; Draw message buffer to the PPU
+    CALL DrawBattleBoxAndText        ; Render blocks to the msg buffer
+    CALL BattleDrawMessageBuffer     ; Draw message buffer to the PPU
     
     INC btl_msgdraw_blockcount      ; Count the number of blocks we've drawn
     
@@ -11843,7 +11843,7 @@ UndrawBattleBlock:
     LDA btl_msgdraw_blockcount
     STA tmp_6aa4                       ; backup the block count
     DEC tmp_6aa4                       ; reduce the count by 1 so we draw one less
-    JSR ClearBattleMessageBuffer    ; erase everything in the buffer
+    CALL ClearBattleMessageBuffer    ; erase everything in the buffer
     
     LDA #<btlbox_blockdata          ; reset the blockptr
     STA btldraw_blockptrstart
@@ -11857,11 +11857,11 @@ UndrawBattleBlock:
       LDA btl_msgdraw_blockcount    ; compare block count
       CMP tmp_6aa4                     ;   to 1-less-than original block count
       BEQ :+                        ; if we've reached that, we're done
-      JSR DrawBattleBoxAndText      ; otherwise, draw another block
+      CALL DrawBattleBoxAndText      ; otherwise, draw another block
       INC btl_msgdraw_blockcount
-      JMP @Loop                     ; and repeat
+      JUMP @Loop                     ; and repeat
 
-  : JSR BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
+  : CALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
     LDA btldraw_blockptrstart           ; move the end pointer to this position, so
     STA btldraw_blockptrend             ; the block we dropped will be actually removed
     LDA btldraw_blockptrstart+1
@@ -11921,7 +11921,7 @@ UndrawNBattleBlocks:
     
     STA tmp_6aa5           ; otherwise, store in temp to use as a downcounter
   @Loop:
-      JSR UndrawBattleBlock ; undraw one
+      CALL UndrawBattleBlock ; undraw one
       DEC tmp_6aa5             ; dec
       BNE @Loop             ; loop until no more to undraw
   @Exit:
@@ -11946,7 +11946,7 @@ DrawRosterBox:
       DEY
       BNE :-
       
-    JSR BattleDraw_AddBlockToBuffer ; add msgdraw to our block buffer
+    CALL BattleDraw_AddBlockToBuffer ; add msgdraw to our block buffer
     INC btl_msgdraw_hdr         ; inc the header so its nonzero
     INC btl_msgdraw_x           ; move right 2 columns
     INC btl_msgdraw_x
@@ -11959,18 +11959,18 @@ DrawRosterBox:
       INC btl_msgdraw_y
     
       TYA
-      JSR GetPointerToRosterString    ; put the pointer in tmp_68b3
+      CALL GetPointerToRosterString    ; put the pointer in tmp_68b3
       LDA tmp_68b3                       ; ... just to move it to btl_msgdraw_srcptr
       STA btl_msgdraw_srcptr          ; (why doesn't GetPointerToRosterString just
       LDA tmp_68b4                       ;  put it in btl_msgdraw_srcptr directly?)
       STA btl_msgdraw_srcptr+1
     
-      JSR BattleDraw_AddBlockToBuffer ; Add this block to the draw buffer
+      CALL BattleDraw_AddBlockToBuffer ; Add this block to the draw buffer
       INY
       CPY #$04
       BNE @RosterLoop                 ; loop 4 times (to print each enemy in the roster
       
-    JMP DrawBlockBuffer            ; Then actually draw it!
+    JUMP DrawBlockBuffer            ; Then actually draw it!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11992,13 +11992,13 @@ DrawCommandBox:
       INX
       CPX #$05
       BNE :+                                    ; every 5 bytes, add the block to the
-        JSR BattleDraw_AddBlockToBuffer         ;  output buffer
+        CALL BattleDraw_AddBlockToBuffer         ;  output buffer
         LDX #$00
     : INY
       CPY #6*5              ; 6 blocks * 5 bytes per block
       BNE @Loop
       
-    JMP DrawBlockBuffer            ; then finally draw it
+    JUMP DrawBlockBuffer            ; then finally draw it
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12028,7 +12028,7 @@ DrawCombatBox:
       INY
       CPX #$05
       BNE :-
-    JSR BattleDraw_AddBlockToBuffer ; add the block
+    CALL BattleDraw_AddBlockToBuffer ; add the block
     
     LDX #$00
     : LDA lut_CombatBoxes, Y    ; copy 3 more bytes (Text data)
@@ -12043,8 +12043,8 @@ DrawCombatBox:
     LDA tmp_68b4
     STA btl_msgdraw_srcptr+1
     
-    JSR BattleDraw_AddBlockToBuffer ; add this text block
-    JMP DrawBlockBuffer             ; then draw it.
+    CALL BattleDraw_AddBlockToBuffer ; add this text block
+    JUMP DrawBlockBuffer             ; then draw it.
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12083,9 +12083,9 @@ DrawBattleMagicBox:
       STA btl_msgdraw_hdr-1, Y
       DEY
       BNE :-
-    JSR BattleDraw_AddBlockToBuffer         ; add it to the block buffer
+    CALL BattleDraw_AddBlockToBuffer         ; add it to the block buffer
     
-    JSR ClearUnformattedCombatBoxBuffer     ; clear the unformatted buffer (so we can draw to it)
+    CALL ClearUnformattedCombatBoxBuffer     ; clear the unformatted buffer (so we can draw to it)
     
     INC btl_msgdraw_hdr     ; inc hdr (should be 1 for text blocks)
     INC btl_msgdraw_x       ; move down+right 1 tile for text
@@ -12095,7 +12095,7 @@ DrawBattleMagicBox:
     STA temp_68b5               ; loop counter / row index
     
     LDA btlcmd_curchar
-    JSR ShiftLeft6          ; get current character*$40
+    CALL ShiftLeft6          ; get current character*$40
     CLC
     ADC #<ch_magicdata      ; and add with ch_magic dat
     STA btl_tmpvar1                 ; to get a pointer to this character's magic list
@@ -12126,7 +12126,7 @@ DrawBattleMagicBox:
     STA btl_unfmtcbtbox_buffer+1, X
     
     ; Print the names of the spells
-    JSR BattleMenu_DrawMagicNames
+    CALL BattleMenu_DrawMagicNames
     
     ; Print the MP amount
     LDA #ch0_curmp - ch_magicdata    ; since btl_varI,89 points to magic list, and the
@@ -12150,7 +12150,7 @@ DrawBattleMagicBox:
     ADC #>btl_unfmtcbtbox_buffer
     STA btl_msgdraw_srcptr+1
     
-    JSR BattleDraw_AddBlockToBuffer ; Add that block to the block buffer
+    CALL BattleDraw_AddBlockToBuffer ; Add that block to the block buffer
     
     INC btl_msgdraw_y               ; then move down 2 rows
     INC btl_msgdraw_y
@@ -12158,7 +12158,7 @@ DrawBattleMagicBox:
     LDA temp_68b5
     CMP #$04
     BNE @TopPage                    ; and loop until all 4 rows drawn
-    JMP @Done
+    JUMP @Done
     
     
   @BottomPage:                      ; This is identical to @TopPage, only it changes
@@ -12183,7 +12183,7 @@ DrawBattleMagicBox:
     CLC
     ADC #$85                        ; '5' + row
     STA btl_unfmtcbtbox_buffer+1, X
-    JSR BattleMenu_DrawMagicNames
+    CALL BattleMenu_DrawMagicNames
     
     LDA #ch0_curmp - ch_magicdata + 4
     CLC
@@ -12205,7 +12205,7 @@ DrawBattleMagicBox:
     ADC #>btl_unfmtcbtbox_buffer
     STA btl_msgdraw_srcptr+1
     
-    JSR BattleDraw_AddBlockToBuffer
+    CALL BattleDraw_AddBlockToBuffer
     
     INC btl_msgdraw_y
     INC btl_msgdraw_y
@@ -12215,7 +12215,7 @@ DrawBattleMagicBox:
     BNE @BottomPage
 
   @Done:
-    JMP DrawBlockBuffer
+    JUMP DrawBlockBuffer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12244,7 +12244,7 @@ BattleMenu_DrawMagicNames:
       STA btl_unfmtcbtbox_buffer + 3, X ; replace 0E code with 10 code to print spaces
       LDA #$04
       STA btl_unfmtcbtbox_buffer + 4, X ; 04 to print 4 spaces
-      JMP @Column1
+      JUMP @Column1
   : CLC                                 ; otherwise (not empty), onvert from a 1-based magic index
     ADC #MG_START-1                     ; to a 0-based item index, and put the index after the '0E' code
     STA btl_unfmtcbtbox_buffer + 4, X
@@ -12257,7 +12257,7 @@ BattleMenu_DrawMagicNames:
       STA btl_unfmtcbtbox_buffer + 6, X
       LDA #$04
       STA btl_unfmtcbtbox_buffer + 7, X
-      JMP @Column2
+      JUMP @Column2
   : CLC
     ADC #MG_START-1
     STA btl_unfmtcbtbox_buffer + 7, X
@@ -12270,7 +12270,7 @@ BattleMenu_DrawMagicNames:
       STA btl_unfmtcbtbox_buffer + 9, X
       LDA #$04
       STA btl_unfmtcbtbox_buffer + 10, X
-      JMP @Done
+      JUMP @Done
   : CLC
     ADC #MG_START-1
     STA btl_unfmtcbtbox_buffer + 10, X
@@ -12311,8 +12311,8 @@ DrawBattleItemBox:
       STA btl_msgdraw_hdr-1, Y
       DEY
       BNE :-
-    JSR BattleDraw_AddBlockToBuffer         ; Add the block to the buffer to be drawn
-    JSR ClearUnformattedCombatBoxBuffer     ; Chear the unformatted buffer (we'll be drawing to it shortly)
+    CALL BattleDraw_AddBlockToBuffer         ; Add the block to the buffer to be drawn
+    CALL ClearUnformattedCombatBoxBuffer     ; Chear the unformatted buffer (we'll be drawing to it shortly)
     
     INC btl_msgdraw_hdr     ; hdr=1 for contained text
     INC btl_msgdraw_x       ; move draw coords right+down 1 tile
@@ -12322,7 +12322,7 @@ DrawBattleItemBox:
     STA temp_68b5               ; loop counter and equip slot to print (0-3)
     
     LDA btlcmd_curchar
-    JSR ShiftLeft6          ; Get the char stat index in X (00,40,80,C0)
+    CALL ShiftLeft6          ; Get the char stat index in X (00,40,80,C0)
     TAX                     ;  This will be the source index
     
     ; Loop 4 times, once for each row.
@@ -12341,7 +12341,7 @@ DrawBattleItemBox:
     ; Strangely, even though only 8 bytes are used, the game spaces rows $20 bytes apart
   @MainLoop:
     LDA temp_68b5               ; Row number * $20 in Y
-    JSR ShiftLeft5          ; This is the offset in the unformatted buffer to print to
+    CALL ShiftLeft5          ; This is the offset in the unformatted buffer to print to
     TAY
     
     LDA #$0E
@@ -12353,7 +12353,7 @@ DrawBattleItemBox:
       AND #$7F                          ; mask off the 'equipped' bit
       CLC
       ADC #TCITYPE_WEPSTART-1           ; convert from 1-based weapon index, to 0-based item index
-      JMP :+
+      JUMP :+
   @NoWeapon:                            ; if it IS empty
       LDA #$10
       STA btl_unfmtcbtbox_buffer + 1, Y ; replace the 0E control code with 10 control code
@@ -12378,7 +12378,7 @@ DrawBattleItemBox:
     ADC #>btl_unfmtcbtbox_buffer
     STA btl_msgdraw_srcptr+1
     
-    JSR BattleDraw_AddBlockToBuffer     ; then draw this row
+    CALL BattleDraw_AddBlockToBuffer     ; then draw this row
     
     INX                                 ; inc source index
     INC btl_msgdraw_y                   ; move drawing down 2 rows
@@ -12389,7 +12389,7 @@ DrawBattleItemBox:
     BNE @MainLoop
     
     ; Finally, after all rows added, Actually draw the block buffer and exit
-    JMP DrawBlockBuffer
+    JUMP DrawBlockBuffer
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12407,9 +12407,9 @@ DrawDrinkBox:
       STA btl_msgdraw_hdr-1, Y          ; -1 because Y is 1-based
       DEY
       BNE :-
-    JSR BattleDraw_AddBlockToBuffer     ; add the box to the block buffer
+    CALL BattleDraw_AddBlockToBuffer     ; add the box to the block buffer
     
-    JSR ClearUnformattedCombatBoxBuffer ; clear the unformatted buffer (we'll be drawing to it)
+    CALL ClearUnformattedCombatBoxBuffer ; clear the unformatted buffer (we'll be drawing to it)
     
     INC btl_msgdraw_hdr                 ; For text, hdr=1
     INC btl_msgdraw_x                   ; move text right+down 1 tile from where the box was drawn
@@ -12432,7 +12432,7 @@ DrawDrinkBox:
     STA btl_msgdraw_srcptr
     LDA #>btl_unfmtcbtbox_buffer
     STA btl_msgdraw_srcptr+1
-    JSR BattleDraw_AddBlockToBuffer     ; and add the block (drawing the Heal Potions)
+    CALL BattleDraw_AddBlockToBuffer     ; and add the block (drawing the Heal Potions)
     
     
     INC btl_msgdraw_y                   ; move down 2 rows for Pure portions
@@ -12455,9 +12455,9 @@ DrawDrinkBox:
     STA btl_msgdraw_srcptr
     LDA #>(btl_unfmtcbtbox_buffer + $20)
     STA btl_msgdraw_srcptr+1
-    JSR BattleDraw_AddBlockToBuffer     ; add the block for the Pure potions
+    CALL BattleDraw_AddBlockToBuffer     ; add the block for the Pure potions
     
-    JMP DrawBlockBuffer                 ; then draw the actual blocks and exit
+    JUMP DrawBlockBuffer                 ; then draw the actual blocks and exit
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12493,13 +12493,13 @@ GetPointerToRosterString:
 DrawBattleString:
     LDX btl_msgdraw_x
     LDY btl_msgdraw_y
-    JSR GetBattleMessagePtr
+    CALL GetBattleMessagePtr
     STX btl_tmpvar3                 ; store target pointer in temp ram
     STY btl_tmpvar4
     
     LDX btl_msgdraw_srcptr
     LDY btl_msgdraw_srcptr+1
-    JSR FormatBattleString  ; draw the battle string to the output buffer
+    CALL FormatBattleString  ; draw the battle string to the output buffer
     
     LDY #$00                ; move 'top bytes' from string output buffer to the
     LDX #$00                ;  actual draw buffer
@@ -12510,7 +12510,7 @@ DrawBattleString:
       INY
       INX                   ; INX *2 because top/bottom tiles are interleaved
       INX
-      JMP @TopLoop          ; loop until we hit the null terminator
+      JUMP @TopLoop          ; loop until we hit the null terminator
     
   @StartBottomLoop:         ; move 'bottom bytes'
     LDY #$20
@@ -12522,7 +12522,7 @@ DrawBattleString:
       INY
       INX
       INX
-      JMP @BottomLoop
+      JUMP @BottomLoop
     
   @Exit:
     RTS
@@ -12650,7 +12650,7 @@ FormatBattleString:
     LDA #$00
     STA loop_counter               ;  ????  no idea what this does
     
-    JSR SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
+    CALL SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
     
     STX btldraw_src         ; store source pointer
     STY btldraw_src+1
@@ -12679,12 +12679,12 @@ FormatBattleString:
     BEQ @Done           ; stop at the null terminator
     CMP #$48
     BCS :+
-      JSR DrawBattleString_ControlCode    ; if <  #$48
-      JMP :++
-:     JSR DrawBattleString_ExpandChar    ; if >= #$48
+      CALL DrawBattleString_ControlCode    ; if <  #$48
+      JUMP :++
+:     CALL DrawBattleString_ExpandChar    ; if >= #$48
 
-:   JSR DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
-    JMP @Loop
+:   CALL DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
+    JUMP @Loop
     
   @Done:
     LDA #$00
@@ -12692,7 +12692,7 @@ FormatBattleString:
     STA (btldraw_dst), Y            ; add null terminator
     INY
     STA (btldraw_dst), Y
-    JMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
+    JUMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12761,7 +12761,7 @@ DrawBattleString_ExpandChar:
     ADC #$6E
   
   @Output:
-    JSR DrawBattleString_DrawChar
+    CALL DrawBattleString_DrawChar
     PLA
     TAY
     PLA
@@ -12788,7 +12788,7 @@ DrawBattleString_DrawChar:
     DEY
     TXA
     STA (btldraw_dst), Y        ; and top part in position [0]
-    JMP DrawBattleString_IncDstPtr
+    JUMP DrawBattleString_IncDstPtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12828,7 +12828,7 @@ DrawBattle_Division:
     STA btltmp+7    ; overwrite btltmp+6 with the result of the subtraction
     PLA
     STA btltmp+6
-    JMP @Loop       ; and keep going until we fall below zero
+    JUMP @Loop       ; and keep going until we fall below zero
     
   @Done:            ; once the result is negative
     PLA             ; throw away the back-up byte
@@ -12839,23 +12839,23 @@ DrawBattle_Division:
     
 ;;  DrawBattleString_Code11  [$FB1E :: 0x3FB2E]
 DrawBattleString_Code11:            ; print a number 
-    JSR DrawBattle_IncSrcPtr        ;   pointer to the number to print is in the source string
+    CALL DrawBattle_IncSrcPtr        ;   pointer to the number to print is in the source string
     LDA btldraw_src
     STA btldraw_subsrc              ; since the number is embedded in the source string, just use
     LDA btldraw_src+1               ; the pointer to the source string as the pointer to the number
     STA btldraw_subsrc+1
-    JSR DrawBattle_IncSrcPtr
-    JMP DrawBattle_Number
+    CALL DrawBattle_IncSrcPtr
+    JUMP DrawBattle_Number
 
 ;;  DrawBattleString_Code0C  [$FB2F :: 0x3FB3F]
 DrawBattleString_Code0C:            ; print a number (indirect)
-    JSR DrawBattle_IncSrcPtr
+    CALL DrawBattle_IncSrcPtr
     LDA (btldraw_src), Y            ; pointer to a pointer to the number to print
     STA btldraw_subsrc
-    JSR DrawBattle_IncSrcPtr
+    CALL DrawBattle_IncSrcPtr
     LDA (btldraw_src), Y
     STA btldraw_subsrc+1
-  ; JMP DrawBattle_Number           ; flow into this routine
+  ; JUMP DrawBattle_Number           ; flow into this routine
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12879,18 +12879,18 @@ DrawBattle_Number:
     
     LDX #<10000
     LDY #>10000
-    JSR DrawBattle_Division
+    CALL DrawBattle_Division
     STA tmp_9a                     ; start pulling digits out and stuff them in tmp_9a
     LDX #<1000
     LDY #>1000
-    JSR DrawBattle_Division
+    CALL DrawBattle_Division
     STA tmp_9b
     LDX #<100
     LDY #>100
-    JSR DrawBattle_Division
+    CALL DrawBattle_Division
     STA tmp_9c
     LDX #<10
-    JSR DrawBattle_Division
+    CALL DrawBattle_Division
     STA tmp_9d
     
     LDX #$00
@@ -12911,7 +12911,7 @@ DrawBattle_Number:
     DEY
     STA (btldraw_dst), Y    ; print the empty space for the top part
     
-    JSR DrawBattleString_IncDstPtr
+    CALL DrawBattleString_IncDstPtr
     INX
     CPX #$05
     BNE @PrintDigits            ; loop until only the 1s digit is left
@@ -12920,13 +12920,13 @@ DrawBattle_Number:
     LDA btltmp+6                    ; fetch the 1s digit
     ORA #$80
     LDX #$FF
-    JMP DrawBattleString_DrawChar   ; and print it
+    JUMP DrawBattleString_DrawChar   ; and print it
     
 ;;  DrawBattleString_Code11_Short  [$FB93 :: 0x3FBA3]
 ;;    Just jumps to the actual routine.  Only exists here because the routine is too
 ;;  far away to branch to.
 DrawBattleString_Code11_Short:
-    JMP DrawBattleString_Code11
+    JUMP DrawBattleString_Code11
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12954,7 +12954,7 @@ DrawBattleString_ControlCode:
     BEQ DrawBattleMessage       ; code:  0F
     CMP #$10
     BNE :+
-      JMP DrawString_SpaceRun   ; code:  10
+      JUMP DrawString_SpaceRun   ; code:  10
   : CMP #$11
     BEQ DrawBattleString_Code11_Short   ; code:  11
     
@@ -12963,16 +12963,16 @@ DrawBattleString_ControlCode:
 
   @PrintAttacker:       ; code: 02
     LDA btl_attacker
-    JMP DrawEntityName
+    JUMP DrawEntityName
   @PrintDefender:       ; code: 03
     LDA btl_defender
-    JMP DrawEntityName
+    JUMP DrawEntityName
   
   @PrintCharacterName:  ; codes:  04-07
     SEC
     SBC #$04            ; subtract 4 to make it zero based
     ORA #$80            ; OR with $80 to make it a character entity ID
-    JMP DrawEntityName  ; then print it as an entity
+    JUMP DrawEntityName  ; then print it as an entity
     
     ; Print an entry on the enemy roster
   @PrintRoster:             ; codes: 08-0B
@@ -12982,12 +12982,12 @@ DrawBattleString_ControlCode:
     LDA btl_enemyroster, X  ; get the roster entry
     CMP #$FF
     BEQ @Exit               ; if 'FF', that signals an empty slot, so don't print anything.
-    JMP DrawEnemyName       ; then draw that enemy's name
+    JUMP DrawEnemyName       ; then draw that enemy's name
     
     
   @PrintAttackName:     ; code:  0E
     LDA #BANK_ITEMS
-    JSR SwapPRG
+    CALL SwapPRG
     LDA btl_attacker                ; check the attacker.  If the high bit is set (it's a player).
     BMI @PrintAttackName_AsItem     ; Player special attacks are always items (or spells, which are stored with items)
     
@@ -12997,14 +12997,14 @@ DrawBattleString_ControlCode:
     
     LDA #>(lut_EnemyAttack - $42*2) ; subtract $42*2 from the start of the lookup table because the enemy attack
     LDX #<(lut_EnemyAttack - $42*2) ;   index starts at $42
-    JMP :+
+    JUMP :+
     
   @PrintAttackName_AsItem: ; attack is less than $42
     LDA #>lut_ItemNamePtrTbl
     LDX #<lut_ItemNamePtrTbl
     
-  : JSR BattleDrawLoadSubSrcPtr
-    JMP DrawBattleSubString_Max8
+  : CALL BattleDrawLoadSubSrcPtr
+    JUMP DrawBattleSubString_Max8
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13019,7 +13019,7 @@ DrawBattleString_ControlCode:
 BattleDrawLoadSubSrcPtr:
     STA tmp_97             ; high byte of pointer table
     
-    JSR DrawBattle_IncSrcPtr
+    CALL DrawBattle_IncSrcPtr
     LDA (tmp_90), Y        ; get the desired index
     
     ASL A               ; multiply by 2 (2 bytes per pointer)
@@ -13057,13 +13057,13 @@ BattleDrawLoadSubSrcPtr:
 
 DrawBattleMessage:
     LDA #BANK_BTLMESSAGES
-    JSR SwapPRG
+    CALL SwapPRG
     LDA #>(data_BattleMessages - 2)     ; -2 because battle message is 1-based
     LDX #<(data_BattleMessages - 2)
-    JSR BattleDrawLoadSubSrcPtr
+    CALL BattleDrawLoadSubSrcPtr
     LDA #$3F
     STA btldraw_max
-    JMP DrawBattleSubString
+    JUMP DrawBattleSubString
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13074,7 +13074,7 @@ DrawBattleMessage:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawString_SpaceRun:
-    JSR DrawBattle_IncSrcPtr    ; inc ptr
+    CALL DrawBattle_IncSrcPtr    ; inc ptr
     LDA (btldraw_src), Y        ; get the run length
     TAX
     LDA #$FF                    ; blank space tile
@@ -13082,7 +13082,7 @@ DrawString_SpaceRun:
       STA (btldraw_dst), Y      ; print top/bottom portions as empty space
       INY
       STA (btldraw_dst), Y
-      JSR DrawBattleString_IncDstPtr
+      CALL DrawBattleString_IncDstPtr
       DEX
       BNE :-
     RTS
@@ -13115,7 +13115,7 @@ DrawEntityName:
     
     LDY #$00
     : LDA (btldraw_subsrc), Y           ; draw each character in the character's name
-      JSR DrawBattleString_ExpandChar
+      CALL DrawBattleString_ExpandChar
       INY
       CPY #$04                          ; draw 4 characters
       BNE :-
@@ -13132,7 +13132,7 @@ DrawEntityName:
     TAX             ; put in X to index
     
     LDA btl_enemystats + en_enemyid, X   ; get this enemy's ID
-  ; JMP DrawEnemyName               ; <- flow into
+  ; JUMP DrawEnemyName               ; <- flow into
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13148,7 +13148,7 @@ DrawEntityName:
 DrawEnemyName:
     PHA                     ; back up enemy ID
     LDA #BANK_ENEMYNAMES
-    JSR SwapPRG           ; swap in bank with enemy names
+    CALL SwapPRG           ; swap in bank with enemy names
     PLA                     ; get enemy ID
     ASL A                   ; *2 to use as index
     TAX
@@ -13158,7 +13158,7 @@ DrawEnemyName:
     LDA data_EnemyNames+1, X
     STA btldraw_subsrc+1
     
-  ; JMP DrawBattleSubString_Max8   ; <- flow into drawing routine (max 8 characters)
+  ; JUMP DrawBattleSubString_Max8   ; <- flow into drawing routine (max 8 characters)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13171,7 +13171,7 @@ DrawEnemyName:
 DrawBattleSubString_Max8:
     LDA #$08
     STA btldraw_max
-    JMP DrawBattleSubString
+    JUMP DrawBattleSubString
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13196,7 +13196,7 @@ DrawBattleSubString:
   @Loop:
     LDA (btldraw_subsrc), Y         ; get a byte of text
     BEQ @Exit                       ; if null terminator, exit
-    JSR DrawBattleString_ExpandChar ; Draw it
+    CALL DrawBattleString_ExpandChar ; Draw it
     
     INY                             ; keep looping until null terminator is found
     CPY btldraw_max                 ;  or until we reach the given maximum
@@ -13205,7 +13205,7 @@ DrawBattleSubString:
     
   @Exit:
     LDA battle_bank                 ; swap back to battle bank
-    JMP SwapPRG                   ;   and exit
+    JUMP SwapPRG                   ;   and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13285,7 +13285,7 @@ SwapBtlTmpBytes:
 
 
     
-WaitForVBlank_L: JMP WaitForVBlank
+WaitForVBlank_L: JUMP WaitForVBlank
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13340,8 +13340,8 @@ OnReset:
 
     FARCALL ResetRAM
 
-    JSR DisableAPU
-    JMP GameStart           ; jump to the start of the game!
+    CALL DisableAPU
+    JUMP GameStart           ; jump to the start of the game!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13349,7 +13349,7 @@ OnReset:
 ;;
 ;;     This is called when an NMI occurs.  FF1 has a bizarre way
 ;;    of doing NMIs.  It calls a Wait for VBlank routine, which enables
-;;    NMIs, and does an infinite JMP loop.  When an NMI is triggered,
+;;    NMIs, and does an infinite JUMP loop.  When an NMI is triggered,
 ;;    It does not RTI (since that would put it back in that infinite
 ;;    loop).  Instead, it tosses the RTI address and does an RTS, which
 ;;    returns to the area in code that called the Wait for Vblank routine
@@ -13398,7 +13398,7 @@ WaitForVBlank:
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
 @LoopForever:
-    JMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
+    JUMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13468,7 +13468,7 @@ Dialogue_CoverSprites_VBl:
 
     BNE @Loop          ; keep looping until all sprites examined
 
-    JMP WaitForVBlank   ; then wait for VBlank, and exit
+    JUMP WaitForVBlank   ; then wait for VBlank, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13575,12 +13575,12 @@ BackUpBatSprPalettes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PaletteFrame:
-    JSR WaitForVBlank        ; Wait for VBlank
-    JSR DrawPalette          ; then update the palette
+    CALL WaitForVBlank        ; Wait for VBlank
+    CALL DrawPalette          ; then update the palette
     LDA #0                   ; reset the scroll
     STA PPUSCROLL
     STA PPUSCROLL
-    JMP CallMusicPlay       ; update music engine, then exit
+    JUMP CallMusicPlay       ; update music engine, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13591,16 +13591,16 @@ PaletteFrame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FadeOutBatSprPalettes:
-    JSR BackUpBatSprPalettes    ; back up the unedited battle sprite palettes
+    CALL BackUpBatSprPalettes    ; back up the unedited battle sprite palettes
 
   @Loop:
-    JSR PaletteFrame            ; do a frame (updating palettes)
+    CALL PaletteFrame            ; do a frame (updating palettes)
     INC framecounter            ; increment the frame counter
     LDA framecounter
     AND #$07                    ; check low 3 bits of frame counter
     BNE @Loop                   ; and loop until they're all clear (effectively waits 8 frames)
 
-    JSR DimBatSprPalettes       ; every 8 frames... dim the palettes a bit
+    CALL DimBatSprPalettes       ; every 8 frames... dim the palettes a bit
     BCS @Loop                   ; and jump back to the loop if there are any that aren't blackened yet
 
     RTS                         ; exit once palette is all black
@@ -13616,13 +13616,13 @@ FadeOutBatSprPalettes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... except...
-    JSR PaletteFrame            ; no need to back up the palettes first
+    CALL PaletteFrame            ; no need to back up the palettes first
     INC framecounter
     LDA framecounter
     AND #$07
     BNE FadeInBatSprPalettes
 
-    JSR BrightenBatSprPalettes  ; brighten them instead of dimming them.
+    CALL BrightenBatSprPalettes  ; brighten them instead of dimming them.
     BCS FadeInBatSprPalettes
 
     RTS
@@ -13640,10 +13640,10 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
 CallMinimapDecompress:
     LDA #BANK_OWMAP
-    JSR SwapPRG
+    CALL SwapPRG
     JSR MinimapDecompress
     LDA #BANK_MINIMAP
-    JMP SwapPRG
+    JUMP SwapPRG
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -13676,7 +13676,7 @@ Impl_FARJUMP:
     PLA
     STA trampoline_low
     CLC
-    ADC #3 ; When we return we want to return right after the extra 3 byte data after the JSR instruction
+    ADC #3 ; When we return we want to return right after the extra 3 byte data after the CALL instruction
 
     ; Pull then push the stack to find the high address of our caller
     PLA
@@ -13743,7 +13743,7 @@ Impl_FARCALL:
     PLA
     STA trampoline_low
     CLC
-    ADC #3 ; When we return we want to return right after the extra 3 byte data after the JSR instruction
+    ADC #3 ; When we return we want to return right after the extra 3 byte data after the CALL instruction
 
     ; Pull then push the stack to find the high address of our caller
     PLA

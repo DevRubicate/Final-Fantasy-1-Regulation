@@ -26,17 +26,17 @@
 .endmacro
 
 .macro CALL _address
-    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, error, "CALL: Address on different bank, use FARCALL instead"
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "CALL: Address on different bank, use FARCALL instead"
     JSR _address
 .endmacro
 
 .macro JUMP _address
-    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, error, "JUMP: Address on different bank, use FARCALL instead"
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARCALL instead"
     JMP _address
 .endmacro
 
 .macro FARCALL _address
-    .assert .bank(_address) <> .bank(*), error, "FARCALL: Address reachable without a bankswitch, use CALL instead"
+    .assert .bank(_address) <> .bank(*), warning, "FARCALL: Address reachable without a bankswitch, use CALL instead"
     JSR Impl_FARCALL
     .byte >(_address - 1)
     .byte <(_address - 1)
@@ -44,7 +44,7 @@
 .endmacro
 
 .macro FARJUMP _address
-    .assert .bank(_address) <> .bank(*), error, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
+    .assert .bank(_address) <> .bank(*), warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
     JSR Impl_FARJUMP
     .byte >(_address - 1)
     .byte <(_address - 1)
