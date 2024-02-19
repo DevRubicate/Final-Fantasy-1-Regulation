@@ -125,6 +125,8 @@ TitleScreen_Music:
 ;;
 ;;    This is a table of complex strings used in menus.
 
+.align $100
+
 lut_MenuText:
   .INCBIN "bin/0E_8500_menutext.bin"
 
@@ -943,7 +945,7 @@ lut_MapObjTalkJumpTbl:
   .WORD Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm                          ; 88-8F
   .WORD Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_ifitem, Talk_norm, Talk_norm, Talk_norm                        ; 90-97
   .WORD Talk_norm, Talk_norm, Talk_ifitem, Talk_ifevent, Talk_norm, Talk_norm, Talk_norm, Talk_norm                     ; 98-9F
-  .WORD Talk_norm, Talk_norm, Talk_CubeBotBad, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm                    ; A0-A7
+  .WORD Talk_norm, Talk_norm, Talk_CubeBot, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm                    ; A0-A7
   .WORD Talk_norm, Talk_ifitem, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_ifevent                     ; A8-AF
   .WORD Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm                          ; B0-B7
   .WORD Talk_norm, Talk_norm, Talk_norm, Talk_Chime, Talk_ifevent, Talk_ifevent, Talk_ifevent, Talk_ifevent             ; B8-BF
@@ -1574,9 +1576,6 @@ Talk_ifevent:
 :   LDA tmp+2               ; otherwise print [2]
     RTS
 
- ; Unused (truely unused -- no entry in the jump table)
-    RTS
-
   ;; Some guard in Coneria town  [$94F0 :: 0x39500]
   ;;  [1] if princess has been saved, but bridge isn't built yet
   ;;  [2] if princess still kidnapped or bridge is built
@@ -1708,19 +1707,6 @@ Talk_ifearthfire:
         RTS
 :   LDA tmp+2            ; otherwise, print [2]
     RTS
-
- ;; Unused duplicate of Cube bot (doesn't play fanfare)  [$9586 :: 0x39596]
- ;;  [1] if you don't have the Cube
- ;;  [2] if you do.
-
-Talk_CubeBotBad:
-    LDA item_cube        ; see if they have the Cube
-    BEQ :+               ; if they do...
-      LDA tmp+2          ;  print [2]
-      RTS
-:   INC item_cube        ; otherwise, give them the cube
-    LDA tmp+1            ; and print [1]
-    RTS                  ; but no fanfare!
 
  ;; Guy with the Chime (in Lefein)  [$9594 :: 0x395A4]
  ;;  [1] if you speak Lefeinish, and don't have the Chime
@@ -2327,40 +2313,7 @@ LineupMenu_DrawCursor:
 
     JMP DrawCursor         ; draw the cursor and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Faux/Unused routine  [$9B3E :: 0x39B4E]
-;;
-;;    Not sure what this is supposed to do.  Apparently it scans the
-;;  slot list for the first matching dead/stone state (stored in tmp).
-;;  Sets C if the state couldn't be found, and clears it if it could.
-;;
-;;    How this is supposed to be of any use, I don't know.  But I guess
-;;  that's why it's unused.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-UnusedRoutine_9B3E:
-    LDY #0
-  @Loop:
-    LDA str_buf, Y
-    CMP tmp
-    BEQ @Found
-
-    TYA
-    CLC
-    ADC #$08
-    AND #$1F
-    TAY
-    BNE @Loop
-
-    SEC
-    RTS
-
-  @Found:
-    CLC
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
