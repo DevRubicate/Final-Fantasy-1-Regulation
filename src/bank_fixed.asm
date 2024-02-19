@@ -19,7 +19,7 @@
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .import ResetRAM, SetRandomSeed, GetRandom
 .import OpenTreasureChest, AddGPToParty, LoadPrice
-.import LoadMenuBGCHRAndPalettes, LoadMenuCHR
+.import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes
 
 .export SwapPRG
 .export GameStart
@@ -8438,7 +8438,7 @@ LoadMenuCHRPal:                ; does not load 'lit orb' palette, or the two mid
     JUMP LoadBatSprCHRPalettes
 
 LoadShopCHRPal:
-    CALL LoadShopBGCHRPalettes
+    FARCALL LoadShopBGCHRPalettes
     JUMP LoadBatSprCHRPalettes
 
 LoadSMCHR:                     ; standard map -- does not any palettes
@@ -8674,43 +8674,6 @@ LoadMapObjCHR:
 
     RTS              ; then exit
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Shop CHR and Palettes  [$EA02 :: 0x3EA12]
-;;
-;;    Loads up ALL BG CHR and palettes relating to shops
-;;    Does not load any sprite CHR or palettes
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-LoadShopBGCHRPalettes:
-    LDA #BANK_MENUCHR  ; swap to bank containing shop CHR
-    CALL SwapPRG
-
-    LDA #<lut_ShopCHR
-    STA tmp
-    LDA #>lut_ShopCHR  ; source pointer (tmp) = lut_ShopCHR
-    STA tmp+1
-
-    LDA #$00           ; dest PPU address = $0000
-    LDX #$08           ; 8 rows to load
-    CALL CHRLoadToA     ; load them up  (loads all shop related CHR
-    FARCALL LoadMenuCHR    ;  then load up all menu related CHR (font/borders/etc)
-    CALL LoadShopTypeAndPalette   ; load shop palettes and type
-
-       ; LoadShopTypeAndPalette doesn't load the palettes for the title
-       ;  and money boxes -- so load those up here
-
-    LDX #$07           ; start at X=7
-  @Loop:
-      LDA lut_ShopPalettes, X
-      STA cur_pal+4, X   ; copy over the shop palettes
-      DEX                ; and loop until X wraps (8 colors copied in total)
-      BPL @Loop
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LoadBattleBGCHRAndPalettes  [$EA28 :: 0x3EA38]
@@ -8929,74 +8892,13 @@ LoadBorderPalette_Black:
        RTS
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Shop Type and Palette [$EB42 :: 0x3EB52]
-;;
-;;    Loads the type of shop from the given shop ID number (weapon/armor/magic/what have you)
-;;  And loads the palette appropriate for the keeper of that shop type.  It also loads the
-;;  blue border palette used by most menus.
-;;
-;;  It doesn't, however, load the purple and green box palettes used by the title
-;;   and money boxes in the shop.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-LoadShopTypeAndPalette:
-    LDA #BANK_BACKDROPPAL
-    CALL SwapPRG        ; Swap to bank
-
-    LDX shop_id          ; Get Shop ID, use it to index and get shop type
-    LDA lut_ShopTypes, X
-    AND #$07             ; Mask out low 3 bits (precautionary -- not really necessary unless you have an invalid shop ID)
-    STA shop_type        ; save shop type
-    ASL A
-    ASL A
-    ORA #$40             ; *4 and add $40 to get offset to required backdrop palette
-    CALL LoadBackdropPalette     ; get the backdrop palette loaded
-    JUMP LoadBorderPalette_Blue  ; and the border palette loaded
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Backdrop Palette  [$EB5A :: 0x3EB6A]
-;;
-;;   Fetches palette for desired backdrop (battle or shop).
-;;
-;;   Y is unchanged
-;;
-;;   IN:   A = backdrop ID * 4
-;;         * = Required bank must be swapped in
-;;
-;;   OUT:  $03C0-03C4 = backdrop palette
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBackdropPalette:
-    TAX                       ; backdrop ID * 4 in X for indexing
-    LDA lut_BackdropPal, X    ; copy the palette over
-    STA cur_pal
-    LDA lut_BackdropPal+1, X
-    STA cur_pal+1
-    LDA lut_BackdropPal+2, X
-    STA cur_pal+2
-    LDA lut_BackdropPal+3, X
-    STA cur_pal+3
-    RTS
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LUT for Shop Money and Title Boxes  [$EB74 :: 0x3EB84]
-;;
-;;   These are the purple and green box palettes used for the title and money
-;;     boxes inside of shops
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lut_ShopPalettes:
-  .byte  $0F,$00,$04,$30,  $0F,$00,$0A,$30
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9009,14 +8911,14 @@ lut_ShopPalettes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleBackdropPalette:
-     LDA #BANK_OWINFO         ; Swap to required bank
-     CALL SwapPRG
-     LDX ow_tile              ; Get last OW tile stepped on
-     LDA lut_BtlBackdrops, X  ; use it to index and get battle backdrop ID
-     AND #$0F                 ; multiply ID by 4
-     ASL A
-     ASL A                    ; and load up the palette
-     JUMP LoadBackdropPalette
+    LDA #BANK_OWINFO         ; Swap to required bank
+    CALL SwapPRG
+    LDX ow_tile              ; Get last OW tile stepped on
+    LDA lut_BtlBackdrops, X  ; use it to index and get battle backdrop ID
+    AND #$0F                 ; multiply ID by 4
+    ASL A
+    ASL A                    ; and load up the palette
+    FARJUMP LoadBackdropPalette
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9063,39 +8965,7 @@ LoadBattleSpritePalettes:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  [$EBB5 :: 0x3EBC5]
-;;
-;;   Shop Type LUT.  Shop ID number is used to index this table to figure out
-;;  what type of shop it is.
-;;
-;;   There are 10 of each kind of shop (supposedly)
-;;    0 = Weapon
-;;    1 = Armor
-;;    2 = White Magic
-;;    3 = Black Magic
-;;    4 = Clinic
-;;    5 = Inn
-;;    6 = Item        Only 9 of these (10th is the Caravan)
-;;    7 = Caravan     Only 1 of these
-;;
-;;  As an additional quirk... shop IDs appear to be 1-based, not the expected 0-based
-;;  As a result... this table is off by 1 (the first byte in it goes unused)
-;;
-;;  To "compensate", there's an extra Armor shop ID (so supposedly, there's only 9 weapon
-;;   shops and 11 armor shops)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lut_ShopTypes:
-   .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00      ; 10 weapon shops (but first is unused)
-   .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01  ; 11 armor shops (to correct the off-by-1 error)
-   .byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02      ; 10 white magic
-   .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03      ; 10 black magic
-   .byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04      ; 10 clinics
-   .byte $05,$05,$05,$05,$05,$05,$05,$05,$05,$05      ; 10 inns
-   .byte $06,$06,$06,$06,$06,$06,$06,$06,$06,$07      ; 9 item shops + 1 caravan
  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

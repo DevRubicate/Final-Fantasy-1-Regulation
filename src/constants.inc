@@ -98,7 +98,6 @@ BANK_STARTINGSTATS= $00
 
 BANK_ORBCHR       = $0D
 BANK_BTLCHR       = $09
-BANK_BACKDROPPAL  = $00
 
 BANK_MINIGAME     = $0D
 BANK_BRIDGESCENE  = $0D
@@ -451,15 +450,11 @@ lut_EnemyAttack    = $B600   ; BANK_ITEMS
 lut_ItemNamePtrTbl = $B700   ; BANK_ITEMS
 lut_Domains        = $8000   ; BANK_DOMAINS -- MUST be on page boundary
 
-lut_ShopCHR        = $8000   ; BANK_MENUCHR
-
 lut_BtlBackdrops   = $B300   ; BANK_OWINFO
 
 lut_OrbCHR         = $B600   ; BANK_ORBCHR
 lut_BatSprCHR      = $9000   ; BANK_BTLCHR -- page
 lut_BatObjCHR      = $A800   ; BANK_BTLCHR -- page
-
-lut_BackdropPal    = $B200   ; BANK_BACKDROPPAL
 
 lut_Weapons        = $8000   ; BANK_EQUIPSTATS - page
 lut_Armor          = $8140   ; BANK_EQUIPSTATS

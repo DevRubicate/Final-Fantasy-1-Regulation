@@ -52,5 +52,5 @@
 .endmacro
 
 .macro DEBUG
-    ;assert(0)
+    .byte $1A
 .endmacro
