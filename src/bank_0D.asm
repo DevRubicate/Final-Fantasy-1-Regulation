@@ -771,15 +771,6 @@ MiniGame_VertSlide:
 
     JMP MiniGame_AnimateSlide   ; then animate them and exit
 
-; Unused space (almost looks like it might be attributes)
-
-  .BYTE $00, $00, $00, $1E
-  .BYTE $1E, $3E, $FE, $FE
-  .BYTE $FC, $F8, $00, $00
-  .BYTE $00, $00, $00, $00
-  .BYTE $00, $00, $00, $00
-  .BYTE $00, $00, $00, $00
-  .BYTE $00, $00, $00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -803,18 +794,6 @@ lut_Bridge_LastPage:  .BYTE  $04  ; bridge scene uses story pages $00-$03
 lut_Ending_LastPage:  .BYTE  $19  ; ending scene uses story pages $04-$18
 
 
-
- ;; ?unused -- fragmented code?
- ;;   looks like some detached music driver code.  Starts with
- ;;  LDA music_track
- ;;  BPL xxx
- ;;   but the branch goes to some garbage address.  Probably left over garbage
- ;;   from earlier assemblies.
-
-  .BYTE $A5, $4B, $10, $12
-  .BYTE $C9, $80, $D0, $0D
-  .BYTE $A9, $70, $8D, $00
-  .BYTE $40, $8D
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1259,8 +1238,7 @@ MiniGame_ProcessInput:
   @Exit:
     RTS               ; then exit
 
-; unused (that $60 might be an unused RTS -- but who cares)
-  .BYTE $60,$00
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2113,6 +2091,24 @@ lut_EnvPatterns:
 
   .BYTE  $01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EF
   .BYTE  $07,$06,$05,$04,$05,$06,$07,$08,$09,$08,$07,$06,$05,$04,$03,$01 ;  fade in then out with tremolo
+
+; unused (that $60 might be an unused RTS -- but who cares)
+  ;.BYTE $60,$00
+
+; Unused space (almost looks like it might be attributes)
+
+;  .BYTE $00, $00, $00, $1E
+;  .BYTE $1E, $3E, $FE, $FE
+;  .BYTE $FC, $F8, $00, $00
+;  .BYTE $00, $00, $00, $00
+;  .BYTE $00, $00, $00, $00
+;  .BYTE $00, $00, $00, $00
+;  .BYTE $00, $00, $00
+
+  ; $A779 -- unused
+  ;.BYTE $1F, $3F, $7F, $7F, $7C, $78, $78
+
+;.align $B000
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;  unknown - unused  [$B5C9 :: 0x375D9]

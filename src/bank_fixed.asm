@@ -22,6 +22,8 @@
 .import ResetRAM, SetRandomSeed, GetRandom
 ; bank_11.asm
 .import OpenTreasureChest, AddGPToParty, LoadPrice
+; bank_12.asm
+.import LoadMenuBGCHRAndPalettes, LoadMenuCHR
 
 .export SwapPRG
 .export GameStart
@@ -38,6 +40,7 @@
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export SetOWScroll_PPUOn, ClearOAM, CallMusicPlay_NoSwap
+.export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8365,7 +8368,7 @@ LoadEpilogueSceneGFX:
     LDX #4
     CALL CHRLoad_Cont
     
-    JUMP LoadMenuCHR
+    FARJUMP LoadMenuCHR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8413,7 +8416,7 @@ LoadBridgeSceneGFX:
                         ;  PPUCTRL and $2400 identical!  This is used for visual effects
 
 
-    JUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
+    FARJUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
                         ;  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8427,7 +8430,7 @@ LoadBridgeSceneGFX:
 
 
 LoadNewGameCHRPal:
-    CALL LoadMenuBGCHRAndPalettes
+    FARCALL LoadMenuBGCHRAndPalettes
     JUMP LoadBatSprCHRPalettes_NewGame
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
@@ -8435,7 +8438,7 @@ LoadBattleCHRPal:              ; does not load palettes for enemies
     JUMP LoadBatSprCHRPalettes
 
 LoadMenuCHRPal:                ; does not load 'lit orb' palette, or the two middle palettes ($03C0-03CB)
-    CALL LoadMenuBGCHRAndPalettes
+    FARCALL LoadMenuBGCHRAndPalettes
     JUMP LoadBatSprCHRPalettes
 
 LoadShopCHRPal:
@@ -8600,28 +8603,7 @@ LoadTilesetAndMenuCHR:
     LDX #8            ; 8 rows to load
     CALL CHRLoadToA
 
-          ;  no JUMP or RTS -- seamlessly runs into LoadMenuCHR
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Menu CHR Loading  [$E98E :: 0x3E99E]
-;;
-;;   Load CHR for menus (text, the window border, weapon icons, etc)
-;;
-;;  IN:   tmp   = assumed to be 0 (does not explicitly set it)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadMenuCHR:
-    LDA #BANK_MENUCHR
-    CALL SwapPRG    ; swap to bank containing menu chr
-    LDA #$88
-    STA tmp+1        ; source address = $8800 (note:  low byte not explicitly set)
-    LDX #8           ; 8 rows to load
-    LDA #8           ; dest address = $0800
-    JUMP CHRLoadToA
-
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8719,7 +8701,7 @@ LoadShopBGCHRPalettes:
     LDA #$00           ; dest PPU address = $0000
     LDX #$08           ; 8 rows to load
     CALL CHRLoadToA     ; load them up  (loads all shop related CHR
-    CALL LoadMenuCHR    ;  then load up all menu related CHR (font/borders/etc)
+    FARCALL LoadMenuCHR    ;  then load up all menu related CHR (font/borders/etc)
     CALL LoadShopTypeAndPalette   ; load shop palettes and type
 
        ; LoadShopTypeAndPalette doesn't load the palettes for the title
@@ -8789,7 +8771,7 @@ LoadBattleBGCHRAndPalettes:
     INC tmp+1                      ; increment high byte of pointer (enemy CHR starts 1 row in, before that is battle backdrop)
     LDX #$07                       ; load 7 rows
     CALL CHRLoad_Cont               ;   continue CHR loading from Y=$20
-    CALL LoadMenuCHR                ; load CHR for font/menu/etc
+    FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
     JUMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8845,29 +8827,6 @@ LoadBattleBGCHRPointers:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Menu BG CHR and Palettes  [$EA9F :: 0x3EAAF]
-;;
-;;   Loads CHR and Palettes for menus
-;;
-;;   Does not load palettes or CHR for sprites
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-LoadMenuBGCHRAndPalettes:
-    CALL LoadBattleBGCHRAndPalettes   ; Load Battle BG and palettes.
-    LDA #BANK_ORBCHR                 ;     This is mainly for menu related CHR and palettes
-    CALL SwapPRG                    ; Swap to Bank D
-    LDX #$02                         ; we want 2 rows of tiles
-    LDA #<lut_OrbCHR                 ; from source address lut_OrbCHR
-    STA tmp
-    LDA #>lut_OrbCHR
-    STA tmp+1
-    LDA #$06                         ; dest ppu address $0600
-    CALL CHRLoadToA                   ; load up desired CHR (this is the ORB graphics that appear in the upper-left corner of main menu
-    JUMP LoadBorderPalette_Blue       ; Load up the blue border palette for menus
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
