@@ -8598,9 +8598,8 @@ LoadTilesetAndMenuCHR:
     LDA #0            ; dest address = $0000
     LDX #8            ; 8 rows to load
     CALL CHRLoadToA
-
-    RTS
-
+    FARJUMP LoadMenuCHR
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Map Object CHR Loading  [$E99E :: 0x3E9AE]
