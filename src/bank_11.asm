@@ -6,8 +6,6 @@
 .include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
-.import SwapPRG
-
 .export FindEmptyWeaponSlot, FindEmptyArmorSlot, OpenTreasureChest, AddGPToParty, LoadPrice
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,11 +100,8 @@ lut_ArmorSlots:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OpenTreasureChest:
-    LDA #BANK_TREASURE       ; swap to bank containing treasure chest info
-    CALL SwapPRG
-
     LDX tileprop+1           ; put chest index in X
-    LDA lut_Treasure, X      ; use it to get the contents of the chest
+    LDA LUTChestItems, X      ; use it to get the contents of the chest
     STA dlg_itemid           ; record that as the item id so it can be printed in the dialogue box
 
     CMP #TCITYPE_WEPSTART    ; see if the ID is >= weapon_ids
@@ -280,7 +275,7 @@ LoadPrice:
     ASL A        ; double item index (2 bytes per price)
     STA tmp+2    ; store low byte in $12
 
-    LDA #>(LUT_Item_Prices>>1)  ; high byte of pointer, but load it right-shifted by 1
+    LDA #>(LUTItemPrices>>1)  ; high byte of pointer, but load it right-shifted by 1
     ROL A                      ; and rotate it left by 1 in order to catch carry from above shifting
     STA tmp+3                  ; store as high byte of pointer at tmp+3
 
@@ -298,7 +293,7 @@ LoadPrice:
 
 .align $100
 
-LUT_Item_Prices:
+LUTItemPrices:
     .word $0000
     .word $0000
     .word $0000
@@ -555,3 +550,263 @@ LUT_Item_Prices:
     .word $0000
     .word $0000
     .word $0000 
+
+
+; I don't know if there are actuall 256 chests in the game
+LUTChestItems:
+    .byte $20 
+    .byte $89
+    .byte $8b
+    .byte $21
+    .byte $26
+    .byte $23
+    .byte $53
+    .byte $4f
+    .byte $3f
+    .byte $01
+    .byte $7e
+    .byte $8d
+    .byte $01
+    .byte $73
+    .byte $1c
+    .byte $f5
+    .byte $02 
+    .byte $07
+    .byte $04
+    .byte $37
+    .byte $2d
+    .byte $2c
+    .byte $4d
+    .byte $3b
+    .byte $3b
+    .byte $81
+    .byte $83
+    .byte $ac
+    .byte $ae
+    .byte $77
+    .byte $59
+    .byte $01
+    .byte $18 
+    .byte $0c
+    .byte $0d
+    .byte $33
+    .byte $2d
+    .byte $2e
+    .byte $48
+    .byte $3b
+    .byte $42
+    .byte $ac
+    .byte $ae
+    .byte $1c
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $1c
+    .byte $14 
+    .byte $0e
+    .byte $1c
+    .byte $0f
+    .byte $1c
+    .byte $1c
+    .byte $59
+    .byte $59
+    .byte $ac
+    .byte $ae
+    .byte $1c
+    .byte $01
+    .byte $d2
+    .byte $7c
+    .byte $7c
+    .byte $d7
+    .byte $55 
+    .byte $54
+    .byte $62
+    .byte $5c
+    .byte $54
+    .byte $59
+    .byte $69
+    .byte $b1
+    .byte $b3
+    .byte $96
+    .byte $93
+    .byte $01
+    .byte $9e
+    .byte $a2
+    .byte $9a
+    .byte $d4
+    .byte $54 
+    .byte $54
+    .byte $60
+    .byte $59
+    .byte $63
+    .byte $6b
+    .byte $01
+    .byte $ba
+    .byte $bc
+    .byte $be
+    .byte $a2
+    .byte $d1
+    .byte $01
+    .byte $a2
+    .byte $cd
+    .byte $d6
+    .byte $67 
+    .byte $65
+    .byte $6f
+    .byte $6b
+    .byte $62
+    .byte $e4
+    .byte $df
+    .byte $df
+    .byte $df
+    .byte $df
+    .byte $df
+    .byte $cf
+    .byte $df
+    .byte $96
+    .byte $df
+    .byte $7c
+    .byte $68 
+    .byte $63
+    .byte $6b
+    .byte $6b
+    .byte $e9
+    .byte $af
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $f5
+    .byte $cb
+    .byte $7c
+    .byte $7c
+    .byte $c9
+    .byte $7c
+    .byte $20 
+    .byte $8a
+    .byte $8c
+    .byte $22
+    .byte $27
+    .byte $24
+    .byte $45
+    .byte $50
+    .byte $53
+    .byte $7d
+    .byte $01
+    .byte $8e
+    .byte $01
+    .byte $74
+    .byte $1d
+    .byte $01
+    .byte $03 
+    .byte $08
+    .byte $05
+    .byte $2c
+    .byte $2a
+    .byte $39
+    .byte $3c
+    .byte $3c
+    .byte $4b
+    .byte $82
+    .byte $84
+    .byte $ad
+    .byte $d9
+    .byte $78
+    .byte $59
+    .byte $f5
+    .byte $0d 
+    .byte $0a
+    .byte $1a
+    .byte $2b
+    .byte $2e
+    .byte $36
+    .byte $49
+    .byte $3c
+    .byte $43
+    .byte $ad
+    .byte $d9
+    .byte $1d
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $1d
+    .byte $0e 
+    .byte $0f
+    .byte $1d
+    .byte $17
+    .byte $1d
+    .byte $1d
+    .byte $59
+    .byte $59
+    .byte $ad
+    .byte $d9
+    .byte $1d
+    .byte $d1
+    .byte $7c
+    .byte $7c
+    .byte $d6
+    .byte $01
+    .byte $54 
+    .byte $56
+    .byte $5b
+    .byte $62
+    .byte $54
+    .byte $59
+    .byte $6a
+    .byte $b2
+    .byte $b4
+    .byte $97
+    .byte $94
+    .byte $cf
+    .byte $9f
+    .byte $a3
+    .byte $9b
+    .byte $01
+    .byte $54 
+    .byte $54
+    .byte $59
+    .byte $5e
+    .byte $64
+    .byte $6c
+    .byte $b9
+    .byte $bb
+    .byte $bd
+    .byte $01
+    .byte $a3
+    .byte $d2
+    .byte $cb
+    .byte $a3
+    .byte $01
+    .byte $d7
+    .byte $68 
+    .byte $66
+    .byte $6c
+    .byte $70
+    .byte $e3
+    .byte $62
+    .byte $e0
+    .byte $e0
+    .byte $e0
+    .byte $e0
+    .byte $e0
+    .byte $7c
+    .byte $e0
+    .byte $97
+    .byte $e0
+    .byte $d4
+    .byte $64 
+    .byte $65
+    .byte $6c
+    .byte $6c
+    .byte $de
+    .byte $b0
+    .byte $20
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $01
+    .byte $7c
+    .byte $7c
+    .byte $c9
+    .byte $7c
+    .byte $cd
