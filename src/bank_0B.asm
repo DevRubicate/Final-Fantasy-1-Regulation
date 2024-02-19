@@ -13,7 +13,7 @@
 BANK_THIS = $0B
 
 ;; Battle Domains  [$8000 :: 0x2C010]
-.INCBIN "bin/0B_8000_battledomains.bin"
+.incbin "bin/0B_8000_battledomains.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -24,7 +24,7 @@ BANK_THIS = $0B
 
 .ALIGN $100            ; must be on page bound
 lut_BattleFormations:
-  .INCBIN "bin/0B_8400_battleformations.bin"
+  .incbin "bin/0B_8400_battleformations.bin"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -32,7 +32,7 @@ lut_BattleFormations:
 ;;  LUT for battle encounter rates per map  [$8C00 :: 0x2CC10]
 
 lut_BattleRates:
-  .INCBIN "bin/0B_8C00_mapencounterrates.bin"
+  .incbin "bin/0B_8C00_mapencounterrates.bin"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -42,7 +42,7 @@ lut_BattleRates:
 ;;  This block of text is weird because the pointer table comes AFTER the text
 ;;
 data_BattleMessages_Raw:                        ; actual text data
-  .INCBIN "bin/0B_8C40_battlemessages.bin"
+  .incbin "bin/0B_8C40_battlemessages.bin"
   
         ; pointer table
         data_BattleMessages = data_BattleMessages_Raw + $310
@@ -50,8 +50,8 @@ data_BattleMessages_Raw:                        ; actual text data
 
 
 ;; $8FEC - "Nothing happens" string
-  .BYTE $97, $B2, $B7, $AB, $AC, $B1, $AA, $FF, $AB, $A4, $B3, $B3, $A8, $B1, $B6, $00
-  .BYTE $00, $00, $00, $00
+  .byte $97, $B2, $B7, $AB, $AC, $B1, $AA, $FF, $AB, $A4, $B3, $B3, $A8, $B1, $B6, $00
+  .byte $00, $00, $00, $00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -65,7 +65,7 @@ lut_ExpToAdvance:
   .FARADDR 727245, 760044, 792844, 825643, 858443, 891242, 924042, 956841, 989641
 
 ; unused byte
-  .BYTE $00
+  .byte $00
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -87,7 +87,7 @@ lut_ExpToAdvance:
 ;;                 bit 7 means you'll get a level 8 charge
 
 data_LevelUpData_Raw:
-  .INCBIN "bin/0B_9094_levelupdata.bin"
+  .incbin "bin/0B_9094_levelupdata.bin"
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Fiend TSA data  [$92E0 :: 0x2D2F0]
@@ -96,7 +96,7 @@ data_LevelUpData_Raw:
 ;;      $40 bytes of NT TSA (8x8 image)
 ;;      $10 bytes of attributes  (4x4)
 data_FiendTSA:
-  .INCBIN "bin/0B_92E0_fiendtsa.bin"
+  .incbin "bin/0B_92E0_fiendtsa.bin"
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Fiend TSA data  [$9420 :: 0x2D430]
@@ -106,12 +106,12 @@ data_FiendTSA:
 ;;      $10 bytes of attributes  (4x4)
 ;;      $08 bytes of padding
 data_ChaosTSA:
-  .INCBIN "bin/0B_9420_chaostsa.bin"
+  .incbin "bin/0B_9420_chaostsa.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Enemy names [$94E0 :: 0x2D4F0]
 data_EnemyNames:
-  .INCBIN "bin/0B_94E0_enemynames.bin"
+  .incbin "bin/0B_94E0_enemynames.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Misc End-Of-Battle text [$9950 :: 0x2D960]
@@ -123,17 +123,17 @@ data_EnemyNames:
         eobtext_print_hp    = $687C
 
 eobtext_NameLN:
-  .BYTE $02, $FF, $95, $0C
+  .byte $02, $FF, $95, $0C
   .WORD eobtext_print_level
-  .BYTE $00                                 ; "<Name> L##", where <Name> is btl_attacker's name and ## is value at $687A
+  .byte $00                                 ; "<Name> L##", where <Name> is btl_attacker's name and ## is value at $687A
 eobtext_HPMax:
-  .BYTE $0F, $31, $00                       ; "HP max"
+  .byte $0F, $31, $00                       ; "HP max"
 eobtext_Npts:
-  .BYTE $0C
+  .byte $0C
   .WORD eobtext_print_hp
-  .BYTE $0F, $32, $00                       ; "##pts." where ## is value at $687C
+  .byte $0F, $32, $00                       ; "##pts." where ## is value at $687C
 eobtext_PartyPerished:
-  .BYTE $04, $0F, $3E, $0F, $3C, $00        ; "<Name> party perished", where <Name> is the party leader's name
+  .byte $04, $0F, $3E, $0F, $3C, $00        ; "<Name> party perished", where <Name> is the party leader's name
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -342,7 +342,7 @@ GetJoyInput:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 lut_RespondDelay:
-    .BYTE   $78, $50, $3C, $2D, $1E, $0F, $05, $01
+    .byte   $78, $50, $3C, $2D, $1E, $0F, $05, $01
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -527,14 +527,14 @@ ConvertIBAilmentToOB:
 ;;  LUT for converting out-of-battle ailment IDs to in-battle ailment flags  [$9AB4 :: 0x2DAC4]
 
 lut_AilmentObToIb:
-  .BYTE 0, 1, 2, 4
+  .byte 0, 1, 2, 4
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LUT for converting in-battle ailment flags to out-of-battle ailments  [$9AB8 :: 0x2DAC8]
 
 lut_AilmentIbToOb:
-  .BYTE 0, 1, 2, 1, 3, 1, 2, 1
+  .byte 0, 1, 2, 1, 3, 1, 2, 1
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1168,7 +1168,7 @@ Draw4EobBoxes:
 ;;  lut - Hit rate bonus for each class (assigned at level up)  [$9DDC :: 0x2DDEC]
 
 lut_LvlUpHitRateBonus:
-  .BYTE  3,  2,  3,  2,  1,  1,   3,  2,  3,  2,  1,  1
+  .byte  3,  2,  3,  2,  1,  1,   3,  2,  3,  2,  1,  1
   ;     FT  TH  BB  RM  WM  BM   KN  NJ  MA  RW  WW  BW
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1180,7 +1180,7 @@ lut_LvlUpHitRateBonus:
 ;;  to be 5-their_value.
   
 lut_LvlUpMagDefBonus:
-  .BYTE  3,  2,  4,  2,  2,  2,   3,  2,  1,  2,  2,  2
+  .byte  3,  2,  4,  2,  2,  2,   3,  2,  1,  2,  2,  2
   ;     FT  TH  BB  RM  WM  BM   KN  NJ  MA  RW  WW  BW
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1790,16 +1790,16 @@ lut_EOBText:
   .WORD eobtext_Npts            ; 8
   .WORD eobtext_PartyPerished   ; 9
   
-  @MnstPrsh: .BYTE $0F, $3D, $0F, $3C, $00      ; "Monsters perished"
-  @ExpUp:    .BYTE $0F, $49, $00                ; "EXP up"
-  @ExpVal:   .BYTE $0C
+  @MnstPrsh: .byte $0F, $3D, $0F, $3C, $00      ; "Monsters perished"
+  @ExpUp:    .byte $0F, $49, $00                ; "EXP up"
+  @ExpVal:   .byte $0C
              .WORD eob_exp_reward
-             .BYTE $99, $00                     ; "##P"  where ## is the experience reward
-  @Gold:     .BYTE $90, $98, $95, $8D, $00      ; "GOLD"
-  @GoldVal:  .BYTE $0C
+             .byte $99, $00                     ; "##P"  where ## is the experience reward
+  @Gold:     .byte $90, $98, $95, $8D, $00      ; "GOLD"
+  @GoldVal:  .byte $0C
              .WORD eob_gp_reward
-             .BYTE $90, $00, $00                ; "##G"   where ## is the GP reward
-  @LevUp:    .BYTE $0F, $30, $00                ; "Lev. up!"
+             .byte $90, $00, $00                ; "##G"   where ## is the GP reward
+  @LevUp:    .byte $0F, $30, $00                ; "Lev. up!"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2002,7 +2002,7 @@ ChaosDeath:
     
     
   @StupidestLutInTheWorld:
-    .BYTE 0,1,2,3,4,5,6,7
+    .byte 0,1,2,3,4,5,6,7
   
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2406,10 +2406,10 @@ ApplyPalette_FiendChaos:
     RTS
     
   @lut_AtOffset:
-    .BYTE $08, $09, $0A, $0B
-    .BYTE $10, $11, $12, $13
-    .BYTE $18, $19, $1A, $1B
-    .BYTE $20, $21, $22, $23
+    .byte $08, $09, $0A, $0B
+    .byte $10, $11, $12, $13
+    .byte $18, $19, $1A, $1B
+    .byte $20, $21, $22, $23
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2846,9 +2846,9 @@ DrawFormation_9Small:
   .WORD $214A, $20CA, $21CA     ; right column
   
 @lut_AttributeOffset:
-  .BYTE $10, $08, $18           ; Left column
-  .BYTE $11, $09, $19           ; Center column
-  .BYTE $12, $0A, $1A           ; Right column
+  .byte $10, $08, $18           ; Left column
+  .byte $11, $09, $19           ; Center column
+  .byte $12, $0A, $1A           ; Right column
   
   
   
@@ -3205,21 +3205,21 @@ DrawFormation_Mix:
     ; As such, these tables need to include the attribute settings for those areas as well.
   @lut_LargeEn0_Attributes:       ; placed at positions $08, $09, $10, $11   in the attribute table
     ; if using palette 0
-    .BYTE $73, $50
-    .BYTE $77, $55
+    .byte $73, $50
+    .byte $77, $55
   
     ; if using palette 1
-    .BYTE $B3, $A0
-    .BYTE $BB, $AA
+    .byte $B3, $A0
+    .byte $BB, $AA
   
   @lut_LargeEn1_Attributes:       ; placed at positions $18, $19, $20, $21   in the attribute table
     ; if using palette 0
-    .BYTE $77, $55
-    .BYTE $F7, $F5
+    .byte $77, $55
+    .byte $F7, $F5
   
     ; if using palette 1
-    .BYTE $BB, $AA
-    .BYTE $FB, $FA
+    .byte $BB, $AA
+    .byte $FB, $FA
   
   ; LUT to indicate the PPU address at which to draw each small enemy
   @lut_SmallEn_DrawPos:
@@ -3229,8 +3229,8 @@ DrawFormation_Mix:
   
   ; LUT to indicate the offset of the first attribute byte impacted by each small enemy
   @lut_SmallEn_AtOffset:
-    .BYTE $12, $0A, $1A     ; first column of small enemies
-    .BYTE $13, $0B, $1B     ; second column of small enemies
+    .byte $12, $0A, $1A     ; first column of small enemies
+    .byte $13, $0B, $1B     ; second column of small enemies
   
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3461,9 +3461,9 @@ Draw4TilesFromX:
 ;;  But it is messed up and not actually used by the game.
     
 lut_EnemyCountByBattleType:
-  .BYTE 9, 0, 0, 0   ; <- formation type 0
-  .BYTE 0, 4, 0, 0   ; <- formation type 1
-  .BYTE 2, 6, 0, 0   ; <- *almost* formation type 2, but it is not used and it has large/small values backwards
+  .byte 9, 0, 0, 0   ; <- formation type 0
+  .byte 0, 4, 0, 0   ; <- formation type 1
+  .byte 2, 6, 0, 0   ; <- *almost* formation type 2, but it is not used and it has large/small values backwards
 ;       ^  ^  ^  ^
 ;       |  |  |  |
 ;       |  |  ??????  not used?
@@ -3599,7 +3599,7 @@ GetEnemyStatPtr:
 .align $100
 
 data_EpilogueCHR:
-  .INCBIN "bin/0B_A800_endingbridge_chrnt.bin"
+  .incbin "bin/0B_A800_endingbridge_chrnt.bin"
   
 data_EpilogueNT =       data_EpilogueCHR + $800         ; $B000
 data_BridgeCHR  =       data_EpilogueNT  + $400         ; $B400

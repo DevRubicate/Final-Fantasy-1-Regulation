@@ -16,13 +16,9 @@
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 .import EnvironmentStartupRoutine
 .import BattleRNG
-; bank_10.asm
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-; bank_1E.asm
 .import ResetRAM, SetRandomSeed, GetRandom
-; bank_11.asm
 .import OpenTreasureChest, AddGPToParty, LoadPrice
-; bank_12.asm
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR
 
 .export SwapPRG
@@ -1329,14 +1325,14 @@ BattleStepRNG:
 
 
 lut_FormationWeight:
-  .BYTE 0,0,0,0,0,0, 0,0,0,0,0,0    ; 12/64 chance of formation 0
-  .BYTE 1,1,1,1,1,1, 1,1,1,1,1,1    ; 12/64
-  .BYTE 2,2,2,2,2,2, 2,2,2,2,2,2    ; 12/64
-  .BYTE 3,3,3,3,3,3, 3,3,3,3,3,3    ; 12/64
-  .BYTE 4,4,4,4,4,4                 ;  6/64
-  .BYTE 5,5,5,5,5,5                 ;  6/64
-  .BYTE 6,6,6                       ;  3/64
-  .BYTE 7                           ;  1/64
+  .byte 0,0,0,0,0,0, 0,0,0,0,0,0    ; 12/64 chance of formation 0
+  .byte 1,1,1,1,1,1, 1,1,1,1,1,1    ; 12/64
+  .byte 2,2,2,2,2,2, 2,2,2,2,2,2    ; 12/64
+  .byte 3,3,3,3,3,3, 3,3,3,3,3,3    ; 12/64
+  .byte 4,4,4,4,4,4                 ;  6/64
+  .byte 5,5,5,5,5,5                 ;  6/64
+  .byte 6,6,6                       ;  3/64
+  .byte 7                           ;  1/64
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1751,11 +1747,11 @@ PrepOverworld:
   ;;  The lut for knowing which track to play based on the current vehicle
 
   @lut_VehicleMusic:
-  .BYTE $44               ; unused
-  .BYTE $44               ; on foot
-  .BYTE $44,$44           ; canoe (2nd byte unused)
-  .BYTE $45,$45,$45,$45   ; ship (last 3 bytes unused)
-  .BYTE $46               ; airship
+  .byte $44               ; unused
+  .byte $44               ; on foot
+  .byte $44,$44           ; canoe (2nd byte unused)
+  .byte $45,$45,$45,$45   ; ship (last 3 bytes unused)
+  .byte $46               ; airship
 
 
 
@@ -3735,7 +3731,7 @@ PrepStandardMap:
  ;; the LUT containing the music tracks for each tileset
 
   @lut_TilesetMusicTrack:
-    .BYTE $47, $48, $49, $4A, $4B, $4C, $4D, $4E
+    .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5123,8 +5119,8 @@ DlgBoxPrep_DR:
 ;;  "2x" because they're really 2 rows (each row is $20, these increment by $40).  This is because
 ;;  map tiles are 2 ppu tiles tall
 
-lut_2xNTRowStartLo:    .BYTE  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
-lut_2xNTRowStartHi:    .BYTE  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
+lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
+lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
 
 
 
@@ -6986,16 +6982,16 @@ DrawImageRect:
 ;;
 
 lut_NTRowStartLo:
-  .BYTE $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .BYTE $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .BYTE $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .BYTE $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
 
 lut_NTRowStartHi:
-  .BYTE $20,$20,$20,$20,$20,$20,$20,$20
-  .BYTE $21,$21,$21,$21,$21,$21,$21,$21
-  .BYTE $22,$22,$22,$22,$22,$22,$22,$22
-  .BYTE $23,$23,$23,$23,$23,$23,$23,$23
+  .byte $20,$20,$20,$20,$20,$20,$20,$20
+  .byte $21,$21,$21,$21,$21,$21,$21,$21
+  .byte $22,$22,$22,$22,$22,$22,$22,$22
+  .byte $23,$23,$23,$23,$23,$23,$23,$23
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7335,8 +7331,8 @@ DrawComplexString:
     ;; a 24-index to the desired 32-index by simply skipping the 3rd byte in every set of 4
 
 @lutMagic:
-    .BYTE $00,$01,$02,    $04,$05,$06,    $08,$09,$0A,    $0C,$0D,$0E
-    .BYTE $10,$11,$12,    $14,$15,$16,    $18,$19,$1A,    $1C,$1D,$1E
+    .byte $00,$01,$02,    $04,$05,$06,    $08,$09,$0A,    $0C,$0D,$0E
+    .byte $10,$11,$12,    $14,$15,$16,    $18,$19,$1A,    $1C,$1D,$1E
 
 
     ; This is called to draw weapon/armor, along with the "E-" before it if the item is equipped
@@ -8167,20 +8163,20 @@ CanMapObjMove:             ; first thing to check is the map
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_2x2MapObj_Right:
- .BYTE $09,$42,$0B,$43,$08,$42,$0A,$43   ; standing
- .BYTE $0D,$42,$0F,$43,$0C,$42,$0E,$43   ; walking
+ .byte $09,$42,$0B,$43,$08,$42,$0A,$43   ; standing
+ .byte $0D,$42,$0F,$43,$0C,$42,$0E,$43   ; walking
 
 lut_2x2MapObj_Left:
- .BYTE $08,$02,$0A,$03,$09,$02,$0B,$03
- .BYTE $0C,$02,$0E,$03,$0D,$02,$0F,$03
+ .byte $08,$02,$0A,$03,$09,$02,$0B,$03
+ .byte $0C,$02,$0E,$03,$0D,$02,$0F,$03
 
 lut_2x2MapObj_Up:
- .BYTE $04,$02,$06,$03,$05,$02,$07,$03
- .BYTE $04,$02,$07,$43,$05,$02,$06,$43
+ .byte $04,$02,$06,$03,$05,$02,$07,$03
+ .byte $04,$02,$07,$43,$05,$02,$06,$43
 
 lut_2x2MapObj_Down:
- .BYTE $00,$02,$02,$03,$01,$02,$03,$03
- .BYTE $00,$02,$03,$43,$01,$02,$02,$43
+ .byte $00,$02,$02,$03,$01,$02,$03,$03
+ .byte $00,$02,$03,$43,$01,$02,$02,$43
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9000,7 +8996,7 @@ LoadBackdropPalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_ShopPalettes:
-  .BYTE  $0F,$00,$04,$30,  $0F,$00,$0A,$30
+  .byte  $0F,$00,$04,$30,  $0F,$00,$0A,$30
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9063,7 +9059,7 @@ LoadBattleSpritePalettes:
       RTS
 
 @BattleSpritePalettes:
-  .BYTE $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
+  .byte $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
 
 
 
@@ -9093,13 +9089,13 @@ LoadBattleSpritePalettes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_ShopTypes:
-   .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00      ; 10 weapon shops (but first is unused)
-   .BYTE $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01  ; 11 armor shops (to correct the off-by-1 error)
-   .BYTE $02,$02,$02,$02,$02,$02,$02,$02,$02,$02      ; 10 white magic
-   .BYTE $03,$03,$03,$03,$03,$03,$03,$03,$03,$03      ; 10 black magic
-   .BYTE $04,$04,$04,$04,$04,$04,$04,$04,$04,$04      ; 10 clinics
-   .BYTE $05,$05,$05,$05,$05,$05,$05,$05,$05,$05      ; 10 inns
-   .BYTE $06,$06,$06,$06,$06,$06,$06,$06,$06,$07      ; 9 item shops + 1 caravan
+   .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00      ; 10 weapon shops (but first is unused)
+   .byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01  ; 11 armor shops (to correct the off-by-1 error)
+   .byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02      ; 10 white magic
+   .byte $03,$03,$03,$03,$03,$03,$03,$03,$03,$03      ; 10 black magic
+   .byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04      ; 10 clinics
+   .byte $05,$05,$05,$05,$05,$05,$05,$05,$05,$05      ; 10 inns
+   .byte $06,$06,$06,$06,$06,$06,$06,$06,$06,$07      ; 9 item shops + 1 caravan
  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9252,8 +9248,8 @@ DrawCursor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lutClassBatSprPalette:
-  .BYTE $01,$00,$00,$01,$01,$00    ; unpromoted classes
-  .BYTE $01,$01,$00,$01,$01,$00    ; promoted classes
+  .byte $01,$00,$00,$01,$01,$00    ; unpromoted classes
+  .byte $01,$01,$00,$01,$01,$00    ; promoted classes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9264,10 +9260,10 @@ lutClassBatSprPalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lutCursor2x2SpriteTable:
-  .BYTE $00, $03      ; UL sprite = tile 0, palette 3
-  .BYTE $02, $03      ; DL sprite = tile 2, palette 3
-  .BYTE $01, $03      ; UR sprite = tile 1, palette 3
-  .BYTE $03, $03      ; DR sprite = tile 3, palette 3
+  .byte $00, $03      ; UL sprite = tile 0, palette 3
+  .byte $02, $03      ; DL sprite = tile 2, palette 3
+  .byte $01, $03      ; UR sprite = tile 1, palette 3
+  .byte $03, $03      ; DR sprite = tile 3, palette 3
 
 
 
@@ -9393,17 +9389,17 @@ DrawEquipMenuStrings:
 ;;   X,Y positions for equipment text to be printed in equip menus
 
 lut_EquipStringPositions:
-  .BYTE $0A, $07,       $14, $07        ; character 0
-  .BYTE $0A, $09,       $14, $09
+  .byte $0A, $07,       $14, $07        ; character 0
+  .byte $0A, $09,       $14, $09
   
-  .BYTE $0A, $0D,       $14, $0D        ; character 1
-  .BYTE $0A, $0F,       $14, $0F
+  .byte $0A, $0D,       $14, $0D        ; character 1
+  .byte $0A, $0F,       $14, $0F
   
-  .BYTE $0A, $13,       $14, $13        ; character 2
-  .BYTE $0A, $15,       $14, $15
+  .byte $0A, $13,       $14, $13        ; character 2
+  .byte $0A, $15,       $14, $15
   
-  .BYTE $0A, $19,       $14, $19        ; character 3
-  .BYTE $0A, $1B,       $14, $1B
+  .byte $0A, $19,       $14, $19        ; character 3
+  .byte $0A, $1B,       $14, $1B
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9884,14 +9880,14 @@ DrawItemBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lutItemBoxStrPos:
-  .BYTE $04,$06,   $0D,$06,   $16,$06
-  .BYTE $04,$08,   $0D,$08,   $16,$08
-  .BYTE $04,$0A,   $0D,$0A,   $16,$0A
-  .BYTE $04,$0C,   $0D,$0C,   $16,$0C
-  .BYTE $04,$0E,   $0D,$0E,   $16,$0E
-  .BYTE $04,$10,   $0D,$10,   $16,$10
-  .BYTE $04,$12,   $0D,$12,   $16,$12
-  .BYTE $04,$14,   $0D,$14,   $16,$14
+  .byte $04,$06,   $0D,$06,   $16,$06
+  .byte $04,$08,   $0D,$08,   $16,$08
+  .byte $04,$0A,   $0D,$0A,   $16,$0A
+  .byte $04,$0C,   $0D,$0C,   $16,$0C
+  .byte $04,$0E,   $0D,$0E,   $16,$0E
+  .byte $04,$10,   $0D,$10,   $16,$10
+  .byte $04,$12,   $0D,$12,   $16,$12
+  .byte $04,$14,   $0D,$14,   $16,$14
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9976,18 +9972,18 @@ SortEquipmentList:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_DTE2:
-  .BYTE $FF,$B7,$AB,$A8,  $FF,$B1,$A4,$FF,  $B1,$A8,$B6,$B5,  $B8,$FF,$B2,$FF
-  .BYTE $AA,$A4,$B6,$AC,  $FF,$B5,$B6,$A5,  $A8,$BA,$A8,$B5,  $B2,$B7,$A6,$B7
-  .BYTE $B1,$A7,$B1,$AC,  $A8,$B6,$A7,$A4,  $B0,$A9,$FF,$A8,  $BA,$FF,$A8,$B0
-  .BYTE $92,$FF,$A9,$B2,  $AF,$B3,$BC,$A4,  $8A,$A8,$FF,$B5,  $B2,$AC,$FF,$AB
-  .BYTE $A8,$B7,$AC,$A4,  $A6,$AF,$A8,$AF,  $A8,$B6,$FF,$AF,  $A8,$A7,$AC,$C3
+  .byte $FF,$B7,$AB,$A8,  $FF,$B1,$A4,$FF,  $B1,$A8,$B6,$B5,  $B8,$FF,$B2,$FF
+  .byte $AA,$A4,$B6,$AC,  $FF,$B5,$B6,$A5,  $A8,$BA,$A8,$B5,  $B2,$B7,$A6,$B7
+  .byte $B1,$A7,$B1,$AC,  $A8,$B6,$A7,$A4,  $B0,$A9,$FF,$A8,  $BA,$FF,$A8,$B0
+  .byte $92,$FF,$A9,$B2,  $AF,$B3,$BC,$A4,  $8A,$A8,$FF,$B5,  $B2,$AC,$FF,$AB
+  .byte $A8,$B7,$AC,$A4,  $A6,$AF,$A8,$AF,  $A8,$B6,$FF,$AF,  $A8,$A7,$AC,$C3
 
 lut_DTE1:
-  .BYTE $A8,$FF,$B7,$AB,  $B6,$AC,$FF,$B7,  $A4,$B5,$FF,$A8,  $B2,$A7,$B7,$B1
-  .BYTE $B1,$A8,$A8,$FF,  $B2,$A4,$AC,$FF,  $B9,$FF,$B0,$B2,  $FF,$B6,$FF,$A4
-  .BYTE $A8,$B1,$B2,$AB,  $B6,$A4,$A8,$AB,  $FF,$FF,$B5,$AF,  $B2,$AA,$A6,$B2
-  .BYTE $90,$BC,$B2,$B5,  $AF,$FF,$FF,$A6,  $96,$B7,$A9,$B8,  $BC,$B7,$AF,$FF
-  .BYTE $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
+  .byte $A8,$FF,$B7,$AB,  $B6,$AC,$FF,$B7,  $A4,$B5,$FF,$A8,  $B2,$A7,$B7,$B1
+  .byte $B1,$A8,$A8,$FF,  $B2,$A4,$AC,$FF,  $B9,$FF,$B0,$B2,  $FF,$B6,$FF,$A4
+  .byte $A8,$B1,$B2,$AB,  $B6,$A4,$A8,$AB,  $FF,$FF,$B5,$AF,  $B2,$AA,$A6,$B2
+  .byte $90,$BC,$B2,$B5,  $AF,$FF,$FF,$A6,  $96,$B7,$A9,$B8,  $BC,$B7,$AF,$FF
+  .byte $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10307,7 +10303,7 @@ DrawBattleBackdropRow:
   ;; the layout of the battle backdrop -- the way the columns are arranged
 
 @lut_BackdropLayout:
-  .BYTE 1,2,3,4,3,4,1,2,1,2,3,4,3,4
+  .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -10401,14 +10397,14 @@ Battle_PPUOff:
 
 
 lut_BtlAttrTbl:
-  .BYTE $3F,$0F,$0F,$0F,$3F,$0F,$FF,$FF
-  .BYTE $33,$00,$00,$00,$33,$00,$FF,$FF
-  .BYTE $33,$00,$00,$00,$33,$00,$FF,$FF
-  .BYTE $33,$00,$00,$00,$33,$00,$FF,$FF
-  .BYTE $F3,$F0,$F0,$F0,$F3,$F0,$FF,$FF
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
+  .byte $3F,$0F,$0F,$0F,$3F,$0F,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $F3,$F0,$F0,$F0,$F3,$F0,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11664,7 +11660,7 @@ DrawBattleString:
 
 lut_EnemyRosterBox:
 ;       hdr   X    Y  width  height
-  .BYTE $00, $01, $00, $0B, $0A
+  .byte $00, $01, $00, $0B, $0A
   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11676,11 +11672,11 @@ lut_EnemyRosterBox:
 lut_CombatBoxes:
 ;             BOX                      TEXT
 ;       hdr    X    Y   wd   ht     hdr    X    Y
-  .BYTE $00, $01, $01, $0A, $04,    $01, $02, $02       ; attacker name
-  .BYTE $00, $0B, $01, $0C, $04,    $01, $0C, $02       ; their attack ("FROST", "2Hits!" etc)
-  .BYTE $00, $01, $04, $0A, $04,    $01, $02, $05       ; defender name
-  .BYTE $00, $0B, $04, $0B, $04,    $01, $0C, $05       ; damage
-  .BYTE $00, $01, $07, $18, $04,    $01, $02, $08       ; bottom message ("Terminated", "Critical Hit", etc)
+  .byte $00, $01, $01, $0A, $04,    $01, $02, $02       ; attacker name
+  .byte $00, $0B, $01, $0C, $04,    $01, $0C, $02       ; their attack ("FROST", "2Hits!" etc)
+  .byte $00, $01, $04, $0A, $04,    $01, $02, $05       ; defender name
+  .byte $00, $0B, $04, $0B, $04,    $01, $0C, $05       ; damage
+  .byte $00, $01, $07, $18, $04,    $01, $02, $08       ; bottom message ("Terminated", "Critical Hit", etc)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11690,7 +11686,7 @@ lut_CombatBoxes:
 
 lut_CombatItemMagicBox:
 ;       hdr    X    Y   wd   ht 
-  .BYTE $00, $02, $01, $16, $0A
+  .byte $00, $02, $01, $16, $0A
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11700,7 +11696,7 @@ lut_CombatItemMagicBox:
 
 lut_CombatDrinkBox:
 ;       hdr    X    Y   wd   ht 
-  .BYTE $00, $03, $01, $0C, $06
+  .byte $00, $03, $01, $0C, $06
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11708,30 +11704,30 @@ lut_CombatDrinkBox:
 
 lua_BattleCommandBoxInfo:
 ;       hdr,  X    Y    W    H
-  .BYTE $00, $0C, $00, $0D, $0A         ; box
+  .byte $00, $0C, $00, $0D, $0A         ; box
 ;       hdr,  X    Y    ptr
-  .BYTE $01, $0E, $01, <@txt0, >@txt0   ; text
-  .BYTE $01, $0E, $03, <@txt1, >@txt1
-  .BYTE $01, $0E, $05, <@txt2, >@txt2
-  .BYTE $01, $0E, $07, <@txt3, >@txt3
-  .BYTE $01, $14, $01, <@txt4, >@txt4
+  .byte $01, $0E, $01, <@txt0, >@txt0   ; text
+  .byte $01, $0E, $03, <@txt1, >@txt1
+  .byte $01, $0E, $05, <@txt2, >@txt2
+  .byte $01, $0E, $07, <@txt3, >@txt3
+  .byte $01, $14, $01, <@txt4, >@txt4
   
   
-  @txt0:  .BYTE $EF, $F0, $F1, $F2, $00     ; "FIGHT"
-  @txt1:  .BYTE $EB, $EC, $ED, $EE, $00     ; "MAGIC"
-  @txt2:  .BYTE $F3, $F4, $F5, $F6, $00     ; "DRINK"
-  @txt3:  .BYTE $92, $9D, $8E, $96, $00     ; "ITEM"
-  @txt4:  .BYTE $9B, $9E, $97, $00          ; "RUN"
+  @txt0:  .byte $EF, $F0, $F1, $F2, $00     ; "FIGHT"
+  @txt1:  .byte $EB, $EC, $ED, $EE, $00     ; "MAGIC"
+  @txt2:  .byte $F3, $F4, $F5, $F6, $00     ; "DRINK"
+  @txt3:  .byte $92, $9D, $8E, $96, $00     ; "ITEM"
+  @txt4:  .byte $9B, $9E, $97, $00          ; "RUN"
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Lut for enemy roster strings  [$FA51 :: 0x3FA61]
 
 lut_EnemyRosterStrings:
-  .BYTE $08, $00        ; these are just the roster control codes, followed by the null terminator
-  .BYTE $09, $00
-  .BYTE $0A, $00
-  .BYTE $0B, $00
+  .byte $08, $00        ; these are just the roster control codes, followed by the null terminator
+  .byte $09, $00
+  .byte $0A, $00
+  .byte $0B, $00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

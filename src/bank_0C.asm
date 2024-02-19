@@ -32,7 +32,7 @@ BANK_THIS = $0C
 ;;  byte 7:  palette
 
 lut_WeaponData:
-    .INCBIN "bin/0C_8000_weapondata.bin"
+    .incbin "bin/0C_8000_weapondata.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -46,7 +46,7 @@ lut_WeaponData:
 ;;  byte 3:  Spell cast
 
 lut_ArmorData:
-    .INCBIN "bin/0C_8140_armordata.bin"
+    .incbin "bin/0C_8140_armordata.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -61,7 +61,7 @@ lut_ArmorData:
 ;;    see MAGDATA constants in constants.inc for layout description
 
 lut_MagicData:
-    .INCBIN "bin/0C_81E0_magicdata.bin"
+    .incbin "bin/0C_81E0_magicdata.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -74,19 +74,19 @@ lut_MagicData:
 ;;    The values themselves match BTLMSG_XXXX names in constants.inc
 
 lut_MagicBattleMessages:
-  .BYTE $01, $00, $02, $03,  $00, $00, $05, $00,    $00, $00, $08, $03,  $00, $00, $0A, $0B     ; spells
-  .BYTE $01, $00, $0C, $01,  $00, $0D, $00, $05,    $00, $0F, $10, $00,  $00, $12, $00, $00
-  .BYTE $01, $4A, $00, $01,  $00, $4D, $4A, $0B,    $4A, $4A, $02, $03,  $00, $15, $16, $00
-  .BYTE $18, $00, $19, $01,  $00, $00, $1B, $00,    $4A, $00, $1C, $1D,  $00, $1E, $1F, $15
+  .byte $01, $00, $02, $03,  $00, $00, $05, $00,    $00, $00, $08, $03,  $00, $00, $0A, $0B     ; spells
+  .byte $01, $00, $0C, $01,  $00, $0D, $00, $05,    $00, $0F, $10, $00,  $00, $12, $00, $00
+  .byte $01, $4A, $00, $01,  $00, $4D, $4A, $0B,    $4A, $4A, $02, $03,  $00, $15, $16, $00
+  .byte $18, $00, $19, $01,  $00, $00, $1B, $00,    $4A, $00, $1C, $1D,  $00, $1E, $1F, $15
   
-  .BYTE $00, $00                                                                                ; potions
+  .byte $00, $00                                                                                ; potions
   
-  .BYTE $00, $00, $00, $00,  $00, $00, $16, $15,    $00, $1F, $00, $00,  $00, $00, $4D, $00     ; enemy attacks
-  .BYTE $00, $00, $15, $00,  $00, $00, $00, $00,    $00, $00
+  .byte $00, $00, $00, $00,  $00, $00, $16, $15,    $00, $1F, $00, $00,  $00, $00, $4D, $00     ; enemy attacks
+  .byte $00, $00, $15, $00,  $00, $00, $00, $00,    $00, $00
 
 
   ; unused padding:
-  .BYTE $00, $00, $00, $00
+  .byte $00, $00, $00, $00
   
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -99,7 +99,7 @@ lut_MagicBattleMessages:
 ;;  See ENROMSTAT_xxx constants in constants.inc for layout
 
 data_EnemyStats:
-  .INCBIN "bin/0C_8520_enemydata.bin"
+  .incbin "bin/0C_8520_enemydata.bin"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -109,7 +109,7 @@ data_EnemyStats:
 ;;    LUT of 64 4-byte palettes for use with battle formations
 
 lut_BattlePalettes:
-  .INCBIN "bin/0C_8F20_battlepalettes.bin"
+  .incbin "bin/0C_8F20_battlepalettes.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -123,7 +123,7 @@ lut_BattlePalettes:
 ;;  bytes $B-$E = special attacks (0 based), or 'FF' to mark end of attacks
 
 lut_EnemyAi:
-  .INCBIN "bin/0C_9020_aidata.bin"
+  .incbin "bin/0C_9020_aidata.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2684,14 +2684,14 @@ lut_CharMagicData:
 
 lut_MainCombatBoxCursorPos:
 ;         X    Y
-  .BYTE $60, $9E    ; FIGHT
-  .BYTE $60, $AE    ; MAGIC
-  .BYTE $60, $BE    ; DRINK
-  .BYTE $60, $CE    ; ITEM
-  .BYTE $90, $9E    ; RUN (repeated 4 times to pad to 2x4 menu)
-  .BYTE $90, $9E
-  .BYTE $90, $9E
-  .BYTE $90, $9E
+  .byte $60, $9E    ; FIGHT
+  .byte $60, $AE    ; MAGIC
+  .byte $60, $BE    ; DRINK
+  .byte $60, $CE    ; ITEM
+  .byte $90, $9E    ; RUN (repeated 4 times to pad to 2x4 menu)
+  .byte $90, $9E
+  .byte $90, $9E
+  .byte $90, $9E
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2702,14 +2702,14 @@ lut_MainCombatBoxCursorPos:
 
 lut_PlayerTargetCursorPos:
 ;         X    Y
-  .BYTE $A0, $34    ; char 0
-  .BYTE $A0, $4C    ; char 1
-  .BYTE $A0, $64    ; char 2
-  .BYTE $A0, $7C    ; char 3
-  .BYTE $A0, $34    ; mirrors
-  .BYTE $A0, $4C
-  .BYTE $A0, $64
-  .BYTE $A0, $7C
+  .byte $A0, $34    ; char 0
+  .byte $A0, $4C    ; char 1
+  .byte $A0, $64    ; char 2
+  .byte $A0, $7C    ; char 3
+  .byte $A0, $34    ; mirrors
+  .byte $A0, $4C
+  .byte $A0, $64
+  .byte $A0, $7C
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2721,31 +2721,31 @@ lut_PlayerTargetCursorPos:
 ;;  formation types)
 
 lut_Target9SmallCursorPos:
-  .BYTE $00, $30
-  .BYTE $00, $50
-  .BYTE $00, $70
-  .BYTE $20, $30
-  .BYTE $20, $50
-  .BYTE $20, $70
-  .BYTE $40, $30
-  .BYTE $40, $50
-  .BYTE $40, $70
+  .byte $00, $30
+  .byte $00, $50
+  .byte $00, $70
+  .byte $20, $30
+  .byte $20, $50
+  .byte $20, $70
+  .byte $40, $30
+  .byte $40, $50
+  .byte $40, $70
   
 lut_Target4LargeCursorPos:
-  .BYTE $00, $30
-  .BYTE $00, $60
-  .BYTE $40, $30
-  .BYTE $40, $60
+  .byte $00, $30
+  .byte $00, $60
+  .byte $40, $30
+  .byte $40, $60
 
 lut_TargetMixCursorPos:
-  .BYTE $00, $30
-  .BYTE $00, $60
-  .BYTE $30, $30
-  .BYTE $30, $50
-  .BYTE $30, $70
-  .BYTE $50, $30
-  .BYTE $50, $50
-  .BYTE $50, $70
+  .byte $00, $30
+  .byte $00, $60
+  .byte $30, $30
+  .byte $30, $50
+  .byte $30, $70
+  .byte $50, $30
+  .byte $50, $50
+  .byte $50, $70
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2758,18 +2758,18 @@ lut_TargetMixCursorPos:
 ;;  easier to multiply by 4 than it is to multiply by 3
 
 lut_MagicCursorPos:
-  .BYTE $20, $A6
-  .BYTE $20, $B6
-  .BYTE $20, $C6
-  .BYTE $20, $D6
-  .BYTE $48, $A6
-  .BYTE $48, $B6
-  .BYTE $48, $C6
-  .BYTE $48, $D6
-  .BYTE $70, $A6
-  .BYTE $70, $B6
-  .BYTE $70, $C6
-  .BYTE $70, $D6
+  .byte $20, $A6
+  .byte $20, $B6
+  .byte $20, $C6
+  .byte $20, $D6
+  .byte $48, $A6
+  .byte $48, $B6
+  .byte $48, $C6
+  .byte $48, $D6
+  .byte $70, $A6
+  .byte $70, $B6
+  .byte $70, $C6
+  .byte $70, $D6
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2779,14 +2779,14 @@ lut_MagicCursorPos:
 ;;    Pixel positions for the DRINK submenu.  It uses the 2x4 menu and
 ;;  actually uses all 8 slots!
 lut_ItemCursorPos:
-  .BYTE $10, $A6
-  .BYTE $10, $B6
-  .BYTE $10, $C6
-  .BYTE $10, $D6
-  .BYTE $58, $A6
-  .BYTE $58, $B6
-  .BYTE $58, $C6
-  .BYTE $58, $D6
+  .byte $10, $A6
+  .byte $10, $B6
+  .byte $10, $C6
+  .byte $10, $D6
+  .byte $58, $A6
+  .byte $58, $B6
+  .byte $58, $C6
+  .byte $58, $D6
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2797,14 +2797,14 @@ lut_ItemCursorPos:
 ;;  several times
 
 lut_DrinkCursorPos:
-  .BYTE $18, $A6        ; Heal
-  .BYTE $18, $B6        ; Pure
-  .BYTE $18, $A6        ; Heal mirror
-  .BYTE $18, $B6        ; Pure mirror
-  .BYTE $18, $A6        ; etc
-  .BYTE $18, $B6
-  .BYTE $18, $A6
-  .BYTE $18, $B6
+  .byte $18, $A6        ; Heal
+  .byte $18, $B6        ; Pure
+  .byte $18, $A6        ; Heal mirror
+  .byte $18, $B6        ; Pure mirror
+  .byte $18, $A6        ; etc
+  .byte $18, $B6
+  .byte $18, $A6
+  .byte $18, $B6
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2818,18 +2818,18 @@ lut_DrinkCursorPos:
 ;;  Example:  in the 9 small formation type, Enemy 0 is in the center row, but cursor=0 points to the top row.
 
 lut_EnemyIndex9Small:
-  .BYTE $01, $00, $02
-  .BYTE $04, $03, $05
-  .BYTE $07, $06, $08
+  .byte $01, $00, $02
+  .byte $04, $03, $05
+  .byte $07, $06, $08
   
 lut_EnemyIndex4Large:
-  .BYTE $00, $01
-  .BYTE $02, $03
+  .byte $00, $01
+  .byte $02, $03
   
 lut_EnemyIndexMix:
-  .BYTE $00, $01            ; 2 large
-  .BYTE $03, $02, $04       ; 6 small
-  .BYTE $06, $05, $07
+  .byte $00, $01            ; 2 large
+  .byte $03, $02, $04       ; 6 small
+  .byte $06, $05, $07
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2840,14 +2840,14 @@ lut_EnemyIndexMix:
 ;;   of padding).  Each byte is the tile to use for the 16x8 sprite for a single tile row in the pose.
 
 lut_CharacterPoseTSA:
-  .BYTE $00, $02, $04, $00      ; 00 = standing pose
-  .BYTE $00, $02, $06, $00      ; 04 = walking pose
-  .BYTE $08, $0A, $0C, $00      ; 08 = attacking (arm back) pose
-  .BYTE $00, $02, $06, $00      ; 0C = attacking (arm forward) pose
-  .BYTE $0E, $10, $12, $00      ; 10 = cheering pose
-  .BYTE $0E, $10, $12, $00      ; 14 = cheering pose again (possibly for casting magic or something?)
-  .BYTE $14, $16, $18, $00      ; 18 = crouching pose  (for when you're hurt)
-  .BYTE $14, $16, $18, $00      ; 1C = crouching pose again
+  .byte $00, $02, $04, $00      ; 00 = standing pose
+  .byte $00, $02, $06, $00      ; 04 = walking pose
+  .byte $08, $0A, $0C, $00      ; 08 = attacking (arm back) pose
+  .byte $00, $02, $06, $00      ; 0C = attacking (arm forward) pose
+  .byte $0E, $10, $12, $00      ; 10 = cheering pose
+  .byte $0E, $10, $12, $00      ; 14 = cheering pose again (possibly for casting magic or something?)
+  .byte $14, $16, $18, $00      ; 18 = crouching pose  (for when you're hurt)
+  .byte $14, $16, $18, $00      ; 1C = crouching pose again
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2859,8 +2859,8 @@ lut_CharacterPoseTSA:
 ;;  Frame 0 is normal drawing, Frame 1 is flipped horizontally
 
 lut_WeaponSwingTSA:
-  .BYTE $00, $01, $02, $03,     $02, $02, $02, $02  ; <- normal graphic
-  .BYTE $01, $00, $03, $02,     $42, $42, $42, $42  ; <- flipped horizontally
+  .byte $00, $01, $02, $03,     $02, $02, $02, $02  ; <- normal graphic
+  .byte $01, $00, $03, $02,     $42, $42, $42, $42  ; <- flipped horizontally
   
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2868,8 +2868,8 @@ lut_WeaponSwingTSA:
 ;;  lut for assigning palettes to in-battle char sprites  [$A03C :: 0x3204C]
 ;;
 lut_InBattleCharPaletteAssign:
-  .BYTE 1, 0, 0, 1, 1, 0
-  .BYTE 1, 1, 0, 1, 1, 0
+  .byte 1, 0, 0, 1, 1, 0
+  .byte 1, 1, 0, 1, 1, 0
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2879,7 +2879,7 @@ lut_InBattleCharPaletteAssign:
 ;;  an empty menu.
 
 data_NothingText:
-  .BYTE $97, $B2, $B7, $AB, $AC, $B1, $AA, $00, $00
+  .byte $97, $B2, $B7, $AB, $AC, $B1, $AA, $00, $00
   ;       N    o    t    h    i    n    g   <terminator>
   
   
@@ -3072,7 +3072,7 @@ RespondDelay:
 ;;
 ;;    Offset for each character's sprite data in OAM
 lut_CharacterOAMOffset:
-  .BYTE $10, $28, $40, $58
+  .byte $10, $28, $40, $58
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3168,8 +3168,8 @@ PrepCharStatPointers:
 ;;  lut used to initialize battle turn order.  Simply contains IDs for all enemies/characters.
 
 lut_InitialTurnOrder:
-  .BYTE $00, $01, $02, $03, $04, $05, $06, $07, $08     ; enemy IDs
-  .BYTE $80, $81, $82, $83                              ; character IDs
+  .byte $00, $01, $02, $03, $04, $05, $06, $07, $08     ; enemy IDs
+  .byte $80, $81, $82, $83                              ; character IDs
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5440,10 +5440,10 @@ SwapCharOBStats:
 ;;  2 bits.  Higher weight = move to back of party.
 
 lut_AilmentWeight:
-  .BYTE $00     ; no ailment (no weight)
-  .BYTE $40     ; dead (highest weight)
-  .BYTE $20     ; stone
-  .BYTE $10     ; poison
+  .byte $00     ; no ailment (no weight)
+  .byte $40     ; dead (highest weight)
+  .byte $20     ; stone
+  .byte $10     ; poison
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6179,18 +6179,18 @@ LoadEnemyStats:
   ;  For whatever reason, the order the data appears in ROM does not
   ;  match the order it appears in RAM.
   @lut_RomRamMapping:
-    .BYTE ENROMSTAT_HPMAX,      en_hp
-    .BYTE ENROMSTAT_HPMAX+1,    en_hp+1
-    .BYTE ENROMSTAT_ABSORB,     en_defense
-    .BYTE ENROMSTAT_MORALE,     en_morale
-    .BYTE ENROMSTAT_EVADE,      en_evade
-    .BYTE ENROMSTAT_DAMAGE,     en_strength
-    .BYTE ENROMSTAT_AI,         en_ai
-    .BYTE ENROMSTAT_EXP,        en_exp
-    .BYTE ENROMSTAT_EXP+1,      en_exp+1
-    .BYTE ENROMSTAT_GP,         en_gp
-    .BYTE ENROMSTAT_GP+1,       en_gp+1
-    .BYTE ENROMSTAT_HPMAX,      en_unknown12     ; <- ?  is this BUGGED?  Why is HP duplicated here?  And why just the low byte?
+    .byte ENROMSTAT_HPMAX,      en_hp
+    .byte ENROMSTAT_HPMAX+1,    en_hp+1
+    .byte ENROMSTAT_ABSORB,     en_defense
+    .byte ENROMSTAT_MORALE,     en_morale
+    .byte ENROMSTAT_EVADE,      en_evade
+    .byte ENROMSTAT_DAMAGE,     en_strength
+    .byte ENROMSTAT_AI,         en_ai
+    .byte ENROMSTAT_EXP,        en_exp
+    .byte ENROMSTAT_EXP+1,      en_exp+1
+    .byte ENROMSTAT_GP,         en_gp
+    .byte ENROMSTAT_GP+1,       en_gp+1
+    .byte ENROMSTAT_HPMAX,      en_unknown12     ; <- ?  is this BUGGED?  Why is HP duplicated here?  And why just the low byte?
 ;          ^                       ^
 ;          |                       |
 ;          |                      dest RAM offset
@@ -6470,10 +6470,10 @@ DrawDamageCombatBox:
     JMP DrawCombatBox_RestoreAXY    ; Draw the combat box and exit
     
     @Data:                          ; data for "###DMG"
-      .BYTE $0C                     ; format number
+      .byte $0C                     ; format number
       .WORD math_basedamage         ; pointer to number to print
-      .BYTE $0F, BTLMSG_DMG         ; "DMG" battle message
-      .BYTE $00                     ; null terminator
+      .byte $0F, BTLMSG_DMG         ; "DMG" battle message
+      .byte $00                     ; null terminator
   
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6531,28 +6531,28 @@ ShowAltBattleMessage:
     
   ; converts ALTBLTMSG_XXX ID to matching BTLMSG_XXX ID.
       @AltMessageLut:               
-      .BYTE BTLMSG_RUNAWAY
-      .BYTE BTLMSG_PARALYZED_B
-      .BYTE BTLMSG_SLEEPING
-      .BYTE BTLMSG_SILENCED
-      .BYTE BTLMSG_INEFFECTIVE
-      .BYTE BTLMSG_CONFUSED
-      .BYTE BTLMSG_SILENCED
-      .BYTE BTLMSG_ASLEEP
-      .BYTE BTLMSG_PARALYZED_A
-      .BYTE BTLMSG_DARKNESS
-      .BYTE BTLMSG_POISONED
-      .BYTE BTLMSG_BROKENTOPIECES
-      .BYTE BTLMSG_TERMINATED
-      .BYTE BTLMSG_CURED
-      .BYTE BTLMSG_BREAKSILENCE
-      .BYTE BTLMSG_WOKEUP
-      .BYTE BTLMSG_CURED
-      .BYTE BTLMSG_SIGHTRECOVERED
-      .BYTE BTLMSG_NEUTRALIZED
-      .BYTE BTLMSG_INEFFECTIVENOW
-      .BYTE BTLMSG_SLAIN
-      .BYTE BTLMSG_NOTHINGHAPPENS
+      .byte BTLMSG_RUNAWAY
+      .byte BTLMSG_PARALYZED_B
+      .byte BTLMSG_SLEEPING
+      .byte BTLMSG_SILENCED
+      .byte BTLMSG_INEFFECTIVE
+      .byte BTLMSG_CONFUSED
+      .byte BTLMSG_SILENCED
+      .byte BTLMSG_ASLEEP
+      .byte BTLMSG_PARALYZED_A
+      .byte BTLMSG_DARKNESS
+      .byte BTLMSG_POISONED
+      .byte BTLMSG_BROKENTOPIECES
+      .byte BTLMSG_TERMINATED
+      .byte BTLMSG_CURED
+      .byte BTLMSG_BREAKSILENCE
+      .byte BTLMSG_WOKEUP
+      .byte BTLMSG_CURED
+      .byte BTLMSG_SIGHTRECOVERED
+      .byte BTLMSG_NEUTRALIZED
+      .byte BTLMSG_INEFFECTIVENOW
+      .byte BTLMSG_SLAIN
+      .byte BTLMSG_NOTHINGHAPPENS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9344,15 +9344,15 @@ MoveDown1Row_UpdateAudio:
 ;;  The sprite coords to draw explosions for enemies in the 9 small formation
 
 lut_ExplosionCoords_9Small:
-  .BYTE $10, $50
-  .BYTE $10, $30
-  .BYTE $10, $70
-  .BYTE $30, $50
-  .BYTE $30, $30
-  .BYTE $30, $70
-  .BYTE $50, $50
-  .BYTE $50, $30
-  .BYTE $50, $70
+  .byte $10, $50
+  .byte $10, $30
+  .byte $10, $70
+  .byte $30, $50
+  .byte $30, $30
+  .byte $30, $70
+  .byte $50, $50
+  .byte $50, $30
+  .byte $50, $70
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9412,10 +9412,10 @@ DrawEnemyEffect_4Large:
 
   ; [$BD7A :: 0x33D8A]
   @lut_ExplosionCoords_4Large:
-    .BYTE $10, $30
-    .BYTE $10, $60
-    .BYTE $50, $30
-    .BYTE $50, $60
+    .byte $10, $30
+    .byte $10, $60
+    .byte $50, $30
+    .byte $50, $60
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9476,12 +9476,12 @@ DrawEnemyEffect_Mix:
     
     ;; [$BDCC :: 0x33DDC]
   @lut_ExplosionCoords_6Small:
-    .BYTE $40, $50
-    .BYTE $40, $30
-    .BYTE $40, $70
-    .BYTE $60, $50
-    .BYTE $60, $30
-    .BYTE $60, $70
+    .byte $40, $50
+    .byte $40, $30
+    .byte $40, $70
+    .byte $60, $50
+    .byte $60, $30
+    .byte $60, $70
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9933,31 +9933,31 @@ data_BattleSoundEffects:
   .WORD @sfx_PlayerAttack
   
 @sfx_Magic:
-  .BYTE $3C, $01, $01
+  .byte $3C, $01, $01
   
-  .BYTE $FF, $FB, $00, $FB, $32,     $00, $00, $1E
+  .byte $FF, $FB, $00, $FB, $32,     $00, $00, $1E
   
 @sfx_EnemyAttack:
-  .BYTE $0F, $01, $04
+  .byte $0F, $01, $04
   
-  .BYTE $00, $00, $00, $00, $01,     $2F, $0E, $03  ; This sound effect starts with a low pitched 'boom'.  That effect actually only plays for
-  .BYTE $00, $00, $00, $00, $01,     $2F, $0A, $06  ;   3 frames here... but due to the fact that the game does not properly update sound effect
-  .BYTE $00, $00, $00, $00, $01,     $2F, $04, $06  ;   playback while it does the "screen shake" effect, it plays longer than indicated.
-  .BYTE $00, $00, $00, $00, $01,     $00, $00, $01
+  .byte $00, $00, $00, $00, $01,     $2F, $0E, $03  ; This sound effect starts with a low pitched 'boom'.  That effect actually only plays for
+  .byte $00, $00, $00, $00, $01,     $2F, $0A, $06  ;   3 frames here... but due to the fact that the game does not properly update sound effect
+  .byte $00, $00, $00, $00, $01,     $2F, $04, $06  ;   playback while it does the "screen shake" effect, it plays longer than indicated.
+  .byte $00, $00, $00, $00, $01,     $00, $00, $01
 
 @sfx_PlayerAttack:
-  .BYTE $0C, $01, $04
+  .byte $0C, $01, $04
   
-  .BYTE $00, $00, $00, $00, $01,     $2F, $07, $03
-  .BYTE $00, $00, $00, $00, $01,     $2F, $0C, $05
-  .BYTE $00, $00, $00, $00, $01,     $2F, $07, $04
-  .BYTE $00, $00, $00, $00, $01,     $00, $00, $01
+  .byte $00, $00, $00, $00, $01,     $2F, $07, $03
+  .byte $00, $00, $00, $00, $01,     $2F, $0C, $05
+  .byte $00, $00, $00, $00, $01,     $2F, $07, $04
+  .byte $00, $00, $00, $00, $01,     $00, $00, $01
   
   
 ; BFFB - unused
-  .BYTE $00
-  .BYTE $00
-  .BYTE $01
-  .BYTE $09
-  .BYTE $07
+  .byte $00
+  .byte $00
+  .byte $01
+  .byte $09
+  .byte $07
 

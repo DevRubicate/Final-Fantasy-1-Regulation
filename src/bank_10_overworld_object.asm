@@ -432,14 +432,14 @@ Draw2x2Sprite:
 
 
 lut_PlayerMapmanSprTbl:
-  .BYTE $09,$40, $0B,$41, $08,$40, $0A,$41   ; facing right, frame 0
-  .BYTE $0D,$40, $0F,$41, $0C,$40, $0E,$41   ; facing right, frame 1
-  .BYTE $08,$00, $0A,$01, $09,$00, $0B,$01   ; facing left,  frame 0
-  .BYTE $0C,$00, $0E,$01, $0D,$00, $0F,$01   ; facing left,  frame 1
-  .BYTE $04,$00, $06,$01, $05,$00, $07,$01   ; facing up,    frame 0
-  .BYTE $04,$00, $07,$41, $05,$00, $06,$41   ; facing up,    frame 1
-  .BYTE $00,$00, $02,$01, $01,$00, $03,$01   ; facing down,  frame 0
-  .BYTE $00,$00, $03,$41, $01,$00, $02,$41   ; facing down,  frame 1
+  .byte $09,$40, $0B,$41, $08,$40, $0A,$41   ; facing right, frame 0
+  .byte $0D,$40, $0F,$41, $0C,$40, $0E,$41   ; facing right, frame 1
+  .byte $08,$00, $0A,$01, $09,$00, $0B,$01   ; facing left,  frame 0
+  .byte $0C,$00, $0E,$01, $0D,$00, $0F,$01   ; facing left,  frame 1
+  .byte $04,$00, $06,$01, $05,$00, $07,$01   ; facing up,    frame 0
+  .byte $04,$00, $07,$41, $05,$00, $06,$41   ; facing up,    frame 1
+  .byte $00,$00, $02,$01, $01,$00, $03,$01   ; facing down,  frame 0
+  .byte $00,$00, $03,$41, $01,$00, $02,$41   ; facing down,  frame 1
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -625,9 +625,9 @@ DrawOWObj_BridgeCanal:
 ;;  to get the right graphics you have to use a tile additive of $10
 
 lut_OWObjectSprTbl:
-  .BYTE $00,$03, $02,$03, $01,$03, $03,$03     ; airship shadow
-  .BYTE $04,$03, $06,$03, $05,$03, $07,$03     ; bridge
-  .BYTE $08,$03, $0A,$03, $09,$03, $0B,$03     ; canal
+  .byte $00,$03, $02,$03, $01,$03, $03,$03     ; airship shadow
+  .byte $04,$03, $06,$03, $05,$03, $07,$03     ; bridge
+  .byte $08,$03, $0A,$03, $09,$03, $0B,$03     ; canal
 
 
 
@@ -687,14 +687,14 @@ Draw2x2Vehicle_Set:
 
 
 lut_VehicleSprTbl:
-  .BYTE $11,$42, $13,$42, $10,$42, $12,$42   ; R 0
-  .BYTE $15,$42, $17,$42, $14,$42, $16,$42   ; R 1
-  .BYTE $10,$02, $12,$02, $11,$02, $13,$02   ; L 0
-  .BYTE $14,$02, $16,$02, $15,$02, $17,$02   ; L 1
-  .BYTE $00,$02, $02,$02, $01,$02, $03,$02   ; U 0
-  .BYTE $04,$02, $06,$02, $05,$02, $07,$02   ; U 1
-  .BYTE $08,$02, $0A,$02, $09,$02, $0B,$02   ; D 0
-  .BYTE $0C,$02, $0E,$02, $0D,$02, $0F,$02   ; D 1
+  .byte $11,$42, $13,$42, $10,$42, $12,$42   ; R 0
+  .byte $15,$42, $17,$42, $14,$42, $16,$42   ; R 1
+  .byte $10,$02, $12,$02, $11,$02, $13,$02   ; L 0
+  .byte $14,$02, $16,$02, $15,$02, $17,$02   ; L 1
+  .byte $00,$02, $02,$02, $01,$02, $03,$02   ; U 0
+  .byte $04,$02, $06,$02, $05,$02, $07,$02   ; U 1
+  .byte $08,$02, $0A,$02, $09,$02, $0B,$02   ; D 0
+  .byte $0C,$02, $0E,$02, $0D,$02, $0F,$02   ; D 1
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -903,7 +903,7 @@ DrawAirshipShadow:
 ;;  built appropriately
 
 lut_VehicleFacingSprTblOffset:
-  .BYTE $00,$00,$10,$00,$30,$00,$10,$00,$20,$00,$10,$00,$30,$00,$10,$00
+  .byte $00,$00,$10,$00,$30,$00,$10,$00,$20,$00,$10,$00,$30,$00,$10,$00
  ;       R   R   L   R   D   R   L   R   U   R   L   R   D   R   L   R   ; direction used
  ;       -   r   l   rl  d   rd  ld rld  u   ru  lu rlu  du rdu ldu rldu ; directions being pressed (lowest bits take priority)
 
@@ -916,11 +916,11 @@ lut_VehicleFacingSprTblOffset:
 ;;     Many of these bytes are unused/padding.
 
 lut_VehicleSprY:
-  .BYTE     $6C
-  .BYTE $6C               ; on foot
-  .BYTE $6F,$6F           ; canoe
-  .BYTE $6F,$6F,$6F,$6F   ; ship
-  .BYTE $4F               ; airship
+  .byte     $6C
+  .byte $6C               ; on foot
+  .byte $6F,$6F           ; canoe
+  .byte $6F,$6F,$6F,$6F   ; ship
+  .byte $4F               ; airship
     ;    ^^  used column
 
 

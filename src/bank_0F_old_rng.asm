@@ -27,4 +27,4 @@ BattleRNG:
     RTS
     
   @Scramble_lut:
-    .INCBIN "bin/0F_FCF1_rngtable.bin"
+    .incbin "bin/0F_FCF1_rngtable.bin"

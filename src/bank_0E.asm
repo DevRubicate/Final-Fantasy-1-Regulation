@@ -23,14 +23,14 @@ BANK_THIS = $0E
 ;;  LUT containing stock shop text  [$8000 :: 0x38010]
 
 lut_ShopStrings:
-  .INCBIN "bin/0E_8000_shopstrings.bin"
+  .incbin "bin/0E_8000_shopstrings.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LUT containing shop data  [$8300 :: 0x38310]
 
 lut_ShopData:
-  .INCBIN "bin/0E_8300_shopdata.bin"
+  .incbin "bin/0E_8300_shopdata.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -73,9 +73,9 @@ TitleScreen_Copyright:
 
 @lut_Copyright:
   .WORD $2328
-  .BYTE $8C,$FF,$81,$89,$88,$87,$FF,$9C,$9A,$9E,$8A,$9B,$8E,$FF,$FF,$00  ; "C 1987 SQUARE  "
+  .byte $8C,$FF,$81,$89,$88,$87,$FF,$9C,$9A,$9E,$8A,$9B,$8E,$FF,$FF,$00  ; "C 1987 SQUARE  "
   .WORD $2348
-  .BYTE $8C,$FF,$81,$89,$89,$80,$FF,$97,$92,$97,$9D,$8E,$97,$8D,$98,$00  ; "C 1990 NINTENDO"
+  .byte $8C,$FF,$81,$89,$89,$80,$FF,$97,$92,$97,$9D,$8E,$97,$8D,$98,$00  ; "C 1990 NINTENDO"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -124,7 +124,7 @@ TitleScreen_Music:
 .align $100
 
 lut_MenuText:
-  .INCBIN "bin/0E_8500_menutext.bin"
+  .incbin "bin/0E_8500_menutext.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -658,19 +658,19 @@ FormatNumber_2Digits:   ; 2 digit numbers are done a bit differently... since th
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lut_DecD6_hi:  .BYTE ^100000,^200000,^300000,^400000,^500000,^600000,^700000,^800000,^900000
-lut_DecD6_md:  .BYTE >100000,>200000,>300000,>400000,>500000,>600000,>700000,>800000,>900000
-lut_DecD6_lo:  .BYTE <100000,<200000,<300000,<400000,<500000,<600000,<700000,<800000,<900000
+lut_DecD6_hi:  .byte ^100000,^200000,^300000,^400000,^500000,^600000,^700000,^800000,^900000
+lut_DecD6_md:  .byte >100000,>200000,>300000,>400000,>500000,>600000,>700000,>800000,>900000
+lut_DecD6_lo:  .byte <100000,<200000,<300000,<400000,<500000,<600000,<700000,<800000,<900000
 
-lut_DecD5_hi:  .BYTE ^10000,^20000,^30000,^40000,^50000,^60000,^70000,^80000,^90000
-lut_DecD5_md:  .BYTE >10000,>20000,>30000,>40000,>50000,>60000,>70000,>80000,>90000
-lut_DecD5_lo:  .BYTE <10000,<20000,<30000,<40000,<50000,<60000,<70000,<80000,<90000
+lut_DecD5_hi:  .byte ^10000,^20000,^30000,^40000,^50000,^60000,^70000,^80000,^90000
+lut_DecD5_md:  .byte >10000,>20000,>30000,>40000,>50000,>60000,>70000,>80000,>90000
+lut_DecD5_lo:  .byte <10000,<20000,<30000,<40000,<50000,<60000,<70000,<80000,<90000
 
-lut_DecD4_md:  .BYTE >1000,>2000,>3000,>4000,>5000,>6000,>7000,>8000,>9000
-lut_DecD4_lo:  .BYTE <1000,<2000,<3000,<4000,<5000,<6000,<7000,<8000,<9000
+lut_DecD4_md:  .byte >1000,>2000,>3000,>4000,>5000,>6000,>7000,>8000,>9000
+lut_DecD4_lo:  .byte <1000,<2000,<3000,<4000,<5000,<6000,<7000,<8000,<9000
 
-lut_DecD3_md:  .BYTE >100,>200,>300,>400,>500,>600,>700,>800,>900
-lut_DecD3_lo:  .BYTE <100,<200,<300,<400,<500,<600,<700,<800,<900
+lut_DecD3_md:  .byte >100,>200,>300,>400,>500,>600,>700,>800,>900
+lut_DecD3_lo:  .byte <100,<200,<300,<400,<500,<600,<700,<800,<900
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1770,7 +1770,7 @@ DoClassChange:
 
 
 lut_MapObjTalkData:
-  .INCBIN "bin/0E_95D5_objectdata.bin"
+  .incbin "bin/0E_95D5_objectdata.bin"
 
 
 
@@ -2352,10 +2352,10 @@ LineupMenu_DrawCharSprites:
 ;;    See EnterLineupTable for description of how this table works
 
 lut_LineupSlots:
-  .BYTE   $00,$00,$98,$38,$98,$38,$00,$00
-  .BYTE   $00,$40,$98,$58,$98,$58,$00,$00
-  .BYTE   $00,$80,$98,$78,$98,$78,$00,$00
-  .BYTE   $00,$C0,$98,$98,$98,$98,$00,$00
+  .byte   $00,$00,$98,$38,$98,$38,$00,$00
+  .byte   $00,$40,$98,$58,$98,$58,$00,$00
+  .byte   $00,$80,$98,$78,$98,$78,$00,$00
+  .byte   $00,$C0,$98,$98,$98,$98,$00,$00
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3296,7 +3296,7 @@ DrawNameInputScreen:
 ;;    offset (in usable characters) to start of each row in the below lut_NameInput
 
 lut_NameInputRowStart:
-  .BYTE  0, 10, 20, 30, 40, 50, 60  ; 10 characters of data per row
+  .byte  0, 10, 20, 30, 40, 50, 60  ; 10 characters of data per row
                                     ;  (which is actually 20 bytes, because they have spaces between them)
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3308,15 +3308,15 @@ lut_NameInputRowStart:
 ;;  with a single call to DrawComplexString.  It's intersperced with $FF (spaces) and $01 (double line breaks)
 
 lut_NameInput:
-  .BYTE $8A, $FF, $8B, $FF, $8C, $FF, $8D, $FF, $8E, $FF, $8F, $FF, $90, $FF, $91, $FF, $92, $FF, $93, $01  ; A - J
-  .BYTE $94, $FF, $95, $FF, $96, $FF, $97, $FF, $98, $FF, $99, $FF, $9A, $FF, $9B, $FF, $9C, $FF, $9D, $01  ; K - T
-  .BYTE $9E, $FF, $9F, $FF, $A0, $FF, $A1, $FF, $A2, $FF, $A3, $FF, $BE, $FF, $BF, $FF, $C0, $FF, $FF, $01  ; U - Z ; , . <space>
-  .BYTE $80, $FF, $81, $FF, $82, $FF, $83, $FF, $84, $FF, $85, $FF, $86, $FF, $87, $FF, $88, $FF, $89, $01  ; 0 - 9
-  .BYTE $A4, $FF, $A5, $FF, $A6, $FF, $A7, $FF, $A8, $FF, $A9, $FF, $AA, $FF, $AB, $FF, $AC, $FF, $AD, $01  ; a - j
-  .BYTE $AE, $FF, $AF, $FF, $B0, $FF, $B1, $FF, $B2, $FF, $B3, $FF, $B4, $FF, $B5, $FF, $B6, $FF, $B7, $01  ; k - t
-  .BYTE $B8, $FF, $B9, $FF, $BA, $FF, $BB, $FF, $BC, $FF, $BD, $FF, $C2, $FF, $C3, $FF, $C4, $FF, $C5, $01  ; u - z - .. ! ?
-  .BYTE $01
-  .BYTE $FF, $FF, $FF, $9C, $8E, $95, $8E, $8C, $9D, $FF, $FF, $97, $8A, $96, $8E, $00                      ;   SELECT  NAME
+  .byte $8A, $FF, $8B, $FF, $8C, $FF, $8D, $FF, $8E, $FF, $8F, $FF, $90, $FF, $91, $FF, $92, $FF, $93, $01  ; A - J
+  .byte $94, $FF, $95, $FF, $96, $FF, $97, $FF, $98, $FF, $99, $FF, $9A, $FF, $9B, $FF, $9C, $FF, $9D, $01  ; K - T
+  .byte $9E, $FF, $9F, $FF, $A0, $FF, $A1, $FF, $A2, $FF, $A3, $FF, $BE, $FF, $BF, $FF, $C0, $FF, $FF, $01  ; U - Z ; , . <space>
+  .byte $80, $FF, $81, $FF, $82, $FF, $83, $FF, $84, $FF, $85, $FF, $86, $FF, $87, $FF, $88, $FF, $89, $01  ; 0 - 9
+  .byte $A4, $FF, $A5, $FF, $A6, $FF, $A7, $FF, $A8, $FF, $A9, $FF, $AA, $FF, $AB, $FF, $AC, $FF, $AD, $01  ; a - j
+  .byte $AE, $FF, $AF, $FF, $B0, $FF, $B1, $FF, $B2, $FF, $B3, $FF, $B4, $FF, $B5, $FF, $B6, $FF, $B7, $01  ; k - t
+  .byte $B8, $FF, $B9, $FF, $BA, $FF, $BB, $FF, $BC, $FF, $BD, $FF, $C2, $FF, $C3, $FF, $C4, $FF, $C5, $01  ; u - z - .. ! ?
+  .byte $01
+  .byte $FF, $FF, $FF, $9C, $8E, $95, $8E, $8C, $9D, $FF, $FF, $97, $8A, $96, $8E, $00                      ;   SELECT  NAME
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3332,10 +3332,10 @@ lut_NameInput:
 ;;  the format of this table.
 
 lut_PtyGenBuf:
-  .BYTE $00,$00,$FF,$FF,$FF,$FF,$07,$0C,$05,$06,$40,$40,$04,$04,$30,$40
-  .BYTE $01,$00,$FF,$FF,$FF,$FF,$15,$0C,$13,$06,$B0,$40,$12,$04,$A0,$40
-  .BYTE $02,$00,$FF,$FF,$FF,$FF,$07,$18,$05,$12,$40,$A0,$04,$10,$30,$A0
-  .BYTE $03,$00,$FF,$FF,$FF,$FF,$15,$18,$13,$12,$B0,$A0,$12,$10,$A0,$A0
+  .byte $00,$00,$FF,$FF,$FF,$FF,$07,$0C,$05,$06,$40,$40,$04,$04,$30,$40
+  .byte $01,$00,$FF,$FF,$FF,$FF,$15,$0C,$13,$06,$B0,$40,$12,$04,$A0,$40
+  .byte $02,$00,$FF,$FF,$FF,$FF,$07,$18,$05,$12,$40,$A0,$04,$10,$30,$A0
+  .byte $03,$00,$FF,$FF,$FF,$FF,$15,$18,$13,$12,$B0,$A0,$12,$10,$A0,$A0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3606,13 +3606,13 @@ TitleScreen_DrawRespondRate:
 ;;  strings directly (hence why each string is labelled)
 
 lut_TitleText_Continue:
-  .BYTE $8C,$98,$97,$9D,$92,$97,$9E,$8E,$00
+  .byte $8C,$98,$97,$9D,$92,$97,$9E,$8E,$00
 
 lut_TitleText_NewGame:
-  .BYTE $97,$8E,$A0,$FF,$90,$8A,$96,$8E,$00
+  .byte $97,$8E,$A0,$FF,$90,$8A,$96,$8E,$00
 
 lut_TitleText_RespondRate:
-  .BYTE $9B,$8E,$9C,$99,$98,$97,$8D,$FF,$9B,$8A,$9D,$8E,$00
+  .byte $9B,$8E,$9C,$99,$98,$97,$8D,$FF,$9B,$8A,$9D,$8E,$00
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3620,8 +3620,8 @@ lut_TitleText_RespondRate:
 ;;  Small LUT for the Y position of the title screen cursor  [$A272 :: 0x3A282]
 
 lut_TitleCursor_Y:
-  .BYTE $58   ; to point at "Continue"
-  .BYTE $80   ; to point at "New Game"
+  .byte $58   ; to point at "Continue"
+  .byte $80   ; to point at "New Game"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5120,10 +5120,10 @@ ShopLoop_CharNames:
     JMP CommonShopLoop_Cmd     ; then run the common loop
 
   @NamesString:
-  .BYTE $10,$00,$01   ; char 0's name, double line break
-  .BYTE $11,$00,$01   ; char 1's, double line break
-  .BYTE $12,$00,$01   ; char 2's, double line break
-  .BYTE $13,$00,$00   ; char 3's, null terminator
+  .byte $10,$00,$01   ; char 0's name, double line break
+  .byte $11,$00,$01   ; char 1's, double line break
+  .byte $12,$00,$01   ; char 2's, double line break
+  .byte $13,$00,$00   ; char 3's, null terminator
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5254,17 +5254,17 @@ CommonShopLoop_List:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_ShopCurs_Cmd:    ; cursor positions for the command box
-  .BYTE $28,$A0
-  .BYTE $28,$B0
-  .BYTE $28,$C0
-  .BYTE $28,$D0
+  .byte $28,$A0
+  .byte $28,$B0
+  .byte $28,$C0
+  .byte $28,$D0
 
 lut_ShopCurs_List:   ; cursor positions for the inventory list box
-  .BYTE $A8,$20
-  .BYTE $A8,$40
-  .BYTE $A8,$60
-  .BYTE $A8,$80
-  .BYTE $A8,$A0
+  .byte $A8,$20
+  .byte $A8,$40
+  .byte $A8,$60
+  .byte $A8,$80
+  .byte $A8,$A0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5902,14 +5902,14 @@ MenuRecoverPartyMP:
 ;;  High bit is the first entry
 
 lut_BIT:
-  .BYTE %10000000
-  .BYTE %01000000
-  .BYTE %00100000
-  .BYTE %00010000
-  .BYTE %00001000
-  .BYTE %00000100
-  .BYTE %00000010
-  .BYTE %00000001
+  .byte %10000000
+  .byte %01000000
+  .byte %00100000
+  .byte %00010000
+  .byte %00001000
+  .byte %00000100
+  .byte %00000010
+  .byte %00000001
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Shop Box LUTs  [$AC40 :: 0x3AC50]
@@ -5930,10 +5930,10 @@ lut_BIT:
 ;;
 
 
-lut_ShopBox_X:    .BYTE $01,$0C,$16,$06,$12
-lut_ShopBox_Y:    .BYTE $04,$02,$02,$12,$18
-lut_ShopBox_Wd:   .BYTE $09,$08,$09,$09,$0A
-lut_ShopBox_Ht:   .BYTE $0C,$04,$16,$0A,$04
+lut_ShopBox_X:    .byte $01,$0C,$16,$06,$12
+lut_ShopBox_Y:    .byte $04,$02,$02,$12,$18
+lut_ShopBox_Wd:   .byte $09,$08,$09,$09,$0A
+lut_ShopBox_Ht:   .byte $0C,$04,$16,$0A,$04
 
 
 
@@ -5948,7 +5948,7 @@ lut_ShopBox_Ht:   .BYTE $0C,$04,$16,$0A,$04
 ;;  just a multiplication by 14
 
 lut_ShopkeepAdditive:
-  .BYTE (0*14),(1*14),(2*14),(3*14),(4*14),(5*14),(6*14),(7*14)
+  .byte (0*14),(1*14),(2*14),(3*14),(4*14),(5*14),(6*14),(7*14)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5960,14 +5960,14 @@ lut_ShopkeepAdditive:
 ;;  for the shop.
 
 lut_ShopAttributes:
-  .BYTE $FF,$FF,$FF,$55,$55,$FF,$FF,$FF
-  .BYTE $FF,$FF,$3F,$05,$05,$CF,$FF,$FF
-  .BYTE $FF,$FF,$33,$00,$00,$CC,$FF,$FF
-  .BYTE $FF,$FF,$33,$00,$00,$CC,$FF,$FF
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .BYTE $FF,$FF,$FF,$FF,$AA,$AA,$AA,$AA
-  .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$55,$55,$FF,$FF,$FF
+  .byte $FF,$FF,$3F,$05,$05,$CF,$FF,$FF
+  .byte $FF,$FF,$33,$00,$00,$CC,$FF,$FF
+  .byte $FF,$FF,$33,$00,$00,$CC,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$AA,$AA,$AA,$AA
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5979,16 +5979,16 @@ lut_ShopAttributes:
 
 lut_ShopkeepImage:
 
- .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- .BYTE $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
- .BYTE $00,$00,$00,$00,$01,$01,$00,$00,$00,$00
- .BYTE $04,$05,$00,$00,$01,$01,$00,$00,$00,$00
- .BYTE $06,$07,$08,$09,$01,$01,$00,$00,$00,$00
- .BYTE $04,$05,$0A,$0B,$01,$01,$00,$00,$00,$00
- .BYTE $06,$07,$0C,$0D,$01,$01,$00,$00,$00,$00
- .BYTE $04,$05,$00,$00,$01,$01,$00,$00,$00,$00
- .BYTE $06,$07,$00,$00,$01,$01,$00,$00,$00,$00
- .BYTE $00,$00,$00,$00,$02,$03,$00,$00,$00,$00
+ .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ .byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+ .byte $00,$00,$00,$00,$01,$01,$00,$00,$00,$00
+ .byte $04,$05,$00,$00,$01,$01,$00,$00,$00,$00
+ .byte $06,$07,$08,$09,$01,$01,$00,$00,$00,$00
+ .byte $04,$05,$0A,$0B,$01,$01,$00,$00,$00,$00
+ .byte $06,$07,$0C,$0D,$01,$01,$00,$00,$00,$00
+ .byte $04,$05,$00,$00,$01,$01,$00,$00,$00,$00
+ .byte $06,$07,$00,$00,$01,$01,$00,$00,$00,$00
+ .byte $00,$00,$00,$00,$02,$03,$00,$00,$00,$00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6020,19 +6020,19 @@ lut_MagicPermisPtr:
 
    ; each class's permission table.  8 bytes (64 spells) per table
 
- @FT: .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- @TH: .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- @BB: .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- @RM: .BYTE $50,$00,$50,$50,$76,$FF,$FF,$FF
- @WM: .BYTE $0F,$0F,$0F,$0F,$0F,$4F,$CF,$FF
- @BM: .BYTE $F0,$F0,$F0,$F0,$F2,$F0,$F6,$FF
+ @FT: .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ @TH: .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ @BB: .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ @RM: .byte $50,$00,$50,$50,$76,$FF,$FF,$FF
+ @WM: .byte $0F,$0F,$0F,$0F,$0F,$4F,$CF,$FF
+ @BM: .byte $F0,$F0,$F0,$F0,$F2,$F0,$F6,$FF
 
- @KN: .BYTE $4F,$0F,$5F,$FF,$FF,$FF,$FF,$FF
- @NJ: .BYTE $F0,$F0,$F0,$F0,$FF,$FF,$FF,$FF
- @MA: .BYTE $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
- @RW: .BYTE $40,$00,$50,$40,$30,$87,$D7,$FF
- @WW: .BYTE $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
- @BW: .BYTE $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+ @KN: .byte $4F,$0F,$5F,$FF,$FF,$FF,$FF,$FF
+ @NJ: .byte $F0,$F0,$F0,$F0,$FF,$FF,$FF,$FF
+ @MA: .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+ @RW: .byte $40,$00,$50,$40,$30,$87,$D7,$FF
+ @WW: .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
+ @BW: .byte $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6045,7 +6045,7 @@ lut_MagicPermisPtr:
 ;;  string) that functionality is removed by having those palettes unchanged.
 
 lutMenuPalettes:
-  .BYTE  $0F,$30,$01,$22,  $0F,$00,$01,$30,  $0F,$00,$01,$30
+  .byte  $0F,$30,$01,$22,  $0F,$00,$01,$30,  $0F,$00,$01,$30
 
 
 
@@ -7349,7 +7349,7 @@ DrawItemTargetCursor:
     JMP DrawCursor       ; draw it, and exit
 
   @lut:
-    .BYTE $10,$48,$80,$B8
+    .byte $10,$48,$80,$B8
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7421,28 +7421,28 @@ DrawItemTargetMenu:
   ;  description for details
 
  @str_charmaxhp:                    ; "/999   /999   /999   /999"
-  .BYTE $7A,$10,$06,$FF,$FF,$FF     ; "/999   "  <- character 0's max HP
-  .BYTE $7A,$11,$06,$FF,$FF,$FF     ; same, but char 1's
-  .BYTE $7A,$12,$06,$FF,$FF,$FF     ; char 2's
-  .BYTE $7A,$13,$06,$00             ; char 3's, then null terminator
+  .byte $7A,$10,$06,$FF,$FF,$FF     ; "/999   "  <- character 0's max HP
+  .byte $7A,$11,$06,$FF,$FF,$FF     ; same, but char 1's
+  .byte $7A,$12,$06,$FF,$FF,$FF     ; char 2's
+  .byte $7A,$13,$06,$00             ; char 3's, then null terminator
 
  @str_charcurhp:                    ; " 999    999    999    999"
-  .BYTE $FF,$10,$05,$FF,$FF,$FF     ; " 999   "  <- character 0's cur HP
-  .BYTE $FF,$11,$05,$FF,$FF,$FF     ; same, but char 1's
-  .BYTE $FF,$12,$05,$FF,$FF,$FF     ; char 2's
-  .BYTE $FF,$13,$05,$00             ; char 3's, then null terminator
+  .byte $FF,$10,$05,$FF,$FF,$FF     ; " 999   "  <- character 0's cur HP
+  .byte $FF,$11,$05,$FF,$FF,$FF     ; same, but char 1's
+  .byte $FF,$12,$05,$FF,$FF,$FF     ; char 2's
+  .byte $FF,$13,$05,$00             ; char 3's, then null terminator
 
  @str_ailmentblurb:
-  .BYTE $10,$02,$FF,$FF,$FF,$FF     ; character 0's OB Ailment blurb  ("HP" when healthy)
-  .BYTE $11,$02,$FF,$FF,$FF,$FF
-  .BYTE $12,$02,$FF,$FF,$FF,$FF
-  .BYTE $13,$02,$00
+  .byte $10,$02,$FF,$FF,$FF,$FF     ; character 0's OB Ailment blurb  ("HP" when healthy)
+  .byte $11,$02,$FF,$FF,$FF,$FF
+  .byte $12,$02,$FF,$FF,$FF,$FF
+  .byte $13,$02,$00
 
  @str_name:
-  .BYTE $10,$00,$FF,$FF,$FF         ; character 0's name, followed by 3 spaces
-  .BYTE $11,$00,$FF,$FF,$FF
-  .BYTE $12,$00,$FF,$FF,$FF
-  .BYTE $13,$00,$00
+  .byte $10,$00,$FF,$FF,$FF         ; character 0's name, followed by 3 spaces
+  .byte $11,$00,$FF,$FF,$FF
+  .byte $12,$00,$FF,$FF,$FF
+  .byte $13,$00,$00
 
 
 
@@ -7524,12 +7524,12 @@ EnterStatusMenu:
     JMP DrawBox                  ; then draw the box and return
 
  @lutStatusBoxes:             ; coords and dims for status menu boxes
-  .BYTE $01,$03,$08,$05       ; box containing character name                (top left)
-  .BYTE $09,$03,$0E,$05       ; box containing battle sprite and class name  (top center)
-  .BYTE $17,$03,$08,$05       ; box containing level                         (top right)
-  .BYTE $04,$08,$17,$07       ; box containing exp                           (center)
-  .BYTE $01,$0F,$0E,$0D       ; box containing base stats (str,int,etc)      (bottom left)
-  .BYTE $0F,$0F,$10,$0D       ; box containing sub stats (dmg,hit,absorb,etc)(bottom right)
+  .byte $01,$03,$08,$05       ; box containing character name                (top left)
+  .byte $09,$03,$0E,$05       ; box containing battle sprite and class name  (top center)
+  .byte $17,$03,$08,$05       ; box containing level                         (top right)
+  .byte $04,$08,$17,$07       ; box containing exp                           (center)
+  .byte $01,$0F,$0E,$0D       ; box containing base stats (str,int,etc)      (bottom left)
+  .byte $0F,$0F,$10,$0D       ; box containing sub stats (dmg,hit,absorb,etc)(bottom right)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8161,21 +8161,21 @@ DrawItemMenuCursor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 lut_MainMenuSubCursor:
-  .BYTE $48,$10,      $98,$10
-  .BYTE $48,$80,      $98,$80
+  .byte $48,$10,      $98,$10
+  .byte $48,$80,      $98,$80
 
 lut_MainMenuCursor_Y:           ; Y coord only... X coord is hardcoded
-  .BYTE   $90,$A0,$B0,$C0,$D0
+  .byte   $90,$A0,$B0,$C0,$D0
 
 lut_ItemMenuCursor:
-  .BYTE   $10,$30,   $58,$30,   $A0,$30
-  .BYTE   $10,$40,   $58,$40,   $A0,$40
-  .BYTE   $10,$50,   $58,$50,   $A0,$50
-  .BYTE   $10,$60,   $58,$60,   $A0,$60
-  .BYTE   $10,$70,   $58,$70,   $A0,$70
-  .BYTE   $10,$80,   $58,$80,   $A0,$80
-  .BYTE   $10,$90,   $58,$90,   $A0,$90
-  .BYTE   $10,$A0,   $58,$A0,   $A0,$A0
+  .byte   $10,$30,   $58,$30,   $A0,$30
+  .byte   $10,$40,   $58,$40,   $A0,$40
+  .byte   $10,$50,   $58,$50,   $A0,$50
+  .byte   $10,$60,   $58,$60,   $A0,$60
+  .byte   $10,$70,   $58,$70,   $A0,$70
+  .byte   $10,$80,   $58,$80,   $A0,$80
+  .byte   $10,$90,   $58,$90,   $A0,$90
+  .byte   $10,$A0,   $58,$A0,   $A0,$A0
 
 
 
@@ -8777,16 +8777,16 @@ DrawMagicMenuMainBox:
 ;;  Item menu boxes are also used for the magic menu.
 
 lut_MainItemBoxes:
-    .BYTE   $02,$02,$08,$08    ; main menu - box holding the orbs
-    .BYTE   $0B,$01,$0A,$0E    ; main menu - Character 0's stat box
-    .BYTE   $15,$01,$0A,$0E    ; main menu - Character 1's stat box
-    .BYTE   $0B,$0F,$0A,$0E    ; main menu - Character 2's stat box
-    .BYTE   $15,$0F,$0A,$0E    ; main menu - Character 3's stat box
-    .BYTE   $01,$0A,$0A,$05    ; main menu - GP box
-    .BYTE   $02,$0F,$08,$0E    ; main menu - option box (containing further menu options)
-    .BYTE   $01,$01,$08,$04    ; item menu - "ITEM" title box
-    .BYTE   $01,$16,$1E,$07    ; item menu - Description box at the bottom
-    .BYTE   $01,$03,$1E,$13    ; item menu - the main box containing item list (but isn't used for
+    .byte   $02,$02,$08,$08    ; main menu - box holding the orbs
+    .byte   $0B,$01,$0A,$0E    ; main menu - Character 0's stat box
+    .byte   $15,$01,$0A,$0E    ; main menu - Character 1's stat box
+    .byte   $0B,$0F,$0A,$0E    ; main menu - Character 2's stat box
+    .byte   $15,$0F,$0A,$0E    ; main menu - Character 3's stat box
+    .byte   $01,$0A,$0A,$05    ; main menu - GP box
+    .byte   $02,$0F,$08,$0E    ; main menu - option box (containing further menu options)
+    .byte   $01,$01,$08,$04    ; item menu - "ITEM" title box
+    .byte   $01,$16,$1E,$07    ; item menu - Description box at the bottom
+    .byte   $01,$03,$1E,$13    ; item menu - the main box containing item list (but isn't used for
                                ;             item menu -- see DrawItemBox.  Is used for magic menu, though)
 
 
@@ -9195,10 +9195,10 @@ lut_ClassEquipBit: ;  FT   TH   BB   RM   WM   BM      KN   NJ   MA   RW   WW   
 ;;
 
 lut_ArmorTypes:
-  .BYTE    0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0        ; 16 pieces of body armor
-  .BYTE    1,1,1,1,1, 1,1,1,1                        ; 9 shields
-  .BYTE    2,2,2,2,2, 2,2                            ; 7 helmets
-  .BYTE    3,3,3,3,3, 3,3,3                          ; 8 gauntlets
+  .byte    0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0        ; 16 pieces of body armor
+  .byte    1,1,1,1,1, 1,1,1,1                        ; 9 shields
+  .byte    2,2,2,2,2, 2,2                            ; 7 helmets
+  .byte    3,3,3,3,3, 3,3,3                          ; 8 gauntlets
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9530,16 +9530,16 @@ DrawEquipMenu:
     JMP DrawBox               ; then draw the box, and return
 
  @lut_EquipBoxes:
-  .BYTE $01,$01,$07,$04   ; title box
-  .BYTE $08,$01,$17,$04   ; top menu box ("Equip   Trade   Drop")
-  .BYTE $01,$05,$08,$04   ; char 0's name box
-  .BYTE $08,$05,$17,$06   ; char 0's equipment box
-  .BYTE $01,$0B,$08,$04   ; ch 1's
-  .BYTE $08,$0B,$17,$06
-  .BYTE $01,$11,$08,$04   ; ch 2's
-  .BYTE $08,$11,$17,$06
-  .BYTE $01,$17,$08,$04   ; ch 3's
-  .BYTE $08,$17,$17,$06
+  .byte $01,$01,$07,$04   ; title box
+  .byte $08,$01,$17,$04   ; top menu box ("Equip   Trade   Drop")
+  .byte $01,$05,$08,$04   ; char 0's name box
+  .byte $08,$05,$17,$06   ; char 0's equipment box
+  .byte $01,$0B,$08,$04   ; ch 1's
+  .byte $08,$0B,$17,$06
+  .byte $01,$11,$08,$04   ; ch 2's
+  .byte $08,$11,$17,$06
+  .byte $01,$17,$08,$04   ; ch 3's
+  .byte $08,$17,$17,$06
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9581,14 +9581,14 @@ DrawEquipMenuCurs:
     JMP DrawCursor               ; draw the cursor, and exit
 
   lut_EquipMenuCurs:
-  .BYTE $40,$38,   $90,$38
-  .BYTE $40,$48,   $90,$48
-  .BYTE $40,$68,   $90,$68
-  .BYTE $40,$78,   $90,$78
-  .BYTE $40,$98,   $90,$98
-  .BYTE $40,$A8,   $90,$A8
-  .BYTE $40,$C8,   $90,$C8
-  .BYTE $40,$D8,   $90,$D8
+  .byte $40,$38,   $90,$38
+  .byte $40,$48,   $90,$48
+  .byte $40,$68,   $90,$68
+  .byte $40,$78,   $90,$78
+  .byte $40,$98,   $90,$98
+  .byte $40,$A8,   $90,$A8
+  .byte $40,$C8,   $90,$C8
+  .byte $40,$D8,   $90,$D8
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9606,7 +9606,7 @@ DrawEquipMenuModeCurs:
     JMP DrawCursor           ; draw the cursor and return
 
   @lut_CursorX:
-     .BYTE $48,  $80,  $B8
+     .byte $48,  $80,  $B8
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9656,9 +9656,9 @@ UpdateEquipMenuModeAttrib:
                             ; all attribute changes made to row 1.
   @lut_Attr:                ; row and column number are 16x16 blocks, zero based.
  ;column:   7 6 - -   9 8 - -   B A - -   D C - -
-    .BYTE %10101111,%11111111,%11111111,%11111111  ; highlight columns 6,7
-    .BYTE %11111111,%10111111,%11101111,%11111111  ; highlight columns 9,A
-    .BYTE %11111111,%11111111,%11111111,%10101111  ; highlight columns C,D
+    .byte %10101111,%11111111,%11111111,%11111111  ; highlight columns 6,7
+    .byte %11111111,%10111111,%11101111,%11111111  ; highlight columns 9,A
+    .byte %11111111,%11111111,%11111111,%10101111  ; highlight columns C,D
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9693,8 +9693,8 @@ SetPPUAddrTo_23aa:
 ;;  completeness sake.
 
 
-    .BYTE           %10111111,%11101111,%11111111
-    .BYTE %11111111,%11111111,%11111111,%10101111
+    .byte           %10111111,%11101111,%11111111
+    .byte %11111111,%11111111,%11111111,%10101111
 
     BIT PPUSTATUS
     LDY #$23
@@ -9703,7 +9703,7 @@ SetPPUAddrTo_23aa:
     RTS
 
 ; this is just more unused junk
-  .BYTE $00,$00,$00
+  .byte $00,$00,$00
 
 
 

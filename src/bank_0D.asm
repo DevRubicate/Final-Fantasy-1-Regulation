@@ -45,9 +45,9 @@ BANK_THIS = $0D
 ;;  F9-FE = Tempo select.  Low bits select which tempo to use
 ;;  FF    = End of song marker -- stops all music playback.
 
- .ALIGN $100
+ .align $100
 lut_ScoreData:
-  .INCBIN "bin/0D_8000_scoredata.bin"
+  .incbin "bin/0D_8000_scoredata.bin"
 
 
 
@@ -128,7 +128,7 @@ MiniGame_ShufflePuzzle:
     JMP @MainLoop       ; and continue looping
 
   @lut_Direction:
-    .BYTE 1, -1, 4, -4
+    .byte 1, -1, 4, -4
 
 
 
@@ -138,9 +138,9 @@ MiniGame_ShufflePuzzle:
 ;;
 ;;    Must be on page boundary
 
-  .ALIGN  $100
+  .align  $100
 lut_MinigameCHR:
-  .INCBIN "bin/0D_9E00_puzzle_1bpp.chr"
+  .incbin "bin/0D_9E00_puzzle_1bpp.chr"
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -148,7 +148,7 @@ lut_MinigameCHR:
 ;;
 ;;  data for the "The End" graphic.  See 'DrawFancyTheEndGraphic' below for details.
 data_TheEndDrawData:
-  .INCBIN "bin/0D_A000_theenddrawdata.bin"
+  .incbin "bin/0D_A000_theenddrawdata.bin"
 
 
   
@@ -495,11 +495,11 @@ DrawFancyTheEndGraphic:
     ;  one for each row.  If that byte is 1, filling is allowed.  If 0, no filling allowed.
     ;
   @lut_FillGradient:
-  .BYTE 0, 0, 1, 0,  1, 0, 1, 0,     1, 0, 0, 1,  0, 0, 1, 0
-  .BYTE 0, 1, 0, 1,  0, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
-  .BYTE 1, 1, 1, 1,  1, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
-  .BYTE 1, 1, 1, 1,  1, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
-  .BYTE 1, 1, 0, 1,  0, 1, 0, 1,     0, 1, 0, 1,  0, 1, 0, 1
+  .byte 0, 0, 1, 0,  1, 0, 1, 0,     1, 0, 0, 1,  0, 0, 1, 0
+  .byte 0, 1, 0, 1,  0, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
+  .byte 1, 1, 1, 1,  1, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
+  .byte 1, 1, 1, 1,  1, 1, 1, 1,     1, 1, 1, 1,  1, 1, 1, 1
+  .byte 1, 1, 0, 1,  0, 1, 0, 1,     0, 1, 0, 1,  0, 1, 0, 1
 
 
   
@@ -606,9 +606,9 @@ TheEnd_MovePos:
 ;;  already on the attribute table
 
 lut_TheEnd_AttrTable:
-  .BYTE             $0F, $0F, $CF,   $77, $55, $55
-  .BYTE $55, $FF,   $00, $00, $CC,   $77, $55, $55
-  .BYTE $55, $FF,   $F0, $F0, $FC
+  .byte             $0F, $0F, $CF,   $77, $55, $55
+  .byte $55, $FF,   $00, $00, $CC,   $77, $55, $55
+  .byte $55, $FF,   $F0, $F0, $FC
   ;                 ^ Interesting ^
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -672,7 +672,7 @@ lut_TheEndPixelPosition_Yhi = lut_TheEndPixelPosition_Ylo + $50 ; $A6D1
 lut_TheEndPixelPosition_X   = lut_TheEndPixelPosition_Yhi + $50 ; $A721
 lut_TheEndPixelMasks        = lut_TheEndPixelPosition_X   + $50 ; $A771
 
-  .INCBIN "bin/0D_A681_theendluts.bin"
+  .incbin "bin/0D_A681_theendluts.bin"
 
 
 
@@ -777,7 +777,7 @@ MiniGame_VertSlide:
 ;;  at a time.  Each string in this text cooresponds to one page.
 
 lut_StoryText:
-  .INCBIN "bin/0D_A800_storytext.bin"
+  .incbin "bin/0D_A800_storytext.bin"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -786,8 +786,8 @@ lut_StoryText:
 ;;
 ;;    These are the "last page" numbers for bridge and ending scene text.
 
-lut_Bridge_LastPage:  .BYTE  $04  ; bridge scene uses story pages $00-$03
-lut_Ending_LastPage:  .BYTE  $19  ; ending scene uses story pages $04-$18
+lut_Bridge_LastPage:  .byte  $04  ; bridge scene uses story pages $00-$03
+lut_Ending_LastPage:  .byte  $19  ; ending scene uses story pages $04-$18
 
 
 
@@ -1059,8 +1059,8 @@ MiniGameLoop:
 ;;  every frame given the desired direction.  Directions are range 0-3 where
 ;;  0=right, 1=left, 2=down, 3=up
 
-lut_MGDirection_Y:   .BYTE  0,  0,   1,  -1
-lut_MGDirection_X:   .BYTE  1,  -1,  0,  0
+lut_MGDirection_Y:   .byte  0,  0,   1,  -1
+lut_MGDirection_X:   .byte  1,  -1,  0,  0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1180,7 +1180,7 @@ ClearOAM_BankD:
 ;;  These pieces are further scrambled after loading
 
 lut_PuzzleStart:
-  .BYTE $F, $4, $C, $8, $1, $6, $D, $9, $0, $5, $B, $3, $7, $E, $2, $A
+  .byte $F, $4, $C, $8, $1, $6, $D, $9, $0, $5, $B, $3, $7, $E, $2, $A
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1358,10 +1358,10 @@ Music_NewSong:
 
  ;; LUT used to convert from primer index to chan index
   @lut_PrimerToChan:
-  .BYTE CHAN_SQ1,  CHAN_SQ1
-  .BYTE CHAN_SQ2,  CHAN_SQ2
-  .BYTE CHAN_TRI,  CHAN_TRI
-  .BYTE CHAN_STOP, CHAN_STOP  ; unused -- probably was supposed to be noise
+  .byte CHAN_SQ1,  CHAN_SQ1
+  .byte CHAN_SQ2,  CHAN_SQ2
+  .byte CHAN_TRI,  CHAN_TRI
+  .byte CHAN_STOP, CHAN_STOP  ; unused -- probably was supposed to be noise
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1972,12 +1972,12 @@ Music_SetEnvPattern:
 ;;  are useless
 
 lut_OctaveOffset:
-  .BYTE 0*12*2     ; 12 notes per octave * 2 bytes of freq per note
-  .BYTE 1*12*2
-  .BYTE 2*12*2
-  .BYTE 3*12*2
-  .BYTE 4*12*2     ; last two entries are useless (note freq table isn't large enough)
-  .BYTE 5*12*2
+  .byte 0*12*2     ; 12 notes per octave * 2 bytes of freq per note
+  .byte 1*12*2
+  .byte 2*12*2
+  .byte 3*12*2
+  .byte 4*12*2     ; last two entries are useless (note freq table isn't large enough)
+  .byte 5*12*2
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2003,12 +2003,12 @@ lut_NoteFreqs:
 ;;  code (the low 4 bits) into a usable duration in frames.
 
 lut_NoteLengths:
-  .BYTE $C0,$60,$30,$18,$0C,$90,$48,$24,$C0,$60,$30,$18,$0C,$90,$48,$24
-  .BYTE $78,$3C,$1E,$0F,$07,$5A,$28,$14,$78,$3C,$1E,$0F,$07,$5A,$28,$14
-  .BYTE $90,$60,$48,$30,$24,$18,$12,$0C,$09,$06,$03,$03,$04,$10,$08,$08
-  .BYTE $78,$50,$3C,$28,$1E,$14,$0F,$0A,$07,$05,$03,$02,$0E,$0D,$07,$06
-  .BYTE $6C,$48,$36,$24,$1B,$12,$0E,$09,$07,$04,$03,$03,$0E,$60,$40,$30
-  .BYTE $60,$40,$30,$20,$18,$10,$0C,$08,$06,$04,$02,$02,$0B,$0A,$06,$05
+  .byte $C0,$60,$30,$18,$0C,$90,$48,$24,$C0,$60,$30,$18,$0C,$90,$48,$24
+  .byte $78,$3C,$1E,$0F,$07,$5A,$28,$14,$78,$3C,$1E,$0F,$07,$5A,$28,$14
+  .byte $90,$60,$48,$30,$24,$18,$12,$0C,$09,$06,$03,$03,$04,$10,$08,$08
+  .byte $78,$50,$3C,$28,$1E,$14,$0F,$0A,$07,$05,$03,$02,$0E,$0D,$07,$06
+  .byte $6C,$48,$36,$24,$1B,$12,$0E,$09,$07,$04,$03,$03,$0E,$60,$40,$30
+  .byte $60,$40,$30,$20,$18,$10,$0C,$08,$06,$04,$02,$02,$0B,$0A,$06,$05
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2023,7 +2023,7 @@ lut_NoteLengths:
 ;;  the addition of the existing 'fraction' will never cause an overflow.
 
 lut_EnvSpeeds:
-  .BYTE $80,$60,$40,$30,$20,$18,$10,$0C,$08,$06,$04,$03,$02,$01,$00,$00
+  .byte $80,$60,$40,$30,$20,$18,$10,$0C,$08,$06,$04,$03,$02,$01,$00,$00
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2040,75 +2040,75 @@ lut_EnvSpeeds:
 ;;  control.
 
 lut_EnvPatterns:
-  .BYTE  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E0
-  .BYTE  $07,$07,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00,$00 ;  gradual decay from F
+  .byte  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E0
+  .byte  $07,$07,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00,$00 ;  gradual decay from F
 
-  .BYTE  $0C,$0C,$0C,$0B,$0B,$0B,$0A,$0A,$0A,$09,$09,$09,$08,$08,$08,$07 ; pattern $E1
-  .BYTE  $07,$06,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00,$00 ;  gradual decay from C
+  .byte  $0C,$0C,$0C,$0B,$0B,$0B,$0A,$0A,$0A,$09,$09,$09,$08,$08,$08,$07 ; pattern $E1
+  .byte  $07,$06,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01,$00,$00 ;  gradual decay from C
 
-  .BYTE  $08,$08,$08,$08,$07,$07,$07,$07,$06,$06,$06,$06,$05,$05,$05,$05 ; pattern $E2
-  .BYTE  $04,$04,$04,$04,$03,$03,$03,$03,$02,$02,$02,$02,$01,$01,$00,$00 ;  gradual decay from 8
+  .byte  $08,$08,$08,$08,$07,$07,$07,$07,$06,$06,$06,$06,$05,$05,$05,$05 ; pattern $E2
+  .byte  $04,$04,$04,$04,$03,$03,$03,$03,$02,$02,$02,$02,$01,$01,$00,$00 ;  gradual decay from 8
 
-  .BYTE  $04,$04,$04,$04,$04,$04,$04,$04,$03,$03,$03,$03,$03,$03,$03,$03 ; pattern $E3
-  .BYTE  $03,$03,$03,$03,$03,$03,$03,$02,$02,$02,$02,$02,$02,$00,$00,$00 ;  gradual decay from 4
+  .byte  $04,$04,$04,$04,$04,$04,$04,$04,$03,$03,$03,$03,$03,$03,$03,$03 ; pattern $E3
+  .byte  $03,$03,$03,$03,$03,$03,$03,$02,$02,$02,$02,$02,$02,$00,$00,$00 ;  gradual decay from 4
 
-  .BYTE  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E4
-  .BYTE  $08,$08,$09,$09,$0A,$0A,$0B,$0B,$0C,$0C,$0D,$0D,$0E,$0E,$0F,$0F ;  fade from F->8->F
+  .byte  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E4
+  .byte  $08,$08,$09,$09,$0A,$0A,$0B,$0B,$0C,$0C,$0D,$0D,$0E,$0E,$0F,$0F ;  fade from F->8->F
 
-  .BYTE  $0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08,$07,$07,$06,$06,$05,$05 ; pattern $E5
-  .BYTE  $04,$04,$05,$05,$06,$06,$07,$07,$08,$08,$09,$09,$0A,$0A,$0B,$0B ;  fade from C->4->B
+  .byte  $0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08,$07,$07,$06,$06,$05,$05 ; pattern $E5
+  .byte  $04,$04,$05,$05,$06,$06,$07,$07,$08,$08,$09,$09,$0A,$0A,$0B,$0B ;  fade from C->4->B
 
-  .BYTE  $08,$08,$07,$07,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01 ; pattern $E6
-  .BYTE  $01,$01,$02,$02,$03,$03,$04,$04,$05,$05,$06,$06,$07,$07,$08,$08 ;  fade from 8->1->8
+  .byte  $08,$08,$07,$07,$06,$06,$05,$05,$04,$04,$03,$03,$02,$02,$01,$01 ; pattern $E6
+  .byte  $01,$01,$02,$02,$03,$03,$04,$04,$05,$05,$06,$06,$07,$07,$08,$08 ;  fade from 8->1->8
 
-  .BYTE  $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$0E,$0E,$0C,$0C,$0B,$0B,$0A,$0A ; pattern $E7
-  .BYTE  $09,$09,$08,$08,$07,$07,$06,$06,$05,$05,$04,$04,$04,$03,$03,$03 ;  hold, then decay from F
+  .byte  $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F,$0E,$0E,$0C,$0C,$0B,$0B,$0A,$0A ; pattern $E7
+  .byte  $09,$09,$08,$08,$07,$07,$06,$06,$05,$05,$04,$04,$04,$03,$03,$03 ;  hold, then decay from F
 
-  .BYTE  $0C,$0C,$0C,$0C,$0C,$0C,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E8
-  .BYTE  $06,$06,$05,$05,$04,$04,$04,$03,$03,$03,$02,$02,$02,$02,$02,$02 ;  hold, then decay from C
+  .byte  $0C,$0C,$0C,$0C,$0C,$0C,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ; pattern $E8
+  .byte  $06,$06,$05,$05,$04,$04,$04,$03,$03,$03,$02,$02,$02,$02,$02,$02 ;  hold, then decay from C
 
-  .BYTE  $04,$04,$04,$04,$04,$04,$04,$04,$04,$03,$03,$03,$03,$03,$03,$03 ; pattern $E9
-  .BYTE  $03,$03,$02,$02,$02,$02,$02,$02,$02,$02,$01,$01,$01,$01,$01,$01 ;  hold, then decay from 4
+  .byte  $04,$04,$04,$04,$04,$04,$04,$04,$04,$03,$03,$03,$03,$03,$03,$03 ; pattern $E9
+  .byte  $03,$03,$02,$02,$02,$02,$02,$02,$02,$02,$01,$01,$01,$01,$01,$01 ;  hold, then decay from 4
 
-  .BYTE  $08,$08,$09,$09,$0A,$0A,$0B,$0B,$0C,$0C,$0D,$0D,$0E,$0E,$0F,$0F ; pattern $EA
-  .BYTE  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ;  fade from 8->F->8
+  .byte  $08,$08,$09,$09,$0A,$0A,$0B,$0B,$0C,$0C,$0D,$0D,$0E,$0E,$0F,$0F ; pattern $EA
+  .byte  $0F,$0F,$0E,$0E,$0D,$0D,$0C,$0C,$0B,$0B,$0A,$0A,$09,$09,$08,$08 ;  fade from 8->F->8
 
-  .BYTE  $04,$04,$05,$05,$06,$06,$07,$07,$08,$08,$09,$09,$0A,$0A,$0B,$0B ; pattern $EB
-  .BYTE  $0C,$0B,$0A,$0A,$09,$09,$08,$08,$07,$07,$06,$06,$05,$05,$04,$04 ;  fade from 4->C->4
+  .byte  $04,$04,$05,$05,$06,$06,$07,$07,$08,$08,$09,$09,$0A,$0A,$0B,$0B ; pattern $EB
+  .byte  $0C,$0B,$0A,$0A,$09,$09,$08,$08,$07,$07,$06,$06,$05,$05,$04,$04 ;  fade from 4->C->4
 
-  .BYTE  $0F,$0E,$0D,$0C,$0B,$0A,$09,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EC
-  .BYTE  $07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05,$04,$03,$02,$01,$00 ;  decay from F with tremolo
+  .byte  $0F,$0E,$0D,$0C,$0B,$0A,$09,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EC
+  .byte  $07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05,$04,$03,$02,$01,$00 ;  decay from F with tremolo
 
-  .BYTE  $0C,$0C,$0B,$0B,$0A,$0A,$09,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $ED
-  .BYTE  $07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05,$04,$03,$02,$01,$00 ;  decay from C with tremolo
+  .byte  $0C,$0C,$0B,$0B,$0A,$0A,$09,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $ED
+  .byte  $07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05,$04,$03,$02,$01,$00 ;  decay from C with tremolo
 
-  .BYTE  $0C,$0B,$0A,$09,$08,$07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05 ; pattern $EE
-  .BYTE  $04,$05,$06,$07,$08,$07,$06,$05,$04,$05,$06,$07,$08,$09,$0A,$0B ;  fade C->4->B with tremolo
+  .byte  $0C,$0B,$0A,$09,$08,$07,$06,$05,$04,$05,$06,$07,$08,$07,$06,$05 ; pattern $EE
+  .byte  $04,$05,$06,$07,$08,$07,$06,$05,$04,$05,$06,$07,$08,$09,$0A,$0B ;  fade C->4->B with tremolo
 
-  .BYTE  $01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EF
-  .BYTE  $07,$06,$05,$04,$05,$06,$07,$08,$09,$08,$07,$06,$05,$04,$03,$01 ;  fade in then out with tremolo
+  .byte  $01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EF
+  .byte  $07,$06,$05,$04,$05,$06,$07,$08,$09,$08,$07,$06,$05,$04,$03,$01 ;  fade in then out with tremolo
 
 ; unused (that $60 might be an unused RTS -- but who cares)
-  ;.BYTE $60,$00
+  ;.byte $60,$00
 
 ; Unused space (almost looks like it might be attributes)
 
-;  .BYTE $00, $00, $00, $1E
-;  .BYTE $1E, $3E, $FE, $FE
-;  .BYTE $FC, $F8, $00, $00
-;  .BYTE $00, $00, $00, $00
-;  .BYTE $00, $00, $00, $00
-;  .BYTE $00, $00, $00, $00
-;  .BYTE $00, $00, $00
+;  .byte $00, $00, $00, $1E
+;  .byte $1E, $3E, $FE, $FE
+;  .byte $FC, $F8, $00, $00
+;  .byte $00, $00, $00, $00
+;  .byte $00, $00, $00, $00
+;  .byte $00, $00, $00, $00
+;  .byte $00, $00, $00
 
   ; $A779 -- unused
-  ;.BYTE $1F, $3F, $7F, $7F, $7C, $78, $78
+  ;.byte $1F, $3F, $7F, $7F, $7C, $78, $78
 
 ;.align $B000
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;  unknown - unused  [$B5C9 :: 0x375D9]
-  .INCBIN "bin/0D_B5C9_unknown.bin"
+  .incbin "bin/0D_B5C9_unknown.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2863,14 +2863,14 @@ Story_EndFrame:
 
 
 lut_StorySecondaryAttrib:
-  .BYTE $55,$55,$55,$55,$55,$55,$55,$55
-  .BYTE $55,$00,$00,$00,$00,$44,$55,$55
-  .BYTE $55,$00,$00,$00,$00,$44,$55,$55
-  .BYTE $55,$00,$00,$00,$00,$44,$55,$55
+  .byte $55,$55,$55,$55,$55,$55,$55,$55
+  .byte $55,$00,$00,$00,$00,$44,$55,$55
+  .byte $55,$00,$00,$00,$00,$44,$55,$55
+  .byte $55,$00,$00,$00,$00,$44,$55,$55
 
 
  ; unused
-  .BYTE 0
+  .byte 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2957,7 +2957,7 @@ MiniGame_HorzSlide:
 
  ;; unknown / unused
 
-  .BYTE $09,$03,$02,$05,$0F,$3C,$F3
+  .byte $09,$03,$02,$05,$0F,$3C,$F3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2970,11 +2970,11 @@ MiniGame_HorzSlide:
 
   .ALIGN  $100
 lut_CreditsText:
-  .INCBIN "bin/0D_BB00_credittext.bin"
+  .incbin "bin/0D_BB00_credittext.bin"
 
 
  ; $BB8E -- item prices start at BC00, so there are some bytes part of the credit text here
-  .INCBIN "bin/0D_BB8E_unknown.bin"
+  .incbin "bin/0D_BB8E_unknown.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3198,7 +3198,7 @@ MiniGame_AnimateSlide:
 
 
  ;; unused
- .BYTE 0,0,0,0,0
+ .byte 0,0,0,0,0
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3206,7 +3206,7 @@ MiniGame_AnimateSlide:
 ;;  Bridge Scene palette [$BF00 :: 0x37F10]
 
 lut_BridgeBGPal:
-  .BYTE $0F,$00,$02,$30,  $0F,$3B,$11,$24,  $0F,$3B,$0B,$2B,  $0F,$00,$0F,$30
+  .byte $0F,$00,$02,$30,  $0F,$3B,$11,$24,  $0F,$3B,$0B,$2B,  $0F,$00,$0F,$30
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3214,7 +3214,7 @@ lut_BridgeBGPal:
 ;;  Ending Scene (epilogue) palette  [$BF10 :: 0x37F20]
 
 lut_EndingBGPal:
-  .BYTE $0F,$00,$01,$30,  $0F,$32,$21,$30,  $0F,$2C,$2A,$1A,  $0F,$00,$0F,$30
+  .byte $0F,$00,$01,$30,  $0F,$32,$21,$30,  $0F,$2C,$2A,$1A,  $0F,$00,$0F,$30
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3225,4 +3225,4 @@ lut_EndingBGPal:
 ;;  (first screen visible when starting the game)
 
 lut_IntroStoryText:
-  .INCBIN "bin/0D_BF20_introtext.bin"
+  .incbin "bin/0D_BF20_introtext.bin"

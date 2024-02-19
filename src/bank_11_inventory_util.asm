@@ -66,16 +66,16 @@ FindEmptyArmorSlot:
 ;;  with a zero based index
 
 lut_WeaponSlots:
-  .BYTE <ch_weapons+$00, <ch_weapons+$01, <ch_weapons+$02, <ch_weapons+$03
-  .BYTE <ch_weapons+$40, <ch_weapons+$41, <ch_weapons+$42, <ch_weapons+$43
-  .BYTE <ch_weapons+$80, <ch_weapons+$81, <ch_weapons+$82, <ch_weapons+$83
-  .BYTE <ch_weapons+$C0, <ch_weapons+$C1, <ch_weapons+$C2, <ch_weapons+$C3
+  .byte <ch_weapons+$00, <ch_weapons+$01, <ch_weapons+$02, <ch_weapons+$03
+  .byte <ch_weapons+$40, <ch_weapons+$41, <ch_weapons+$42, <ch_weapons+$43
+  .byte <ch_weapons+$80, <ch_weapons+$81, <ch_weapons+$82, <ch_weapons+$83
+  .byte <ch_weapons+$C0, <ch_weapons+$C1, <ch_weapons+$C2, <ch_weapons+$C3
 
 lut_ArmorSlots:
-  .BYTE <ch_armor+$00, <ch_armor+$01, <ch_armor+$02, <ch_armor+$03
-  .BYTE <ch_armor+$40, <ch_armor+$41, <ch_armor+$42, <ch_armor+$43
-  .BYTE <ch_armor+$80, <ch_armor+$81, <ch_armor+$82, <ch_armor+$83
-  .BYTE <ch_armor+$C0, <ch_armor+$C1, <ch_armor+$C2, <ch_armor+$C3
+  .byte <ch_armor+$00, <ch_armor+$01, <ch_armor+$02, <ch_armor+$03
+  .byte <ch_armor+$40, <ch_armor+$41, <ch_armor+$42, <ch_armor+$43
+  .byte <ch_armor+$80, <ch_armor+$81, <ch_armor+$82, <ch_armor+$83
+  .byte <ch_armor+$C0, <ch_armor+$C1, <ch_armor+$C2, <ch_armor+$C3
 
 
 
