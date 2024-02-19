@@ -300,10 +300,6 @@ WriteAilment_PrepMagicPtr:
     
     RTS
     
-;;;;  [$9A00 :: 0x2DA10]
-PrepBattleVarsAndEnterBattle_L:     JMP PrepBattleVarsAndEnterBattle
-BattleOver_ProcessResult_L:         JMP BattleOver_ProcessResult
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  GetJoyInput  [$9A06 :: 0x2DA16]

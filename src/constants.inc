@@ -100,7 +100,6 @@ BANK_ORBCHR       = $0D
 BANK_BTLCHR       = $09
 BANK_BACKDROPPAL  = $00
 
-BANK_ITEMPRICES   = $0D
 BANK_MINIGAME     = $0D
 BANK_BRIDGESCENE  = $0D
 BANK_ENDINGSCENE  = $0D
@@ -461,8 +460,6 @@ lut_BatSprCHR      = $9000   ; BANK_BTLCHR -- page
 lut_BatObjCHR      = $A800   ; BANK_BTLCHR -- page
 
 lut_BackdropPal    = $B200   ; BANK_BACKDROPPAL
-
-lut_ItemPrices     = $BC00   ; BANK_ITEMPRICES - page
 
 lut_Weapons        = $8000   ; BANK_EQUIPSTATS - page
 lut_Armor          = $8140   ; BANK_EQUIPSTATS

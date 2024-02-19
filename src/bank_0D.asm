@@ -11,12 +11,6 @@
 
 BANK_THIS = $0D
 
-;;
-;; This bank seems to have a lot of unused space
-;;
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LUT for score data  [$8000 :: 0x34010]
@@ -2088,35 +2082,10 @@ lut_EnvPatterns:
   .byte  $01,$02,$03,$04,$05,$06,$07,$08,$09,$0A,$0B,$0C,$0B,$0A,$09,$08 ; pattern $EF
   .byte  $07,$06,$05,$04,$05,$06,$07,$08,$09,$08,$07,$06,$05,$04,$03,$01 ;  fade in then out with tremolo
 
-; unused (that $60 might be an unused RTS -- but who cares)
-  ;.byte $60,$00
-
-; Unused space (almost looks like it might be attributes)
-
-;  .byte $00, $00, $00, $1E
-;  .byte $1E, $3E, $FE, $FE
-;  .byte $FC, $F8, $00, $00
-;  .byte $00, $00, $00, $00
-;  .byte $00, $00, $00, $00
-;  .byte $00, $00, $00, $00
-;  .byte $00, $00, $00
-
-  ; $A779 -- unused
-  ;.byte $1F, $3F, $7F, $7F, $7C, $78, $78
-
-;.align $B000
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;  unknown - unused  [$B5C9 :: 0x375D9]
   .incbin "bin/0D_B5C9_unknown.bin"
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  EnterBridgeScene  [$B800 :: 0x37810]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterBridgeScene_L:              JMP EnterBridgeScene
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2973,8 +2942,6 @@ lut_CreditsText:
   .incbin "bin/0D_BB00_credittext.bin"
 
 
- ; $BB8E -- item prices start at BC00, so there are some bytes part of the credit text here
-  .incbin "bin/0D_BB8E_unknown.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
