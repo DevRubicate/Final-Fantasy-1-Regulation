@@ -1,9 +1,5 @@
 .segment "BANK_11"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
 .export FindEmptyWeaponSlot, FindEmptyArmorSlot, OpenTreasureChest, AddGPToParty, LoadPrice

@@ -1,9 +1,5 @@
 .segment "BANK_0B"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
 .export data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, lut_BattleFormations, data_BattleMessages

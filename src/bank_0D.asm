@@ -1,9 +1,5 @@
 .segment "BANK_0D"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
 .export EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte

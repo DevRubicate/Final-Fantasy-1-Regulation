@@ -1,9 +1,5 @@
 .segment "BANK_0C"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
 .import GameStart

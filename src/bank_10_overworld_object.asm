@@ -1,9 +1,5 @@
 .segment "BANK_10"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
 .include "src/global-import.inc"
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, SetOWScroll_PPUOn, ClearOAM, CallMusicPlay_NoSwap

@@ -1,9 +1,6 @@
 .segment "BANK_0F"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
+.include "src/global-import.inc"
 
 .export BattleRNG
 

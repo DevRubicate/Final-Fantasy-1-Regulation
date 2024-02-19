@@ -1,9 +1,6 @@
 .segment "BANK_09"
 
-.include "src/registers.inc"
-.include "src/constants.inc"
-.include "src/macros.inc"
-.include "src/ram-definitions.inc"
+.include "src/global-import.inc"
 
 .export EnterMinimap
 .import CallMinimapDecompress, UpdateJoy, CallMusicPlay, DrawPalette, WaitForVBlank

@@ -1,8 +1,6 @@
 .segment "BANK_01"
 
-.include "src/registers.inc"
-.include "src/ram-definitions.inc"
-.include "src/constants.inc"
+.include "src/global-import.inc"
 
 .export MinimapDecompress
 
