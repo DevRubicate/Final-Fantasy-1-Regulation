@@ -142,7 +142,7 @@ lut_MenuText:
 PrintCharStat:
     CMP #$03      ; is ID == $03?
     BNE :+
-      JMP @Level  ; if yes, print Level
+      JUMP @Level  ; if yes, print Level
 :   CMP #$04
     BEQ @Exp      ; if $04, print Exp
     CMP #$05
@@ -174,7 +174,7 @@ PrintCharStat:
       TAX
       LDA ch0_mp-$20, X ; get MP  (need to subtract $20 because index is +$20)
       STA tmp          ;  and print it as 1 Digit
-      JMP PrintNumber_1Digit
+      JUMP PrintNumber_1Digit
 
 
 @CodeAbove3B:
@@ -191,7 +191,7 @@ PrintCharStat:
       STA tmp             ; write it as low byte
       LDA #0              ; set mid byte to 0 (need a mid byte for 3 Digit printing)
       STA tmp+1           ;  and print as 3 digits
-      JMP PrintNumber_3Digit
+      JUMP PrintNumber_3Digit
 
     ;;; all other codes default to Exp to Next level
 @ExpToNext:
@@ -202,39 +202,39 @@ PrintCharStat:
       STA tmp+1
       LDA #0                 ; high byte is 0 (5 digit numbers need a high byte)
       STA tmp+2              ; print it as 5 digits
-      JMP PrintNumber_5Digit
+      JUMP PrintNumber_5Digit
 
 @Exp:
     LDA #<ch_exp
-    JMP @Stat6Digit
+    JUMP @Stat6Digit
 
 @CurHP:
     LDA #<ch_curhp
-    JMP @Stat3Digit
+    JUMP @Stat3Digit
 
 @MaxHP:
     LDA #<ch_maxhp
-    JMP @Stat3Digit
+    JUMP @Stat3Digit
 
 @Str:
     LDA #<ch_str
-    JMP @Stat2Digit
+    JUMP @Stat2Digit
 
 @Agil:
     LDA #<ch_agil
-    JMP @Stat2Digit
+    JUMP @Stat2Digit
 
 @Int:
     LDA #<ch_int
-    JMP @Stat2Digit
+    JUMP @Stat2Digit
 
 @Vit:
     LDA #<ch_vit
-    JMP @Stat2Digit
+    JUMP @Stat2Digit
 
 @Luck:
     LDA #<ch_luck
-    JMP @Stat2Digit
+    JUMP @Stat2Digit
 
 @Stat1Digit:       ; same as below routines -- but 1 byte, 1 digit
     CLC            ;  I do not believe this 1Digit code is ever called
@@ -242,7 +242,7 @@ PrintCharStat:
     TAX
     LDA ch_stats, X
     STA tmp
-    JMP PrintNumber_1Digit
+    JUMP PrintNumber_1Digit
 
 @Stat2Digit:       ; same as below routines -- but 1 byte, 2 digits
     CLC
@@ -250,7 +250,7 @@ PrintCharStat:
     TAX
     LDA ch_stats, X
     STA tmp
-    JMP PrintNumber_2Digit
+    JUMP PrintNumber_2Digit
 
 @Stat3Digit:
     CLC
@@ -260,7 +260,7 @@ PrintCharStat:
     STA tmp
     LDA ch_stats+1, X  ; read a 2-byte number
     STA tmp+1          ; and print it as 3-digits
-    JMP PrintNumber_3Digit
+    JUMP PrintNumber_3Digit
 
 @Stat6Digit:
     CLC
@@ -272,7 +272,7 @@ PrintCharStat:
     STA tmp+1
     LDA ch_stats+2, X
     STA tmp+2           ; and print it as 6-digits
-    JMP PrintNumber_6Digit
+    JUMP PrintNumber_6Digit
 
 ;;  Stat Code = $03 -- character level
 @Level:
@@ -281,7 +281,7 @@ PrintCharStat:
     CLC
     ADC #$01         ; Add 1 to it ($00 is "Level 1")
     STA tmp          ; and print it as 2-digit
-    JMP PrintNumber_2Digit
+    JUMP PrintNumber_2Digit
 
 
 
@@ -298,7 +298,7 @@ PrintCharStat:
 
 PrintPrice:
     FARCALL LoadPrice             ; just load the price
-    JMP PrintNumber_5Digit    ; and print it as 5-digits!
+    JUMP PrintNumber_5Digit    ; and print it as 5-digits!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -316,7 +316,7 @@ PrintGold:
     STA tmp+1
     LDA gold+2
     STA tmp+2
-    JMP PrintNumber_6Digit
+    JUMP PrintNumber_6Digit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -345,38 +345,38 @@ PrintNumber_1Digit:
     ORA #$80             ; just OR the number with $80 to convert it to the tile ID
     STA format_buf+6     ; write it to output buffer
     LDA #<format_buf+6
-    JMP PrintNumber_Exit
+    JUMP PrintNumber_Exit
                          ; A = start of string, then BNE (or BEQ) to exit
 
 PrintNumber_2Digit:
     CALL FormatNumber_2Digits   ; format the number
     CALL TrimZeros_2Digits      ; trim leading zeros
     LDA #<format_buf+5
-    JMP PrintNumber_Exit      ; string start
+    JUMP PrintNumber_Exit      ; string start
 
 PrintNumber_3Digit:            ; more of same...
     CALL FormatNumber_3Digits
     CALL TrimZeros_3Digits
     LDA #<format_buf+4
-    JMP PrintNumber_Exit
+    JUMP PrintNumber_Exit
 
 PrintNumber_4Digit:            ; more of same.
     CALL FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
     CALL TrimZeros_4Digits
     LDA #<format_buf+3
-    JMP PrintNumber_Exit
+    JUMP PrintNumber_Exit
 
 PrintNumber_5Digit:
     CALL FormatNumber_5Digits
     CALL TrimZeros_5Digits
     LDA #<format_buf+2
-    JMP PrintNumber_Exit
+    JUMP PrintNumber_Exit
 
 PrintNumber_6Digit:
     CALL FormatNumber_6Digits
     CALL TrimZeros_6Digits
     LDA #<format_buf+1
-    JMP PrintNumber_Exit
+    NOJUMP PrintNumber_Exit
 
 PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
     STA text_ptr          ; of the pointer in A -- store that to text_ptr, our output pointer
@@ -477,7 +477,7 @@ FormatNumber_6Digits:
 
       LDX #$80                   ;  code reaches here if we went through all 9 digits and there was no match
       STX format_buf+1           ; This means the number has no 6th digit -- so use the '0' character instead ($80)
-      JMP FormatNumber_5Digits   ; And continue formatting by formatting for 5 digits
+      JUMP FormatNumber_5Digits   ; And continue formatting by formatting for 5 digits
 
 @Equal:                   ; if the high byte was equal to the check, we need to compare the middle byte
     LDA tmp+1             ;  load up the middle byte
@@ -523,7 +523,7 @@ FormatNumber_5Digits:         ; Flow in this routine is identical to the flow in
  
       LDX #$80
       STX format_buf+2
-      JMP FormatNumber_4Digits
+      JUMP FormatNumber_4Digits
 
 @Equal:
     LDA tmp+1
@@ -569,7 +569,7 @@ FormatNumber_4Digits:     ; again... this routine is exactly the same as the abo
 
       LDX #$80
       STX format_buf+3
-      JMP FormatNumber_3Digits
+      JUMP FormatNumber_3Digits
 
 @Equal:
     LDA tmp
@@ -604,7 +604,7 @@ FormatNumber_3Digits:  ; again... more of the same
 
       LDX #$80
       STX format_buf+4
-      JMP FormatNumber_2Digits
+      JUMP FormatNumber_2Digits
 
 @Equal:
     LDA tmp
@@ -1931,7 +1931,7 @@ EnterLineupMenu:
     CALL LineupMenu_UpdateJoy         ; update joypad info
     CALL LineupMenu_ProcessMode       ; process mode operations (animation)
     CALL LineupMenu_ProcessJoy        ; process joypad input
-    JMP @MainLoop                    ; and keep looping!
+    JUMP @MainLoop                    ; and keep looping!
 
     ; Routine can only exit via ProcessJoy -- which drops the return address and JMPs
     ; out of the routine when the player exits the menu.
@@ -1959,7 +1959,7 @@ LineupMenu_UpdateJoy:
     LDA joy_a
     ORA joy_b              ; check if either A or B pressed
     BEQ :+
-      JMP PlaySFX_MenuSel  ; if either one, play selection SFX, and exit
+      JUMP PlaySFX_MenuSel  ; if either one, play selection SFX, and exit
 
 :   LDA joy                ; otherwise, get newly updated joy data
     AND #$0C               ; isolate up/down buttons
@@ -1968,7 +1968,7 @@ LineupMenu_UpdateJoy:
     CMP tmp+7              ; if what is pressed is the same as what was already
     BEQ @Exit              ;  pressed.. no change.  So exit
 
-    JMP PlaySFX_MenuMove   ; otherwise, play the cursor move SFX, and exit
+    JUMP PlaySFX_MenuMove   ; otherwise, play the cursor move SFX, and exit
 
   @Exit:
     RTS
@@ -2012,7 +2012,7 @@ LineupMenu_UpdateJoy:
   @ExitMenu:
     PLA                       ; drop return address (so when we return from here,
     PLA                       ;  we exit the Lineup menu completely)
-    JMP LineupMenu_Finalize   ; then jump to lineup finalization, and exit (exiting lineup menu)
+    JUMP LineupMenu_Finalize   ; then jump to lineup finalization, and exit (exiting lineup menu)
 
 
   LUJoy_Exit:
@@ -2190,7 +2190,7 @@ LineupMenu_ProcessMode:
     BCC @M4_FirstDone          ; if first slot is done... jump ahead
 
       LDY lu_cursor2           ; otherwise... just move the second selected slot
-      JMP LineupMenu_AnimStep  ;   and exit
+      JUMP LineupMenu_AnimStep  ;   and exit
 
   @M4_FirstDone:
     LDY lu_cursor2
@@ -2231,7 +2231,7 @@ LineupMenu_ProcessMode:
 
     LDA #1
     STA menustall            ; PPU is currently on, so we need to menustall for drawing
-    JMP DrawLineupMenuNames  ; redraw the char names to reflect the swap.  Then exit
+    JUMP DrawLineupMenuNames  ; redraw the char names to reflect the swap.  Then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2308,7 +2308,7 @@ LineupMenu_DrawCursor:
     ADC #$08               ; +8
     STA spr_y              ; and that's the cursor Y coord
 
-    JMP DrawCursor         ; draw the cursor and exit
+    JUMP DrawCursor         ; draw the cursor and exit
 
 
 
@@ -2388,7 +2388,7 @@ DrawLineupMenuNames:
     LDA #$14
     STA dest_y
     LDA str_buf+1+(3*8)
-    JMP DrawCharacterName   ; and slot 3's.. then exit
+    JUMP DrawCharacterName   ; and slot 3's.. then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2527,7 +2527,7 @@ DrawCharacterName:
     STA cur_bank
     STA ret_bank
 
-    JMP DrawComplexString  ; Draw it!  Then return
+    JUMP DrawComplexString  ; Draw it!  Then return
 
 
 
@@ -2610,7 +2610,7 @@ NewGamePartyGeneration:
     LDX #$20
     CALL @RecordClassAndName
     LDX #$30
-  ; JMP @RecordClassAndName
+  ; JUMP @RecordClassAndName
     
   @RecordClassAndName:
     TXA                     ; X is the ptygen source index  ($10 bytes per character)
@@ -2653,7 +2653,7 @@ PtyGen_DrawScreen:
     CALL ClearNT             ; wipe the screen clean
     CALL PtyGen_DrawBoxes    ;  draw the boxes
     CALL PtyGen_DrawText     ;  and the text in those boxes
-    JMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
+    JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2708,7 +2708,7 @@ DoPartyGen_OnCharacter:
       STA menustall
       LDX char_index            ; then update the on-screen class name
       CALL PtyGen_DrawOneText
-      JMP @MainLoop
+      JUMP @MainLoop
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2782,7 +2782,7 @@ DoNameInput:
     BPL @MainLoop
     LDA #$06                ; wrap 0->6
     STA namecurs_y
-    JMP @MainLoop
+    JUMP @MainLoop
     
   @Down:
     INC namecurs_y          ; INC cursor Y position
@@ -2791,7 +2791,7 @@ DoNameInput:
     BCC @MainLoop
     LDA #$00
     STA namecurs_y
-    JMP @MainLoop
+    JUMP @MainLoop
     
   @Left_Or_Right:
     CMP #$02                ; if D-pad state == 2, Left pressed
@@ -2802,7 +2802,7 @@ DoNameInput:
     BPL @MainLoop
     LDA #$09                ; wrap 0->9
     STA namecurs_x
-    JMP @MainLoop
+    JUMP @MainLoop
     
   @Right:
     INC namecurs_x          ; INC cursor X position
@@ -2811,7 +2811,7 @@ DoNameInput:
     BCC @MainLoop
     LDA #$00
     STA namecurs_x
-    JMP @MainLoop
+    JUMP @MainLoop
     
     ;;;;;;;;;;;;;;;;;;
   @B_Pressed:
@@ -2842,7 +2842,7 @@ DoNameInput:
     TAX                             ; use that value as an index to the lut_NameInput
     BCC :+                          ; This will always branch, as C will always be clear
         LDA lut_NameInput+$100, X       ; I can only guess this was used in the Japanese version, where the NameInput table might have been bigger than 
-        JMP :++                         ; 256 bytes -- even though that seems very unlikely.
+        JUMP :++                         ; 256 bytes -- even though that seems very unlikely.
         
   : LDA lut_NameInput, X
   : STA theend_selectedtile               ; record selected tile
@@ -2871,7 +2871,7 @@ DoNameInput:
       LDA #$00
   : STA cursor
   
-    JMP @MainLoop               ; And keep going!
+    JUMP @MainLoop               ; And keep going!
     
   @Done:
     CLC                 ; CLC to indicate name was successfully input
@@ -2900,7 +2900,7 @@ PtyGen_Frame:
     STA cur_bank
     CALL CallMusicPlay
 
-    JMP PtyGen_Joy         ; and update joy data!
+    JUMP PtyGen_Joy         ; and update joy data!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2951,14 +2951,14 @@ PtyGen_Joy:
     LDA joy_a            ; if either A or B pressed...
     ORA joy_b
     BEQ :+
-      JMP PlaySFX_MenuSel ; play the Selection SFX, and exit
+      JUMP PlaySFX_MenuSel ; play the Selection SFX, and exit
 
 :   LDA joy              ; otherwise, check new directional buttons
     AND #$0F
     BEQ @Exit            ; if none pressed, exit
     CMP tmp+7            ; if they match the old buttons (no new buttons pressed)
     BEQ @Exit            ;   exit
-    JMP PlaySFX_MenuMove ; .. otherwise, play the Move sound effect
+    JUMP PlaySFX_MenuMove ; .. otherwise, play the Move sound effect
   @Exit:
     RTS
 
@@ -2998,7 +2998,7 @@ PtyGen_DrawBoxes:
 
     LDA #0
     STA menustall        ; disable menustalling (PPU is off)
-    JMP DrawBox          ;  draw the box, and exit
+    JUMP DrawBox          ;  draw the box, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3024,7 +3024,7 @@ PtyGen_DrawText:
   @DrawOne:
     TAX                 ; put the ptygen index in X for upcoming routine
 
-      ; no JMP or RTS -- code flows seamlessly into PtyGen_DrawOneText
+      ; no JUMP or RTS -- code flows seamlessly into PtyGen_DrawOneText
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3098,7 +3098,7 @@ PtyGen_DrawOneText:
     STA cur_bank            ;   but oh well)
     STA ret_bank
 
-    JMP DrawComplexString   ; then draw another complex string -- and exit!
+    JUMP DrawComplexString   ; then draw another complex string -- and exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3115,7 +3115,7 @@ PtyGen_DrawCursor:
     STA spr_x
     LDA ptygen_curs_y, X
     STA spr_y
-    JMP DrawCursor          ; and draw the cursor there
+    JUMP DrawCursor          ; and draw the cursor there
 
 
 
@@ -3146,7 +3146,7 @@ CharName_DrawCursor:
     ADC #$50
     STA spr_y
     
-    JMP DrawCursor
+    JUMP DrawCursor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3186,7 +3186,7 @@ PtyGen_DrawChars:
     ASL A
     ASL A
     STA tmp           ; store it in tmp for DrawSimple2x3Sprite
-    JMP DrawSimple2x3Sprite
+    JUMP DrawSimple2x3Sprite
 
 
 
@@ -3227,7 +3227,7 @@ NameInput_DrawName:
     LDA #$01                ; drawing while PPU is on, so set menustall
     STA menustall
     
-    JMP DrawComplexString   ; Then draw the name and exit!
+    JUMP DrawComplexString   ; Then draw the name and exit!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3287,7 +3287,7 @@ DrawNameInputScreen:
     LDA #BANK_THIS
     STA cur_bank
     STA ret_bank
-    JMP DrawComplexString
+    JUMP DrawComplexString
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3522,7 +3522,7 @@ EnterTitleScreen:
     EOR #1                  ;  and continue
     STA cursor
     CALL PlaySFX_MenuSel     ; play a little sound effect (the sel sfx, not the move sfx like you
-    JMP @Loop               ;  may expect).  Then resume the loop.
+    JUMP @Loop               ;  may expect).  Then resume the loop.
 
   @LeftRight:
     CMP #RIGHT              ; did they press Right?
@@ -3537,7 +3537,7 @@ EnterTitleScreen:
     STA respondrate
 
     CALL PlaySFX_MenuMove    ; play the move sound effect, and continue looping!
-    JMP @Loop
+    JUMP @Loop
 
 @OptionChosen:              ; Jumps here when the player presses A or Start (selected an option)
     LDA cursor              ;  this CMP will set C if they selected option 1 (New Game)
@@ -3570,7 +3570,7 @@ IntroTitlePrepare:
     STA cursor
     STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
-    JMP ClearNT            ; then wipe the nametable clean and exit
+    JUMP ClearNT            ; then wipe the nametable clean and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3657,7 +3657,7 @@ IntroStory_MainLoop:
 
   @InfiniteLoop:
     CALL IntroStory_Frame
-    JMP @InfiniteLoop
+    JUMP @InfiniteLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3670,12 +3670,12 @@ IntroStory_MainLoop:
 ;;    This routine updates intro_atbyte, which in turn updates onscreen
 ;;  attributes so that different rows of text become animated.
 ;;
-;;    Note this routine calls IntroStory_Frame directly.. and with a JMP no less!
+;;    Note this routine calls IntroStory_Frame directly.. and with a JUMP no less!
 ;;  IntroStory_Frame can double-RTS (see that routine for details), which means
 ;;  it is theoretically possible for the intro story to be prematurely exited
 ;;  if you happen to press A or B at *exactly* the wrong time (there's only a very
 ;;  slim 1 frame window where it could happen -- but still).  This could be considered
-;;  BUGGED -- with the appropriate fix being to change the JMP IntroStory_Frame into
+;;  BUGGED -- with the appropriate fix being to change the JUMP IntroStory_Frame into
 ;;  CALL IntroStory_Frame, RTS.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3699,7 +3699,7 @@ IntroStory_AnimateBlock:
   @Done:
     LDA #%11111111          ; lastly, set attribute byte so that the entire block uses %11
     STA intro_atbyte        ;  this prevents the bottom row from animating further
-    JMP IntroStory_Frame    ;  Do a frame to update the actual attribute tables, then exit
+    JUMP IntroStory_Frame    ;  Do a frame to update the actual attribute tables, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3766,7 +3766,7 @@ IntroStory_AnimateRow:
     BPL :+               ; if that caused it to wrap below 0
       LDA #$01           ;  use $01 blue instead
 :   STA cur_pal + $B     ; and use this color (the sub color) next frame
-    JMP @SubLoop         ; and continue looping
+    JUMP @SubLoop         ; and continue looping
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3907,7 +3907,7 @@ EnterShop:
   MagicShop_CancelPurchase:
     LDA #$25
     CALL DrawShopDialogueBox      ; "too bad... something else?" dialogue
-    JMP MagicShop_Loop           ; jump ahead to loop
+    JUMP MagicShop_Loop           ; jump ahead to loop
 
 
 EnterShop_Magic:
@@ -3951,14 +3951,14 @@ EnterShop_Magic:
 
       LDA #$10                   ; ... otherwise
       CALL DrawShopDialogueBox    ; "you can't afford it" dialogue
-      JMP MagicShop_Loop         ; keep looping
+      JUMP MagicShop_Loop         ; keep looping
 
   @FinalizePurchase:
     CALL ShopPayPrice             ; subtract the item price from party GP
     LDX shop_charindex           ; get the empty slot in X
     LDA shop_spell               ; get the adjusted spell ID
     STA ch0_spells, X             ; add this spell to char's magic list
-    JMP EnterShop_Magic          ; and re-enter the shop
+    JUMP EnterShop_Magic          ; and re-enter the shop
 
 
 
@@ -3971,7 +3971,7 @@ EnterShop_Magic:
   EquipShop_Cancel:
     LDA #$25
     CALL DrawShopDialogueBox     ; "Too bad... something else?" dialogue
-    JMP EquipShop_Loop          ; jump ahead to loop
+    JUMP EquipShop_Loop          ; jump ahead to loop
 
 
 EnterShop_Equip:
@@ -4013,7 +4013,7 @@ EnterShop_Equip:
 
       LDA #$10
       CALL DrawShopDialogueBox   ; "You can't afford it" dialogue
-      JMP EquipShop_Loop        ; keep looping
+      JUMP EquipShop_Loop        ; keep looping
 
   @CanAfford:
     LDA #$11
@@ -4026,19 +4026,19 @@ EnterShop_Equip:
 
       LDA #$0C                   ; otherwise (no room)
       CALL DrawShopDialogueBox    ; "You don't have room" dialogue
-      JMP EquipShop_Loop         ; jump back to loop
+      JUMP EquipShop_Loop         ; jump back to loop
 
   @FinalizePurchase:
     CALL ShopPayPrice             ; subtract the GP
     LDA #$13
     CALL DrawShopDialogueBox      ; "Thank you, what else?" dialogue
-    JMP EquipShop_Loop           ; jump back to loop
+    JUMP EquipShop_Loop           ; jump back to loop
 
 
   ;; Selling
 
-  @_Loop:   JMP EquipShop_Loop   ; these two are here so that these labels
-  @_Cancel: JMP EquipShop_Cancel ;  can be branched to.  The main labels
+  @_Loop:   JUMP EquipShop_Loop   ; these two are here so that these labels
+  @_Cancel: JUMP EquipShop_Cancel ;  can be branched to.  The main labels
                                  ;  might be too far for a branch (can only branch
                                  ;  back 128 bytes).  I'm not sure that's
                                  ;  necessary though.... don't think the routine
@@ -4055,7 +4055,7 @@ EnterShop_Equip:
 
       LDA #$1E
       CALL DrawShopDialogueBox    ; "you have nothing to sell" dialogue
-      JMP EquipShop_Loop         ; jump back to loop
+      JUMP EquipShop_Loop         ; jump back to loop
 
   @ItemsForSale:
     CALL ShopSelectBuyItem        ; have the user select an item to sell
@@ -4099,7 +4099,7 @@ EnterShop_Equip:
 
     FARCALL AddGPToParty       ; give that money to the party
     CALL DrawShopGoldBox    ; redraw the gold box to reflect changes
-    JMP EquipShop_Loop     ; and jump back to loop
+    JUMP EquipShop_Loop     ; and jump back to loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4118,7 +4118,7 @@ EnterShop_Equip:
   ItemShop_CancelBuy:           ; jumped to for cancelled purchases
     LDA #$25
     CALL DrawShopDialogueBox     ; "too bad, something else?" dialogue
-    JMP ItemShop_Loop           ; return to loop
+    JUMP ItemShop_Loop           ; return to loop
 
 EnterShop_Caravan:
     BNE EnterShop_Item          ; this always branches.. but even if it didn't....
@@ -4150,7 +4150,7 @@ EnterShop_Item:
     BCC @CheckForSpace          ; if they can, jump ahead to check to see if they have room for this item
       LDA #$10
       CALL DrawShopDialogueBox   ; if they can't, "you can't afford it" dialogue
-      JMP ItemShop_Loop         ; and return to loop
+      JUMP ItemShop_Loop         ; and return to loop
 
   @CheckForSpace:
     LDX shop_curitem            ; get the item ID in X
@@ -4159,14 +4159,14 @@ EnterShop_Item:
     BCC @CompletePurchase       ; if yes, jump ahead to complete the purchase.  Otherwise...
       LDA #$0C
       CALL DrawShopDialogueBox   ; "you have too many" dialogue
-      JMP ItemShop_Loop         ; return to loop
+      JUMP ItemShop_Loop         ; return to loop
 
   @CompletePurchase:
     INC items, X                ; add one of this item to their inventory
     CALL ShopPayPrice            ; subtract the price from your gold amount
     LDA #$13
     CALL DrawShopDialogueBox     ; "Thank you, anything else?" dialogue
-    JMP ItemShop_Loop           ; and continue loop
+    JUMP ItemShop_Loop           ; and continue loop
 
 
 
@@ -4192,7 +4192,7 @@ ShopPayPrice:
     SBC #0                    ; and get borrow from high byte
     STA gold+2
 
-    JMP DrawShopGoldBox       ; then redraw the gold box to reflect changes, and return
+    JUMP DrawShopGoldBox       ; then redraw the gold box to reflect changes, and return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4398,7 +4398,7 @@ EnterShop_Clinic:
     LDA joy_a
     ORA joy_b
     BEQ @ReviveLoop            ; and loop (keep doing frames) until A or B pressed
-    JMP EnterShop_Clinic       ; then restart the clinic loop
+    JUMP EnterShop_Clinic       ; then restart the clinic loop
 
   @NobodysDead:
     LDA #$23
@@ -4573,7 +4573,7 @@ InnClinic_CanAfford:
     SBC #0
     STA gold+2
 
-    JMP DrawShopGoldBox  ; redraw the gold box to reflect changes, and exit
+    JUMP DrawShopGoldBox  ; redraw the gold box to reflect changes, and exit
 
 
 
@@ -4599,7 +4599,7 @@ Clinic_SelectTarget:
     STA text_ptr+1
     CALL DrawShopComplexString  ; and draw it
 
-    JMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
+    JUMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4706,7 +4706,7 @@ ShopFrame:
     STA cur_bank
     CALL CallMusicPlay          ; set the current bank, and call music play
 
-    JMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
+    JUMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
 
     RTS                        ; useless RTS (impossible to reach)
 
@@ -4730,7 +4730,7 @@ ShopFrameNoCursor:
     ORA joy_b
     BEQ @CheckMovement         ; if not... check directionals
 
-    JMP PlaySFX_MenuSel        ; if either A or B pressed, play the selection sound effect, and exit
+    JUMP PlaySFX_MenuSel        ; if either A or B pressed, play the selection sound effect, and exit
 
   @CheckMovement:
     LDA joy                    ; joy current joypad data
@@ -4738,7 +4738,7 @@ ShopFrameNoCursor:
     BEQ @Exit                  ; if no directional buttons down, exit
     CMP tmp+7                  ; compare to previous directional buttons
     BEQ @Exit                  ; if no change, exit
-    JMP PlaySFX_MenuMove       ; otherwise, play the movement sound effec, and exit
+    JUMP PlaySFX_MenuMove       ; otherwise, play the movement sound effec, and exit
 
   @Exit:
     RTS
@@ -4865,7 +4865,7 @@ DrawShopGoldBox:
     STA dest_x
 
     LDA #$08                   ; draw shop string ID=$08 (" G")
-    JMP DrawShopString         ; then exit
+    JUMP DrawShopString         ; then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5025,7 +5025,7 @@ ShopSelectBuyItem:
     CALL LoadShopBoxDims
     CALL EraseBox           ; erase shop box #3 (command box)
 
-    JMP CommonShopLoop_List  ; everything's ready!  Just run the common loop from here, then return
+    JUMP CommonShopLoop_List  ; everything's ready!  Just run the common loop from here, then return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5048,7 +5048,7 @@ ShopLoop_BuyExit:
     LDA #2
     STA cursor_max           ; 2 cursor options
 
-    JMP CommonShopLoop_Cmd   ; do the common shop loop, and exit
+    JUMP CommonShopLoop_Cmd   ; do the common shop loop, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5069,7 +5069,7 @@ ShopLoop_YesNo:
     LDA #2
     STA cursor_max           ; 2 cursor options
 
-    JMP CommonShopLoop_Cmd   ; do command shop loop and exit
+    JUMP CommonShopLoop_Cmd   ; do command shop loop and exit
 
 
 
@@ -5091,7 +5091,7 @@ ShopLoop_BuySellExit:
     LDA #$03
     STA cursor_max           ; 3 options
 
-    JMP CommonShopLoop_Cmd   ; do command loop
+    JUMP CommonShopLoop_Cmd   ; do command loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5118,7 +5118,7 @@ ShopLoop_CharNames:
     LDA #4
     STA cursor_max             ; give the user 4 options
 
-    JMP CommonShopLoop_Cmd     ; then run the common loop
+    JUMP CommonShopLoop_Cmd     ; then run the common loop
 
   @NamesString:
   .byte $10,$00,$01   ; char 0's name, double line break
@@ -5158,7 +5158,7 @@ CommonShopLoop_Cmd:
     STA text_ptr               ;  put the pointer in (text_ptr).  Yes, I know... 
     LDA #>lut_ShopCurs_Cmd     ;  it's not really text.
     STA text_ptr+1
-    JMP _CommonShopLoop_Main   ; then jump ahead to the main entry for these routines
+    JUMP _CommonShopLoop_Main   ; then jump ahead to the main entry for these routines
 
 CommonShopLoop_List:
     LDA #<lut_ShopCurs_List    ; exactly the same as _Cmd version of the routine
@@ -5217,7 +5217,7 @@ CommonShopLoop_List:
     LDA cursor_max       ; otherwise (below zero), wrap to cursor_max-1
     SEC
     SBC #$01
-    JMP @MoveDone        ; desired cursor is in A, jump ahead to @MoveDone to write it back
+    JUMP @MoveDone        ; desired cursor is in A, jump ahead to @MoveDone to write it back
 
   @Down:
     LDA cursor           ; if down pressed, get the cursor
@@ -5230,7 +5230,7 @@ CommonShopLoop_List:
 
   @MoveDone:             ; code reaches here when A is to be the new cursor position
     STA cursor           ; just write it back to the cursor
-    JMP @Loop            ; and continue loop
+    JUMP @Loop            ; and continue loop
 
 
   @B_Pressed:            ; if B pressed....
@@ -5351,7 +5351,7 @@ ShopSelectBuyMagic:
     CALL LoadShopBoxDims         ; then erase shop box 3 (command box)
     CALL EraseBox
 
-    JMP CommonShopLoop_List     ; and have the user select an option from the shop inventory list
+    JUMP CommonShopLoop_List     ; and have the user select an option from the shop inventory list
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5364,7 +5364,7 @@ DrawShopCursor:
     STA spr_x
     LDA shopcurs_y
     STA spr_y
-    JMP DrawCursor     ; then draw it, and exit
+    JUMP DrawCursor     ; then draw it, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5397,7 +5397,7 @@ DrawShopPartySprites:
     LDA #$88
     STA spr_x
     LDA #0<<6
-    JMP DrawOBSprite    ; draw char 0 at $88,$50, then exit
+    JUMP DrawOBSprite    ; draw char 0 at $88,$50, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5416,7 +5416,7 @@ DrawShopString:
     STA text_ptr
     LDA lut_ShopStrings+1, X
     STA text_ptr+1     ;  ... then draw it....
-                       ; no JMP or RTS -- code seamlessly flows into DrawShopComplexString
+                       ; no JUMP or RTS -- code seamlessly flows into DrawShopComplexString
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5439,7 +5439,7 @@ DrawShopComplexString:
     LDX #BANK_THIS
     STX cur_bank
     STX ret_bank
-    JMP DrawComplexString
+    JUMP DrawComplexString
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5454,7 +5454,7 @@ DrawShopComplexString:
 
 DrawShopBox:
     CALL LoadShopBoxDims      ; load the dims
-    JMP DrawBox              ; draw it, then exit
+    JUMP DrawBox              ; draw it, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5497,7 +5497,7 @@ DrawShopDialogueBox:
     LDA #$00
     CALL DrawShopBox      ; draw shop box ID 0 (the dialogue box)
     PLA                  ; pull our dialogue string
-    JMP DrawShopString   ; draw it, then exit
+    JUMP DrawShopString   ; draw it, then exit
 
 
 
@@ -5567,7 +5567,7 @@ DrawShopBuyItemConfirm:
     LDA tmp+1
     STA shop_curprice+1
 
-    JMP DrawShopComplexString  ; draw our complex string (item price), and exit
+    JUMP DrawShopComplexString  ; draw our complex string (item price), and exit
 
 
 
@@ -5591,7 +5591,7 @@ DrawInnClinicConfirm:
     STA tmp+2                 ; 5digit print number needs 3 bytes... so just set high byte to zero
 
     CALL PrintNumber_5Digit    ; print it
-    JMP DrawShopComplexString ; and draw it
+    JUMP DrawShopComplexString ; and draw it
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5634,7 +5634,7 @@ DrawShopSellItemConfirm:
     STA shop_curprice+1      ; copy the price to shop_curprice
 
     CALL PrintNumber_5Digit    ; print the sale price as 5 digits
-    JMP DrawShopComplexString ; then draw it, and exit
+    JUMP DrawShopComplexString ; then draw it, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5693,7 +5693,7 @@ MagicShop_AssertLearn:
       CALL DrawShopDialogueBox   ; "You can't learn that" dialogue
       PLA                       ; drop the return address
       PLA
-      JMP MagicShop_Loop        ; and jump back to the magic shop loop
+      JUMP MagicShop_Loop        ; and jump back to the magic shop loop
 
   @HasPermission:
     LDA tmp+2            ; get magic ID
@@ -5730,14 +5730,14 @@ MagicShop_AssertLearn:
     CALL DrawShopDialogueBox  ; "That level is full" dialogue
     PLA                      ; drop return address
     PLA
-    JMP MagicShop_Loop       ; and jump back to magic loop
+    JUMP MagicShop_Loop       ; and jump back to magic loop
 
   @AlreadyKnow:
     LDA #$1A                 ; if they already know the spell...
     CALL DrawShopDialogueBox  ; "You already know that" dialogue
     PLA                      ; drop return addy
     PLA
-    JMP MagicShop_Loop       ; jump back to magic loop
+    JUMP MagicShop_Loop       ; jump back to magic loop
 
                          ; if found empty slot -- we have success!
   @FoundEmptySlot:       ;  All conditions are met
@@ -6155,7 +6155,7 @@ MainMenuLoop:
     LDA joy_b                     ; then see if B has been pressed
     BNE @B_Pressed
     CALL MoveCursorUpDown          ; then move the cursor up or down if up/down pressed
-    JMP MainMenuLoop              ;  rinse, repeat
+    JUMP MainMenuLoop              ;  rinse, repeat
 
   @B_Pressed:
     LDA #0            ; turn PPU off
@@ -6175,7 +6175,7 @@ MainMenuLoop:
 
     @Item:
       CALL EnterItemMenu         ; enter item menu
-      JMP ResumeMainMenu        ; then resume (redraw) main menu
+      JUMP ResumeMainMenu        ; then resume (redraw) main menu
 
   @NotItem:
     CMP #$01
@@ -6201,11 +6201,11 @@ MainMenuLoop:
 
     @CantUseMagic:              ;if dead or stone...
       CALL PlaySFX_Error         ;  play error sound effect
-      JMP @MagicLoop            ;  and continue magic loop until valid option selected
+      JUMP @MagicLoop            ;  and continue magic loop until valid option selected
 
     @CanUseMagic:
       CALL EnterMagicMenu        ; if target is valid.. enter magic menu
-      JMP ResumeMainMenu        ; then resume (redraw) main menu and continue
+      JUMP ResumeMainMenu        ; then resume (redraw) main menu and continue
 
   @NotMagic:
     CMP #$02
@@ -6214,7 +6214,7 @@ MainMenuLoop:
     @Weapon:
       LDA #ch_weapons-ch_stats  ; select offset for Weapon data
       CALL EnterEquipMenu        ; and enter equip menu (Weapons menu)
-      JMP ResumeMainMenu        ; then resume main menu
+      JUMP ResumeMainMenu        ; then resume main menu
 
   @NotWeapon:
     CMP #$03
@@ -6223,20 +6223,20 @@ MainMenuLoop:
     @Armor:
       LDA #ch_armor-ch_stats    ; select offset for Armor data
       CALL EnterEquipMenu        ; and enter equip menu (Armor menu)
-      JMP ResumeMainMenu        ; then resume main menu
+      JUMP ResumeMainMenu        ; then resume main menu
 
   @Status:                      ; otherwise (cursor=4)... they selected 'Status'
     CALL MainMenuSubTarget       ; select a sub target
     BCS @EscapeSubTarget        ;  if they escaped the sub target selection, then escape it
     CALL EnterStatusMenu         ; otherwise, enter Status menu
-    JMP ResumeMainMenu          ; then resume (redraw) main menu
+    JUMP ResumeMainMenu          ; then resume (redraw) main menu
 
 @EscapeSubTarget:             ; if they escaped the sub target menu...
     LDA #0
     STA cursor                ; reset the cursor to zero
     LDA #5
     STA cursor_max            ; and reset cursor_max to 5 (only 5 main menu options)
-    JMP MainMenuLoop          ; then return to main menu loop
+    JUMP MainMenuLoop          ; then return to main menu loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6269,7 +6269,7 @@ MainMenuSubTarget:
     BNE @B_Pressed               ; or B
 
     CALL MoveMainMenuSubCursor    ; if neither, move the cursor
-    JMP @Loop                    ; and keep looping
+    JUMP @Loop                    ; and keep looping
 
   @B_Pressed:
     SEC            ; if B pressed, just SEC before exiting
@@ -6309,7 +6309,7 @@ EnterMagicMenu:
 
     PLP                            ; pull status to see if character has any spells
     BCC :+                         ; if not....
-      JMP MenuWaitForBtn_SFX       ;    simply wait for a button press and exit
+      JUMP MenuWaitForBtn_SFX       ;    simply wait for a button press and exit
 
 :   LDA #0                    ; otherwise.... (they have magic)
     STA joy                   ; clear joypad
@@ -6326,7 +6326,7 @@ MagicMenu_Loop:
     BNE @B_Pressed            ; and B
 
     CALL MoveMagicMenuCursor   ; otherwise, move the cursor if a direction was pressed
-    JMP MagicMenu_Loop        ; and keep looping
+    JUMP MagicMenu_Loop        ; and keep looping
 
   @B_Pressed:
     RTS                       ; if B pressed, just exit
@@ -6338,7 +6338,7 @@ MagicMenu_Loop:
 
       LDA #$32                  ; otherwise...
       CALL DrawItemDescBox       ;  print "you don't have enough MP" or whatever message (description text ID=$32)
-      JMP MagicMenu_Loop        ;  and return to loop
+      JUMP MagicMenu_Loop        ;  and return to loop
 
   @HaveMP:
     LDA submenu_targ       ; get character ID
@@ -6376,47 +6376,47 @@ MagicMenu_Loop:
 
     CMP #MG_CURE             ; just keep CMPing with every spell you can cast out of battle
     BNE :+                   ;  until we find a match
-      JMP UseMagic_CURE      ;  then jump to that spell's routine
+      JUMP UseMagic_CURE      ;  then jump to that spell's routine
 :   CMP #MG_CUR2
     BNE :+
-      JMP UseMagic_CUR2
+      JUMP UseMagic_CUR2
 :   CMP #MG_CUR3
     BNE :+
-      JMP UseMagic_CUR3
+      JUMP UseMagic_CUR3
 :   CMP #MG_CUR4
     BNE :+
-      JMP UseMagic_CUR4
+      JUMP UseMagic_CUR4
 :   CMP #MG_HEAL
     BNE :+
-      JMP UseMagic_HEAL
+      JUMP UseMagic_HEAL
 :   CMP #MG_HEL3
     BNE :+
-      JMP UseMagic_HEL3
+      JUMP UseMagic_HEL3
 :   CMP #MG_HEL2
     BNE :+
-      JMP UseMagic_HEL2
+      JUMP UseMagic_HEL2
 :   CMP #MG_PURE
     BNE :+
-      JMP UseMagic_PURE
+      JUMP UseMagic_PURE
 :   CMP #MG_LIFE
     BNE :+
-      JMP UseMagic_LIFE
+      JUMP UseMagic_LIFE
 :   CMP #MG_LIF2
     BNE :+
-      JMP UseMagic_LIF2
+      JUMP UseMagic_LIF2
 :   CMP #MG_WARP
     BNE :+
-      JMP UseMagic_WARP
+      JUMP UseMagic_WARP
 :   CMP #MG_SOFT
     BNE :+
-      JMP UseMagic_SOFT
+      JUMP UseMagic_SOFT
 :   CMP #MG_EXIT
     BNE :+
-      JMP UseMagic_EXIT
+      JUMP UseMagic_EXIT
 
 :   LDA #$33                ; gets here if no match found.
     CALL DrawItemDescBox     ; print description text ("can't cast that here")
-    JMP MagicMenu_Loop      ; and return to magic loop
+    JUMP MagicMenu_Loop      ; and return to magic loop
 
 ;;;;;;;;;;;;;;;
 
@@ -6471,11 +6471,11 @@ UseMagic_CureFamily:
     CALL MenuWaitForBtn_SFX  ; Then just wait for the player to press a button.  Then exit by re-entering magic menu
 
   CureFamily_Exit:
-    JMP EnterMagicMenu      ; to exit, re-enter (redraw) magic menu
+    JUMP EnterMagicMenu      ; to exit, re-enter (redraw) magic menu
 
   CureFamily_CantUse:
     CALL PlaySFX_Error       ; if can't use, play the error sound effect
-    JMP CureFamily_Loop     ; and loop until you get a proper target
+    JUMP CureFamily_Loop     ; and loop until you get a proper target
 
 ;;;;;;;;;;;;;;
 
@@ -6504,7 +6504,7 @@ UseMagic_CUR4:
     DEC ch_magicdata, X     ; and subtract MP from proper level
 
     CALL MenuWaitForBtn_SFX  ; then just wait for the player to press a button
-    JMP EnterMagicMenu      ; and re-enter (redraw) the magic menu
+    JUMP EnterMagicMenu      ; and re-enter (redraw) the magic menu
 
 ;;;;;;;;;;;;;;
 
@@ -6547,7 +6547,7 @@ UseMagic_HealFamily:
     CALL MenuWaitForBtn_SFX  ; then just wait for the player to press a button before exiting
 
  HealFamily_Exit:
-    JMP EnterMagicMenu      ; to exit, just re-enter magic menu
+    JUMP EnterMagicMenu      ; to exit, just re-enter magic menu
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6572,11 +6572,11 @@ UseMagic_LIFE:
 
     CALL DrawItemTargetMenu  ; redraw target menu to reflect changes
     CALL MenuWaitForBtn_SFX  ; then wait for the user to press a button
-    JMP EnterMagicMenu      ; and exit by re-entering magic menu
+    JUMP EnterMagicMenu      ; and exit by re-entering magic menu
 
   @CantUse:
     CALL PlaySFX_Error       ; if you can't use it, play the error sound
-    JMP @Loop               ;  and loop!
+    JUMP @Loop               ;  and loop!
 
 
 UseMagic_LIF2:
@@ -6602,11 +6602,11 @@ UseMagic_LIF2:
 
     CALL DrawItemTargetMenu
     CALL MenuWaitForBtn_SFX
-    JMP EnterMagicMenu
+    JUMP EnterMagicMenu
 
   @CantUse:
     CALL PlaySFX_Error
-    JMP @Loop
+    JUMP @Loop
 
 UseMagic_PURE:
     CALL DrawItemTargetMenu  ; Exactly the same as LIFE, except...
@@ -6627,11 +6627,11 @@ UseMagic_PURE:
     CALL MenuWaitForBtn_SFX
 
  UseMagic_PURE_Exit:
-    JMP EnterMagicMenu
+    JUMP EnterMagicMenu
 
  UseMagic_PURE_CantUse:
     CALL PlaySFX_Error
-    JMP UseMagic_PURE_Loop
+    JUMP UseMagic_PURE_Loop
 
 UseMagic_SOFT:
     CALL DrawItemTargetMenu     ; again... more of the same
@@ -6648,10 +6648,10 @@ UseMagic_SOFT:
     DEC ch_magicdata, X
     CALL DrawItemTargetMenu
     CALL MenuWaitForBtn_SFX
-    JMP EnterMagicMenu
+    JUMP EnterMagicMenu
   @CantUse:
     CALL PlaySFX_Error
-    JMP @Loop
+    JUMP @Loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -6687,12 +6687,12 @@ UseMagic_EXIT:
     CALL MenuWaitForBtn_SFX    ; wait for button press
 
   UseMagic_DoEXIT:
-    JMP DoOverworld           ; then restart logic on overworld by JMPing to DoOverworld
+    JUMP DoOverworld           ; then restart logic on overworld by JMPing to DoOverworld
 
 ;  Notes regarding WARP/EXIT:
 ;
 ;    The Overword loop wipes the stack clean, so it is effectively the "top" of all game
-;  logic execution.  When you JMP to DoOverworld (as EXIT does), the end result is that
+;  logic execution.  When you JUMP to DoOverworld (as EXIT does), the end result is that
 ;  all warp chain data (which exists on the stack) is cleared, and you find yourself
 ;  back on the overworld map, at the same coords you were when you left.
 ;
@@ -6776,7 +6776,7 @@ ResumeItemMenu:
     BCC :+                 ; if the player has no inventory...
       LDA #$04
       CALL DrawItemDescBox     ; draw the "You have nothing" description text
-      JMP MenuWaitForBtn_SFX  ; then just wait for A or B to be pressed -- then exit
+      JUMP MenuWaitForBtn_SFX  ; then just wait for A or B to be pressed -- then exit
 
     ; otherwise (player has at least 1 item in inventory)
 :   LDA #0
@@ -6794,7 +6794,7 @@ ItemMenu_Loop:
     CMP joy_b               ; otherwise check for B
     BNE @Exit               ; and exit if B pressed
     CALL MoveItemMenuCurs    ; neither button pressed... so move cursor if a direction was pressed
-    JMP ItemMenu_Loop       ; then continue the loop
+    JUMP ItemMenu_Loop       ; then continue the loop
 
   @Exit:
     RTS
@@ -6838,7 +6838,7 @@ ItemMenu_Loop:
 
     ; called for invalid item IDs (should never be called -- just sort of a safety catch)
 UseItem_Bad:
-  JMP ItemMenu_Loop   ; just jump back to the item loop
+  JUMP ItemMenu_Loop   ; just jump back to the item loop
 
 
     ; called when the CROWN is selected
@@ -6849,57 +6849,57 @@ UseItem_Crown:
     ; Jumped to by items that just print a simple description
 UseItem_SetDesc:
     CALL DrawItemDescBox    ; draw the description box with given description (in A)
-    JMP ItemMenu_Loop      ;  then return to the item loop
+    JUMP ItemMenu_Loop      ;  then return to the item loop
 
     ; these various items just print simple description.
 
 UseItem_Crystal:  
     LDA #$08
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Herb:     
     LDA #$09
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Key:      
     LDA #$0A
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_TNT:      
     LDA #$0B
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Adamant:  
     LDA #$0C
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Slab:     
     LDA #$0D
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Ruby:     
     LDA #$0E
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Chime:    
     LDA #$13
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Tail:     
     LDA #$14
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Cube:     
     LDA #$15
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Oxyale:   
     LDA #$18
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 UseItem_Canoe:    
     LDA #$19
-    JMP UseItem_SetDesc
+    JUMP UseItem_SetDesc
 
 
 ;;;;;;;;;;;;;;;;;;;;;
@@ -6914,7 +6914,7 @@ UseItem_Bottle:
     BCC @OpenBottle                 ; if flag is clear... fairy isn't visible, so bottle hasn't been opened yet.  Otherwise...
       LDA #$17                      ; Draw "It is empty" description text
       CALL DrawItemDescBox
-      JMP ItemMenu_Loop             ;  and return to the item loop
+      JUMP ItemMenu_Loop             ;  and return to the item loop
 
 @OpenBottle:                        ; if the bottle hasn't been opened yet
     LDA #0
@@ -6923,7 +6923,7 @@ UseItem_Bottle:
     CALL ShowMapObject               ; mark the fairy object as visible
     LDA #$16                        ; Draw "Pop... a fiary pops out" etc description text
     CALL DrawItemDescBox_Fanfare     ;   with fanfare!
-    JMP ResumeItemMenu              ; Then RESUME item menu (redraw the item list -- now that the bottle isn't there)
+    JUMP ResumeItemMenu              ; Then RESUME item menu (redraw the item list -- now that the bottle isn't there)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6949,12 +6949,12 @@ UseItem_Rod:
     CALL HideMapObject           ; otherwise.. first time rod is being used.  Hide the rod plate
     LDA #$0F                    ;  load up the relevent description text
     CALL DrawItemDescBox_Fanfare ;  and draw it with fanfare!
-    JMP ItemMenu_Loop           ; then return to item loop
+    JUMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$10                  ; if you can't use the Rod here, just load up
     CALL DrawItemDescBox       ;   the generic description text
-    JMP ItemMenu_Loop         ; and return to the item loop
+    JUMP ItemMenu_Loop         ; and return to the item loop
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -6982,12 +6982,12 @@ UseItem_Lute:
     CALL HideMapObject           ; hide the lute plate object
     LDA #$05                    ; get relevent description text
     CALL DrawItemDescBox_Fanfare ;  and draw it ... WITH FANFARE!
-    JMP ItemMenu_Loop           ; then return to item loop
+    JUMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$06                    ; if you can't use the lute here, just
     CALL DrawItemDescBox         ;  load up generic description text
-    JMP ItemMenu_Loop           ; and return to item loop
+    JUMP ItemMenu_Loop           ; and return to item loop
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7012,12 +7012,12 @@ UseItem_Floater:
     INC airship_vis             ; otherwise... increment airship visibility (= $01)
     LDA #$11                    ; load up the "omg you raised the airship" description text
     CALL DrawItemDescBox_Fanfare ;   and draw it with fanfare
-    JMP ItemMenu_Loop           ; then return to item loop
+    JUMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$12
     CALL DrawItemDescBox     ; can't use... so just draw lame description text
-    JMP ItemMenu_Loop       ;  and return to loop
+    JUMP ItemMenu_Loop       ;  and return to loop
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7036,12 +7036,12 @@ UseItem_Tent:
     CALL MenuRecoverPartyHP  ; give 30 HP to the whole party
     LDA #$1A
     CALL MenuSaveConfirm     ; and bring up confirm save screen (with description text $1A)
-    JMP EnterItemMenu       ; then re-enter item menu (need to re-enter, because screen needs full redrawing)
+    JUMP EnterItemMenu       ; then re-enter item menu (need to re-enter, because screen needs full redrawing)
 
   @CantUse:
     LDA #$1B                ; if we can't use, just print description text
     CALL DrawItemDescBox
-    JMP ItemMenu_Loop       ; and return to loop
+    JUMP ItemMenu_Loop       ; and return to loop
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7058,11 +7058,11 @@ UseItem_Cabin:
     CALL MenuRecoverPartyHP
     LDA #$1C                ; and use different description strings
     CALL MenuSaveConfirm
-    JMP EnterItemMenu
+    JUMP EnterItemMenu
   @CantUse:
     LDA #$1D                ; another different description string
     CALL DrawItemDescBox
-    JMP ItemMenu_Loop
+    JUMP ItemMenu_Loop
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7083,12 +7083,12 @@ UseItem_House:
 
     BCC :+                    ; if they saved....
       CALL MenuRecoverPartyMP  ;   recover MP  (note this is done after the save!  some would say this is BUGGED)
-:   JMP EnterItemMenu         ; then, whether they saved or not, re-enter item menu
+:   JUMP EnterItemMenu         ; then, whether they saved or not, re-enter item menu
 
   @CantUse:
     LDA #$1F
     CALL DrawItemDescBox     ; if you can't use the house... just print description text ($1F)
-    JMP ItemMenu_Loop       ; and return to loop
+    JUMP ItemMenu_Loop       ; and return to loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7166,11 +7166,11 @@ UseItem_Heal:
     DEC item_heal              ; then remove a heal potion from the inventory
 
 UseItem_Exit:
-    JMP EnterItemMenu          ; re-enter item menu (item menu needs to be redrawn)
+    JUMP EnterItemMenu          ; re-enter item menu (item menu needs to be redrawn)
 
   _UseItem_Heal_CantUse:       ; can't make this local because of stupid UseItem_Pure hijacking the above label
     CALL PlaySFX_Error          ; play the error sound effect
-    JMP _UseItem_Heal_Loop     ; and keep looping until they select a legal target or escape with B
+    JUMP _UseItem_Heal_Loop     ; and keep looping until they select a legal target or escape with B
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7194,11 +7194,11 @@ UseItem_Pure:
     DEC item_pure              ; if we could... remove one from the inventory
     CALL DrawItemTargetMenu     ; redraw the target menu to reflect the changes
     CALL MenuWaitForBtn_SFX     ; then wait for the player to press a button
-    JMP EnterItemMenu          ; before re-entering the item menu (redrawing item menu)
+    JUMP EnterItemMenu          ; before re-entering the item menu (redrawing item menu)
 
   @CantUse:
     CALL PlaySFX_Error          ; if can't use... give the error sound effect
-    JMP @Loop                  ;  and keep looping
+    JUMP @Loop                  ;  and keep looping
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7222,11 +7222,11 @@ UseItem_Soft:
     DEC item_soft              ; remove soft from inventory
     CALL DrawItemTargetMenu
     CALL MenuWaitForBtn_SFX
-    JMP EnterItemMenu
+    JUMP EnterItemMenu
 
   @CantUse:
     CALL PlaySFX_Error
-    JMP @Loop
+    JUMP @Loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7309,7 +7309,7 @@ ItemTargetMenuLoop:
     LDA cursor         ; get cursor
     CLC                ;  and add 1 (move it to the right)
     ADC #$01
-    JMP @MoveCurs      ; skip over the @Left block
+    JUMP @MoveCurs      ; skip over the @Left block
 
   @Left:
     LDA cursor         ; get cursor
@@ -7320,7 +7320,7 @@ ItemTargetMenuLoop:
     AND #$03               ; whether we moved left or right, AND with 3 to effectively wrap the cursor
     STA cursor             ;  and keep it in bounds.  Then write it back to the 'cursor' var
     CALL PlaySFX_MenuMove   ; Play the "move" sound effect
-    JMP @Loop              ; and continue looping
+    JUMP @Loop              ; and continue looping
 
   @A_Pressed:              ; if A was pressed
     CALL PlaySFX_MenuSel    ;  play the selection sound effect
@@ -7347,7 +7347,7 @@ DrawItemTargetCursor:
     STA spr_x            ; that lut is the X coord for cursor
     LDA #$68
     STA spr_y            ; Y coord is always $68
-    JMP DrawCursor       ; draw it, and exit
+    JUMP DrawCursor       ; draw it, and exit
 
   @lut:
     .byte $10,$48,$80,$B8
@@ -7379,7 +7379,7 @@ DrawItemTargetMenu:
     CALL DrawBox          ; draw it
 
     CALL @DrawBoxBody                ; draw the box body
-    JMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen back on.  then exit
+    JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen back on.  then exit
 
     RTS     ; useless RTS -- impossible to reach
 
@@ -7412,7 +7412,7 @@ DrawItemTargetMenu:
     STA text_ptr                      ; put it in text_ptr
     LDA @lut_str_pointertable+1, X
     STA text_ptr+1
-    JMP DrawMenuComplexString        ; then draw it as a local complex string, and exit
+    JUMP DrawMenuComplexString        ; then draw it as a local complex string, and exit
 
 
  @lut_str_pointertable:
@@ -7509,7 +7509,7 @@ EnterStatusMenu:
     CALL DrawOBSprite        ; then draw this character's OB sprite
 
     CALL TurnMenuScreenOn    ; turn the screen on
-    JMP MenuWaitForBtn_SFX  ; then just wait for the user to press a button before exiting
+    JUMP MenuWaitForBtn_SFX  ; then just wait for the user to press a button before exiting
 
 
 
@@ -7522,7 +7522,7 @@ EnterStatusMenu:
     STA box_wd
     LDA @lutStatusBoxes+3, X
     STA box_ht
-    JMP DrawBox                  ; then draw the box and return
+    JUMP DrawBox                  ; then draw the box and return
 
  @lutStatusBoxes:             ; coords and dims for status menu boxes
   .byte $01,$03,$08,$05       ; box containing character name                (top left)
@@ -7552,7 +7552,7 @@ MenuRecoverPartyHP:
     CALL MenuRecoverHP
     LDX #$C0
     CALL MenuRecoverHP
-    JMP DrawItemTargetMenu   ; then draw item target menu, and exit
+    JUMP DrawItemTargetMenu   ; then draw item target menu, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7623,7 +7623,7 @@ MenuRecoverHP_Abs:
     STA ch_curhp, X
     LDA ch_maxhp+1, X
     STA ch_curhp+1, X
-    JMP _MenuRecoverHP_Done     ; and then jump to done
+    JUMP _MenuRecoverHP_Done     ; and then jump to done
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7686,7 +7686,7 @@ MoveItemMenuCurs:
     CMP cursor_max
     BCC @UpWrap        ;  until the cursor is greater than the maximum
     SBC #$03           ; at which point, you subtract 3 to get it *just under* the maximum (but keeping it in its column)
-    JMP @Done          ; then we're done
+    JUMP @Done          ; then we're done
 
 
  @LeftOrRight:
@@ -7713,7 +7713,7 @@ MoveItemMenuCurs:
 
  @Done:
     STA cursor            ; write the new cursor value
-    JMP CloseDescBox_Sfx  ; close the description box, play the menu move sound effect, and exit
+    JUMP CloseDescBox_Sfx  ; close the description box, play the menu move sound effect, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7736,7 +7736,7 @@ MenuWaitForBtn_SFX:
     LDA #0
     STA joy_a               ; clear both joy_a and joy_b
     STA joy_b
-    JMP PlaySFX_MenuSel     ; play the MenuSel sound effect, and exit
+    JUMP PlaySFX_MenuSel     ; play the MenuSel sound effect, and exit
 
 
 MenuWaitForBtn:
@@ -7779,7 +7779,7 @@ DrawMainMenuCharSprites:
     LDA #$88           ; and lastly, char 2's OB sprite at $88,$88
     STA spr_x
     LDA #$80
-    JMP DrawOBSprite   ; then exit
+    JUMP DrawOBSprite   ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7824,7 +7824,7 @@ MenuFrame:
     LDA #0                 ; zero joy_a and joy_b so that an increment will bring to a
     STA joy_a              ;   nonzero state
     STA joy_b
-    JMP UpdateJoy          ; update joypad info, then exit
+    JUMP UpdateJoy          ; update joypad info, then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7854,7 +7854,7 @@ MoveMainMenuSubCursor:
                          ; A is now 1 for horizontal movement and 2 for vertical movement
     EOR cursor           ; EOR with the cursor (wrap around appropriate axis)
     STA cursor           ; and write back
-    JMP PlaySFX_MenuMove ; then play the move sound effect
+    JUMP PlaySFX_MenuMove ; then play the move sound effect
   @Exit:
     RTS                  ; and exit
 
@@ -7903,7 +7903,7 @@ MoveCursorUpDown:
 
   @Move:
     STA cursor            ; set cursor to changed value
-    JMP PlaySFX_MenuMove  ; then play that hideous sound effect and exit
+    JUMP PlaySFX_MenuMove  ; then play that hideous sound effect and exit
 
   @Exit:
     RTS
@@ -7953,13 +7953,13 @@ MoveMagicMenuCursor:
       STA cursor             ; write it back
       CALL @CheckCursor       ; check to make sure slot isn't empty
       BEQ @Right             ; if it is, keep looping until we get to a slot that isn't empty
-      JMP CloseDescBox_Sfx   ; otherwise, close the description box and exit
+      JUMP CloseDescBox_Sfx   ; otherwise, close the description box and exit
 
   @Right_ColOK:
     INC cursor             ; if we're not in the last column... just INC the cursor
     CALL @CheckCursor       ; then check to make sure it's not an empty slot
     BEQ @Right             ; if it is, keep looping
-    JMP CloseDescBox_Sfx   ; otherwise, close desc box and exit
+    JUMP CloseDescBox_Sfx   ; otherwise, close desc box and exit
 
 
   @Left:                  ; moving left is just like moving right, just in opposite direction
@@ -7976,13 +7976,13 @@ MoveMagicMenuCursor:
       STA cursor            ; write back
       CALL @CheckCursor      ; verify slot isn't empty
       BEQ @Left             ; if it is, keep looping
-      JMP CloseDescBox_Sfx  ; otherwise, exit
+      JUMP CloseDescBox_Sfx  ; otherwise, exit
 
   @Left_ColOK:
     DEC cursor            ; not in the first column... so we can just dec the cursor
     CALL @CheckCursor      ; verify it
     BEQ @Left             ; loop if empty
-    JMP CloseDescBox_Sfx  ; otherwise exit
+    JUMP CloseDescBox_Sfx  ; otherwise exit
 
 
 @UpDown:         ; if we pressed up or down... see which
@@ -7997,7 +7997,7 @@ MoveMagicMenuCursor:
     STA cursor             ; and write back
     CALL @CheckCursor       ; verify
     BEQ @Down              ; loop if slot is empty
-    JMP CloseDescBox_Sfx   ; then exit once we find a nonempty slot
+    JUMP CloseDescBox_Sfx   ; then exit once we find a nonempty slot
 
   @Up:                     ; moving up is exactly the same
     LDA cursor
@@ -8007,7 +8007,7 @@ MoveMagicMenuCursor:
     STA cursor
     CALL @CheckCursor
     BEQ @Up
-    JMP CloseDescBox_Sfx
+    JUMP CloseDescBox_Sfx
 
   ;;;;;;
   ;;  A little mini local subroutine here that checks to see if the cursor
@@ -8055,7 +8055,7 @@ CloseDescBox_Sfx:
 CloseDescBox:
     LDA #0
     STA descboxopen          ; clear descboxopen to indicate that the box is now closed
-    JMP EraseDescBox         ; and erase the box, then exit
+    JUMP EraseDescBox         ; and erase the box, then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8092,7 +8092,7 @@ TurnMenuScreenOn:
 
     LDA #BANK_THIS           ; record current bank and CallMusicPlay
     STA cur_bank
-    JMP CallMusicPlay
+    JUMP CallMusicPlay
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8112,7 +8112,7 @@ DrawMainMenuSubCursor:
     STA spr_x
     LDA lut_MainMenuSubCursor+1, X
     STA spr_y
-    JMP DrawCursor                  ; then draw the cursor and exit
+    JUMP DrawCursor                  ; then draw the cursor and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8130,7 +8130,7 @@ DrawMainMenuCursor:
     STA spr_y                     ;  write the Y coord
     LDA #$10                      ; X coord for main menu cursor is always $10
     STA spr_x
-    JMP DrawCursor                ; draw it!  and exit
+    JUMP DrawCursor                ; draw it!  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8150,7 +8150,7 @@ DrawItemMenuCursor:
     LDA lut_ItemMenuCursor+1, X
     STA spr_y
 
-    JMP DrawCursor               ; then draw the cursor
+    JUMP DrawCursor               ; then draw the cursor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8211,7 +8211,7 @@ DrawMagicMenuCursor:
     ADC #$28              ; add $28  (row*16 + $28)
     STA spr_y             ; htis is our Y coord
 
-    JMP DrawCursor        ; Draw it!  and exit
+    JUMP DrawCursor        ; Draw it!  and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8247,7 +8247,7 @@ DrawMainMenu:
     LDA #4                         ; fourth
     CALL DrawMainItemBox
     LDA #$C0
-    JMP DrawMainMenuCharBoxBody    ; and then exit
+    JUMP DrawMainMenuCharBoxBody    ; and then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8262,7 +8262,7 @@ DrawMainMenuGoldBox:
     LDA #5               ; draw main/item box number 5 (the GP box)
     CALL DrawMainItemBox
     LDA #$01             ; draw menu string ID=$01  (current GP, followed by " G")
-    JMP DrawMenuString
+    JUMP DrawMenuString
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8362,7 +8362,7 @@ DrawOrbBox:
 
 DrawMainItemBox:
     CALL LoadMainItemBoxDims
-    JMP DrawBox
+    JUMP DrawBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8408,7 +8408,7 @@ DrawMainMenuOptionBox:
     CALL DrawMainItemBox    ; Draw Main/Item Box ID=$06  (the option box)
     INC dest_y             ;  draw the containing text one line lower than usual (so the cursor will fit in the box)
     LDA #$02               ; Draw Menu String ID=$02 (the option text)
-    JMP DrawMenuString
+    JUMP DrawMenuString
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8427,7 +8427,7 @@ DrawItemTitleBox:
     LDA #$07              ; draw mainitem box ID 7 (the "ITEM" title box)
     CALL DrawMainItemBox
     PLA                   ; pull menu string ID
-    JMP DrawMenuString    ;  and draw it and return
+    JUMP DrawMenuString    ;  and draw it and return
 
 
 
@@ -8462,7 +8462,7 @@ DrawItemDescBox:
     PLA                   ; restore menu string ID
     INC descboxopen       ; set descboxopen to a nonzero value to mark the description box as open
 
-    ;;;  no JMP or RTS -- code flows seamlessly into DrawMenuString
+    ;;;  no JUMP or RTS -- code flows seamlessly into DrawMenuString
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8501,7 +8501,7 @@ DrawMenuComplexString:
     LDA #BANK_THIS
     STA cur_bank          ; set data bank (string to draw is on this bank -- or is in RAM)
     STA ret_bank          ; set return bank (we want it to RTS to this bank when complete)
-    JMP DrawComplexString ;  Draw Complex String, then exit!
+    JUMP DrawComplexString ;  Draw Complex String, then exit!
 
 
 
@@ -8518,7 +8518,7 @@ EraseDescBox:
     STA menustall            ; set menustall -- we will need to stall here, since the PPU is on
     LDA #$08
     CALL LoadMainItemBoxDims  ; load box dimensions for box ID 8 (the item description box)
-    JMP EraseBox             ;  erase the box, then exit
+    JUMP EraseBox             ;  erase the box, then exit
 
 
 
@@ -8569,7 +8569,7 @@ DrawCharMenuString_Len:
     BNE @Loop               ; and keep looping until it has
 
                                 ; once the loop is complete and our big string buffer has been filled
-    JMP DrawMenuComplexString   ; draw the complex string and exit.
+    JUMP DrawMenuComplexString   ; draw the complex string and exit.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8600,7 +8600,7 @@ DrawMainMenuCharBoxBody:
     ORA ch0_maxmp+6, X
     ORA ch0_maxmp+7, X
     BNE @DrawMP       ; if max MP is nonzero, jump ahead to DrawMP
-      JMP @NoMP       ; otherwise... jump ahead to NoMP
+      JUMP @NoMP       ; otherwise... jump ahead to NoMP
 
 
   @DrawMP:
@@ -8711,7 +8711,7 @@ DrawMainMenuCharBoxBody:
     STA str_buf+9
     LDA #<str_buf  ; start drawing from start of string
     STA text_ptr
-    JMP DrawComplexString    ; Draw it, then exit!
+    JUMP DrawComplexString    ; Draw it, then exit!
 
 
 
@@ -8843,16 +8843,16 @@ EnterEquipMenu:
     BNE @B_Pressed            ; or B
 
     CALL MoveEquipMenuModeCurs ; if neither A nor B pressed, move the mode cursor
-    JMP @Loop                 ; and loop until one of them is pressed
+    JUMP @Loop                 ; and loop until one of them is pressed
 
   @A_Pressed:
     CALL @GoToSubMenu          ; go to the desired sub menu
-    JMP @Start                ; then restart this loop once they exit that sub menu
+    JUMP @Start                ; then restart this loop once they exit that sub menu
 
   @B_Pressed:                 ; if B pressed....
     CALL CopyEquipFromItemBox  ;  move all equipment from item box back to player inventory
     CALL SortEquipmentList     ;  sort equipment list to remove gaps
-    JMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
+    JUMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
 
 
   @GoToSubMenu:
@@ -8864,11 +8864,11 @@ EnterEquipMenu:
 
     LDA eq_modecurs           ; get the mode cursor to see which sub menu we're to go to.
     BNE :+
-      JMP EquipMenu_EQUIP     ;   mode=0 -> EQUIP
+      JUMP EquipMenu_EQUIP     ;   mode=0 -> EQUIP
 :   CMP #$01
     BNE :+
-      JMP EquipMenu_TRADE     ;   mode=1 -> TRADE
-:   JMP EquipMenu_DROP        ;   mode=2 -> DROP
+      JUMP EquipMenu_TRADE     ;   mode=1 -> TRADE
+:   JUMP EquipMenu_DROP        ;   mode=2 -> DROP
 
 
 ;;
@@ -8886,7 +8886,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     BNE @B_Pressed
 
     CALL MoveEquipMenuCurs     ; then move the cursor for directional presses
-    JMP EquipMenu_TRADE       ; rinse, repeat
+    JUMP EquipMenu_TRADE       ; rinse, repeat
 
   @B_Pressed:                 ; if B pressed... just exit
     RTS
@@ -8906,7 +8906,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
       BNE EquipMenu_TRADE     ;   if B pressed, jump back to main Trade loop
 
       CALL MoveEquipMenuCurs   ; check for cursor movement
-      JMP @SubLoop            ; and loop
+      JUMP @SubLoop            ; and loop
 
   @DoTrade:              ; DoTrade is called when two items to trade have been selected
     LDX cursor           ; primary cursor in X (one of the items to trade)
@@ -8922,7 +8922,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     STA item_box, Y      ; and move X item to Y item (swapped the two items)
 
     CALL DrawEquipMenuStrings   ; redraw all the equipment strings to reflect changes
-    JMP EquipMenu_TRADE        ; then jump back to Trade loop
+    JUMP EquipMenu_TRADE        ; then jump back to Trade loop
 
 ;;
 ;;  EQUIP
@@ -8939,7 +8939,7 @@ EquipMenu_EQUIP:
     BNE @B_Pressed
 
     CALL MoveEquipMenuCurs    ; and check for cursor movement
-    JMP EquipMenu_EQUIP      ; rinse, repeat
+    JUMP EquipMenu_EQUIP      ; rinse, repeat
 
   @B_Pressed:                ; if B pressed, just exit
     RTS
@@ -8951,7 +8951,7 @@ EquipMenu_EQUIP:
                              ;  otherwise.. can't equip (can't equip a blank slot)
     @CantEquip:
       CALL PlaySFX_Error      ; if can't equip, play the error sound effect
-      JMP EquipMenu_EQUIP    ; and keep looping
+      JUMP EquipMenu_EQUIP    ; and keep looping
 
   @ConfirmEquip:
     BMI @ToggleEquip         ; see if item is already equipped, if it is, you can ALWAYS unequip it (no check necessary)
@@ -8965,7 +8965,7 @@ EquipMenu_EQUIP:
     EOR #$80                  ; toggle its equip state (unequip it if equipped... or equip it if unequipped)
     STA item_box, X           ; and write it back
     CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
-    JMP EquipMenu_EQUIP       ; and continue looping
+    JUMP EquipMenu_EQUIP       ; and continue looping
 
 
 ;;
@@ -8983,7 +8983,7 @@ EquipMenu_DROP:
     BNE @B_Pressed
 
     CALL MoveEquipMenuCurs     ; check for cursor movement
-    JMP EquipMenu_DROP        ; rinse, repeat until A/B pressed
+    JUMP EquipMenu_DROP        ; rinse, repeat until A/B pressed
 
   @B_Pressed:
     RTS                       ; if B pressed, just exit
@@ -8993,7 +8993,7 @@ EquipMenu_DROP:
     LDA item_box, X           ; get the item to drop from the item box
     BNE @ConfirmLoop          ; if it's zero....
       CALL PlaySFX_Error       ;  ... play the error sound effect (can't drop an empty slot)
-      JMP EquipMenu_DROP      ;      and continue looping
+      JUMP EquipMenu_DROP      ;      and continue looping
 
   @ConfirmLoop:
     CALL ClearOAM              ; clear OAM
@@ -9010,14 +9010,14 @@ EquipMenu_DROP:
     LDA joy_b
     BNE EquipMenu_DROP        ; if they pressed B, abort, and return to main DROP loop
 
-    JMP @ConfirmLoop          ; if neither A nor B pressed, keep looping until one of them is.
+    JUMP @ConfirmLoop          ; if neither A nor B pressed, keep looping until one of them is.
 
 @DoDrop:
     LDX cursor                ; get the cursor in X
     LDA #0
     STA item_box, X           ; erase the item from the item box
     CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
-    JMP EquipMenu_DROP        ; and return to Drop loop
+    JUMP EquipMenu_DROP        ; and return to Drop loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9251,7 +9251,7 @@ EquipMenuFrame:
     LDA joy_a
     ORA joy_b             ; see if either A or B pressed
     BEQ @NotPressed       ; if not... jump ahead
-    JMP PlaySFX_MenuSel   ; otherwise, play the selection sound effect and exit
+    JUMP PlaySFX_MenuSel   ; otherwise, play the selection sound effect and exit
 
 
   @NotPressed:            ; if neither A nor B have been pressed
@@ -9262,7 +9262,7 @@ EquipMenuFrame:
     CMP tmp+7             ; compare current buttons to previous buttons
     BEQ @Exit             ; if no change, then exit
 
-    JMP PlaySFX_MenuMove  ; otherwise, a new button has been pressed, so play the menu move sound, then exit
+    JUMP PlaySFX_MenuMove  ; otherwise, a new button has been pressed, so play the menu move sound, then exit
 
   @Exit:
     RTS
@@ -9528,7 +9528,7 @@ DrawEquipMenu:
     LDA #BANK_THIS            ; set cur_bank (for DrawMenuString?) -- kind of pointless because DrawMenuString
     STA cur_bank              ;   already does this
 
-    JMP DrawBox               ; then draw the box, and return
+    JUMP DrawBox               ; then draw the box, and return
 
  @lut_EquipBoxes:
   .byte $01,$01,$07,$04   ; title box
@@ -9579,7 +9579,7 @@ DrawEquipMenuCurs:
     STA spr_x                    ; record X coord
     LDA lut_EquipMenuCurs+1, X   ; then fetch
     STA spr_y                    ;    and record Y coord
-    JMP DrawCursor               ; draw the cursor, and exit
+    JUMP DrawCursor               ; draw the cursor, and exit
 
   lut_EquipMenuCurs:
   .byte $40,$38,   $90,$38
@@ -9604,7 +9604,7 @@ DrawEquipMenuModeCurs:
     STA spr_x                ; set it
     LDA #$14
     STA spr_y                ; y coord fixed at $14
-    JMP DrawCursor           ; draw the cursor and return
+    JUMP DrawCursor           ; draw the cursor and return
 
   @lut_CursorX:
      .byte $48,  $80,  $B8

@@ -12087,7 +12087,7 @@ WaitForVBlank:
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
 @LoopForever:
-    JMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
+    JUMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

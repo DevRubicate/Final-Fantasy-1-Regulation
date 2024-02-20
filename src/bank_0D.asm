@@ -119,7 +119,7 @@ MiniGame_ShufflePuzzle:
     LDA #0
     STA puzzle, Y       ; then make the slot we moved empty
 
-    JMP @MainLoop       ; and continue looping
+    JUMP @MainLoop       ; and continue looping
 
   @lut_Direction:
     .byte 1, -1, 4, -4
@@ -364,7 +364,7 @@ DrawFancyTheEndGraphic:
         ADC #$00
         STA theend_src+1
         
-        JMP :-                      ; and keep looping until we find the terminator
+        JUMP :-                      ; and keep looping until we find the terminator
         
 @StartFill:
     ; The "Fill" effect works by re-traversing the outline of the graphic, and on certain
@@ -410,7 +410,7 @@ DrawFancyTheEndGraphic:
     ADC #$00
     STA theend_src+1
     
-    JMP @FillLoop_Trace ; loop until we hit the null
+    JUMP @FillLoop_Trace ; loop until we hit the null
  
  
     ; Here, we actually want to start filling
@@ -478,7 +478,7 @@ DrawFancyTheEndGraphic:
     STA PPUDATA
     
     CALL TheEnd_EndVblank            ; end VBlank (set scroll, update music)
-    JMP @FillInnerLoop              ; keep looping until fill for this row is complete
+    JUMP @FillInnerLoop              ; keep looping until fill for this row is complete
     
     RTS         ; <- never reached
     
@@ -514,7 +514,7 @@ TheEnd_MoveAndSet:
     LDX theend_x
     LDY theend_y
     CALL TheEnd_SetPixel
-    JMP TheEnd_EndVblank
+    NOJUMP TheEnd_EndVblank
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -530,7 +530,7 @@ TheEnd_EndVblank:
     LDA #$00
     STA PPUSCROLL
     STA PPUSCROLL
-    JMP MusicPlay
+    JUMP MusicPlay
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -556,7 +556,7 @@ TheEnd_MovePos:
         CLC
         ADC #$01
         STA theend_x
-        JMP @CheckVert
+        JUMP @CheckVert
     
     @Left:
         LDA theend_x        ; move left (why doesn't he DEC?)
@@ -723,7 +723,7 @@ MiniGame_VertSlide:
       DEX                    ; and loop until all rows have been recorded
       BNE @Up_SpriteLoop
 
-    JMP MiniGame_AnimateSlide   ; then do the animation, and exit
+    JUMP MiniGame_AnimateSlide   ; then do the animation, and exit
 
 
   @Down:                ; sliding down is the same as sliding up
@@ -759,7 +759,7 @@ MiniGame_VertSlide:
       DEX
       BNE @Down_SpriteLoop   ; and loop until all rows have been recorded
 
-    JMP MiniGame_AnimateSlide   ; then animate them and exit
+    JUMP MiniGame_AnimateSlide   ; then animate them and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -941,7 +941,7 @@ EnterMiniGame:
     LDA puzzle               ; but check slot zero to make sure it's not the empty slot
     BNE MiniGameLoop
       INC cursor             ; if it is... start the cursor on slot 1 instead
-                      ; no JMP or RTS -- code flows into MiniGameLoop
+                      ; no JUMP or RTS -- code flows into MiniGameLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1035,16 +1035,16 @@ MiniGameLoop:
     LDA #$14
     STA sq2_sfx        ; mark sq2 as being sound effect for $14 frames
 
-    JMP MiniGameLoop   ; then jump back to minigame loop
+    JUMP MiniGameLoop   ; then jump back to minigame loop
 
   @Vertical:                   ; if moving vertically...
     CALL DrawAllPuzzlePieces    ;   redraw all the puzzle pieces so that they're all visible
-    JMP MiniGame_VertSlide     ;   (cursor's piece might be hidden, here -- this ensures it's visible).
+    JUMP MiniGame_VertSlide     ;   (cursor's piece might be hidden, here -- this ensures it's visible).
                                ; Then perform a vertical slide
 
   @Horizontal:                 ; same thing if moving horizontally, but do the horizontal
     CALL DrawAllPuzzlePieces    ;  slide instead.
-    JMP MiniGame_HorzSlide
+    JUMP MiniGame_HorzSlide
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1377,7 +1377,7 @@ MusicPlay:
 
   @Play:
     BEQ @Resume        ; if the track was zero, resume a playing track
-    JMP Music_NewSong  ; otherwise start a new song
+    JUMP Music_NewSong  ; otherwise start a new song
 
 
 @Resume:
@@ -1402,7 +1402,7 @@ MusicPlay:
 
       LDA #$80                   ; set high bit of freq to mark that it doesn't need to be updated
       STA CHAN_SQ1 + ch_freq+1   ;  anymore (that LDA should probalby be ORA, but it doesn't matter)
-      JMP @Sq1_Done
+      JUMP @Sq1_Done
 
     @Sq1_NoFreqChange:           ; if the freq is not to be changed...
       LDA CHAN_SQ1 + ch_vol      ; still update volume (same process as above)
@@ -1447,7 +1447,7 @@ MusicPlay:
       STA PAPU_CT2
       ORA #$80                  ; then set high bit to mark that it doesn't need updating
       STA CHAN_SQ2 + ch_freq+1  ; and write it back
-      JMP @Sq2_Done             ; then sq2 is done!
+      JUMP @Sq2_Done             ; then sq2 is done!
 
    @Sq2_NoFreqChange:
       LDA CHAN_SQ2 + ch_vol     ; update vol/sweep just as above -- but don't update freq
@@ -1476,7 +1476,7 @@ MusicPlay:
 
       LDA #%10000000
       STA CHAN_TRI + ch_freq+1  ; then set high bit to indicate freq doesn't need updating
-      JMP @Tri_Done
+      JUMP @Tri_Done
 
     @Tri_HighBitSet:            ; if high bit was set
       CMP #$FF                  ;  see if high byte = $FF
@@ -1500,7 +1500,7 @@ MusicPlay:
 
       CALL Music_ChannelScore ; otherwise, the note is done (len expired), so do more score processing
       LDA ch_envpos, X       ; put the env position in A (expected to be there in @UpdateVol)
-      JMP @UpdateVol         ;  and jump ahead
+      JUMP @UpdateVol         ;  and jump ahead
 
   @EnvStep:            ; if a note is still playing... update the env pattern
     LDA ch_envrate, X      ; get the envelope rate
@@ -1567,7 +1567,7 @@ Music_ChannelScore:
     LDA ch_scoreptr+1, X
     STA mu_scoreptr+1
 
-    JMP Music_DoScore     ; then call Music_DoScore
+    JUMP Music_DoScore     ; then call Music_DoScore
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1616,14 +1616,14 @@ Music_DoScore:
     BCS @Code_D0_FF      ; if is, jump ahead.
 
       CALL Music_Rest     ; otherwise it's $Cx, which is a rest.  Process as a rest
-      JMP @Done          ;  and jump back to @Done
+      JUMP @Done          ;  and jump back to @Done
 
   @Code_D0_FF:
     CMP #$D8
     BCS @Code_D8_FF      ; next, see if code is >= $D8
 
       CALL Music_LoopCode  ; if here, it's $D0-D7 (loop/repeat code).  Process the loop
-      JMP Music_DoScore   ;  then continue with normal processing (Music_LoopCode updates the
+      JUMP Music_DoScore   ;  then continue with normal processing (Music_LoopCode updates the
                           ;  score pointer)
 
   @Code_D8_FF:
@@ -1632,7 +1632,7 @@ Music_DoScore:
 
       CALL Music_SetOctave        ; here if code $D8-DF (octave select).  Set octave
       LDA #1
-      JMP Music_DoScore_IncByA   ; then resume score processing, adding 1 to score pointer
+      JUMP Music_DoScore_IncByA   ; then resume score processing, adding 1 to score pointer
 
   @Code_E0_FF:
     CMP #$F0
@@ -1640,7 +1640,7 @@ Music_DoScore:
 
       CALL Music_SetEnvPattern    ; here if $E0-EF (env pattern select).
       LDA #1                     ;  set env pattern, then add 1 to score pointer and resume
-      JMP Music_DoScore_IncByA
+      JUMP Music_DoScore_IncByA
 
   @Code_F0_FF:
     CMP #$FF             ; is code == $FF ?
@@ -1662,7 +1662,7 @@ Music_DoScore:
       STA ch_envrate, X     ;  record that for the channel
 
       LDA #2
-      JMP Music_DoScore_IncByA  ; then resume processing -- incing by 2 (for $F8 and following byte)
+      JUMP Music_DoScore_IncByA  ; then resume processing -- incing by 2 (for $F8 and following byte)
 
   @Code_Fx:              ; here if $F0-F7, or $F9-FE
     CMP #$F9
@@ -1670,11 +1670,11 @@ Music_DoScore:
 
       CALL Music_SetTempo       ; here if $F9-FE -- Tempo select
       LDA #1
-      JMP Music_DoScore_IncByA ; resume processing after incing by 1
+      JUMP Music_DoScore_IncByA ; resume processing after incing by 1
 
   @Code_F0_F7:
     LDA #1                     ; $F0-F7 do absolutely nothing
-    JMP Music_DoScore_IncByA   ;  just skip over this byte and continue processing
+    JUMP Music_DoScore_IncByA   ;  just skip over this byte and continue processing
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1726,7 +1726,7 @@ Music_LoopCode:
   @StartLoop:             ; to start a new loop...
     LDA tmp               ; get the number to times to repeat this loop
     STA ch_loopctr, X     ; record that as the loop counter
-    JMP @ResumeLoop       ;  then resume the loop as normal
+    JUMP @ResumeLoop       ;  then resume the loop as normal
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1744,7 +1744,7 @@ Music_Note:
     STA tmp+14               ; backup the code
     CALL Music_ApplyTone      ; apply the tone
     LDA tmp+14               ; restore the code
-    JMP Music_ApplyLength    ; apply the length, and exit
+    JUMP Music_ApplyLength    ; apply the length, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2111,7 +2111,7 @@ EnterEndingScene:
       STA story_dropinput     ; otherwise, ignore/drop user input
 
       CALL Story_DoPage        ; do a page of story
-      JMP @StoryLoop          ; and keep looping
+      JUMP @StoryLoop          ; and keep looping
 
   @StoryExit:
     LDA #$04                  ; redraw the story box
@@ -2130,7 +2130,7 @@ EnterEndingScene:
   @FinalLoop:              ; then the game is over!
     CALL WaitForVBlank    ; simply wait endlessly... FOREVER  **THERE IS NO ESCAPE**
     CALL MusicPlay        ;   but keep the music playing by calling MusicPlay every frame
-    JMP @FinalLoop
+    JUMP @FinalLoop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2162,7 +2162,7 @@ EnterBridgeScene:
       STA story_dropinput   ; set dropinput to zero (we don't want to ignore user input)
       CALL Story_DoPage      ; and do a page of story
 
-      JMP @StoryLoop        ; and continue looping until all necessary pages have been done
+      JUMP @StoryLoop        ; and continue looping until all necessary pages have been done
 
   @StoryExit:
     LDA #0
@@ -2181,7 +2181,7 @@ EnterBridgeScene:
       STA story_dropinput
       CALL Story_DoPage      ; and do a page of credits
 
-      JMP @CreditsLoop      ; and continue looping
+      JUMP @CreditsLoop      ; and continue looping
 
   @CreditsExit:
     LDA #$80              ; mark the bridge scene as completed.. so it won't be activated again
@@ -2262,7 +2262,7 @@ Story_FillSecAttrib:
 
 Ending_StartPPU:
     CALL Ending_LoadPalette   ; load ending palette
-    JMP _Story_StartPPU      ;  then jump ahead to turn on PPU
+    JUMP _Story_StartPPU      ;  then jump ahead to turn on PPU
 
 
  ;; entry point for the Bridge Scene
@@ -2323,7 +2323,7 @@ Story_DoPage:
     CALL Story_OpenShutters   ; do the open shutter effect
     CALL Story_Wait           ; wait for user to read the text
     INC story_page           ;  then increment the story page
-    JMP Story_CloseShutters  ; do the close shutter effect, then exit
+    JUMP Story_CloseShutters  ; do the close shutter effect, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2718,7 +2718,7 @@ Ending_LoadPalette:
 Story_DrawText:
     LDA story_credits    ; are we drawing credits?  or story text?
     BNE @DoCredits       ;  if credits... do them
-      JMP @DoStory       ;  otherwise, do story
+      JUMP @DoStory       ;  otherwise, do story
 
   @DoCredits:
     LDA story_page       ; get current page number
@@ -2763,7 +2763,7 @@ Story_DrawText:
     BEQ @StartSimpleString   ; if this byte was $01, start a new simple string
 
     STA PPUDATA              ; otherwise (normal byte), draw it
-    JMP @SimpleStringLoop  ; and continue looping
+    JUMP @SimpleStringLoop  ; and continue looping
 
   @EndCreditsPage:
     LDA #0
@@ -2785,7 +2785,7 @@ Story_DrawText:
     LDA lut_StoryText+1, X
     STA text_ptr+1
 
-    JMP DrawComplexString ; and draw it at a complex string.  Then exit
+    JUMP DrawComplexString ; and draw it at a complex string.  Then exit
 
 
 __Nasir_CRC_High_Byte = @NasirCRCHighByte+2   ; unimportant to this routine -- has to do with CRC check
@@ -2880,7 +2880,7 @@ MiniGame_HorzSlide:
       DEX
       BNE @Right_SpriteLoop
 
-    JMP MiniGame_AnimateSlide   ; then animate them -- and exit
+    JUMP MiniGame_AnimateSlide   ; then animate them -- and exit
 
 
   @Left:
@@ -2910,7 +2910,7 @@ MiniGame_HorzSlide:
       DEX
       BNE @Left_SpriteLoop
 
-    JMP MiniGame_AnimateSlide  ; then animate them, and exit
+    JUMP MiniGame_AnimateSlide  ; then animate them, and exit
 
 
 
@@ -3063,7 +3063,7 @@ DrawPuzzlePiece:
     STA oam_a+(2*4), X
     STA oam_a+(3*4), X
 
-    JMP @Done             ; and JMP to the exit
+    JUMP @Done             ; and JUMP to the exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3106,7 +3106,7 @@ MiniGame_AnimateSlide:
     CMP #$10               ; and keep looping until we reach $10 ($10 iterations)
     BCC @AnimateLoop
 
-    JMP MiniGameLoop       ; once finished -- return to the minigame loop
+    JUMP MiniGameLoop       ; once finished -- return to the minigame loop
 
   ;;
   ;;  This local subroutine moves the tile in the given slot (in A) 1 pixel in the desired direction

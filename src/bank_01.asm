@@ -8053,7 +8053,7 @@ MinimapDecompress:
       STA tmp
       LDA lut_OWPtrTbl + $101, X
       STA tmp+1
-      JMP @Start
+      JUMP @Start
 
   @LowHalf:
       LDA lut_OWPtrTbl, X
@@ -8095,7 +8095,7 @@ MinimapDecompress:
     INC tmp
     BNE @Loop
     INC tmp+1
-    JMP @Loop
+    JUMP @Loop
 
   DoNextRow:         ; didn't make this local because I wanted to be able to use the
                      ;   same local labels in this half (since it is just a copy/paste)
@@ -8115,7 +8115,7 @@ MinimapDecompress:
       STA tmp
       LDA lut_OWPtrTbl + $101, X
       STA tmp+1
-      JMP @Start
+      JUMP @Start
 
   @LowHalf:
       LDA lut_OWPtrTbl, X
@@ -8157,7 +8157,7 @@ MinimapDecompress:
     INC tmp
     BNE @Loop
     INC tmp+1
-    JMP @Loop
+    JUMP @Loop
 
   @Exit:
     RTS
