@@ -12375,7 +12375,7 @@ Impl_FARJUMP:
     PHA
 
     ; Push this address to the stack so we can return here
-    JSR @jump
+    CALL @jump
     ; We just got back so time to rewind
 
     ; Save A
@@ -12448,7 +12448,7 @@ Impl_FARCALL:
     PHA
 
     ; Push this address to the stack so we can return here
-    JSR @jump
+    CALL @jump
     ; We just got back so time to rewind
 
     ; Save A

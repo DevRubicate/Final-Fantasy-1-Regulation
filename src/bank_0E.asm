@@ -42,11 +42,11 @@ lut_ShopData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TitleScreen_Copyright:
-    JSR IntroTitlePrepare    ; clear NT, start music, etc
+    CALL IntroTitlePrepare    ; clear NT, start music, etc
     BIT PPUSTATUS                ;  reset PPU toggle
 
     LDX #0
-    JSR @DrawString         ; JSR to the @DrawString to draw the first one
+    CALL @DrawString         ; CALL to the @DrawString to draw the first one
                             ;  then just let code flow into it to draw a second one (2 strings total)
 
   @DrawString:
@@ -90,7 +90,7 @@ IntroStory_Joy:
     LDA #0                ; reset the respond rate to zero
     STA a:respondrate     ;  (why do this here?  Very out of place)
 
-    JSR UpdateJoy         ; Update joypad data
+    CALL UpdateJoy         ; Update joypad data
     LDA joy
     AND #BTN_START        ; see if start was pressed
     BNE :+                ;  if not, just exit
@@ -109,7 +109,7 @@ IntroStory_Joy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TitleScreen_Music:
-    JSR CallMusicPlay
+    CALL CallMusicPlay
     LDA joy_a
     RTS
 
@@ -349,32 +349,32 @@ PrintNumber_1Digit:
                          ; A = start of string, then BNE (or BEQ) to exit
 
 PrintNumber_2Digit:
-    JSR FormatNumber_2Digits   ; format the number
-    JSR TrimZeros_2Digits      ; trim leading zeros
+    CALL FormatNumber_2Digits   ; format the number
+    CALL TrimZeros_2Digits      ; trim leading zeros
     LDA #<format_buf+5
     JMP PrintNumber_Exit      ; string start
 
 PrintNumber_3Digit:            ; more of same...
-    JSR FormatNumber_3Digits
-    JSR TrimZeros_3Digits
+    CALL FormatNumber_3Digits
+    CALL TrimZeros_3Digits
     LDA #<format_buf+4
     JMP PrintNumber_Exit
 
 PrintNumber_4Digit:            ; more of same.
-    JSR FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
-    JSR TrimZeros_4Digits
+    CALL FormatNumber_4Digits   ; though... I don't think this 4-digit routine is used anywhere in the game
+    CALL TrimZeros_4Digits
     LDA #<format_buf+3
     JMP PrintNumber_Exit
 
 PrintNumber_5Digit:
-    JSR FormatNumber_5Digits
-    JSR TrimZeros_5Digits
+    CALL FormatNumber_5Digits
+    CALL TrimZeros_5Digits
     LDA #<format_buf+2
     JMP PrintNumber_Exit
 
 PrintNumber_6Digit:
-    JSR FormatNumber_6Digits
-    JSR TrimZeros_6Digits
+    CALL FormatNumber_6Digits
+    CALL TrimZeros_6Digits
     LDA #<format_buf+1
     JMP PrintNumber_Exit
 
@@ -1047,7 +1047,7 @@ Talk_None:
 
 Talk_KingConeria:
     LDY #OBJID_PRINCESS_2   ; see if the saved princess is visible (princess has been rescued)
-    JSR IsObjectVisible
+    CALL IsObjectVisible
     BCS :+                  ; if not...
       LDA tmp+1             ;  ... print [1]
       RTS
@@ -1067,10 +1067,10 @@ Talk_KingConeria:
 
 Talk_Garland:
     LDY #OBJID_GARLAND
-    JSR HideThisMapObject   ; hide (kill) the Garland object (this object)
+    CALL HideThisMapObject   ; hide (kill) the Garland object (this object)
 
     LDA #BTL_GARLAND
-    JSR TalkBattle          ; trigger the battle with Garland
+    CALL TalkBattle          ; trigger the battle with Garland
 
     LDA tmp+1               ; and print [1]
     RTS
@@ -1080,13 +1080,13 @@ Talk_Garland:
 
 Talk_Princess1:
     LDY #OBJID_PRINCESS_1
-    JSR HideThisMapObject   ; hide the kidnapped princess (this object)
+    CALL HideThisMapObject   ; hide the kidnapped princess (this object)
 
     LDY #OBJID_PRINCESS_2
-    JSR ShowMapObject       ; show (replace with) the rescued princess
+    CALL ShowMapObject       ; show (replace with) the rescued princess
 
     LDA #NORMTELE_SAVEDPRINCESS  ; trigger the teleport back to Coneria Castle
-    JSR TalkNormTeleport
+    CALL TalkNormTeleport
 
     LDA tmp+1               ; and print [1]
     RTS
@@ -1098,12 +1098,12 @@ Talk_Princess1:
 
 Talk_Bikke:
     LDY #OBJID_BIKKE
-    JSR CheckGameEventFlag  ; check Bikke's event flag to see if we fought him yet
+    CALL CheckGameEventFlag  ; check Bikke's event flag to see if we fought him yet
     BCS @AlreadyFought      ; if we already have, skip ahead
 
-      JSR SetGameEventFlag  ; otherwise, set event flag to mark him as fought
+      CALL SetGameEventFlag  ; otherwise, set event flag to mark him as fought
       LDA #BTL_BIKKE        ; then start a battle with Bikke (his pirates)
-      JSR TalkBattle
+      CALL TalkBattle
       LDA tmp+1             ; and print [1]
       RTS
 
@@ -1113,11 +1113,11 @@ Talk_Bikke:
 
       INC ship_vis            ; otherwise, give the player the ship
       LDY #OBJID_PIRATETERR_1
-      JSR ShowMapObject       ; and show a bunch of scaredy-cat townspeople that the pirates
+      CALL ShowMapObject       ; and show a bunch of scaredy-cat townspeople that the pirates
       LDY #OBJID_PIRATETERR_2 ;  were terrorizing
-      JSR ShowMapObject
+      CALL ShowMapObject
       LDY #OBJID_PIRATETERR_3
-      JSR ShowMapObject
+      CALL ShowMapObject
 
       LDA tmp+2          ; print [2]
       INC dlgsfx         ; and play fanfare
@@ -1134,7 +1134,7 @@ Talk_Bikke:
 
 Talk_ElfDoc:
     LDY #OBJID_ELFPRINCE    ; check the elf prince's event flag
-    JSR CheckGameEventFlag  ;  it will be clear if the prince is still asleep
+    CALL CheckGameEventFlag  ;  it will be clear if the prince is still asleep
     BCC @PrinceAsleep       ; if prince is awake...
       LDA tmp+3             ;  .. then simply print [3]
       RTS
@@ -1147,7 +1147,7 @@ Talk_ElfDoc:
 
   @HaveHerb:              ; prince is asleep and you have herb!
     DEC item_herb         ; take away the herb from the party
-    JSR SetGameEventFlag  ; set the prince's event flag (wake him up)
+    CALL SetGameEventFlag  ; set the prince's event flag (wake him up)
     INC dlgsfx            ; play fanfare
     LDA tmp+2             ; and print [2]
     RTS
@@ -1159,7 +1159,7 @@ Talk_ElfDoc:
 
 Talk_ElfPrince:
     LDY #OBJID_ELFPRINCE    ; check the prince's event flag to see if he's sleeping
-    JSR CheckGameEventFlag
+    CALL CheckGameEventFlag
     BCS @Awake              ; if he's still sleeping...
       LDA tmp+3             ;  .. then just print [3]
       RTS
@@ -1189,10 +1189,10 @@ Talk_Astos:
   @HaveCrown:              ; otherwise (they have the crown)
     INC item_crystal       ; give them the Crystal
     LDY #OBJID_ASTOS
-    JSR HideThisMapObject  ; hide (kill) Astos' map object (this object)
+    CALL HideThisMapObject  ; hide (kill) Astos' map object (this object)
 
     LDA #BTL_ASTOS         ; trigger battle with Astos
-    JSR TalkBattle
+    CALL TalkBattle
 
     INC dlgsfx             ; play fanfare
     LDA tmp+2              ; and print [2]
@@ -1214,7 +1214,7 @@ Talk_Nerrick:
     LDA #0                 ; kill the Canal
     STA canal_vis
     LDY #OBJID_NERRICK     ; hide Nerrick (this object)
-    JSR HideThisMapObject
+    CALL HideThisMapObject
 
     INC dlgsfx             ; play fanfare
     LDA tmp+2              ; and print [2]
@@ -1228,7 +1228,7 @@ Talk_Nerrick:
 
 Talk_Smith:
     LDY #OBJID_SMITH       ; check Smith's event flag to see if we already made
-    JSR CheckGameEventFlag ;  the Xcalbur for the party
+    CALL CheckGameEventFlag ;  the Xcalbur for the party
     BCC @WantSword         ; if he already made it....
       LDA tmp+3            ; ... then simply print [3]
       RTS
@@ -1246,7 +1246,7 @@ Talk_Smith:
      LDA #WPNID_XCALBUR     ; put the XCalbur in the previously found slot
      STA ch_stats, X
      LDY #OBJID_SMITH       ; set Smith's event flag to mark that we made the sword
-     JSR SetGameEventFlag
+     CALL SetGameEventFlag
      DEC item_adamant       ; take the Adamant away from the party
      INC dlgsfx             ; play fanfare
      LDA tmp+2              ; and print [2]
@@ -1274,7 +1274,7 @@ Talk_Matoya:
     BNE @DoExchange           ; if they do, exchange!
 
      LDY #OBJID_ELFPRINCE     ; otherwise, see if the elf prince is still asleep
-     JSR CheckGameEventFlag   ;  by checking his game flag
+     CALL CheckGameEventFlag   ;  by checking his game flag
      BCS @Default             ; if he's awake, revert to default action
 
       LDA tmp+1               ; otherwise, elf is still asleep.  print [1]
@@ -1294,7 +1294,7 @@ Talk_Matoya:
 
 Talk_Unne:
     LDY #OBJID_UNNE         ; Check Unne's event flag to see if he taught you
-    JSR CheckGameEventFlag  ;   Lefeinish yet
+    CALL CheckGameEventFlag  ;   Lefeinish yet
     BCC @NeedToLearn        ; if he already taught you...
       LDA tmp+3             ; .. print [3]
       RTS
@@ -1307,7 +1307,7 @@ Talk_Unne:
 
   @Teach:                   ; if they have the slab... teach them!
     DEC item_slab           ; take away the slab
-    JSR SetGameEventFlag    ; set Unne's event flag (teach you lefeinish)
+    CALL SetGameEventFlag    ; set Unne's event flag (teach you lefeinish)
     INC dlgsfx              ; fanfare
     LDA tmp+2               ; print [2]
     RTS
@@ -1317,9 +1317,9 @@ Talk_Unne:
 
 Talk_Vampire:
     LDY #OBJID_VAMPIRE      ; Kill/Hide the Vampire object (this object)
-    JSR HideThisMapObject
+    CALL HideThisMapObject
     LDA #BTL_VAMPIRE        ; Trigger a battle with the Vampire
-    JSR TalkBattle
+    CALL TalkBattle
     LDA tmp+1               ; and print [1]
     RTS
 
@@ -1332,7 +1332,7 @@ Talk_Sarda:
     BNE @Default            ; if they do, skip to default
 
     LDY #OBJID_VAMPIRE      ; see if they killed the vampire yet (seems pointless -- can't reach Sarda
-    JSR IsObjectVisible     ;   until you kill the vampire)
+    CALL IsObjectVisible     ;   until you kill the vampire)
     BCS @Default            ; if Vampire is still alive, skip to default
 
     INC item_rod            ; otherwise, reward them with the Rod
@@ -1351,7 +1351,7 @@ Talk_Sarda:
 
 Talk_Bahamut:
     LDY #OBJID_BAHAMUT      ; Check Bahamut's Event flag (see if he promoted you yet)
-    JSR CheckGameEventFlag
+    CALL CheckGameEventFlag
     BCC @CheckTail          ; if he has...
       LDA tmp+3             ; ... print [3]
       RTS
@@ -1364,8 +1364,8 @@ Talk_Bahamut:
 
   @ClassChange:             ; otherwise (have tail), do the class change!
     DEC item_tail           ; remove the tail from inventory
-    JSR SetGameEventFlag    ; set Bahamut's event flag
-    JSR DoClassChange       ; do class change
+    CALL SetGameEventFlag    ; set Bahamut's event flag
+    CALL DoClassChange       ; do class change
     INC dlgsfx              ; play fanfare
     LDA tmp+2               ; and print [2]
     RTS
@@ -1376,7 +1376,7 @@ Talk_Bahamut:
 
 Talk_ifvis:
     LDY tmp                 ; check to see if object [0] is visible
-    JSR IsObjectVisible
+    CALL IsObjectVisible
     BCS :+                  ; if it is, print [2]
       LDA tmp+1             ; otherwise, print [1]
       RTS
@@ -1393,7 +1393,7 @@ Talk_SubEng:
       LDA tmp+1             ; ...print [1]
       RTS
 :   LDY #OBJID_SUBENGINEER  ; otherwise (they do)
-    JSR HideThisMapObject   ; hide the sub engineer object (this object)
+    CALL HideThisMapObject   ; hide the sub engineer object (this object)
     LDA tmp+2               ; and print [2]
     RTS
 
@@ -1450,7 +1450,7 @@ Talk_Titan:
       RTS
 :   DEC item_ruby          ; if they do have it, take it away
     LDY #OBJID_TITAN       ; hide/remove Titan (this object)
-    JSR HideThisMapObject
+    CALL HideThisMapObject
     LDA tmp+2              ; print [2]
     INC dlgsfx             ; and play fanfare
     RTS
@@ -1484,9 +1484,9 @@ Talk_norm:
 
 Talk_Replace:
     LDY tmp               ; get object ID from [0]
-    JSR HideThisMapObject ; hide that object (this object)
+    CALL HideThisMapObject ; hide that object (this object)
     LDY tmp+3
-    JSR ShowMapObject     ; show object ID [3]
+    CALL ShowMapObject     ; show object ID [3]
     LDA tmp+1             ; and print [1]
     RTS
 
@@ -1495,7 +1495,7 @@ Talk_Replace:
 
 Talk_CoOGuy:
     LDY tmp
-    JSR HideThisMapObject ; hide object ID [0] (this object)
+    CALL HideThisMapObject ; hide object ID [0] (this object)
     LDA tmp+1             ; and print [1]
     RTS
 
@@ -1504,9 +1504,9 @@ Talk_CoOGuy:
 
 Talk_fight:
     LDY tmp
-    JSR HideThisMapObject ; hide object [0] (this object)
+    CALL HideThisMapObject ; hide object [0] (this object)
     LDA tmp+3
-    JSR TalkBattle        ; trigger battle ID [3]
+    CALL TalkBattle        ; trigger battle ID [3]
     LDA tmp+1             ; and print [1]
     RTS
 
@@ -1536,7 +1536,7 @@ Talk_ifitem:
 
 Talk_Invis:
     LDY #OBJID_PRINCESS_2
-    JSR IsObjectVisible  ; see if the princess has been rescued (rescued princess object visible)
+    CALL IsObjectVisible  ; see if the princess has been rescued (rescued princess object visible)
     BCS :+               ; if she's not rescued...
       LDA item_lute
       BNE :+             ; ... and if you don't have the lute (redundant)
@@ -1566,7 +1566,7 @@ Talk_ifbridge:
 
 Talk_ifevent:
     LDY tmp                 ; use [0] as an event flag index
-    JSR CheckGameEventFlag  ;  see if that event flag has been set
+    CALL CheckGameEventFlag  ;  see if that event flag has been set
     BCS :+                  ; if not...
       LDA tmp+1             ; ... print [1]
       RTS
@@ -1579,7 +1579,7 @@ Talk_ifevent:
 
 Talk_GoBridge:
     LDY #OBJID_PRINCESS_2   ; check to see if princess has been rescued
-    JSR IsObjectVisible
+    CALL IsObjectVisible
     BCC :+                  ; if she has...
       LDA bridge_vis        ; see if bridge has been built
       BNE :+                ; if not... (princess saved, but bridge not built yet...)
@@ -1599,7 +1599,7 @@ Talk_BlackOrb:
     AND orb_earth
     BEQ @NotAllLit          ; if all of them are lit...
       LDY #OBJID_BLACKORB   ; hide the black orb object (this object)
-      JSR HideThisMapObject
+      CALL HideThisMapObject
       INC dlgsfx            ; play TC sound effect  (not fanfare)
       INC dlgsfx
       LDA tmp+1             ; and print [1]
@@ -1669,7 +1669,7 @@ Talk_ifkeytnt:
 
 Talk_ifearthvamp:
     LDY #OBJID_VAMPIRE    ; see if the vampire has been killed yet
-    JSR IsObjectVisible
+    CALL IsObjectVisible
     BCS :+                ; if not...
       LDA orb_earth       ; check to see if player revived earth orb
       BNE :+              ; if not... (Vampire killed, Earth Orb not lit yet)
@@ -1712,7 +1712,7 @@ Talk_ifearthfire:
 
 Talk_Chime:
     LDY #OBJID_UNNE         ; see if Unne event has happened yet (they speak Lefeinish)
-    JSR CheckGameEventFlag
+    CALL CheckGameEventFlag
     BCS :+                  ; if not (they don't speak it)
       LDA tmp+3             ; ... print [3]
       RTS
@@ -1828,8 +1828,8 @@ EnterLineupMenu:
     LDA #$08
     STA soft2000          ; reset soft2000 to typical setup
 
-    JSR LoadMenuCHRPal    ; load menu related CHR and palettes
-    JSR ClearNT           ; clear the nametable
+    CALL LoadMenuCHRPal    ; load menu related CHR and palettes
+    CALL ClearNT           ; clear the nametable
 
     LDA #$0A              ; box coords = $0A,$05
     STA box_x             ; box dims   = $0E,$13
@@ -1875,10 +1875,10 @@ EnterLineupMenu:
     AND #$02
     STA str_buf+(3*8)
 
-    JSR DrawBox                 ; draw box (coords/dims previously filled)
-    JSR DrawLineupMenuNames     ; draw names of all the characters
-    JSR WaitForVBlank         ; wait for VBlank
-    JSR DrawPalette             ; and draw the palette
+    CALL DrawBox                 ; draw box (coords/dims previously filled)
+    CALL DrawLineupMenuNames     ; draw names of all the characters
+    CALL WaitForVBlank         ; wait for VBlank
+    CALL DrawPalette             ; and draw the palette
 
     LDA #$55
     STA music_track             ; switch to music track $55  (crystal theme)
@@ -1889,9 +1889,9 @@ EnterLineupMenu:
     STA PPUSCROLL
     STA PPUSCROLL
 
-    JSR ClearOAM                ; clear OAM
+    CALL ClearOAM                ; clear OAM
 
-    JSR UpdateJoy               ; update joy data
+    CALL UpdateJoy               ; update joy data
     LDA joy                     ;  so we can fill our lu_joyprev
     AND #$0C
     STA lu_joyprev
@@ -1907,7 +1907,7 @@ EnterLineupMenu:
   ;; Then start the main loop
 
   @MainLoop:
-    JSR WaitForVBlank         ; wait for VBlank
+    CALL WaitForVBlank         ; wait for VBlank
 
     LDA #>oam
     STA OAMDMA                   ; do sprite DMA
@@ -1923,14 +1923,14 @@ EnterLineupMenu:
 
     LDA #BANK_THIS
     STA cur_bank
-    JSR CallMusicPlay           ; call music routine
+    CALL CallMusicPlay           ; call music routine
 
-    JSR ClearOAM                     ; clear OAM
-    JSR LineupMenu_DrawCharSprites   ; draw the character sprites
-    JSR LineupMenu_DrawCursor        ; draw the cursor
-    JSR LineupMenu_UpdateJoy         ; update joypad info
-    JSR LineupMenu_ProcessMode       ; process mode operations (animation)
-    JSR LineupMenu_ProcessJoy        ; process joypad input
+    CALL ClearOAM                     ; clear OAM
+    CALL LineupMenu_DrawCharSprites   ; draw the character sprites
+    CALL LineupMenu_DrawCursor        ; draw the cursor
+    CALL LineupMenu_UpdateJoy         ; update joypad info
+    CALL LineupMenu_ProcessMode       ; process mode operations (animation)
+    CALL LineupMenu_ProcessJoy        ; process joypad input
     JMP @MainLoop                    ; and keep looping!
 
     ; Routine can only exit via ProcessJoy -- which drops the return address and JMPs
@@ -1954,7 +1954,7 @@ LineupMenu_UpdateJoy:
     AND #$0C               ; isolate up/down buttons
     STA tmp+7              ; and store in tmp RAM as previous buttons
 
-    JSR UpdateJoy          ; update the joypad
+    CALL UpdateJoy          ; update the joypad
 
     LDA joy_a
     ORA joy_b              ; check if either A or B pressed
@@ -2186,7 +2186,7 @@ LineupMenu_ProcessMode:
 
   @Mode_4:
     LDY lu_cursor
-    JSR LineupMenu_AnimStep    ; move first slot towards its destination
+    CALL LineupMenu_AnimStep    ; move first slot towards its destination
     BCC @M4_FirstDone          ; if first slot is done... jump ahead
 
       LDY lu_cursor2           ; otherwise... just move the second selected slot
@@ -2194,7 +2194,7 @@ LineupMenu_ProcessMode:
 
   @M4_FirstDone:
     LDY lu_cursor2
-    JSR LineupMenu_AnimStep    ; move the second selected slot
+    CALL LineupMenu_AnimStep    ; move the second selected slot
     BCS LUMode_Exit            ; if it's not done yet... exit otherwise they're both done
 
 
@@ -2332,7 +2332,7 @@ LineupMenu_DrawCharSprites:
     STA spr_y
 
     LDA str_buf+1, Y        ; get slot's char index
-    JSR DrawOBSprite        ; and draw that sprite
+    CALL DrawOBSprite        ; and draw that sprite
 
     PLA                     ; pull our loop counter
     CLC
@@ -2373,17 +2373,17 @@ DrawLineupMenuNames:
     LDA #$08
     STA dest_y              ; dest = $0D,$08
     LDA str_buf+1           ; get the char index of slot 0
-    JSR DrawCharacterName   ; draw his name
+    CALL DrawCharacterName   ; draw his name
 
     LDA #$0C
     STA dest_y              ; dest = $0D,$0C
     LDA str_buf+1+(1*8)     ; char index of slot 1
-    JSR DrawCharacterName   ; draw name
+    CALL DrawCharacterName   ; draw name
 
     LDA #$10
     STA dest_y
     LDA str_buf+1+(2*8)
-    JSR DrawCharacterName   ; draw slot 2's name
+    CALL DrawCharacterName   ; draw slot 2's name
 
     LDA #$14
     STA dest_y
@@ -2416,15 +2416,15 @@ LineupMenu_Finalize:
 
     LDX str_buf+1             ; char ID to be put in
     LDY #0                    ;   slot 0
-    JSR @PutInSlot
+    CALL @PutInSlot
 
     LDX str_buf+1+(1*8)       ; char ID for...
     LDY #(1<<6)               ;   slot 1
-    JSR @PutInSlot
+    CALL @PutInSlot
 
     LDX str_buf+1+(2*8)       ; slot 2
     LDY #(2<<6)
-    JSR @PutInSlot
+    CALL @PutInSlot
 
     LDX str_buf+1+(3*8)       ; slot 3
     LDY #(3<<6)
@@ -2544,7 +2544,7 @@ NewGamePartyGeneration:
     LDA #$0F                ; turn ON the audio (it should already be on, though
     STA PAPU_EN               ;  so this is kind of pointless)
     
-    JSR LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
+    CALL LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
     
     LDA cur_pal+$D          ; Do some palette finagling
     STA cur_pal+$1          ;  Though... these palettes are never drawn, so this seems entirely pointless
@@ -2567,34 +2567,34 @@ NewGamePartyGeneration:
   @Char_0:                      ; To Character generation for each of the 4 characters
     LDA #$00                    ;   branching back to the previous char if the user
     STA char_index              ;   cancelled by pressing B
-    JSR DoPartyGen_OnCharacter
+    CALL DoPartyGen_OnCharacter
     BCS @Char_0
   @Char_1:
     LDA #$10
     STA char_index
-    JSR DoPartyGen_OnCharacter
+    CALL DoPartyGen_OnCharacter
     BCS @Char_0
   @Char_2:
     LDA #$20
     STA char_index
-    JSR DoPartyGen_OnCharacter
+    CALL DoPartyGen_OnCharacter
     BCS @Char_1
   @Char_3:
     LDA #$30
     STA char_index
-    JSR DoPartyGen_OnCharacter
+    CALL DoPartyGen_OnCharacter
     BCS @Char_2
     
     
     ; Once all 4 characters have been generated and named...
-    JSR PtyGen_DrawScreen       ; Draw the screen one more time
-    JSR ClearOAM                ; Clear OAM
-    JSR PtyGen_DrawChars        ; Redraw char sprites
-    JSR WaitForVBlank         ; Do a frame
+    CALL PtyGen_DrawScreen       ; Draw the screen one more time
+    CALL ClearOAM                ; Clear OAM
+    CALL PtyGen_DrawChars        ; Redraw char sprites
+    CALL WaitForVBlank         ; Do a frame
     LDA #>oam                   ;   with a proper OAM update
     STA OAMDMA
     
-    JSR MenuWaitForBtn_SFX      ; Wait for the user to press A (or B) again, to
+    CALL MenuWaitForBtn_SFX      ; Wait for the user to press A (or B) again, to
     LDA joy                     ;  confirm their party decisions.
     AND #$40
     BNE @Char_3                 ; If they pressed B, jump back to Char 3 generation
@@ -2604,11 +2604,11 @@ NewGamePartyGeneration:
     STA PPUMASK                   ; shut the PPU off
     
     LDX #$00                    ; Move class and name selection
-    JSR @RecordClassAndName     ;  out of the ptygen buffer and into the actual character stats
+    CALL @RecordClassAndName     ;  out of the ptygen buffer and into the actual character stats
     LDX #$10
-    JSR @RecordClassAndName
+    CALL @RecordClassAndName
     LDX #$20
-    JSR @RecordClassAndName
+    CALL @RecordClassAndName
     LDX #$30
   ; JMP @RecordClassAndName
     
@@ -2650,9 +2650,9 @@ PtyGen_DrawScreen:
     STA joy
     STA joy_prevdir
 
-    JSR ClearNT             ; wipe the screen clean
-    JSR PtyGen_DrawBoxes    ;  draw the boxes
-    JSR PtyGen_DrawText     ;  and the text in those boxes
+    CALL ClearNT             ; wipe the screen clean
+    CALL PtyGen_DrawBoxes    ;  draw the boxes
+    CALL PtyGen_DrawText     ;  and the text in those boxes
     JMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
 
@@ -2671,11 +2671,11 @@ PtyGen_DrawScreen:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoPartyGen_OnCharacter:
-    JSR PtyGen_DrawScreen           ; Draw the Party generation screen
+    CALL PtyGen_DrawScreen           ; Draw the Party generation screen
     
     ; Then enter the main logic loop
   @MainLoop:
-      JSR PtyGen_Frame              ; Do a frame and update joypad input
+      CALL PtyGen_Frame              ; Do a frame and update joypad input
       LDA joy_a
       BNE DoNameInput               ; if A was pressed, do name input
       LDA joy_b
@@ -2707,7 +2707,7 @@ DoPartyGen_OnCharacter:
       LDA #$01                  ; set menustall (drawing while PPU is on)
       STA menustall
       LDX char_index            ; then update the on-screen class name
-      JSR PtyGen_DrawOneText
+      CALL PtyGen_DrawOneText
       JMP @MainLoop
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2738,8 +2738,8 @@ DoNameInput:
     STA namecurs_y          ; Y position (0-6)
     
     ; Some local temp vars
-    JSR ClearNT
-    JSR DrawNameInputScreen
+    CALL ClearNT
+    CALL DrawNameInputScreen
     
     LDX char_index          ; wipe this character's name
     LDA #$FF
@@ -2748,13 +2748,13 @@ DoNameInput:
     STA ptygen_name+2, X
     STA ptygen_name+3, X
     
-    JSR TurnMenuScreenOn_ClearOAM   ; now that everything is drawn, turn the screen on
+    CALL TurnMenuScreenOn_ClearOAM   ; now that everything is drawn, turn the screen on
     
     LDA #$01                ; Set menustall, as future drawing will
     STA menustall           ;  be with the PPU on
     
   @MainLoop:
-    JSR CharName_Frame      ; Do a frame & get input
+    CALL CharName_Frame      ; Do a frame & get input
     
     LDA joy_a
     BNE @A_Pressed          ; Check if A or B pressed
@@ -2862,7 +2862,7 @@ DoNameInput:
     LDA theend_selectedtile
     STA ptygen_name, X          ; and write the selected tile
     
-    JSR NameInput_DrawName      ; Redraw the name as it appears on-screen
+    CALL NameInput_DrawName      ; Redraw the name as it appears on-screen
     
     LDA cursor                  ; Then add to our cursor
     CLC
@@ -2888,17 +2888,17 @@ DoNameInput:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_Frame:
-    JSR ClearOAM           ; wipe OAM then draw all sprites
-    JSR PtyGen_DrawChars
-    JSR PtyGen_DrawCursor
+    CALL ClearOAM           ; wipe OAM then draw all sprites
+    CALL PtyGen_DrawChars
+    CALL PtyGen_DrawCursor
 
-    JSR WaitForVBlank    ; VBlank and DMA
+    CALL WaitForVBlank    ; VBlank and DMA
     LDA #>oam
     STA OAMDMA
 
     LDA #BANK_THIS         ; then keep playing music
     STA cur_bank
-    JSR CallMusicPlay
+    CALL CallMusicPlay
 
     JMP PtyGen_Joy         ; and update joy data!
 
@@ -2912,10 +2912,10 @@ PtyGen_Frame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CharName_Frame:
-    JSR ClearOAM           ; wipe OAM then draw the cursor
-    JSR CharName_DrawCursor
+    CALL ClearOAM           ; wipe OAM then draw the cursor
+    CALL CharName_DrawCursor
 
-    JSR WaitForVBlank    ; VBlank and DMA
+    CALL WaitForVBlank    ; VBlank and DMA
     LDA #>oam
     STA OAMDMA
 
@@ -2927,7 +2927,7 @@ CharName_Frame:
 
     LDA #BANK_THIS         ; keep playing music
     STA cur_bank
-    JSR CallMusicPlay
+    CALL CallMusicPlay
 
       ; then update joy by running seamlessly into PtyGen_Joy
 
@@ -2946,7 +2946,7 @@ PtyGen_Joy:
     AND #$0F
     STA tmp+7            ; put old directional buttons in tmp+7 for now
 
-    JSR UpdateJoy        ; then update joypad data
+    CALL UpdateJoy        ; then update joypad data
 
     LDA joy_a            ; if either A or B pressed...
     ORA joy_b
@@ -2975,7 +2975,7 @@ PtyGen_DrawBoxes:
     STA tmp+15       ; reset loop counter to zero
 
   @Loop:
-      JSR @Box       ; then loop 4 times, each time, drawing the next
+      CALL @Box       ; then loop 4 times, each time, drawing the next
       LDA tmp+15     ; character's box
       CLC
       ADC #$10       ; incrementing by $10 each time (indexes ptygen buffer)
@@ -3013,7 +3013,7 @@ PtyGen_DrawText:
     LDA #0             ; start loop counter at zero
   @MainLoop:
      PHA                ; push loop counter to back it up
-     JSR @DrawOne       ; draw one character's strings
+     CALL @DrawOne       ; draw one character's strings
      PLA                ;  pull loop counter
      CLC                ; and increase it to point to next character's data
      ADC #$10           ;  ($10 bytes per char in 'ptygen')
@@ -3071,7 +3071,7 @@ PtyGen_DrawOneText:
 
     TXA                     ; back up our index (DrawComplexString will corrupt it)
     PHA
-    JSR DrawComplexString   ; draw the string
+    CALL DrawComplexString   ; draw the string
     PLA
     TAX                     ; and restore our index
 
@@ -3161,11 +3161,11 @@ CharName_DrawCursor:
 
 PtyGen_DrawChars:
     LDX #$00         ; Simply call @DrawOne four times, each time
-    JSR @DrawOne     ;  having the index of the char to draw in X
+    CALL @DrawOne     ;  having the index of the char to draw in X
     LDX #$10
-    JSR @DrawOne
+    CALL @DrawOne
     LDX #$20
-    JSR @DrawOne
+    CALL @DrawOne
     LDX #$30
 
   @DrawOne:
@@ -3264,7 +3264,7 @@ DrawNameInputScreen:
     STA box_wd
     LDA #$14
     STA box_ht
-    JSR DrawBox
+    CALL DrawBox
     
     LDA #$0D                ; Draw the small top box containing the player's name
     STA box_x
@@ -3274,7 +3274,7 @@ DrawNameInputScreen:
     STA box_wd
     LDA #$04
     STA box_ht
-    JSR DrawBox
+    CALL DrawBox
     
     LDA #<lut_NameInput     ; Print the NameInput lut as a string.  This will fill
     STA text_ptr            ;  the bottom box with the characters the user can select.
@@ -3346,7 +3346,7 @@ lut_PtyGenBuf:
 
 
 EnterIntroStory:
-    JSR IntroTitlePrepare      ; load CHR, start music, other prepwork
+    CALL IntroTitlePrepare      ; load CHR, start music, other prepwork
 
     LDA PPUSTATUS           ; reset PPU toggle and set PPU address to PPUCTRL
     LDA #>PPUCTRL         ;   (start of nametable)
@@ -3399,10 +3399,10 @@ EnterIntroStory:
     LDA #1
     STA dest_x
 
-    JSR DrawComplexString   ; draw intro story as a complex string!
+    CALL DrawComplexString   ; draw intro story as a complex string!
 
-    JSR TurnMenuScreenOn_ClearOAM  ; turn on the PPU
-    JSR IntroStory_MainLoop        ; and run the main loop of the intro story
+    CALL TurnMenuScreenOn_ClearOAM  ; turn on the PPU
+    CALL IntroStory_MainLoop        ; and run the main loop of the intro story
 
     LDA #0              ; once the intro story exits, shut off the PPU
     STA PAPU_EN
@@ -3425,7 +3425,7 @@ EnterIntroStory:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterTitleScreen:
-    JSR TitleScreen_Copyright     ; Do prepwork, and draw the copyright text
+    CALL TitleScreen_Copyright     ; Do prepwork, and draw the copyright text
 
    ;; The rest of the title screen consists of 3 boxes, each containing a single
    ;;  complex string.  The game here simply draws each of those boxes and 
@@ -3443,23 +3443,23 @@ EnterTitleScreen:
     STA box_ht
     LDA #10
     STA box_wd
-      JSR DrawBox
+      CALL DrawBox
     LDA #<lut_TitleText_Continue
     STA text_ptr
     LDA #>lut_TitleText_Continue
     STA text_ptr+1
     LDA #0
     STA menustall    ; disable menu stalling (PPU is off)
-     JSR DrawComplexString
+     CALL DrawComplexString
 
     LDA #15          ; next box is same X pos and same dims, but at Y=15
     STA box_y        ;  and contains text "New Game"
-      JSR DrawBox
+      CALL DrawBox
     LDA #<lut_TitleText_NewGame
     STA text_ptr
     LDA #>lut_TitleText_NewGame
     STA text_ptr+1
-      JSR DrawComplexString
+      CALL DrawComplexString
 
     LDA #20          ; last box is moved left and down a bit (8,20)
     STA box_y        ;  and is a little fatter (wd=16)
@@ -3467,41 +3467,41 @@ EnterTitleScreen:
     STA box_x
     LDA #16
     STA box_wd
-      JSR DrawBox
+      CALL DrawBox
     LDA #<lut_TitleText_RespondRate
     STA text_ptr
     LDA #>lut_TitleText_RespondRate
     STA text_ptr+1
-      JSR DrawComplexString
+      CALL DrawComplexString
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
     STA PAPU_EN               ;   will do this automatically)
-    JSR TurnMenuScreenOn_ClearOAM  ; turn on the screen and clear OAM
+    CALL TurnMenuScreenOn_ClearOAM  ; turn on the screen and clear OAM
                                    ;  and continue on to the logic loop
 
 
   ;; This is the main logic loop for the Title screen.
 
   @Loop:
-    JSR ClearOAM            ; Clear OAM
+    CALL ClearOAM            ; Clear OAM
 
     LDX cursor              ; Draw the cursor sprite using a fixed X coord of $48
     LDA #$48                ;  and using the current cursor position to get the Y coord
     STA spr_x               ;  from a LUT
     LDA lut_TitleCursor_Y, X
     STA spr_y
-    JSR DrawCursor
+    CALL DrawCursor
 
-    JSR WaitForVBlank     ; Wait for VBlank
+    CALL WaitForVBlank     ; Wait for VBlank
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
-    JSR TitleScreen_DrawRespondRate
+    CALL TitleScreen_DrawRespondRate
 
-    JSR UpdateJoy           ; update joypad data
+    CALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for CallMusicPlay)
     STA cur_bank
 
-    JSR TitleScreen_Music   ; call music playback, AND get joy_a (weird little routine)
+    CALL TitleScreen_Music   ; call music playback, AND get joy_a (weird little routine)
     ORA joy_start           ; OR with joy_start to see if either A or Start pressed
     BNE @OptionChosen       ; if either pressed, a menu option was chosen.
 
@@ -3521,7 +3521,7 @@ EnterTitleScreen:
     LDA cursor              ; if up/down, simply toggle the cursor between New Game
     EOR #1                  ;  and continue
     STA cursor
-    JSR PlaySFX_MenuSel     ; play a little sound effect (the sel sfx, not the move sfx like you
+    CALL PlaySFX_MenuSel     ; play a little sound effect (the sel sfx, not the move sfx like you
     JMP @Loop               ;  may expect).  Then resume the loop.
 
   @LeftRight:
@@ -3536,7 +3536,7 @@ EnterTitleScreen:
     AND #7                  ; mask to wrap it from 0<->7
     STA respondrate
 
-    JSR PlaySFX_MenuMove    ; play the move sound effect, and continue looping!
+    CALL PlaySFX_MenuMove    ; play the move sound effect, and continue looping!
     JMP @Loop
 
 @OptionChosen:              ; Jumps here when the player presses A or Start (selected an option)
@@ -3558,7 +3558,7 @@ IntroTitlePrepare:
     LDA #0
     STA PPUMASK              ; turn off the PPU
 
-    JSR LoadMenuCHRPal     ; Load necessary CHR and palettes
+    CALL LoadMenuCHRPal     ; Load necessary CHR and palettes
 
     LDA #$41
     STA music_track        ; Start up the crystal theme music
@@ -3639,7 +3639,7 @@ IntroStory_MainLoop:
     STA intro_ataddr           ; table ($23C0)
 
   @Loop:
-    JSR IntroStory_AnimateBlock  ; animate a block
+    CALL IntroStory_AnimateBlock  ; animate a block
 
     LDA intro_ataddr             ; then add 8 to animate the next block (8 bytes of
     CLC                          ;   attribute per block)
@@ -3656,7 +3656,7 @@ IntroStory_MainLoop:
      ;  loop isn't really all that infinite.  See IntroStory_Frame for details.
 
   @InfiniteLoop:
-    JSR IntroStory_Frame
+    CALL IntroStory_Frame
     JMP @InfiniteLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3676,7 +3676,7 @@ IntroStory_MainLoop:
 ;;  if you happen to press A or B at *exactly* the wrong time (there's only a very
 ;;  slim 1 frame window where it could happen -- but still).  This could be considered
 ;;  BUGGED -- with the appropriate fix being to change the JMP IntroStory_Frame into
-;;  JSR IntroStory_Frame, RTS.
+;;  CALL IntroStory_Frame, RTS.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3684,7 +3684,7 @@ IntroStory_AnimateBlock:
     LDA #%01011010          ; set desired attribute byte.  This sets the top row of the block to use
     STA intro_atbyte        ;  palette %10 (the animating palette), and the bottom row to use
                             ;  palette %01 (faded-out / invisible palette)
-    JSR IntroStory_AnimateRow  ; animate the top row of text
+    CALL IntroStory_AnimateRow  ; animate the top row of text
 
     LDA intro_ataddr        ; Check to see if this is the very last block ($23F8).  If it is, there's
     CMP #<$23F8             ;  no bottom row to animate -- the last block is really only half a block
@@ -3694,7 +3694,7 @@ IntroStory_AnimateBlock:
 
     LDA #%10101111             ; otherwise, set attribute so that top row uses %11 (fully faded in)
     STA intro_atbyte           ;  and bottom row uses %10 (animating)
-    JSR IntroStory_AnimateRow  ;  animate the bottom row
+    CALL IntroStory_AnimateRow  ;  animate the bottom row
 
   @Done:
     LDA #%11111111          ; lastly, set attribute byte so that the entire block uses %11
@@ -3741,7 +3741,7 @@ IntroStory_AnimateRow:
     STA cur_pal + $B       ;   by copying it to the palette
 
   @SubLoop:
-    JSR IntroStory_Frame   ; Do a frame
+    CALL IntroStory_Frame   ; Do a frame
     INC framecounter       ; and update the frame counter
 
     LDA framecounter       ; see if we're on a 16th frame
@@ -3818,9 +3818,9 @@ IntroStory_WriteAttr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IntroStory_Frame:
-    JSR WaitForVBlank        ; wait for VBlank
-    JSR IntroStory_WriteAttr   ; then do the attribute updates
-    JSR DrawPalette            ; and draw the animating palette
+    CALL WaitForVBlank        ; wait for VBlank
+    CALL IntroStory_WriteAttr   ; then do the attribute updates
+    CALL DrawPalette            ; and draw the animating palette
 
     LDA soft2000
     STA PPUCTRL
@@ -3833,9 +3833,9 @@ IntroStory_Frame:
 
     LDA #BANK_THIS             ; set current bank (needed when calling CallMusicPlay from
     STA cur_bank               ;   a swappable bank)
-    JSR CallMusicPlay          ; Then call music play to keep music playing!
+    CALL CallMusicPlay          ; Then call music play to keep music playing!
 
-    JSR IntroStory_Joy         ; update joypad
+    CALL IntroStory_Joy         ; update joypad
 
     LDA joy_a             ; check to see if either A
     ORA joy_b             ;  or B were pressed
@@ -3878,8 +3878,8 @@ EnterShop:
     STA joy_b              ; erase joypad A and B buttons
     STA joy_a
 
-    JSR LoadShopCHRPal     ; load up the CHR and palettes (and the shop type)
-    JSR DrawShop           ; draw the shop
+    CALL LoadShopCHRPal     ; load up the CHR and palettes (and the shop type)
+    CALL DrawShop           ; draw the shop
 
     LDA shop_type              ; use the shop type to get the entry point for this shop
     ASL A                      ; double it (2 bytes per pointer)
@@ -3906,16 +3906,16 @@ EnterShop:
 
   MagicShop_CancelPurchase:
     LDA #$25
-    JSR DrawShopDialogueBox      ; "too bad... something else?" dialogue
+    CALL DrawShopDialogueBox      ; "too bad... something else?" dialogue
     JMP MagicShop_Loop           ; jump ahead to loop
 
 
 EnterShop_Magic:
     LDA #$17
-    JSR DrawShopDialogueBox      ; "Who will learn the spell" dialogue
+    CALL DrawShopDialogueBox      ; "Who will learn the spell" dialogue
 
   MagicShop_Loop:
-    JSR ShopLoop_CharNames       ; Have the player select a party member
+    CALL ShopLoop_CharNames       ; Have the player select a party member
     BCS MagicShop_Exit           ; if they pressed B, exit the shop
 
     LDA cursor                   ; otherwise, get their selection
@@ -3925,7 +3925,7 @@ EnterShop_Magic:
     AND #$C0                     ; shift and mask to get the char index
     STA shop_charindex           ; record it
 
-    JSR ShopSelectBuyMagic       ; now have them select the spell to buy from the
+    CALL ShopSelectBuyMagic       ; now have them select the spell to buy from the
                                  ;   shop inventory
     BCS MagicShop_Loop           ; if they press B, restart the loop
 
@@ -3933,28 +3933,28 @@ EnterShop_Magic:
     LDA item_box, X              ; use it to get the item ID they selected
     STA shop_curitem             ; record that as the current item
 
-    JSR MagicShop_AssertLearn    ; assert that the selected character can learn
+    CALL MagicShop_AssertLearn    ; assert that the selected character can learn
                                  ;  this spell.
 
                                  ; code only reaches here if the character
                                  ; can learn the spell.  If they can't
                                  ; AssertLearn jumps back to the magic loop.
-    JSR DrawShopBuyItemConfirm   ; Draw item price and confirmation dialogue
-    JSR ShopLoop_YesNo           ; Give the player the yes/no option
+    CALL DrawShopBuyItemConfirm   ; Draw item price and confirmation dialogue
+    CALL ShopLoop_YesNo           ; Give the player the yes/no option
 
     BCS MagicShop_CancelPurchase ; cancel purchase if they pressed B
     LDA cursor
     BNE MagicShop_CancelPurchase ; or if they selected "No"
 
-    JSR Shop_CanAfford           ; check to make sure they can afford the purchase
+    CALL Shop_CanAfford           ; check to make sure they can afford the purchase
     BCC @FinalizePurchase        ; if yes... finalize the purchase
 
       LDA #$10                   ; ... otherwise
-      JSR DrawShopDialogueBox    ; "you can't afford it" dialogue
+      CALL DrawShopDialogueBox    ; "you can't afford it" dialogue
       JMP MagicShop_Loop         ; keep looping
 
   @FinalizePurchase:
-    JSR ShopPayPrice             ; subtract the item price from party GP
+    CALL ShopPayPrice             ; subtract the item price from party GP
     LDX shop_charindex           ; get the empty slot in X
     LDA shop_spell               ; get the adjusted spell ID
     STA ch0_spells, X             ; add this spell to char's magic list
@@ -3970,16 +3970,16 @@ EnterShop_Magic:
 
   EquipShop_Cancel:
     LDA #$25
-    JSR DrawShopDialogueBox     ; "Too bad... something else?" dialogue
+    CALL DrawShopDialogueBox     ; "Too bad... something else?" dialogue
     JMP EquipShop_Loop          ; jump ahead to loop
 
 
 EnterShop_Equip:
     LDA #$09
-    JSR DrawShopDialogueBox     ; "Welcome" dialogue
+    CALL DrawShopDialogueBox     ; "Welcome" dialogue
 
   EquipShop_Loop:
-    JSR ShopLoop_BuySellExit    ; give player Buy/Sell/Exit option
+    CALL ShopLoop_BuySellExit    ; give player Buy/Sell/Exit option
     BCS @Exit                   ; if they pressed B, exit
     LDA cursor
     BEQ @Buy                    ; cursor=0  means they selected "Buy"
@@ -3992,46 +3992,46 @@ EnterShop_Equip:
   ;; Buying
 
   @Buy:
-    JSR LoadShopInventory       ; load shop inventory.  Needs to be done here
+    CALL LoadShopInventory       ; load shop inventory.  Needs to be done here
                                 ;  because item box can be filled with a character's
                                 ;  equipment instead of shop inventory.
 
     LDA #$0D
-    JSR DrawShopDialogueBox     ; "what would you like" dialogue
+    CALL DrawShopDialogueBox     ; "what would you like" dialogue
 
-    JSR ShopSelectBuyItem       ; have the player select something
+    CALL ShopSelectBuyItem       ; have the player select something
     BCS EquipShop_Loop          ; if they pressed B, return to loop
 
-    JSR DrawShopBuyItemConfirm  ; otherwise.. draw price confirmation text
-    JSR ShopLoop_YesNo          ; and have them confirm it
+    CALL DrawShopBuyItemConfirm  ; otherwise.. draw price confirmation text
+    CALL ShopLoop_YesNo          ; and have them confirm it
     BCS EquipShop_Cancel        ; if they press B, cancel purchase
     LDA cursor
     BNE EquipShop_Cancel        ; if they select "No", cancel purchase
 
-    JSR Shop_CanAfford          ; check to see if they can afford it
+    CALL Shop_CanAfford          ; check to see if they can afford it
     BCC @CanAfford              ; if they can, jump ahead... otherwise...
 
       LDA #$10
-      JSR DrawShopDialogueBox   ; "You can't afford it" dialogue
+      CALL DrawShopDialogueBox   ; "You can't afford it" dialogue
       JMP EquipShop_Loop        ; keep looping
 
   @CanAfford:
     LDA #$11
-    JSR DrawShopDialogueBox      ; "who will you give it to" dialogue"
-    JSR ShopLoop_CharNames       ; have the player select a character
+    CALL DrawShopDialogueBox      ; "who will you give it to" dialogue"
+    CALL ShopLoop_CharNames       ; have the player select a character
     BCS EquipShop_Loop           ; if they press B, jump back to loop
 
-    JSR EquipShop_GiveItemToChar ; give the item to the character
+    CALL EquipShop_GiveItemToChar ; give the item to the character
     BCC @FinalizePurchase        ; if they had room, finalize the purchase
 
       LDA #$0C                   ; otherwise (no room)
-      JSR DrawShopDialogueBox    ; "You don't have room" dialogue
+      CALL DrawShopDialogueBox    ; "You don't have room" dialogue
       JMP EquipShop_Loop         ; jump back to loop
 
   @FinalizePurchase:
-    JSR ShopPayPrice             ; subtract the GP
+    CALL ShopPayPrice             ; subtract the GP
     LDA #$13
-    JSR DrawShopDialogueBox      ; "Thank you, what else?" dialogue
+    CALL DrawShopDialogueBox      ; "Thank you, what else?" dialogue
     JMP EquipShop_Loop           ; jump back to loop
 
 
@@ -4046,23 +4046,23 @@ EnterShop_Equip:
 
   @Sell:
     LDA #$14
-    JSR DrawShopDialogueBox      ; "Whose item do you want to sell" dialogue
-    JSR ShopLoop_CharNames       ; have the player select a character
+    CALL DrawShopDialogueBox      ; "Whose item do you want to sell" dialogue
+    CALL ShopLoop_CharNames       ; have the player select a character
     BCS @_Loop                   ; if they pressed B, jump back to loop
 
-    JSR EquipMenu_BuildSellBox   ; fill the item box with this character's equipment
+    CALL EquipMenu_BuildSellBox   ; fill the item box with this character's equipment
     BCC @ItemsForSale            ; if there are items for sale... proceed.  otherwise....
 
       LDA #$1E
-      JSR DrawShopDialogueBox    ; "you have nothing to sell" dialogue
+      CALL DrawShopDialogueBox    ; "you have nothing to sell" dialogue
       JMP EquipShop_Loop         ; jump back to loop
 
   @ItemsForSale:
-    JSR ShopSelectBuyItem        ; have the user select an item to sell
+    CALL ShopSelectBuyItem        ; have the user select an item to sell
     BCS @_Loop                   ; if they pressed B, jump back to the loop
 
-    JSR DrawShopSellItemConfirm  ; draw the sell confirmation dialogue
-    JSR ShopLoop_YesNo           ; give them the yes/no option
+    CALL DrawShopSellItemConfirm  ; draw the sell confirmation dialogue
+    CALL ShopLoop_YesNo           ; give them the yes/no option
     BCS @_Cancel                 ; if they pressed B, canecl
     LDA cursor
     BNE @_Cancel                 ; if they selected "No", cancel
@@ -4078,14 +4078,14 @@ EnterShop_Equip:
       ;  Need to do all this work here so that stats are adjusted if you're
       ;  selling an item that is currently equipped
 
-      JSR UnadjustEquipStats       ; unadjust equipment stats
+      CALL UnadjustEquipStats       ; unadjust equipment stats
 
       LDX shop_charindex           ; erase the item from char's inventory
       LDA #0
       STA ch_stats, X
 
-      JSR SortEquipmentList        ; sort the equipment list
-      JSR ReadjustEquipStats       ; and readjust stats.
+      CALL SortEquipmentList        ; sort the equipment list
+      CALL ReadjustEquipStats       ; and readjust stats.
 
     PLA                    ; pull backed up shop type
     STA shop_type          ; and restore it
@@ -4098,7 +4098,7 @@ EnterShop_Equip:
     STA tmp+2
 
     FARCALL AddGPToParty       ; give that money to the party
-    JSR DrawShopGoldBox    ; redraw the gold box to reflect changes
+    CALL DrawShopGoldBox    ; redraw the gold box to reflect changes
     JMP EquipShop_Loop     ; and jump back to loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4117,7 +4117,7 @@ EnterShop_Equip:
 
   ItemShop_CancelBuy:           ; jumped to for cancelled purchases
     LDA #$25
-    JSR DrawShopDialogueBox     ; "too bad, something else?" dialogue
+    CALL DrawShopDialogueBox     ; "too bad, something else?" dialogue
     JMP ItemShop_Loop           ; return to loop
 
 EnterShop_Caravan:
@@ -4127,29 +4127,29 @@ EnterShop_Caravan:
 
 EnterShop_Item:
     LDA #$09
-    JSR DrawShopDialogueBox     ; draw the "welcome" dialogue
+    CALL DrawShopDialogueBox     ; draw the "welcome" dialogue
 
   ItemShop_Loop:
-    JSR ShopLoop_BuyExit        ; give them the option to buy or exit
+    CALL ShopLoop_BuyExit        ; give them the option to buy or exit
     BCS ItemShop_Exit           ; if they pressed B, exit
     LDA cursor
     BNE ItemShop_Exit           ; otherwise if they selected 'exit', then exit
 
     LDA #$0D
-    JSR DrawShopDialogueBox     ; "what would you like" dialogue
-    JSR ShopSelectBuyItem       ; let them choose an item from the shop inventory
+    CALL DrawShopDialogueBox     ; "what would you like" dialogue
+    CALL ShopSelectBuyItem       ; let them choose an item from the shop inventory
     BCS ItemShop_Loop           ; if they pressed B, restart the loop
 
-    JSR DrawShopBuyItemConfirm  ; confirm price dialogue
-    JSR ShopLoop_YesNo          ; give them the yes/no option
+    CALL DrawShopBuyItemConfirm  ; confirm price dialogue
+    CALL ShopLoop_YesNo          ; give them the yes/no option
     BCS ItemShop_CancelBuy      ; if they pressed B, cancel the purchase
     LDA cursor
     BNE ItemShop_CancelBuy      ; if they selected "No", cancel the purchase
 
-    JSR Shop_CanAfford          ; check to ensure they can afford this item
+    CALL Shop_CanAfford          ; check to ensure they can afford this item
     BCC @CheckForSpace          ; if they can, jump ahead to check to see if they have room for this item
       LDA #$10
-      JSR DrawShopDialogueBox   ; if they can't, "you can't afford it" dialogue
+      CALL DrawShopDialogueBox   ; if they can't, "you can't afford it" dialogue
       JMP ItemShop_Loop         ; and return to loop
 
   @CheckForSpace:
@@ -4158,14 +4158,14 @@ EnterShop_Item:
     CMP #99                     ; do they have less than 99 of this item?
     BCC @CompletePurchase       ; if yes, jump ahead to complete the purchase.  Otherwise...
       LDA #$0C
-      JSR DrawShopDialogueBox   ; "you have too many" dialogue
+      CALL DrawShopDialogueBox   ; "you have too many" dialogue
       JMP ItemShop_Loop         ; return to loop
 
   @CompletePurchase:
     INC items, X                ; add one of this item to their inventory
-    JSR ShopPayPrice            ; subtract the price from your gold amount
+    CALL ShopPayPrice            ; subtract the price from your gold amount
     LDA #$13
-    JSR DrawShopDialogueBox     ; "Thank you, anything else?" dialogue
+    CALL DrawShopDialogueBox     ; "Thank you, anything else?" dialogue
     JMP ItemShop_Loop           ; and continue loop
 
 
@@ -4239,20 +4239,20 @@ Shop_CanAfford:
 
 EnterShop_Inn:
     LDA #$1B
-    JSR DrawShopDialogueBox     ; "Welcome.. would you like to stay?" dialogue
+    CALL DrawShopDialogueBox     ; "Welcome.. would you like to stay?" dialogue
 
-    JSR ShopLoop_YesNo          ; give them the yes/no option
+    CALL ShopLoop_YesNo          ; give them the yes/no option
     BCS @Exit                   ; if they pressed B, exit
     LDA cursor
     BNE @Exit                   ; also exit if they selected 'No'
 
-    JSR DrawInnClinicConfirm    ; draw the price confirmation dialogue
-    JSR ShopLoop_YesNo          ; give them another yes/no option
+    CALL DrawInnClinicConfirm    ; draw the price confirmation dialogue
+    CALL ShopLoop_YesNo          ; give them another yes/no option
     BCS @Exit                   ; again... pressed B = exit
     LDA cursor
     BNE @Exit                   ; select No = exit
 
-    JSR InnClinic_CanAfford     ; assert that they can afford the price, and charge them
+    CALL InnClinic_CanAfford     ; assert that they can afford the price, and charge them
 
     LDA #$30                    ; code only reaches here if the price could be afforded
     STA PAPU_CTL2               ;   silence square 2
@@ -4262,31 +4262,31 @@ EnterShop_Inn:
     STA PAPU_FT2                   ;   but it only does it for some tracks?
     STA PAPU_CT2
 
-    JSR MenuFillPartyHP         ; refill the party's HP
-    JSR MenuRecoverPartyMP      ;  and MP
-    JSR SaveGame                ;  then save the game (this starts the "you saved your game" jingle)
+    CALL MenuFillPartyHP         ; refill the party's HP
+    CALL MenuRecoverPartyMP      ;  and MP
+    CALL SaveGame                ;  then save the game (this starts the "you saved your game" jingle)
 
     LDA #0
     STA joy_a                   ; clear A and B catchers
     STA joy_b
 
     LDA #$1C
-    JSR DrawShopDialogueBox     ; "Don't forget when you leave your game" dialogue
+    CALL DrawShopDialogueBox     ; "Don't forget when you leave your game" dialogue
 
     LDA #$03
-    JSR LoadShopBoxDims         ; erase shop box 3 (command box)
-    JSR EraseBox
+    CALL LoadShopBoxDims         ; erase shop box 3 (command box)
+    CALL EraseBox
 
-    JSR ClearOAM                ; clear OAM (to remove the cursor)
-    JSR DrawShopPartySprites    ; draw the party
-    JSR WaitForVBlank         ; then wait for VBlank before
+    CALL ClearOAM                ; clear OAM (to remove the cursor)
+    CALL DrawShopPartySprites    ; draw the party
+    CALL WaitForVBlank         ; then wait for VBlank before
     LDA #>oam                   ;   performing sprite DMA
     STA OAMDMA                   ; all of this is to remove the cursor graphic without doing a real frame
 
-    JSR FadeOutBatSprPalettes   ; and fade the party out
+    CALL FadeOutBatSprPalettes   ; and fade the party out
 
   @LoopOne:
-    JSR ShopFrameNoCursor       ; do a shop frame (with no visible cursor)
+    CALL ShopFrameNoCursor       ; do a shop frame (with no visible cursor)
 
     LDA music_track             ; check the music track
     CMP #$81                    ; if $81 (no music currently playing)...
@@ -4298,24 +4298,24 @@ EnterShop_Inn:
     ORA joy_b
     BEQ @LoopOne                ; and keep looping until one of them has
 
-    JSR FadeInBatSprPalettes    ; then fade the party back in
+    CALL FadeInBatSprPalettes    ; then fade the party back in
 
   @Exit:
     LDA #$03
-    JSR LoadShopBoxDims         ; erase shop box 3 (the command box)
-    JSR EraseBox                ; this is redundant if they stayed at the inn, but
+    CALL LoadShopBoxDims         ; erase shop box 3 (the command box)
+    CALL EraseBox                ; this is redundant if they stayed at the inn, but
                                 ; if the code jumped here because the user wanted to
                                 ; exit the inn, then this has meaning
 
     LDA #$1D
-    JSR DrawShopDialogueBox     ; "Hold Reset when turning power off" dialogue
+    CALL DrawShopDialogueBox     ; "Hold Reset when turning power off" dialogue
 
     LDA #0
     STA joy_a
     STA joy_b                   ; clear A and B catchers
 
   @LoopTwo:
-    JSR ShopFrameNoCursor       ; do a frame
+    CALL ShopFrameNoCursor       ; do a frame
 
     LDA music_track             ; check to see if the music has silenced (will happen
     CMP #$81                    ;  after the save jingle ends)
@@ -4344,24 +4344,24 @@ EnterShop_Clinic:
     STA joy_a                  ; clear A and B button catchers
     STA joy_b
 
-    JSR ClinicBuildNameString  ; build the name string (also tells us if anyone is dead)
+    CALL ClinicBuildNameString  ; build the name string (also tells us if anyone is dead)
     BCC @NobodysDead           ; if nobody is dead... skip ahead
 
     LDA #$20
-    JSR DrawShopDialogueBox    ; "Who needs to come back to life" dialogue
+    CALL DrawShopDialogueBox    ; "Who needs to come back to life" dialogue
 
-    JSR Clinic_SelectTarget    ; Get a user selection
+    CALL Clinic_SelectTarget    ; Get a user selection
     LDA cursor                 ;   grab their selection
     STA shop_curitem           ;   and put it in cur_item to hold it for later
     BCS ClinicShop_Exit        ; If they pressed B, exit.
 
-    JSR DrawInnClinicConfirm   ; Draw the cost confirmation dialogue
-    JSR ShopLoop_YesNo         ; give them the yes/no option
+    CALL DrawInnClinicConfirm   ; Draw the cost confirmation dialogue
+    CALL ShopLoop_YesNo         ; give them the yes/no option
     BCS EnterShop_Clinic       ; If they pressed B, restart loop
     LDA cursor
     BNE EnterShop_Clinic       ; if they selected "No", restart loop
 
-    JSR InnClinic_CanAfford    ; otherwise, they selected "Yes".  Make sure they can afford the charge
+    CALL InnClinic_CanAfford    ; otherwise, they selected "Yes".  Make sure they can afford the charge
 
     LDA shop_curitem           ; code only reaches here if they can afford it.
     CLC
@@ -4387,14 +4387,14 @@ EnterShop_Clinic:
     STA joy_b                  ; clear A and B catchers
 
     LDA #$21
-    JSR DrawShopDialogueBox    ; "Warrior!  Return to life!"  dialogue
+    CALL DrawShopDialogueBox    ; "Warrior!  Return to life!"  dialogue
 
     LDA #$03
-    JSR LoadShopBoxDims        ; erase shop box 3 (command box)
-    JSR EraseBox
+    CALL LoadShopBoxDims        ; erase shop box 3 (command box)
+    CALL EraseBox
 
   @ReviveLoop:
-    JSR ShopFrameNoCursor      ; do a frame
+    CALL ShopFrameNoCursor      ; do a frame
     LDA joy_a
     ORA joy_b
     BEQ @ReviveLoop            ; and loop (keep doing frames) until A or B pressed
@@ -4402,14 +4402,14 @@ EnterShop_Clinic:
 
   @NobodysDead:
     LDA #$23
-    JSR DrawShopDialogueBox    ; if nobody is dead... "You don't need my help" dialogue
+    CALL DrawShopDialogueBox    ; if nobody is dead... "You don't need my help" dialogue
 
     LDA #0
     STA joy_a
     STA joy_b                  ; clear A and B catchers
 
   @ExitLoop:
-    JSR ShopFrameNoCursor      ; do a frame
+    CALL ShopFrameNoCursor      ; do a frame
     LDA joy_a
     ORA joy_b
     BEQ @ExitLoop              ; and loop (keep doing frames) until either A or B pressed
@@ -4545,13 +4545,13 @@ InnClinic_CanAfford:
 
   @CantAfford:
     LDA #$10
-    JSR DrawShopDialogueBox    ; draw "you can't afford it" dialogue
+    CALL DrawShopDialogueBox    ; draw "you can't afford it" dialogue
 
     LDA #0                     ; clear joy_a and joy_b markers
     STA joy_a
     STA joy_b
    @Loop:
-      JSR ShopFrameNoCursor    ; then just keep looping frames
+      CALL ShopFrameNoCursor    ; then just keep looping frames
       LDA joy_a                ;  until either A or B pressed
       ORA joy_b
       BEQ @Loop
@@ -4589,15 +4589,15 @@ InnClinic_CanAfford:
 
 Clinic_SelectTarget:
     LDA #$03
-    JSR DrawShopBox            ; draw shop box #3 (command box)
-    JSR ClinicBuildNameString  ; build the name string (this is a bit wasteful here.. this was
+    CALL DrawShopBox            ; draw shop box #3 (command box)
+    CALL ClinicBuildNameString  ; build the name string (this is a bit wasteful here.. this was
                                ;  just done in the clinic code prior to calling this routine.  Oh well.
 
     LDA #<(str_buf+$10)        ; set our text pointer to point to the generated string
     STA text_ptr
     LDA #>(str_buf+$10)
     STA text_ptr+1
-    JSR DrawShopComplexString  ; and draw it
+    CALL DrawShopComplexString  ; and draw it
 
     JMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
 
@@ -4694,38 +4694,38 @@ ClinicBuildNameString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopFrame:
-    JSR ClearOAM               ; clear OAM
-    JSR DrawShopPartySprites   ; draw the party sprites
-    JSR DrawShopCursor         ; and the cursor
-    JSR WaitForVBlank        ; the wait for VBlank
+    CALL ClearOAM               ; clear OAM
+    CALL DrawShopPartySprites   ; draw the party sprites
+    CALL DrawShopCursor         ; and the cursor
+    CALL WaitForVBlank        ; the wait for VBlank
 
     LDA #>oam
     STA OAMDMA                  ; do sprite DMA
 
     LDA #BANK_THIS
     STA cur_bank
-    JSR CallMusicPlay          ; set the current bank, and call music play
+    CALL CallMusicPlay          ; set the current bank, and call music play
 
     JMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
 
     RTS                        ; useless RTS (impossible to reach)
 
 ShopFrameNoCursor:
-    JSR ClearOAM               ; do all the same things as above, in the same order
-    JSR DrawShopPartySprites   ;  only do not draw the cursor
-    JSR WaitForVBlank
+    CALL ClearOAM               ; do all the same things as above, in the same order
+    CALL DrawShopPartySprites   ;  only do not draw the cursor
+    CALL WaitForVBlank
     LDA #>oam
     STA OAMDMA
     LDA #BANK_THIS
     STA cur_bank
-    JSR CallMusicPlay          ; after we call MusicPlay, proceed to check the buttons
+    CALL CallMusicPlay          ; after we call MusicPlay, proceed to check the buttons
 
   _ShopFrame_CheckBtns:
     LDA joy                    ; get old joypad data for last frame
     AND #$0F                   ; isolate the directional buttons
     STA tmp+7                  ; and store it as our prev joy data
 
-    JSR UpdateJoy              ; update joypad data
+    CALL UpdateJoy              ; update joypad data
     LDA joy_a                  ; see if either A or B pressed
     ORA joy_b
     BEQ @CheckMovement         ; if not... check directionals
@@ -4759,8 +4759,8 @@ ShopFrameNoCursor:
 
 
 DrawShop:
-    JSR LoadShopInventory      ; load up this shop's inventory into the item box
-    JSR ClearNT                ; clear the nametable
+    CALL LoadShopInventory      ; load up this shop's inventory into the item box
+    CALL ClearNT                ; clear the nametable
 
               ; Fill attribute tables
     LDA PPUSTATUS                  ; reset the PPU toggle
@@ -4795,20 +4795,20 @@ DrawShop:
     LDA #>lut_ShopkeepImage
     STA image_ptr+1
 
-    JSR DrawImageRect            ; draw the image rect
+    CALL DrawImageRect            ; draw the image rect
 
     LDA #0
     STA menustall                ; disable menu stalling (PPU is off)
 
     LDA #$01
-    JSR DrawShopBox              ; draw shop box ID=1  (the title box)
+    CALL DrawShopBox              ; draw shop box ID=1  (the title box)
 
     LDA shop_type                ; get the shop type
-    JSR DrawShopString           ; and draw that string (the shop title string)
+    CALL DrawShopString           ; and draw that string (the shop title string)
 
-    JSR DrawShopGoldBox          ; draw the gold box
+    CALL DrawShopGoldBox          ; draw the gold box
 
-    JSR TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
+    CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
 
     LDA #1
     STA menustall                ; now that the screen is on, turn on menu stalling as well
@@ -4855,9 +4855,9 @@ LoadShopInventory:
 
 DrawShopGoldBox:
     LDA #$04
-    JSR DrawShopBox            ; Draw shop box #4  (the gold box)
-    JSR PrintGold              ; print current gold to format buffer
-    JSR DrawShopComplexString  ; draw formatted string
+    CALL DrawShopBox            ; Draw shop box #4  (the gold box)
+    CALL PrintGold              ; print current gold to format buffer
+    CALL DrawShopComplexString  ; draw formatted string
 
     LDA dest_x                 ; add 6 to the X coord
     CLC
@@ -5013,17 +5013,17 @@ ShopSelectBuyItem:
     STA str_buf+$10, Y     ; slap a null terminator at the end of our string
 
     LDA #$02
-    JSR DrawShopBox        ; draw shop box #2 (inv list box)
+    CALL DrawShopBox        ; draw shop box #2 (inv list box)
 
     LDA #<(str_buf+$10)    ; load up the pointer to our string
     STA text_ptr
     LDA #>(str_buf+$10)
     STA text_ptr+1
-    JSR DrawShopComplexString  ; and draw it
+    CALL DrawShopComplexString  ; and draw it
 
     LDA #$03
-    JSR LoadShopBoxDims
-    JSR EraseBox           ; erase shop box #3 (command box)
+    CALL LoadShopBoxDims
+    CALL EraseBox           ; erase shop box #3 (command box)
 
     JMP CommonShopLoop_List  ; everything's ready!  Just run the common loop from here, then return
 
@@ -5041,9 +5041,9 @@ ShopSelectBuyItem:
 
 ShopLoop_BuyExit:
     LDA #$03
-    JSR DrawShopBox          ; draw shop box ID=3 (the command box)
+    CALL DrawShopBox          ; draw shop box ID=3 (the command box)
     LDA #$0B
-    JSR DrawShopString       ; draw shop string ID=$0B ("Buy"/"Exit")
+    CALL DrawShopString       ; draw shop string ID=$0B ("Buy"/"Exit")
 
     LDA #2
     STA cursor_max           ; 2 cursor options
@@ -5062,9 +5062,9 @@ ShopLoop_BuyExit:
 
 ShopLoop_YesNo:
     LDA #$03
-    JSR DrawShopBox          ; draw shop box ID=3 (the command box)
+    CALL DrawShopBox          ; draw shop box ID=3 (the command box)
     LDA #$0F
-    JSR DrawShopString       ; draw shop string ID=$0F ("Yes"/"No")
+    CALL DrawShopString       ; draw shop string ID=$0F ("Yes"/"No")
 
     LDA #2
     STA cursor_max           ; 2 cursor options
@@ -5084,9 +5084,9 @@ ShopLoop_YesNo:
 
 ShopLoop_BuySellExit:
     LDA #$03
-    JSR DrawShopBox          ; draw box 3 (command box)
+    CALL DrawShopBox          ; draw box 3 (command box)
     LDA #$0A
-    JSR DrawShopString       ; string 0A ("Buy Sell Exit")
+    CALL DrawShopString       ; string 0A ("Buy Sell Exit")
 
     LDA #$03
     STA cursor_max           ; 3 options
@@ -5107,13 +5107,13 @@ ShopLoop_BuySellExit:
 
 ShopLoop_CharNames:
     LDA #$03
-    JSR DrawShopBox            ; draw shop box 3 (command box)
+    CALL DrawShopBox            ; draw shop box 3 (command box)
 
     LDA #<@NamesString         ; set our pointer to the string containing char names
     STA text_ptr
     LDA #>@NamesString
     STA text_ptr+1
-    JSR DrawShopComplexString  ; and draw it
+    CALL DrawShopComplexString  ; and draw it
 
     LDA #4
     STA cursor_max             ; give the user 4 options
@@ -5189,7 +5189,7 @@ CommonShopLoop_List:
     LDA (text_ptr), Y    ; read it
     STA shopcurs_y       ; and record it
 
-    JSR ShopFrame        ; now that cursor position has been recorded... do a frame
+    CALL ShopFrame        ; now that cursor position has been recorded... do a frame
 
     LDA joy_b
     BNE @B_Pressed       ; check to see if A or B have been pressed
@@ -5339,17 +5339,17 @@ ShopSelectBuyMagic:
     STA str_buf+$10, Y ; put a null terminator at the end of the string
 
     LDA #$02
-    JSR DrawShopBox    ; draw shop box 2 (inventory list box)
+    CALL DrawShopBox    ; draw shop box 2 (inventory list box)
 
     LDA #<(str_buf+$10)         ; set the text pointer to our string
     STA text_ptr
     LDA #>(str_buf+$10)
     STA text_ptr+1
-    JSR DrawShopComplexString   ; and draw it
+    CALL DrawShopComplexString   ; and draw it
 
     LDA #$03
-    JSR LoadShopBoxDims         ; then erase shop box 3 (command box)
-    JSR EraseBox
+    CALL LoadShopBoxDims         ; then erase shop box 3 (command box)
+    CALL EraseBox
 
     JMP CommonShopLoop_List     ; and have the user select an option from the shop inventory list
 
@@ -5380,17 +5380,17 @@ DrawShopPartySprites:
     LDA #$38
     STA spr_y
     LDA #1<<6
-    JSR DrawOBSprite    ; draw char 1 at $98,$38
+    CALL DrawOBSprite    ; draw char 1 at $98,$38
 
     LDA #$50
     STA spr_y
     LDA #2<<6
-    JSR DrawOBSprite    ; draw char 2 at $98,$50
+    CALL DrawOBSprite    ; draw char 2 at $98,$50
 
     LDA #$68
     STA spr_y
     LDA #3<<6
-    JSR DrawOBSprite    ; draw char 3 at $98,$68
+    CALL DrawOBSprite    ; draw char 3 at $98,$68
 
     LDA #$50
     STA spr_y
@@ -5453,7 +5453,7 @@ DrawShopComplexString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawShopBox:
-    JSR LoadShopBoxDims      ; load the dims
+    CALL LoadShopBoxDims      ; load the dims
     JMP DrawBox              ; draw it, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5495,7 +5495,7 @@ LoadShopBoxDims:
 DrawShopDialogueBox:
     PHA                  ; back up desired dialogue string by pushing it
     LDA #$00
-    JSR DrawShopBox      ; draw shop box ID 0 (the dialogue box)
+    CALL DrawShopBox      ; draw shop box ID 0 (the dialogue box)
     PLA                  ; pull our dialogue string
     JMP DrawShopString   ; draw it, then exit
 
@@ -5534,7 +5534,7 @@ DrawShopDialogueBox:
 
 DrawShopBuyItemConfirm:
     LDA #$0E
-    JSR DrawShopDialogueBox  ; draws "Gold  OK?" -- IE:  all the non-price text
+    CALL DrawShopDialogueBox  ; draws "Gold  OK?" -- IE:  all the non-price text
 
     LDA cursor            ; get the cursor
     ASL A
@@ -5581,7 +5581,7 @@ DrawShopBuyItemConfirm:
 
 DrawInnClinicConfirm:
     LDA #$0E
-    JSR DrawShopDialogueBox   ; draw "Gold  OK?" -- all the non-price text
+    CALL DrawShopDialogueBox   ; draw "Gold  OK?" -- all the non-price text
 
     LDA item_box              ; copy the inn price (first two bytes in item_box)
     STA tmp                   ;  to tmp  (for PrintNumber)
@@ -5590,7 +5590,7 @@ DrawInnClinicConfirm:
     LDA #0
     STA tmp+2                 ; 5digit print number needs 3 bytes... so just set high byte to zero
 
-    JSR PrintNumber_5Digit    ; print it
+    CALL PrintNumber_5Digit    ; print it
     JMP DrawShopComplexString ; and draw it
 
 
@@ -5621,7 +5621,7 @@ DrawShopSellItemConfirm:
     LDA item_box, X          ; get the item ID from the item box (stupid)
     PHA                      ; push it (stupid)
     LDA #$0E
-    JSR DrawShopDialogueBox  ; draw " Gold OK?" dialogue -- all the text except the actual price
+    CALL DrawShopDialogueBox  ; draw " Gold OK?" dialogue -- all the text except the actual price
     PLA                      ; pull the previously pushed item ID (would make more sense to just LDA it here)
 
     FARCALL LoadPrice            ; load the price of this item
@@ -5633,7 +5633,7 @@ DrawShopSellItemConfirm:
     LDA tmp+1
     STA shop_curprice+1      ; copy the price to shop_curprice
 
-    JSR PrintNumber_5Digit    ; print the sale price as 5 digits
+    CALL PrintNumber_5Digit    ; print the sale price as 5 digits
     JMP DrawShopComplexString ; then draw it, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5690,7 +5690,7 @@ MagicShop_AssertLearn:
     BEQ @HasPermission  ;  if result is zero, they have permission to learn
 
       LDA #$19                  ; otherwise...
-      JSR DrawShopDialogueBox   ; "You can't learn that" dialogue
+      CALL DrawShopDialogueBox   ; "You can't learn that" dialogue
       PLA                       ; drop the return address
       PLA
       JMP MagicShop_Loop        ; and jump back to the magic shop loop
@@ -5727,14 +5727,14 @@ MagicShop_AssertLearn:
     BEQ @FoundEmptySlot
 
     LDA #$22                 ; if no empty slot found...
-    JSR DrawShopDialogueBox  ; "That level is full" dialogue
+    CALL DrawShopDialogueBox  ; "That level is full" dialogue
     PLA                      ; drop return address
     PLA
     JMP MagicShop_Loop       ; and jump back to magic loop
 
   @AlreadyKnow:
     LDA #$1A                 ; if they already know the spell...
-    JSR DrawShopDialogueBox  ; "You already know that" dialogue
+    CALL DrawShopDialogueBox  ; "You already know that" dialogue
     PLA                      ; drop return addy
     PLA
     JMP MagicShop_Loop       ; jump back to magic loop
@@ -6113,7 +6113,7 @@ EnterMainMenu:
     STA PPUMASK           ; turn off the PPU (we need to do some drawing)     
     STA PAPU_EN           ; and silence the APU.  Music sill start next time MusicPlay is called.
 
-    JSR LoadMenuCHRPal        ; load menu related CHR and palettes
+    CALL LoadMenuCHRPal        ; load menu related CHR and palettes
     LDX #$0B
   @Loop:                      ; load a few other main menu related palettes
       LDA lutMenuPalettes, X  ; fetch the palette from the LUT
@@ -6131,8 +6131,8 @@ ResumeMainMenu:
     LDA #0
     STA menustall                   ; and disable menu stalling
 
-    JSR DrawMainMenu                ; draw the main menu
-    JSR TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
+    CALL DrawMainMenu                ; draw the main menu
+    CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
 
     LDA #0
     STA cursor                      ; flush cursor, joypad, and prev joy directions
@@ -6145,16 +6145,16 @@ ResumeMainMenu:
 
 
 MainMenuLoop:
-    JSR ClearOAM                  ; clear OAM (erasing all existing sprites)
-    JSR DrawMainMenuCursor        ; draw the cursor
-    JSR DrawMainMenuCharSprites   ; draw the character sprites
-    JSR MenuFrame                 ; Do a frame
+    CALL ClearOAM                  ; clear OAM (erasing all existing sprites)
+    CALL DrawMainMenuCursor        ; draw the cursor
+    CALL DrawMainMenuCharSprites   ; draw the character sprites
+    CALL MenuFrame                 ; Do a frame
 
     LDA joy_a                     ; check to see if A has been pressed
     BNE @A_Pressed
     LDA joy_b                     ; then see if B has been pressed
     BNE @B_Pressed
-    JSR MoveCursorUpDown          ; then move the cursor up or down if up/down pressed
+    CALL MoveCursorUpDown          ; then move the cursor up or down if up/down pressed
     JMP MainMenuLoop              ;  rinse, repeat
 
   @B_Pressed:
@@ -6169,12 +6169,12 @@ MainMenuLoop:
     ; if A pressed, we need to move into the appropriate sub menu based on 'cursor' (selected menu item)
 
   @A_Pressed:
-    JSR PlaySFX_MenuSel         ; play the selection sound effect
+    CALL PlaySFX_MenuSel         ; play the selection sound effect
     LDA cursor                  ; get the cursor
     BNE @NotItem                ; if zero.... (ITEM)
 
     @Item:
-      JSR EnterItemMenu         ; enter item menu
+      CALL EnterItemMenu         ; enter item menu
       JMP ResumeMainMenu        ; then resume (redraw) main menu
 
   @NotItem:
@@ -6183,7 +6183,7 @@ MainMenuLoop:
 
 
     @MagicLoop:
-      JSR MainMenuSubTarget     ; select a sub target
+      CALL MainMenuSubTarget     ; select a sub target
       BCS @EscapeSubTarget      ; if B pressed, they want to escape sub target menu.
 
       LDA cursor                ; otherwise (A pressed), get the selected character
@@ -6200,11 +6200,11 @@ MainMenuLoop:
       BNE @CanUseMagic          ; otherwise.. if they're not stone, you can
 
     @CantUseMagic:              ;if dead or stone...
-      JSR PlaySFX_Error         ;  play error sound effect
+      CALL PlaySFX_Error         ;  play error sound effect
       JMP @MagicLoop            ;  and continue magic loop until valid option selected
 
     @CanUseMagic:
-      JSR EnterMagicMenu        ; if target is valid.. enter magic menu
+      CALL EnterMagicMenu        ; if target is valid.. enter magic menu
       JMP ResumeMainMenu        ; then resume (redraw) main menu and continue
 
   @NotMagic:
@@ -6213,7 +6213,7 @@ MainMenuLoop:
 
     @Weapon:
       LDA #ch_weapons-ch_stats  ; select offset for Weapon data
-      JSR EnterEquipMenu        ; and enter equip menu (Weapons menu)
+      CALL EnterEquipMenu        ; and enter equip menu (Weapons menu)
       JMP ResumeMainMenu        ; then resume main menu
 
   @NotWeapon:
@@ -6222,13 +6222,13 @@ MainMenuLoop:
 
     @Armor:
       LDA #ch_armor-ch_stats    ; select offset for Armor data
-      JSR EnterEquipMenu        ; and enter equip menu (Armor menu)
+      CALL EnterEquipMenu        ; and enter equip menu (Armor menu)
       JMP ResumeMainMenu        ; then resume main menu
 
   @Status:                      ; otherwise (cursor=4)... they selected 'Status'
-    JSR MainMenuSubTarget       ; select a sub target
+    CALL MainMenuSubTarget       ; select a sub target
     BCS @EscapeSubTarget        ;  if they escaped the sub target selection, then escape it
-    JSR EnterStatusMenu         ; otherwise, enter Status menu
+    CALL EnterStatusMenu         ; otherwise, enter Status menu
     JMP ResumeMainMenu          ; then resume (redraw) main menu
 
 @EscapeSubTarget:             ; if they escaped the sub target menu...
@@ -6258,17 +6258,17 @@ MainMenuSubTarget:
     STA cursor
 
   @Loop:
-    JSR ClearOAM                 ; clear OAM
-    JSR DrawMainMenuCharSprites  ; draw the main menu battle sprite
-    JSR DrawMainMenuSubCursor    ; draw the sub target cursor
-    JSR MenuFrame                ; do a frame
+    CALL ClearOAM                 ; clear OAM
+    CALL DrawMainMenuCharSprites  ; draw the main menu battle sprite
+    CALL DrawMainMenuSubCursor    ; draw the sub target cursor
+    CALL MenuFrame                ; do a frame
 
     LDA joy_a
     BNE @A_Pressed               ; check if A pressed
     LDA joy_b
     BNE @B_Pressed               ; or B
 
-    JSR MoveMainMenuSubCursor    ; if neither, move the cursor
+    CALL MoveMainMenuSubCursor    ; if neither, move the cursor
     JMP @Loop                    ; and keep looping
 
   @B_Pressed:
@@ -6297,15 +6297,15 @@ EnterMagicMenu:
     STA menustall                  ; clear menustall
     STA descboxopen                ; and mark description box as closed
 
-    JSR ClearNT                    ; clear the nametable
-    JSR DrawMagicMenuMainBox       ; draw the big box containing all the spells
+    CALL ClearNT                    ; clear the nametable
+    CALL DrawMagicMenuMainBox       ; draw the big box containing all the spells
     PHP                            ; C is set if char has no spells -- we'll use that later, so PHP for now
 
     LDA #$07
-    JSR DrawMainItemBox            ; draw the title box
+    CALL DrawMainItemBox            ; draw the title box
     LDA #$29
-    JSR DrawCharMenuString         ; and draw the "MAGIC" title text
-    JSR TurnMenuScreenOn_ClearOAM  ; clear OAM and turn the screen on
+    CALL DrawCharMenuString         ; and draw the "MAGIC" title text
+    CALL TurnMenuScreenOn_ClearOAM  ; clear OAM and turn the screen on
 
     PLP                            ; pull status to see if character has any spells
     BCC :+                         ; if not....
@@ -6316,28 +6316,28 @@ EnterMagicMenu:
     STA joy_prevdir           ; and previous joy directions
 
 MagicMenu_Loop:
-    JSR ClearOAM              ; clear OAM
-    JSR DrawMagicMenuCursor   ; draw the cursor
-    JSR MenuFrame             ; and do a frame
+    CALL ClearOAM              ; clear OAM
+    CALL DrawMagicMenuCursor   ; draw the cursor
+    CALL MenuFrame             ; and do a frame
 
     LDA joy_a
     BNE @A_Pressed            ; check if A pressed
     LDA joy_b
     BNE @B_Pressed            ; and B
 
-    JSR MoveMagicMenuCursor   ; otherwise, move the cursor if a direction was pressed
+    CALL MoveMagicMenuCursor   ; otherwise, move the cursor if a direction was pressed
     JMP MagicMenu_Loop        ; and keep looping
 
   @B_Pressed:
     RTS                       ; if B pressed, just exit
 
   @A_Pressed:
-    JSR PlaySFX_MenuSel         ; play the selection sound effect
-    JSR UseMagic_GetRequiredMP  ; see if we have MP to cast selected spell
+    CALL PlaySFX_MenuSel         ; play the selection sound effect
+    CALL UseMagic_GetRequiredMP  ; see if we have MP to cast selected spell
     BCS @HaveMP                 ; if so, skip ahead
 
       LDA #$32                  ; otherwise...
-      JSR DrawItemDescBox       ;  print "you don't have enough MP" or whatever message (description text ID=$32)
+      CALL DrawItemDescBox       ;  print "you don't have enough MP" or whatever message (description text ID=$32)
       JMP MagicMenu_Loop        ;  and return to loop
 
   @HaveMP:
@@ -6415,7 +6415,7 @@ MagicMenu_Loop:
       JMP UseMagic_EXIT
 
 :   LDA #$33                ; gets here if no match found.
-    JSR DrawItemDescBox     ; print description text ("can't cast that here")
+    CALL DrawItemDescBox     ; print description text ("can't cast that here")
     JMP MagicMenu_Loop      ; and return to magic loop
 
 ;;;;;;;;;;;;;;;
@@ -6440,12 +6440,12 @@ UseMagic_CUR3:
 
 UseMagic_CureFamily:
     STA hp_recovery         ; store the HP to be recovered for future use
-    JSR DrawItemTargetMenu  ; draw the item target menu (gotta choose who to target with this spell)
+    CALL DrawItemTargetMenu  ; draw the item target menu (gotta choose who to target with this spell)
     LDA #$2B
-    JSR DrawItemDescBox     ; load up the relevent description text
+    CALL DrawItemDescBox     ; load up the relevent description text
 
  CureFamily_Loop:
-    JSR ItemTargetMenuLoop  ; handle the item target menu loop
+    CALL ItemTargetMenuLoop  ; handle the item target menu loop
     BCS CureFamily_Exit     ; if they pressed B, just exit
 
     LDA cursor              ; otherwise... get cursor
@@ -6462,28 +6462,28 @@ UseMagic_CureFamily:
     BEQ CureFamily_CantUse  ; can't target if stone, either
 
     LDA hp_recovery         ; otherwise, we can target.  Get the HP to recover
-    JSR MenuRecoverHP_Abs   ; and recover it
-    JSR DrawItemTargetMenu  ; then redraw the target menu screen to reflect changes
+    CALL MenuRecoverHP_Abs   ; and recover it
+    CALL DrawItemTargetMenu  ; then redraw the target menu screen to reflect changes
 
     LDX mp_required         ; put mp required index in X
     DEC ch_magicdata, X     ; and subtract 1 MP from the proper level
 
-    JSR MenuWaitForBtn_SFX  ; Then just wait for the player to press a button.  Then exit by re-entering magic menu
+    CALL MenuWaitForBtn_SFX  ; Then just wait for the player to press a button.  Then exit by re-entering magic menu
 
   CureFamily_Exit:
     JMP EnterMagicMenu      ; to exit, re-enter (redraw) magic menu
 
   CureFamily_CantUse:
-    JSR PlaySFX_Error       ; if can't use, play the error sound effect
+    CALL PlaySFX_Error       ; if can't use, play the error sound effect
     JMP CureFamily_Loop     ; and loop until you get a proper target
 
 ;;;;;;;;;;;;;;
 
 UseMagic_CUR4:
-    JSR DrawItemTargetMenu  ; draw item target menu
+    CALL DrawItemTargetMenu  ; draw item target menu
     LDA #$2B
-    JSR DrawItemDescBox     ; and appropriate description text
-    JSR ItemTargetMenuLoop  ; do the item target menu loop
+    CALL DrawItemDescBox     ; and appropriate description text
+    CALL ItemTargetMenuLoop  ; do the item target menu loop
     BCS CureFamily_Exit     ; if they pressed B to escape.. just exit
 
     LDA cursor              ; otherwise, get cursor (target character ID)
@@ -6499,11 +6499,11 @@ UseMagic_CUR4:
     STA ch_curhp, X         ;  but while it will refill a dead character's HP, he will stay dead
                             ;  because he'll still have the "dead" ailment.
 
-    JSR DrawItemTargetMenu  ; redraw target menu to reflect changes
+    CALL DrawItemTargetMenu  ; redraw target menu to reflect changes
     LDX mp_required         ; put MP required index in X
     DEC ch_magicdata, X     ; and subtract MP from proper level
 
-    JSR MenuWaitForBtn_SFX  ; then just wait for the player to press a button
+    CALL MenuWaitForBtn_SFX  ; then just wait for the player to press a button
     JMP EnterMagicMenu      ; and re-enter (redraw) the magic menu
 
 ;;;;;;;;;;;;;;
@@ -6532,19 +6532,19 @@ UseMagic_HEL3:
 UseMagic_HealFamily: 
     STA hp_recovery         ; store HP recovery for future use
     LDA #$2C
-    JSR DrawItemDescBox     ; draw the relevent description text
-    JSR ClearOAM            ; clear OAM (no sprites)
-    JSR MenuWaitForBtn      ; wait for the user to press a button
+    CALL DrawItemDescBox     ; draw the relevent description text
+    CALL ClearOAM            ; clear OAM (no sprites)
+    CALL MenuWaitForBtn      ; wait for the user to press a button
 
     LDA joy                 ; see whether the user pressed A or B
     AND #$80                ; check A
     BEQ HealFamily_Exit     ; if not A, they pressed B... so exit
 
     LDA hp_recovery         ; otherwise (pressed A), get HP recovery
-    JSR MenuRecoverPartyHP  ; and give it to the entire party (also redraws the target menu for us)
+    CALL MenuRecoverPartyHP  ; and give it to the entire party (also redraws the target menu for us)
     LDX mp_required
     DEC ch_magicdata, X     ; subtract the MP for this level
-    JSR MenuWaitForBtn_SFX  ; then just wait for the player to press a button before exiting
+    CALL MenuWaitForBtn_SFX  ; then just wait for the player to press a button before exiting
 
  HealFamily_Exit:
     JMP EnterMagicMenu      ; to exit, just re-enter magic menu
@@ -6552,16 +6552,16 @@ UseMagic_HealFamily:
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 UseMagic_LIFE:
-    JSR DrawItemTargetMenu  ; draw the target menu
+    CALL DrawItemTargetMenu  ; draw the target menu
     LDA #$2E
-    JSR DrawItemDescBox     ; and relevent description text
+    CALL DrawItemDescBox     ; and relevent description text
   @Loop:
-    JSR ItemTargetMenuLoop  ; do the target loop
+    CALL ItemTargetMenuLoop  ; do the target loop
     BCS HealFamily_Exit     ; if they pressed B to exit, exit (hijack the HealFamily exit, whynot)
 
     LDA #$01                ; mark the ailment-to-cure as "death" ($01)
     STA tmp                 ; put it in tmp for 'CureOBAilment' routine
-    JSR CureOBAilment       ; attempt to cure death!
+    CALL CureOBAilment       ; attempt to cure death!
     BCS @CantUse            ; if the char didn't have the death ailment... can't use this spell on him
 
     LDA #1                  ; otherwise it worked.  Give them 1 HP now that they're alive
@@ -6570,26 +6570,26 @@ UseMagic_LIFE:
     LDX mp_required
     DEC ch_magicdata, X     ; and take away MP for the spell cast
 
-    JSR DrawItemTargetMenu  ; redraw target menu to reflect changes
-    JSR MenuWaitForBtn_SFX  ; then wait for the user to press a button
+    CALL DrawItemTargetMenu  ; redraw target menu to reflect changes
+    CALL MenuWaitForBtn_SFX  ; then wait for the user to press a button
     JMP EnterMagicMenu      ; and exit by re-entering magic menu
 
   @CantUse:
-    JSR PlaySFX_Error       ; if you can't use it, play the error sound
+    CALL PlaySFX_Error       ; if you can't use it, play the error sound
     JMP @Loop               ;  and loop!
 
 
 UseMagic_LIF2:
-    JSR DrawItemTargetMenu  ; Exactly the same as LIFE, except...
+    CALL DrawItemTargetMenu  ; Exactly the same as LIFE, except...
     LDA #$2E
-    JSR DrawItemDescBox
+    CALL DrawItemDescBox
   @Loop:
-    JSR ItemTargetMenuLoop
+    CALL ItemTargetMenuLoop
     BCS HealFamily_Exit
 
     LDA #$01
     STA tmp
-    JSR CureOBAilment
+    CALL CureOBAilment
     BCS @CantUse
 
     LDA ch_maxhp, X         ; refill their HP to max, instead of just giving them 1 HP
@@ -6600,57 +6600,57 @@ UseMagic_LIF2:
     LDX mp_required
     DEC ch_magicdata, X
 
-    JSR DrawItemTargetMenu
-    JSR MenuWaitForBtn_SFX
+    CALL DrawItemTargetMenu
+    CALL MenuWaitForBtn_SFX
     JMP EnterMagicMenu
 
   @CantUse:
-    JSR PlaySFX_Error
+    CALL PlaySFX_Error
     JMP @Loop
 
 UseMagic_PURE:
-    JSR DrawItemTargetMenu  ; Exactly the same as LIFE, except...
+    CALL DrawItemTargetMenu  ; Exactly the same as LIFE, except...
     LDA #$2D
-    JSR DrawItemDescBox     ; different description text
+    CALL DrawItemDescBox     ; different description text
   UseMagic_PURE_Loop:
-    JSR ItemTargetMenuLoop
+    CALL ItemTargetMenuLoop
     BCS UseMagic_PURE_Exit
 
     LDA #$03                   ; cure "poison" ailment instead of "death"
     STA tmp
-    JSR CureOBAilment
+    CALL CureOBAilment
     BCS UseMagic_PURE_CantUse
 
     LDX mp_required            ; do not recover any HP
     DEC ch_magicdata, X
-    JSR DrawItemTargetMenu
-    JSR MenuWaitForBtn_SFX
+    CALL DrawItemTargetMenu
+    CALL MenuWaitForBtn_SFX
 
  UseMagic_PURE_Exit:
     JMP EnterMagicMenu
 
  UseMagic_PURE_CantUse:
-    JSR PlaySFX_Error
+    CALL PlaySFX_Error
     JMP UseMagic_PURE_Loop
 
 UseMagic_SOFT:
-    JSR DrawItemTargetMenu     ; again... more of the same
+    CALL DrawItemTargetMenu     ; again... more of the same
     LDA #$30
-    JSR DrawItemDescBox        ; but different description text
+    CALL DrawItemDescBox        ; but different description text
   @Loop:
-    JSR ItemTargetMenuLoop
+    CALL ItemTargetMenuLoop
     BCS UseMagic_PURE_Exit
     LDA #$02                   ; and cure stone instead of death or poison
     STA tmp
-    JSR CureOBAilment
+    CALL CureOBAilment
     BCS @CantUse
     LDX mp_required
     DEC ch_magicdata, X
-    JSR DrawItemTargetMenu
-    JSR MenuWaitForBtn_SFX
+    CALL DrawItemTargetMenu
+    CALL MenuWaitForBtn_SFX
     JMP EnterMagicMenu
   @CantUse:
-    JSR PlaySFX_Error
+    CALL PlaySFX_Error
     JMP @Loop
 
 
@@ -6658,10 +6658,10 @@ UseMagic_SOFT:
 
 UseMagic_WARP:
     LDA #$2F
-    JSR DrawItemDescBox       ; draw description text
+    CALL DrawItemDescBox       ; draw description text
     LDX mp_required
     DEC ch_magicdata, X       ; decrement MP
-    JSR MenuWaitForBtn_SFX    ; wait for a button press
+    CALL MenuWaitForBtn_SFX    ; wait for a button press
 
     TSX                  ; get the stack pointer
     TXA                  ; and put it in A
@@ -6670,9 +6670,9 @@ UseMagic_WARP:
 
     CLC                  ; otherwise, we're to go back one floor
     ADC #6               ;   so add 6 to the stack pointer (kills the last 3 JSRs)
-    TAX                  ;   which would be:  JSR to Magic Menu
-    TXS                  ;                    JSR to Main Menu
-                         ;                and JSR to Standard Map loop
+    TAX                  ;   which would be:  CALL to Magic Menu
+    TXS                  ;                    CALL to Main Menu
+                         ;                and CALL to Standard Map loop
     LDA #0               ; turn off PPU and APU
     STA PPUMASK
     STA PAPU_EN
@@ -6681,10 +6681,10 @@ UseMagic_WARP:
 
 UseMagic_EXIT:
     LDA #$31
-    JSR DrawItemDescBox       ; draw description text
+    CALL DrawItemDescBox       ; draw description text
     LDX mp_required
     DEC ch_magicdata, X       ; decrement MP
-    JSR MenuWaitForBtn_SFX    ; wait for button press
+    CALL MenuWaitForBtn_SFX    ; wait for button press
 
   UseMagic_DoEXIT:
     JMP DoOverworld           ; then restart logic on overworld by JMPing to DoOverworld
@@ -6703,7 +6703,7 @@ UseMagic_EXIT:
 ;  JSRs to the Standard Map loop, resulting in a 7 byte stack increase.  (see @NormalTeleport
 ;  local label inside of StandardMapLoop)
 ;
-;    To perform a WARP, all the game has to do is escape the most recent JSR to the standard map code.
+;    To perform a WARP, all the game has to do is escape the most recent CALL to the standard map code.
 ;  once this is accomplished, the returning code in StandardMapLoop will pull the old position
 ;  off the stack and all that good stuff, just as if the player had stepped on a warp-style
 ;  teleport.
@@ -6760,22 +6760,22 @@ EnterItemMenu:
     STA PPUMASK           ; turn the PPU off
     STA menustall       ; zero menustall (don't want to stall for drawing the screen for the first time)
     STA descboxopen     ; indicate that the descbox is closed
-    JSR ClearNT         ; wipe the NT clean
+    CALL ClearNT         ; wipe the NT clean
                         ;  then start drawing the item menu
 
 ;; ResumeItemMenu is jumped to to refresh the item box (like after you use a key item and it disappears)
 ResumeItemMenu:
-    JSR DrawItemBox        ; Draw the item box
+    CALL DrawItemBox        ; Draw the item box
     PHP                    ; C will be set if there was no inventory -- push it to stack for use later
 
     LDA #$03
-    JSR DrawItemTitleBox           ; draw the "ITEM" title box
-    JSR TurnMenuScreenOn_ClearOAM  ; clear OAM and turn the screen on
+    CALL DrawItemTitleBox           ; draw the "ITEM" title box
+    CALL TurnMenuScreenOn_ClearOAM  ; clear OAM and turn the screen on
 
     PLP                    ; pull the previously pushed C (C set if no inventory)
     BCC :+                 ; if the player has no inventory...
       LDA #$04
-      JSR DrawItemDescBox     ; draw the "You have nothing" description text
+      CALL DrawItemDescBox     ; draw the "You have nothing" description text
       JMP MenuWaitForBtn_SFX  ; then just wait for A or B to be pressed -- then exit
 
     ; otherwise (player has at least 1 item in inventory)
@@ -6785,22 +6785,22 @@ ResumeItemMenu:
     STA joy_prevdir    ; and previous joy directionals
 
 ItemMenu_Loop:
-    JSR ClearOAM            ; clear OAM
-    JSR DrawItemMenuCursor  ; draw the cursor where it needs to be
-    JSR MenuFrame           ; do a frame
+    CALL ClearOAM            ; clear OAM
+    CALL DrawItemMenuCursor  ; draw the cursor where it needs to be
+    CALL MenuFrame           ; do a frame
 
     LDA joy_a               ; see if A has been pressed
     BNE @APressed           ; if it has... jump ahead
     CMP joy_b               ; otherwise check for B
     BNE @Exit               ; and exit if B pressed
-    JSR MoveItemMenuCurs    ; neither button pressed... so move cursor if a direction was pressed
+    CALL MoveItemMenuCurs    ; neither button pressed... so move cursor if a direction was pressed
     JMP ItemMenu_Loop       ; then continue the loop
 
   @Exit:
     RTS
 
   @APressed:
-    JSR PlaySFX_MenuSel        ; play the menu selection sound effect
+    CALL PlaySFX_MenuSel        ; play the menu selection sound effect
     LDX cursor                 ; put the cursor in X
     LDA item_box, X            ; get the selected item, and put it in A
     ASL A                      ; double it (2 bytes per pointer)
@@ -6848,7 +6848,7 @@ UseItem_Crown:
 
     ; Jumped to by items that just print a simple description
 UseItem_SetDesc:
-    JSR DrawItemDescBox    ; draw the description box with given description (in A)
+    CALL DrawItemDescBox    ; draw the description box with given description (in A)
     JMP ItemMenu_Loop      ;  then return to the item loop
 
     ; these various items just print simple description.
@@ -6913,16 +6913,16 @@ UseItem_Bottle:
     LSR A                           ; move flag into C
     BCC @OpenBottle                 ; if flag is clear... fairy isn't visible, so bottle hasn't been opened yet.  Otherwise...
       LDA #$17                      ; Draw "It is empty" description text
-      JSR DrawItemDescBox
+      CALL DrawItemDescBox
       JMP ItemMenu_Loop             ;  and return to the item loop
 
 @OpenBottle:                        ; if the bottle hasn't been opened yet
     LDA #0
     STA item_bottle                 ; remove the bottle from inventory
     LDY #OBJID_FAIRY
-    JSR ShowMapObject               ; mark the fairy object as visible
+    CALL ShowMapObject               ; mark the fairy object as visible
     LDA #$16                        ; Draw "Pop... a fiary pops out" etc description text
-    JSR DrawItemDescBox_Fanfare     ;   with fanfare!
+    CALL DrawItemDescBox_Fanfare     ;   with fanfare!
     JMP ResumeItemMenu              ; Then RESUME item menu (redraw the item list -- now that the bottle isn't there)
 
 ;;;;;;;;;;;;;;;;;;;;;
@@ -6946,14 +6946,14 @@ UseItem_Rod:
     LSR A                     ;   shift that flag into C
     BCC @CantUse              ;   if clear, plate is gone, so Rod has already been used.. can't use the Rod again
 
-    JSR HideMapObject           ; otherwise.. first time rod is being used.  Hide the rod plate
+    CALL HideMapObject           ; otherwise.. first time rod is being used.  Hide the rod plate
     LDA #$0F                    ;  load up the relevent description text
-    JSR DrawItemDescBox_Fanfare ;  and draw it with fanfare!
+    CALL DrawItemDescBox_Fanfare ;  and draw it with fanfare!
     JMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$10                  ; if you can't use the Rod here, just load up
-    JSR DrawItemDescBox       ;   the generic description text
+    CALL DrawItemDescBox       ;   the generic description text
     JMP ItemMenu_Loop         ; and return to the item loop
 
 
@@ -6979,14 +6979,14 @@ UseItem_Lute:
     BCC @CantUse                ;   if clear, lute plate is gone, so lute was already used.  Can't use it again
 
     ASL A                       ; completely pointless shift (undoes above LSR, but has no real effect)
-    JSR HideMapObject           ; hide the lute plate object
+    CALL HideMapObject           ; hide the lute plate object
     LDA #$05                    ; get relevent description text
-    JSR DrawItemDescBox_Fanfare ;  and draw it ... WITH FANFARE!
+    CALL DrawItemDescBox_Fanfare ;  and draw it ... WITH FANFARE!
     JMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$06                    ; if you can't use the lute here, just
-    JSR DrawItemDescBox         ;  load up generic description text
+    CALL DrawItemDescBox         ;  load up generic description text
     JMP ItemMenu_Loop           ; and return to item loop
 
 
@@ -7011,12 +7011,12 @@ UseItem_Floater:
 
     INC airship_vis             ; otherwise... increment airship visibility (= $01)
     LDA #$11                    ; load up the "omg you raised the airship" description text
-    JSR DrawItemDescBox_Fanfare ;   and draw it with fanfare
+    CALL DrawItemDescBox_Fanfare ;   and draw it with fanfare
     JMP ItemMenu_Loop           ; then return to item loop
 
   @CantUse:
     LDA #$12
-    JSR DrawItemDescBox     ; can't use... so just draw lame description text
+    CALL DrawItemDescBox     ; can't use... so just draw lame description text
     JMP ItemMenu_Loop       ;  and return to loop
 
 
@@ -7033,14 +7033,14 @@ UseItem_Tent:
 
     DEC item_tent           ; otherwise... remove 1 tent from the inventory
     LDA #30
-    JSR MenuRecoverPartyHP  ; give 30 HP to the whole party
+    CALL MenuRecoverPartyHP  ; give 30 HP to the whole party
     LDA #$1A
-    JSR MenuSaveConfirm     ; and bring up confirm save screen (with description text $1A)
+    CALL MenuSaveConfirm     ; and bring up confirm save screen (with description text $1A)
     JMP EnterItemMenu       ; then re-enter item menu (need to re-enter, because screen needs full redrawing)
 
   @CantUse:
     LDA #$1B                ; if we can't use, just print description text
-    JSR DrawItemDescBox
+    CALL DrawItemDescBox
     JMP ItemMenu_Loop       ; and return to loop
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7055,13 +7055,13 @@ UseItem_Cabin:
     BCS @CantUse
     DEC item_cabin          ; remove cabins from inventory instead of tents
     LDA #60                 ;  recover 60 HP instead of 30
-    JSR MenuRecoverPartyHP
+    CALL MenuRecoverPartyHP
     LDA #$1C                ; and use different description strings
-    JSR MenuSaveConfirm
+    CALL MenuSaveConfirm
     JMP EnterItemMenu
   @CantUse:
     LDA #$1D                ; another different description string
-    JSR DrawItemDescBox
+    CALL DrawItemDescBox
     JMP ItemMenu_Loop
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7077,17 +7077,17 @@ UseItem_House:
 
     DEC item_house          ; otherwise... remove a house from our inventory
     LDA #120
-    JSR MenuRecoverPartyHP  ; give the whole party 120 HP
+    CALL MenuRecoverPartyHP  ; give the whole party 120 HP
     LDA #$1E
-    JSR MenuSaveConfirm     ; bring up the save confirmation screen.  (description text $1E)
+    CALL MenuSaveConfirm     ; bring up the save confirmation screen.  (description text $1E)
 
     BCC :+                    ; if they saved....
-      JSR MenuRecoverPartyMP  ;   recover MP  (note this is done after the save!  some would say this is BUGGED)
+      CALL MenuRecoverPartyMP  ;   recover MP  (note this is done after the save!  some would say this is BUGGED)
 :   JMP EnterItemMenu         ; then, whether they saved or not, re-enter item menu
 
   @CantUse:
     LDA #$1F
-    JSR DrawItemDescBox     ; if you can't use the house... just print description text ($1F)
+    CALL DrawItemDescBox     ; if you can't use the house... just print description text ($1F)
     JMP ItemMenu_Loop       ; and return to loop
 
 
@@ -7107,21 +7107,21 @@ UseItem_House:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MenuSaveConfirm:
-    JSR DrawItemDescBox       ; draw the description box
-    JSR ClearOAM              ; clear OAM
-    JSR MenuWaitForBtn        ; then wait for player to press A or B
+    CALL DrawItemDescBox       ; draw the description box
+    CALL ClearOAM              ; clear OAM
+    CALL MenuWaitForBtn        ; then wait for player to press A or B
 
     LDA joy                   ; see if they pressed A or B
     AND #$80                  ;  check the 'A' bit
     BNE :+                    ; if they didn't press A...
-      JSR CloseDescBox         ;  close the description box
+      CALL CloseDescBox         ;  close the description box
       CLC                      ;  CLC to indicate they did not save
       RTS                      ;  and exit
 
 :   LDA #$3F                  ; draw description box with text ID $3F
-    JSR DrawItemDescBox       ; "your gave is being saved" or whatever
-    JSR SaveGame              ; save the game
-    JSR MenuWaitForBtn_SFX    ; then wait for them to press A or B again
+    CALL DrawItemDescBox       ; "your gave is being saved" or whatever
+    CALL SaveGame              ; save the game
+    CALL MenuWaitForBtn_SFX    ; then wait for them to press A or B again
     SEC                       ;  before setting C (to indicate game has been saved)
     RTS                       ;  and exiting
 
@@ -7137,12 +7137,12 @@ MenuSaveConfirm:
   ;; can't make these labels local because UseItem_Pure hijacks one of the labels ;_;
 
 UseItem_Heal:
-    JSR DrawItemTargetMenu     ; Draw the item target menu (need to know who to use this heal potion on)
+    CALL DrawItemTargetMenu     ; Draw the item target menu (need to know who to use this heal potion on)
     LDA #$20
-    JSR DrawItemDescBox        ; open up the description box with text ID $20
+    CALL DrawItemDescBox        ; open up the description box with text ID $20
 
   _UseItem_Heal_Loop:
-    JSR ItemTargetMenuLoop     ; run the item target loop.
+    CALL ItemTargetMenuLoop     ; run the item target loop.
     BCS UseItem_Exit           ; if B was pressed (C set), exit this menu
 
     LDA cursor                 ; otherwise... A was pressed.
@@ -7159,9 +7159,9 @@ UseItem_Heal:
     BEQ _UseItem_Heal_CantUse  ; if stone... can't use
 
     LDA #30                    ; otherwise.. can use!
-    JSR MenuRecoverHP_Abs      ;   recover 30 HP for target (index is still in X).  Can use _Abs version
-    JSR DrawItemTargetMenu     ;   because we already checked the ailments
-    JSR MenuWaitForBtn_SFX     ; then redraw the menu to reflect the HP change, and wait for the user to press a button
+    CALL MenuRecoverHP_Abs      ;   recover 30 HP for target (index is still in X).  Can use _Abs version
+    CALL DrawItemTargetMenu     ;   because we already checked the ailments
+    CALL MenuWaitForBtn_SFX     ; then redraw the menu to reflect the HP change, and wait for the user to press a button
 
     DEC item_heal              ; then remove a heal potion from the inventory
 
@@ -7169,7 +7169,7 @@ UseItem_Exit:
     JMP EnterItemMenu          ; re-enter item menu (item menu needs to be redrawn)
 
   _UseItem_Heal_CantUse:       ; can't make this local because of stupid UseItem_Pure hijacking the above label
-    JSR PlaySFX_Error          ; play the error sound effect
+    CALL PlaySFX_Error          ; play the error sound effect
     JMP _UseItem_Heal_Loop     ; and keep looping until they select a legal target or escape with B
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7179,25 +7179,25 @@ UseItem_Exit:
 ;;;;;;;;;;;;;;;;;;;;
 
 UseItem_Pure:
-    JSR DrawItemTargetMenu     ; draw target menu
+    CALL DrawItemTargetMenu     ; draw target menu
     LDA #$21
-    JSR DrawItemDescBox        ; print relevent description text (ID=$21)
+    CALL DrawItemDescBox        ; print relevent description text (ID=$21)
   @Loop:
-    JSR ItemTargetMenuLoop     ; do the target menu loop
+    CALL ItemTargetMenuLoop     ; do the target menu loop
     BCS UseItem_Exit           ; if they pressed B (C set), exit
 
     LDA #$03                   ; otherwise, put "poison" OB ailment
     STA tmp                    ;   in tmp as our ailment to cure
-    JSR CureOBAilment          ; then try to cure it
+    CALL CureOBAilment          ; then try to cure it
     BCS @CantUse               ; if we couldn't... can't use this item
 
     DEC item_pure              ; if we could... remove one from the inventory
-    JSR DrawItemTargetMenu     ; redraw the target menu to reflect the changes
-    JSR MenuWaitForBtn_SFX     ; then wait for the player to press a button
+    CALL DrawItemTargetMenu     ; redraw the target menu to reflect the changes
+    CALL MenuWaitForBtn_SFX     ; then wait for the player to press a button
     JMP EnterItemMenu          ; before re-entering the item menu (redrawing item menu)
 
   @CantUse:
-    JSR PlaySFX_Error          ; if can't use... give the error sound effect
+    CALL PlaySFX_Error          ; if can't use... give the error sound effect
     JMP @Loop                  ;  and keep looping
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7207,25 +7207,25 @@ UseItem_Pure:
 ;;;;;;;;;;;;;;;;;;;;
 
 UseItem_Soft:
-    JSR DrawItemTargetMenu     ; this is all EXACTLY the same as UseItem_Pure.  Except...
+    CALL DrawItemTargetMenu     ; this is all EXACTLY the same as UseItem_Pure.  Except...
     LDA #$22
-    JSR DrawItemDescBox        ; different description text ID
+    CALL DrawItemDescBox        ; different description text ID
   @Loop:
-    JSR ItemTargetMenuLoop
+    CALL ItemTargetMenuLoop
     BCS UseItem_Exit
 
     LDA #$02                   ; cure "stone" ailment
     STA tmp
-    JSR CureOBAilment
+    CALL CureOBAilment
     BCS @CantUse
 
     DEC item_soft              ; remove soft from inventory
-    JSR DrawItemTargetMenu
-    JSR MenuWaitForBtn_SFX
+    CALL DrawItemTargetMenu
+    CALL MenuWaitForBtn_SFX
     JMP EnterItemMenu
 
   @CantUse:
-    JSR PlaySFX_Error
+    CALL PlaySFX_Error
     JMP @Loop
 
 
@@ -7284,9 +7284,9 @@ ItemTargetMenuLoop:
     STA joy_a       ; clear joy_a and joy_b so that a button press
     STA joy_b       ;  will be recognized
 
-    JSR ClearOAM               ; clear OAM
-    JSR DrawItemTargetCursor   ; draw the cursor for this menu
-    JSR MenuFrame              ; do a frame
+    CALL ClearOAM               ; clear OAM
+    CALL DrawItemTargetCursor   ; draw the cursor for this menu
+    CALL MenuFrame              ; do a frame
 
     LDA joy_a
     BNE @A_Pressed     ; check to see if they pressed A
@@ -7319,16 +7319,16 @@ ItemTargetMenuLoop:
   @MoveCurs:
     AND #$03               ; whether we moved left or right, AND with 3 to effectively wrap the cursor
     STA cursor             ;  and keep it in bounds.  Then write it back to the 'cursor' var
-    JSR PlaySFX_MenuMove   ; Play the "move" sound effect
+    CALL PlaySFX_MenuMove   ; Play the "move" sound effect
     JMP @Loop              ; and continue looping
 
   @A_Pressed:              ; if A was pressed
-    JSR PlaySFX_MenuSel    ;  play the selection sound effect
+    CALL PlaySFX_MenuSel    ;  play the selection sound effect
     CLC                    ;  clear carry to indicate A pressed
     RTS                    ;  and exit
 
   @B_Pressed:              ; if B pressed
-    JSR PlaySFX_MenuSel    ;  play selection sound effect
+    CALL PlaySFX_MenuSel    ;  play selection sound effect
     SEC                    ;  and set carry before exiting
     RTS
 
@@ -7366,7 +7366,7 @@ DrawItemTargetMenu:
     LDA #0
     STA PPUMASK            ; turn the PPU off
     STA menustall        ; and disable menu stalling
-    JSR ClearNT          ; wipe the NT clean
+    CALL ClearNT          ; wipe the NT clean
 
     LDA #$0B             ; hardcoded box
     STA box_y            ; x,y   = $01,$0B
@@ -7376,9 +7376,9 @@ DrawItemTargetMenu:
     STA box_wd
     LDA #$08
     STA box_ht
-    JSR DrawBox          ; draw it
+    CALL DrawBox          ; draw it
 
-    JSR @DrawBoxBody                ; draw the box body
+    CALL @DrawBoxBody                ; draw the box body
     JMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen back on.  then exit
 
     RTS     ; useless RTS -- impossible to reach
@@ -7393,15 +7393,15 @@ DrawItemTargetMenu:
     STA dest_x       ; draw this string at $04,$11
     LDA #$11
     STA dest_y
-    JSR @DrawString  ; draw it
+    CALL @DrawString  ; draw it
 
     DEC dest_y       ; dec Y coord ($04,$10)
     LDX #1*2         ; draw string 1 (cur hp)
-    JSR @DrawString
+    CALL @DrawString
 
     DEC dest_y       ; dec Y coord again ($04,$0F)
     LDX #2*2         ; draw string 2 (ailment blurb)
-    JSR @DrawString
+    CALL @DrawString
 
     DEC dest_y       ; dec Y coord by 2  ($04,$0D)
     DEC dest_y
@@ -7462,39 +7462,39 @@ EnterStatusMenu:
     STA PPUMASK               ; turn off the PPU
     LDA #0
     STA menustall           ; disable menu stalling
-    JSR ClearNT             ; clear the NT
+    CALL ClearNT             ; clear the NT
 
     LDX #0*4                ; draw status box 0
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$23                ; and its contents (menu text ID $23 = character name)
-    JSR DrawCharMenuString
+    CALL DrawCharMenuString
 
     LDX #1*4                ; then status box 1
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$24                ; and its contents
-    JSR DrawCharMenuString
+    CALL DrawCharMenuString
 
     LDX #2*4                ; and so on
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$25
-    JSR DrawCharMenuString
+    CALL DrawCharMenuString
 
     LDX #3*4                ; and so on
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$26
-    JSR DrawCharMenuString
+    CALL DrawCharMenuString
 
     LDX #4*4
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$27
-    JSR DrawCharMenuString
+    CALL DrawCharMenuString
 
     LDX #5*4
-    JSR @DrawStatusBox
+    CALL @DrawStatusBox
     LDA #$28
-    JSR DrawCharMenuString  ; 6th and final box drawn
+    CALL DrawCharMenuString  ; 6th and final box drawn
 
-    JSR ClearOAM            ; clear OAM
+    CALL ClearOAM            ; clear OAM
 
     LDA #$58                ; set sprite coords to $58,$20
     STA spr_x
@@ -7506,9 +7506,9 @@ EnterStatusMenu:
     ROR A
     ROR A
     AND #$C0                ; shift to make ID a usable index
-    JSR DrawOBSprite        ; then draw this character's OB sprite
+    CALL DrawOBSprite        ; then draw this character's OB sprite
 
-    JSR TurnMenuScreenOn    ; turn the screen on
+    CALL TurnMenuScreenOn    ; turn the screen on
     JMP MenuWaitForBtn_SFX  ; then just wait for the user to press a button before exiting
 
 
@@ -7545,13 +7545,13 @@ EnterStatusMenu:
 
 MenuRecoverPartyHP:
     LDX #$00
-    JSR MenuRecoverHP        ; recover HP for each character
+    CALL MenuRecoverHP        ; recover HP for each character
     LDX #$40
-    JSR MenuRecoverHP
+    CALL MenuRecoverHP
     LDX #$80
-    JSR MenuRecoverHP
+    CALL MenuRecoverHP
     LDX #$C0
-    JSR MenuRecoverHP
+    CALL MenuRecoverHP
     JMP DrawItemTargetMenu   ; then draw item target menu, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7729,7 +7729,7 @@ MoveItemMenuCurs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MenuWaitForBtn_SFX:
-    JSR MenuFrame           ; do a frame
+    CALL MenuFrame           ; do a frame
     LDA joy_a               ;  check A and B buttons
     ORA joy_b
     BEQ MenuWaitForBtn_SFX  ;  if both are zero, keep looping.  Otherwise...
@@ -7740,7 +7740,7 @@ MenuWaitForBtn_SFX:
 
 
 MenuWaitForBtn:
-    JSR MenuFrame           ; exactly the same -- only no call to PlaySFX_MenuSel at the end
+    CALL MenuFrame           ; exactly the same -- only no call to PlaySFX_MenuSel at the end
     LDA joy_a
     ORA joy_b
     BEQ MenuWaitForBtn
@@ -7764,17 +7764,17 @@ DrawMainMenuCharSprites:
     LDA #$18
     STA spr_y
     LDA #$00
-    JSR DrawOBSprite
+    CALL DrawOBSprite
 
     LDA #$D8           ; Draw char 1's OB sprite at $D8,$18
     STA spr_x
     LDA #$40
-    JSR DrawOBSprite
+    CALL DrawOBSprite
 
     LDA #$88           ; Draw char 3's OB sprite at $D8,$88
     STA spr_y
     LDA #$C0
-    JSR DrawOBSprite
+    CALL DrawOBSprite
 
     LDA #$88           ; and lastly, char 2's OB sprite at $88,$88
     STA spr_x
@@ -7800,7 +7800,7 @@ DrawMainMenuCharSprites:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MenuFrame:
-    JSR WaitForVBlank    ; wait for VBlank
+    CALL WaitForVBlank    ; wait for VBlank
     LDA #>oam              ; Do sprite DMA (update the 'real' OAM)
     STA OAMDMA
 
@@ -7817,7 +7817,7 @@ MenuFrame:
 
 :   LDA #BANK_THIS         ; record this bank as the return bank
     STA cur_bank           ; then call the music play routine (keep music playing)
-    JSR CallMusicPlay
+    CALL CallMusicPlay
 
     INC framecounter       ; increment the frame counter to count this frame
 
@@ -7951,13 +7951,13 @@ MoveMagicMenuCursor:
       LDA cursor             ; otherwise (column is bad), get the cursor
       AND #$1C               ; wrap it to start of row
       STA cursor             ; write it back
-      JSR @CheckCursor       ; check to make sure slot isn't empty
+      CALL @CheckCursor       ; check to make sure slot isn't empty
       BEQ @Right             ; if it is, keep looping until we get to a slot that isn't empty
       JMP CloseDescBox_Sfx   ; otherwise, close the description box and exit
 
   @Right_ColOK:
     INC cursor             ; if we're not in the last column... just INC the cursor
-    JSR @CheckCursor       ; then check to make sure it's not an empty slot
+    CALL @CheckCursor       ; then check to make sure it's not an empty slot
     BEQ @Right             ; if it is, keep looping
     JMP CloseDescBox_Sfx   ; otherwise, close desc box and exit
 
@@ -7974,13 +7974,13 @@ MoveMagicMenuCursor:
       AND #$1C              ; mask out the row
       ORA #$02              ; snap to last column in row
       STA cursor            ; write back
-      JSR @CheckCursor      ; verify slot isn't empty
+      CALL @CheckCursor      ; verify slot isn't empty
       BEQ @Left             ; if it is, keep looping
       JMP CloseDescBox_Sfx  ; otherwise, exit
 
   @Left_ColOK:
     DEC cursor            ; not in the first column... so we can just dec the cursor
-    JSR @CheckCursor      ; verify it
+    CALL @CheckCursor      ; verify it
     BEQ @Left             ; loop if empty
     JMP CloseDescBox_Sfx  ; otherwise exit
 
@@ -7995,7 +7995,7 @@ MoveMagicMenuCursor:
     ADC #$04               ; just add 4 to it (one row)
     AND #$1F               ; mask to keep within 8 rows
     STA cursor             ; and write back
-    JSR @CheckCursor       ; verify
+    CALL @CheckCursor       ; verify
     BEQ @Down              ; loop if slot is empty
     JMP CloseDescBox_Sfx   ; then exit once we find a nonempty slot
 
@@ -8005,7 +8005,7 @@ MoveMagicMenuCursor:
     SBC #$04               ; only we subtract 4 instead of adding
     AND #$1F
     STA cursor
-    JSR @CheckCursor
+    CALL @CheckCursor
     BEQ @Up
     JMP CloseDescBox_Sfx
 
@@ -8047,7 +8047,7 @@ MoveMagicMenuCursor:
 
 
 CloseDescBox_Sfx:
-    JSR PlaySFX_MenuMove     ; play the menu move sound effect
+    CALL PlaySFX_MenuMove     ; play the menu move sound effect
     LDA descboxopen          ; see if the box is currently open
     BNE CloseDescBox         ;  if it is, close it... otherwise
       RTS                    ;    just exit
@@ -8071,14 +8071,14 @@ CloseDescBox:
 
 
 TurnMenuScreenOn_ClearOAM:
-    JSR ClearOAM             ; clear OAM
+    CALL ClearOAM             ; clear OAM
                              ;  then just do the normal stuff
 
 TurnMenuScreenOn:
-    JSR WaitForVBlank      ; wait for VBlank (don't want to turn the screen on midway through the frame)
+    CALL WaitForVBlank      ; wait for VBlank (don't want to turn the screen on midway through the frame)
     LDA #>oam                ; do Sprite DMA
     STA OAMDMA
-    JSR DrawPalette          ; draw/apply the current palette
+    CALL DrawPalette          ; draw/apply the current palette
 
     LDA #$08
     STA soft2000             ; set PPUCTRL and soft2000 appropriately
@@ -8224,28 +8224,28 @@ DrawMagicMenuCursor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawMainMenu:
-    JSR ClearNT                    ; start by clearing the NT
-    JSR DrawOrbBox                 ; draw the orb box
-    JSR DrawMainMenuGoldBox        ; gold box
-    JSR DrawMainMenuOptionBox      ; and option box
+    CALL ClearNT                    ; start by clearing the NT
+    CALL DrawOrbBox                 ; draw the orb box
+    CALL DrawMainMenuGoldBox        ; gold box
+    CALL DrawMainMenuOptionBox      ; and option box
 
     LDA #1                         ; then draw the boxes for each character
-    JSR DrawMainItemBox            ;  stats...starting with the first character
+    CALL DrawMainItemBox            ;  stats...starting with the first character
     LDA #$00
-    JSR DrawMainMenuCharBoxBody
+    CALL DrawMainMenuCharBoxBody
 
     LDA #2                         ; second
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     LDA #$40
-    JSR DrawMainMenuCharBoxBody
+    CALL DrawMainMenuCharBoxBody
 
     LDA #3                         ; third
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     LDA #$80
-    JSR DrawMainMenuCharBoxBody
+    CALL DrawMainMenuCharBoxBody
 
     LDA #4                         ; fourth
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     LDA #$C0
     JMP DrawMainMenuCharBoxBody    ; and then exit
 
@@ -8260,7 +8260,7 @@ DrawMainMenu:
 
 DrawMainMenuGoldBox:
     LDA #5               ; draw main/item box number 5 (the GP box)
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     LDA #$01             ; draw menu string ID=$01  (current GP, followed by " G")
     JMP DrawMenuString
 
@@ -8277,31 +8277,31 @@ DrawMainMenuGoldBox:
 
 DrawOrbBox:
     LDA #0             ; Draw main menu box ID 0  (the orb box)
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
 
       ; Fire Orb
     LDX #$84           ; dest ppu address       = $2084
     LDY #$64           ; lit orb tiles start at = $64
     LDA orb_fire       ; fire orb status
-    JSR @DrawOrb
+    CALL @DrawOrb
 
       ; Water Orb
     LDX #$86           ; dest ppu address       = $2086
     LDY #$68           ; lit orb tiles start at = $68
     LDA orb_water      ; water orb status
-    JSR @DrawOrb
+    CALL @DrawOrb
 
       ; Air Orb
     LDX #$C4           ; dest ppu address       = $20C4
     LDY #$6C           ; lit orb tiles start at = $6C
     LDA orb_air        ; air orb status
-    JSR @DrawOrb
+    CALL @DrawOrb
 
       ; Earth Orb
     LDX #$C6           ; dest ppu address       = $20C6
     LDY #$70           ; lit orb tiles start at = $70
     LDA orb_earth      ; earth orb status
-    JSR @DrawOrb
+    CALL @DrawOrb
 
       ; Attributes for all orbs
     LDA PPUSTATUS    ; reset PPU toggle
@@ -8361,7 +8361,7 @@ DrawOrbBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawMainItemBox:
-    JSR LoadMainItemBoxDims
+    CALL LoadMainItemBoxDims
     JMP DrawBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8405,7 +8405,7 @@ LoadMainItemBoxDims:
 
 DrawMainMenuOptionBox:
     LDA #6
-    JSR DrawMainItemBox    ; Draw Main/Item Box ID=$06  (the option box)
+    CALL DrawMainItemBox    ; Draw Main/Item Box ID=$06  (the option box)
     INC dest_y             ;  draw the containing text one line lower than usual (so the cursor will fit in the box)
     LDA #$02               ; Draw Menu String ID=$02 (the option text)
     JMP DrawMenuString
@@ -8425,7 +8425,7 @@ DrawMainMenuOptionBox:
 DrawItemTitleBox:
     PHA                   ; push menu string ID to back it up
     LDA #$07              ; draw mainitem box ID 7 (the "ITEM" title box)
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     PLA                   ; pull menu string ID
     JMP DrawMenuString    ;  and draw it and return
 
@@ -8458,7 +8458,7 @@ DrawItemDescBox:
     LDA #1                ; set menustall to nonzero (indicating we need to stall)
     STA menustall
     LDA #$08              ; draw main/item box ID $08  (the description box)
-    JSR DrawMainItemBox
+    CALL DrawMainItemBox
     PLA                   ; restore menu string ID
     INC descboxopen       ; set descboxopen to a nonzero value to mark the description box as open
 
@@ -8517,7 +8517,7 @@ EraseDescBox:
     LDA #1
     STA menustall            ; set menustall -- we will need to stall here, since the PPU is on
     LDA #$08
-    JSR LoadMainItemBoxDims  ; load box dimensions for box ID 8 (the item description box)
+    CALL LoadMainItemBoxDims  ; load box dimensions for box ID 8 (the item description box)
     JMP EraseBox             ;  erase the box, then exit
 
 
@@ -8630,14 +8630,14 @@ DrawMainMenuCharBoxBody:
 
     LDA #<str_buf + $08  ; start drawing from 8 characters into the string
     STA text_ptr         ;  this will draw MP for levels 4-7 only (the second row)
-    JSR DrawMenuComplexString    ; draw it
+    CALL DrawMenuComplexString    ; draw it
 
     LDA #<str_buf     ; set low byte of pointer to start of the string buf
     STA text_ptr      ;  this is MP levels 0-3 (the first row)
     LDA #0            ; write a null terminator to the start of the second row, so we don't draw that row again
     STA str_buf + $08
     DEC dest_y        ; decrement the Y coord so we draw this row one row above the previous draw
-    JSR DrawMenuComplexString   ; draw it!
+    CALL DrawMenuComplexString   ; draw it!
 
     LDA #$52          ; "MA" DTE tile
     STA str_buf
@@ -8651,7 +8651,7 @@ DrawMainMenuCharBoxBody:
     LDA #<str_buf
     STA text_ptr      ; draw "MAGIC" string as loaded above
     DEC dest_y        ; dec row to print 1 above last
-    JSR DrawComplexString    ; draw it!
+    CALL DrawComplexString    ; draw it!
 
     LDA dest_y        ; subtract 8 from the Y coord to put it back to where it started
     SEC               ;  (we added 10 at first, and then DEC'd twice)
@@ -8684,7 +8684,7 @@ DrawMainMenuCharBoxBody:
     STA dest_y
     LDA #<str_buf  ; set low byte of string pointer (start drawing the string from $0300)
     STA text_ptr
-    JSR DrawMenuComplexString    ; Draw it!
+    CALL DrawMenuComplexString    ; Draw it!
     LDA dest_y
     SEC
     SBC #5         ; then subtract the 5 we just added to restore the Y coord
@@ -8730,11 +8730,11 @@ DrawMainMenuCharBoxBody:
 
 DrawMagicMenuMainBox:
     LDA #$09
-    JSR DrawMainItemBox          ; Draw the box itself from the list of MainItem boxes
+    CALL DrawMainItemBox          ; Draw the box itself from the list of MainItem boxes
 
     LDY #$C0                     ; set char menu string length to $C0
     LDA #$2A                     ; and draw string 2A (entire spell list, along with level names an MP amounts
-    JSR DrawCharMenuString_Len   ;   -- ALL the text in one string!)
+    CALL DrawCharMenuString_Len   ;   -- ALL the text in one string!)
 
     LDA submenu_targ             ; get the character we're looking at
     ROR A
@@ -8818,45 +8818,45 @@ EnterEquipMenu:
     STA joy_b
     STA menustall         ; and turn off menu stalling (since the PPU is off)
 
-    JSR SortEquipmentList           ; sort the equipment list to remove gaps
-    JSR DrawEquipMenu               ; draw the equip menu (but not the item text)
-    JSR CopyEquipToItemBox          ; copy equipment from inventory to item_box so it's easier to work with
-    JSR UnadjustEquipStats          ; unadjust equipment stats so they can be readjusted later
-    JSR TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on  (even though item names have not been drawn)
+    CALL SortEquipmentList           ; sort the equipment list to remove gaps
+    CALL DrawEquipMenu               ; draw the equip menu (but not the item text)
+    CALL CopyEquipToItemBox          ; copy equipment from inventory to item_box so it's easier to work with
+    CALL UnadjustEquipStats          ; unadjust equipment stats so they can be readjusted later
+    CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on  (even though item names have not been drawn)
 
     LDA #1
     STA menustall                   ; now that the PPU is on, turn on menu stalling (DrawEquipMenuStrings does
-    JSR DrawEquipMenuStrings        ;   this already though...).  Then draw the menu strings (item names)
+    CALL DrawEquipMenuStrings        ;   this already though...).  Then draw the menu strings (item names)
 
   @Start:
     LDA #0
     STA eq_modecurs               ; reset the mode cursor to 0  ("Equip")
 
   @Loop:
-    JSR ClearOAM                  ; clear OAM
-    JSR DrawEquipMenuModeCurs     ; draw the mode cursor
-    JSR EquipMenuFrame            ; then do an Equip Menu Frame
+    CALL ClearOAM                  ; clear OAM
+    CALL DrawEquipMenuModeCurs     ; draw the mode cursor
+    CALL EquipMenuFrame            ; then do an Equip Menu Frame
 
     LDA joy_a
     BNE @A_Pressed            ; check to see if A pressed
     LDA joy_b
     BNE @B_Pressed            ; or B
 
-    JSR MoveEquipMenuModeCurs ; if neither A nor B pressed, move the mode cursor
+    CALL MoveEquipMenuModeCurs ; if neither A nor B pressed, move the mode cursor
     JMP @Loop                 ; and loop until one of them is pressed
 
   @A_Pressed:
-    JSR @GoToSubMenu          ; go to the desired sub menu
+    CALL @GoToSubMenu          ; go to the desired sub menu
     JMP @Start                ; then restart this loop once they exit that sub menu
 
   @B_Pressed:                 ; if B pressed....
-    JSR CopyEquipFromItemBox  ;  move all equipment from item box back to player inventory
-    JSR SortEquipmentList     ;  sort equipment list to remove gaps
+    CALL CopyEquipFromItemBox  ;  move all equipment from item box back to player inventory
+    CALL SortEquipmentList     ;  sort equipment list to remove gaps
     JMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
 
 
   @GoToSubMenu:
-    JSR PlaySFX_MenuSel       ; play the selection sound effect (a waste, it was already played by EquipMenuFrame)
+    CALL PlaySFX_MenuSel       ; play the selection sound effect (a waste, it was already played by EquipMenuFrame)
 
     LDA #0
     STA cursor                ; reset the primary
@@ -8876,16 +8876,16 @@ EnterEquipMenu:
 ;;
 
 EquipMenu_TRADE:              ; "TRADE" option selected
-    JSR ClearOAM              ; clear OAM
-    JSR DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
-    JSR EquipMenuFrame        ; do a frame
+    CALL ClearOAM              ; clear OAM
+    CALL DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
+    CALL EquipMenuFrame        ; do a frame
 
     LDA joy_a                 ; check or A and B button presses
     BNE @A_Pressed
     LDA joy_b
     BNE @B_Pressed
 
-    JSR MoveEquipMenuCurs     ; then move the cursor for directional presses
+    CALL MoveEquipMenuCurs     ; then move the cursor for directional presses
     JMP EquipMenu_TRADE       ; rinse, repeat
 
   @B_Pressed:                 ; if B pressed... just exit
@@ -8896,16 +8896,16 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     STA cursor2               ; copy the primary cursor to the secondary cursor
                               ; then proceed to the Trade subloop
     @SubLoop:
-      JSR ClearOAM                      ; clear OAM
-      JSR DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
-      JSR EquipMenuFrame                ; do a frame
+      CALL ClearOAM                      ; clear OAM
+      CALL DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
+      CALL EquipMenuFrame                ; do a frame
 
       LDA joy_a
       BNE @DoTrade            ; check for A/B button presses
       LDA joy_b
       BNE EquipMenu_TRADE     ;   if B pressed, jump back to main Trade loop
 
-      JSR MoveEquipMenuCurs   ; check for cursor movement
+      CALL MoveEquipMenuCurs   ; check for cursor movement
       JMP @SubLoop            ; and loop
 
   @DoTrade:              ; DoTrade is called when two items to trade have been selected
@@ -8921,7 +8921,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     AND #$7F             ;  unequip it
     STA item_box, Y      ; and move X item to Y item (swapped the two items)
 
-    JSR DrawEquipMenuStrings   ; redraw all the equipment strings to reflect changes
+    CALL DrawEquipMenuStrings   ; redraw all the equipment strings to reflect changes
     JMP EquipMenu_TRADE        ; then jump back to Trade loop
 
 ;;
@@ -8929,16 +8929,16 @@ EquipMenu_TRADE:              ; "TRADE" option selected
 ;;
 
 EquipMenu_EQUIP:
-    JSR ClearOAM             ; clear OAM
-    JSR DrawEquipMenuCurs    ; draw the primary cursor
-    JSR EquipMenuFrame       ; do a frame
+    CALL ClearOAM             ; clear OAM
+    CALL DrawEquipMenuCurs    ; draw the primary cursor
+    CALL EquipMenuFrame       ; do a frame
 
     LDA joy_a
     BNE @A_Pressed           ; check for A/B button presses
     LDA joy_b
     BNE @B_Pressed
 
-    JSR MoveEquipMenuCurs    ; and check for cursor movement
+    CALL MoveEquipMenuCurs    ; and check for cursor movement
     JMP EquipMenu_EQUIP      ; rinse, repeat
 
   @B_Pressed:                ; if B pressed, just exit
@@ -8950,12 +8950,12 @@ EquipMenu_EQUIP:
     BNE @ConfirmEquip        ; if this item is nonzero, jump ahead to confirm that it's equippable
                              ;  otherwise.. can't equip (can't equip a blank slot)
     @CantEquip:
-      JSR PlaySFX_Error      ; if can't equip, play the error sound effect
+      CALL PlaySFX_Error      ; if can't equip, play the error sound effect
       JMP EquipMenu_EQUIP    ; and keep looping
 
   @ConfirmEquip:
     BMI @ToggleEquip         ; see if item is already equipped, if it is, you can ALWAYS unequip it (no check necessary)
-    JSR IsEquipLegal         ; Confirm to see if this item is equippable by this class
+    CALL IsEquipLegal         ; Confirm to see if this item is equippable by this class
     BCS @CantEquip           ; if it isn't (C set), then we can't equip it
 
     LDX cursor               ; otherwise (can equip), restore X to be the cursor again, then toggle equip state
@@ -8964,7 +8964,7 @@ EquipMenu_EQUIP:
     LDA item_box, X           ; get the item
     EOR #$80                  ; toggle its equip state (unequip it if equipped... or equip it if unequipped)
     STA item_box, X           ; and write it back
-    JSR DrawEquipMenuStrings  ; redraw the item names to reflect changes
+    CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
     JMP EquipMenu_EQUIP       ; and continue looping
 
 
@@ -8973,16 +8973,16 @@ EquipMenu_EQUIP:
 ;;
 
 EquipMenu_DROP:
-    JSR ClearOAM              ; clear OAM
-    JSR DrawEquipMenuCurs     ; draw the primary cursor
-    JSR EquipMenuFrame        ; do a frame
+    CALL ClearOAM              ; clear OAM
+    CALL DrawEquipMenuCurs     ; draw the primary cursor
+    CALL EquipMenuFrame        ; do a frame
 
     LDA joy_a
     BNE @A_Pressed            ; check for A and B presses
     LDA joy_b
     BNE @B_Pressed
 
-    JSR MoveEquipMenuCurs     ; check for cursor movement
+    CALL MoveEquipMenuCurs     ; check for cursor movement
     JMP EquipMenu_DROP        ; rinse, repeat until A/B pressed
 
   @B_Pressed:
@@ -8992,18 +8992,18 @@ EquipMenu_DROP:
     LDX cursor                ; put the cursor in X
     LDA item_box, X           ; get the item to drop from the item box
     BNE @ConfirmLoop          ; if it's zero....
-      JSR PlaySFX_Error       ;  ... play the error sound effect (can't drop an empty slot)
+      CALL PlaySFX_Error       ;  ... play the error sound effect (can't drop an empty slot)
       JMP EquipMenu_DROP      ;      and continue looping
 
   @ConfirmLoop:
-    JSR ClearOAM              ; clear OAM
+    CALL ClearOAM              ; clear OAM
 
     LDA framecounter          ; for confirmation, the cursor is to flicker.  Use the frame counter
     LSR A                     ;   and put bit 1 in C  (but remember that framecounter is INC'd by 2
     LSR A                     ;   every EquipMenuFrame
     BCS :+                    ; skip over drawing the cursor if C set (odd frame) --
-      JSR DrawEquipMenuCurs   ;   -- so only draw the cursor every other frame
-:   JSR EquipMenuFrame        ; Do a frame
+      CALL DrawEquipMenuCurs   ;   -- so only draw the cursor every other frame
+:   CALL EquipMenuFrame        ; Do a frame
 
     LDA joy_a
     BNE @DoDrop               ; if they pressed A, do the drop
@@ -9016,7 +9016,7 @@ EquipMenu_DROP:
     LDX cursor                ; get the cursor in X
     LDA #0
     STA item_box, X           ; erase the item from the item box
-    JSR DrawEquipMenuStrings  ; redraw the item names to reflect changes
+    CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
     JMP EquipMenu_DROP        ; and return to Drop loop
 
 
@@ -9220,10 +9220,10 @@ lut_ArmorTypes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EquipMenuFrame:
-    JSR WaitForVBlank     ; wait for VBlank
+    CALL WaitForVBlank     ; wait for VBlank
     LDA #>oam
     STA OAMDMA               ; do sprite DMA
-    JSR UpdateEquipMenuModeAttrib   ; update mode attributes (useless, see this routine for why)
+    CALL UpdateEquipMenuModeAttrib   ; update mode attributes (useless, see this routine for why)
 
     LDA soft2000          ; reset scroll
     STA PPUCTRL
@@ -9233,7 +9233,7 @@ EquipMenuFrame:
 
     LDA #BANK_THIS
     STA cur_bank          ; set cur_bank to this bank
-    JSR CallMusicPlay     ;   so we can call music play routine
+    CALL CallMusicPlay     ;   so we can call music play routine
 
     INC framecounter      ; inc the frame counter to count this frame
 
@@ -9246,7 +9246,7 @@ EquipMenuFrame:
     LDA joy               ; get the joy data
     AND #$0F              ; isolate directional buttons
     STA tmp+7             ; and store it as the previous joy data
-    JSR UpdateJoy         ; then update joy data
+    CALL UpdateJoy         ; then update joy data
 
     LDA joy_a
     ORA joy_b             ; see if either A or B pressed
@@ -9452,52 +9452,52 @@ CopyEquipFromItemBox:    ; this routine is exactly the same as the above
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawEquipMenu:
-    JSR ClearNT             ; clear the NT
+    CALL ClearNT             ; clear the NT
 
     LDA #0
-    JSR @DrawEquipBox           ; draw the title box
+    CALL @DrawEquipBox           ; draw the title box
     LDA #$34                    ; menu string $34 ("WEAPON")
     LDX equipoffset
     CPX #ch_weapons - ch_stats  ; check whether this is the weapon or armor screen
     BEQ :+
       LDA #$3E                  ;   if not the weapon screen, change menu string ID to $3E ("ARMOR")
-:   JSR DrawMenuString          ; then draw that title string
+:   CALL DrawMenuString          ; then draw that title string
 
     LDA #1
-    JSR @DrawEquipBox           ; then draw the top menu box
+    CALL @DrawEquipBox           ; then draw the top menu box
     LDA #$35
-    JSR DrawMenuString          ; and its contained text ("EQUIP   TRADE   DROP")
+    CALL DrawMenuString          ; and its contained text ("EQUIP   TRADE   DROP")
 
     LDA #$03
-    JSR @DrawEquipBox           ; char 0's equip box (but leave it empty for now)
+    CALL @DrawEquipBox           ; char 0's equip box (but leave it empty for now)
     LDA #$02
-    JSR @DrawEquipBox           ; char 0's name box
+    CALL @DrawEquipBox           ; char 0's name box
     LDA #$36
-    JSR DrawMenuString          ; char 0's name
+    CALL DrawMenuString          ; char 0's name
 
     LDA #$05
-    JSR @DrawEquipBox           ; then char 1...
+    CALL @DrawEquipBox           ; then char 1...
     LDA #$04
-    JSR @DrawEquipBox
+    CALL @DrawEquipBox
     LDA #$38
-    JSR DrawMenuString
+    CALL DrawMenuString
 
     LDA #$07
-    JSR @DrawEquipBox           ; char 2...
+    CALL @DrawEquipBox           ; char 2...
     LDA #$06
-    JSR @DrawEquipBox
+    CALL @DrawEquipBox
     LDA #$3A
-    JSR DrawMenuString
+    CALL DrawMenuString
 
     LDA #$09
-    JSR @DrawEquipBox           ; char 3...
+    CALL @DrawEquipBox           ; char 3...
     LDA #$08
-    JSR @DrawEquipBox
+    CALL @DrawEquipBox
     LDA #$3C
-    JSR DrawMenuString
+    CALL DrawMenuString
 
     LDA #$C0
-    JSR SetPPUAddrTo_23aa       ; PPU Address = $23C0  (start of attribute tables)
+    CALL SetPPUAddrTo_23aa       ; PPU Address = $23C0  (start of attribute tables)
     LDA #$7F                    ; some useless attribute changes...
     STA PPUDATA                   ;  this sets a paticular square to use palette 1 instead of the normal palette 3
     LDA #$DF                    ; and this sets another square to use palette 1
@@ -9636,7 +9636,7 @@ UpdateEquipMenuModeAttrib:
     TAX                       ; and stuff in X
 
     LDA #$C3
-    JSR SetPPUAddrTo_23aa     ; Set PPU address to $23C3 (relevent attribute bytes)
+    CALL SetPPUAddrTo_23aa     ; Set PPU address to $23C3 (relevent attribute bytes)
 
     LDA @lut_Attr, X          ; copy over 4 bytes of attribute
     STA PPUDATA

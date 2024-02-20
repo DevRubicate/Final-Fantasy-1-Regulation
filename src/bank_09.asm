@@ -4195,7 +4195,7 @@ Minimap_DrawTitleCHR:
                              ;  out over 16 frames
 
   @FrameLoop:
-    JSR WaitForVBlank      ; wait for VBlank
+    CALL WaitForVBlank      ; wait for VBlank
     LDY #0                   ; Y will be loop counter/index
 
     @SmallLoop:
@@ -4228,7 +4228,7 @@ Minimap_DrawTitleCHR:
     LDA #$E8
     STA PPUSCROLL
 
-    JSR Minimap_DrawSFX       ; play ugly drawing sound effect
+    CALL Minimap_DrawSFX       ; play ugly drawing sound effect
     INX
     CPX #16                   ; increment the frame loop counter
     BCC @FrameLoop            ; and loop until we do 16 frames (8 rows, 2 bitplanes per row = full tile)
@@ -4405,10 +4405,10 @@ EnterMinimap:
     LDA #$41               ; switch to music track $41 (crystal theme)
     STA music_track        ;   but it's not heard until after all drawing is complete (music routine isn't called)
 
-    JSR Minimap_PrepDecorCHR   ; Load decoration CHR to RAM (those dragon graphic things)
-    JSR Minimap_PrepTitleCHR   ; And the "Final Fantasy" title text
-    JSR Minimap_YouAreHere     ; Load the "You are here" graphic -- clear OAM, and draw the "you are here" sprite
-    JSR Minimap_FillNTPal      ; Fill the nametable and palettes
+    CALL Minimap_PrepDecorCHR   ; Load decoration CHR to RAM (those dragon graphic things)
+    CALL Minimap_PrepTitleCHR   ; And the "Final Fantasy" title text
+    CALL Minimap_YouAreHere     ; Load the "You are here" graphic -- clear OAM, and draw the "you are here" sprite
+    CALL Minimap_FillNTPal      ; Fill the nametable and palettes
 
     LDA #0
     STA mm_maprow          ; start decompression tiles from row 0 (top row)
@@ -4421,7 +4421,7 @@ EnterMinimap:
     STA minimap_ptr
 
     @InnerLoop:            ;   Inner loop is run 8 times -- each time loads a single row of pixels
-      JSR Minimap_PrepRow  ; Load a single row of 128 pixels from 2 rows of map data
+      CALL Minimap_PrepRow  ; Load a single row of 128 pixels from 2 rows of map data
 
       INC mm_maprow        ; increment map row counter by 2
       INC mm_maprow
@@ -4433,7 +4433,7 @@ EnterMinimap:
       STA minimap_ptr
       BNE @InnerLoop       ; once it wraps from 7->0, we've filled 256 bytes of graphic data (8 rows of pixels)
 
-    JSR Minimap_DrawRows       ; draw those 8 rows of pixels
+    CALL Minimap_DrawRows       ; draw those 8 rows of pixels
     INC minimap_ptr+1          ; increment high byte of PPU dest
 
     LDA minimap_ptr+1
@@ -4442,12 +4442,12 @@ EnterMinimap:
 
       ;  now map drawing is done
 
-    JSR Minimap_DrawDecorCHR   ; draw the dragon decorations (previously loaded)
-    JSR Minimap_DrawTitleCHR   ; and the "Final Fantasy" title graphics (also previously loaded)
+    CALL Minimap_DrawDecorCHR   ; draw the dragon decorations (previously loaded)
+    CALL Minimap_DrawTitleCHR   ; and the "Final Fantasy" title graphics (also previously loaded)
 
 
   @ExitLoop:
-    JSR MinimapFrame      ; do a frame... animating sprite palettes and whatnot
+    CALL MinimapFrame      ; do a frame... animating sprite palettes and whatnot
 
     LDA joy_a
     ORA joy_b
@@ -4477,7 +4477,7 @@ Minimap_DrawDecorCHR:
                              ;  out over 16 frames
 
   @FrameLoop:
-    JSR WaitForVBlank      ; wait for VBlank
+    CALL WaitForVBlank      ; wait for VBlank
     LDY #0                   ; Y will be loop counter/index
 
     @SmallLoop:
@@ -4510,7 +4510,7 @@ Minimap_DrawDecorCHR:
     LDA #$E8
     STA PPUSCROLL
 
-    JSR Minimap_DrawSFX       ; play ugly drawing sound effect
+    CALL Minimap_DrawSFX       ; play ugly drawing sound effect
     INX
     CPX #16                   ; increment the frame loop counter
     BCC @FrameLoop            ; and loop until we do 16 frames (8 rows, 2 bitplanes per row = full tile)
@@ -4661,11 +4661,11 @@ lut_MinimapDecorCHRDest_hi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MinimapFrame:
-    JSR WaitForVBlank    ; wait for VBlank
+    CALL WaitForVBlank    ; wait for VBlank
     LDA #>oam              ; Sprite DMA
     STA OAMDMA
 
-    JSR DrawPalette      ; draw the palette
+    CALL DrawPalette      ; draw the palette
     LDA #$1E               ; turn PPU on
     STA PPUMASK
 
@@ -4676,12 +4676,12 @@ MinimapFrame:
     LDA #$E8
     STA PPUSCROLL
 
-    JSR CallMusicPlay    ; keep the music playing
+    CALL CallMusicPlay    ; keep the music playing
 
     LDA #0
     STA joy_a              ; clear A and B button catchers
     STA joy_b
-    JSR UpdateJoy        ; then update joypad data
+    CALL UpdateJoy        ; then update joypad data
 
     INC framecounter       ; inc the frame counter
 
@@ -4718,7 +4718,7 @@ Minimap_DrawRows:
 
     @MainLoop:
       LDX mm_pixrow          ; put row in X -- X will be the loop up counter and source index
-      JSR WaitForVBlank    ; wait for VBlank
+      CALL WaitForVBlank    ; wait for VBlank
 
       @RowLoop:
         LDA minimap_ptr+1    ; set PPU address
@@ -4742,7 +4742,7 @@ Minimap_DrawRows:
       LDA #$E8
       STA PPUSCROLL
 
-      JSR Minimap_DrawSFX   ; play the ugly drawing sound effect
+      CALL Minimap_DrawSFX   ; play the ugly drawing sound effect
 
       LDA mm_pixrow         ; add 1 to our row counter
       CLC                   ; and mask low bits (0-7)
@@ -4794,7 +4794,7 @@ Minimap_DrawSFX:
 
 
 Minimap_PrepRow:
-    JSR CallMinimapDecompress    ; decompress 2 rows of map data
+    CALL CallMinimapDecompress    ; decompress 2 rows of map data
     LDY #0                       ; Y will be the x coord (column) counter
 
   @MainLoop:
@@ -4821,7 +4821,7 @@ Minimap_PrepRow:
 
       LSR A                   ; shift out marker sprite flag
       BCC :+                  ; if set....
-        JSR DrawDungeonSprite ; ... generate a dungeon marker sprite
+        CALL DrawDungeonSprite ; ... generate a dungeon marker sprite
 
   :   INY             ; increment our X coord by 2
       INY
@@ -4987,11 +4987,11 @@ Minimap_FillNTPal:
    ;  Do last minute PPU stuff before exiting
    ;
 
-    JSR WaitForVBlank   ; wait for VBlank
+    CALL WaitForVBlank   ; wait for VBlank
     LDA #>oam             ; then do sprite DMA
     STA OAMDMA
 
-    JSR DrawPalette     ; draw the palette
+    CALL DrawPalette     ; draw the palette
 
     LDA soft2000
     STA PPUCTRL             ; set NT scroll and pattern page assignments

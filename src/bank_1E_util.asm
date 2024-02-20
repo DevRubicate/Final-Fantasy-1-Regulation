@@ -44,7 +44,7 @@ SetRandomSeed:
 ; This is a 16-bit Galois linear feedback shift register with polynomial $0039.
 ; The sequence of numbers it generates will repeat after 65535 calls.
 ;
-; Execution time is an average of 125 cycles (excluding jsr and rts)
+; Execution time is an average of 125 cycles (excluding CALL and rts)
 
 GetRandom:
     ldy #8     ; iteration count (generates 8 bits)
