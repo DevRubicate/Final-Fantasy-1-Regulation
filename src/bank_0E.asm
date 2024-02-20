@@ -95,7 +95,8 @@ IntroStory_Joy:
     AND #BTN_START        ; see if start was pressed
     BNE :+                ;  if not, just exit
       RTS
-:   JMP GameStart       ; if it was pressed, restart game (brings up title screen)
+    :   
+    FARJUMP GameStart       ; if it was pressed, restart game (brings up title screen)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

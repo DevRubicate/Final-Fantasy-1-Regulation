@@ -478,13 +478,6 @@ lut_EntrTele_X     = $AC00   ; BANK_TELEPORTINFO
 lut_EntrTele_Y     = $AC20   ; BANK_TELEPORTINFO
 lut_EntrTele_Map   = $AC40   ; BANK_TELEPORTINFO
 
-lut_InitGameFlags       = $AF00 ; BANK_STARTUPINFO
-lut_InitUnsramFirstPage = $B000 ; BANK_STARTUPINFO
-
-
-lut_ClassStartingStats  = $B040 ; BANK_STARTINGSTATS
-
-
 ; These are used as offsets for btl_enemystats
 en_romptr       = $00  ; 2 bytes - pointer to enemy stats in ROM
 en_hp           = $02  ; 2 bytes

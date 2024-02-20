@@ -247,7 +247,7 @@ BattleFadeOutAndRestartGame:
     CALL BattleFadeOut
     PLA                 ; drop the return address (this is pointless, because GameStart resets the
     PLA                 ;  stack pointer anyway)
-    JUMP GameStart     ; then jump to GameStart, which returns the user to the title screen.
+    FARJUMP GameStart     ; then jump to GameStart, which returns the user to the title screen.
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

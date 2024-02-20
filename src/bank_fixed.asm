@@ -20,9 +20,9 @@
 .import ResetRAM, SetRandomSeed, GetRandom
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
+.import GameStart
 
 .export SwapPRG
-.export GameStart
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
 .export ClearOAM, DrawPalette, CallMusicPlay, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, CallMusicPlay, DrawComplexString
@@ -37,115 +37,9 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export SetOWScroll_PPUOn, ClearOAM, CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Game Start [$C012 :: 0x3C022]
-;;
-;;    The game code starts here.  This is jumped to after the reset vector
-;;  preps all the necessary hardware stuff.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GameStart:
-    LDA #0                      ; Turn off the PPU
-    STA PPUCTRL
-    STA PPUMASK
-    
-    LDA #$08                    ; Sprites use pattern table at $1xxx
-    STA soft2000
-    STA NTsoft2000
-    
-    LDX #$FF                    ; reset stack pointer
-    TXS
-    
-    CALL DisableAPU              ; Silence/disable all audio
-    
-    ;; Load some startup info
-    
-    FARCALL SetRandomSeed
-
-    LDA #BANK_STARTUPINFO       ; swap in bank containing some LUTs
-    CALL SwapPRG
-    
-    LDX #$00                        ; Loop $100 times to fill each page of unsram
-    : LDA lut_InitGameFlags, X      ; game flags page loaded from this table
-      STA game_flags, X
-      
-      LDA #0                        ; character stats are set after party generation
-      STA ch_stats, X
-      STA ch_magicdata, X
-      STA unsram, X
+.export DisableAPU, VerifyChecksum, ClearZeroPage, DoOverworld
 
 
-      INX                           ; loop for the full page
-      BNE :-
-      
-    LDX #$1D                        ; Loop $3B times to fill each page of unsram
-    : LDA lut_InitUnsramFirstPage, X; Page 0 of unsram is loaded from this table
-      STA unsram, X
-      DEX                           ; loop for the full page
-      BPL :-
-      
-    LDA #40
-    STA ch_exptonext                ; initialize exptonext.  40 XP to get to level 2
-    STA ch_exptonext + (1<<6)
-    STA ch_exptonext + (2<<6)
-    STA ch_exptonext + (3<<6)
-    
-    LDA #$01                        ; start on foot
-    STA unsram_vehicle
-    
-    LDA startintrocheck             ; check a random spot in memory.  This value is not inialized as powerup,
-    CMP #$4D                        ;    and will be semi-random.
-    BEQ :+                          ; if it is any value other than $4D, we can assume we just powered on...
-      LDA #$4D                      ; ... so initilize it to $4D.  From this point forward, it will always be initlialized.
-      STA startintrocheck           ; This is how the game makes the distinction between cold boot and warm reset
-      FARCALL EnterIntroStory       ; And do the intro story!
-    : 
-
-    FARCALL EnterTitleScreen
-    
-    BCS @NewGame                    ; Do a new game, if the user selected the New Game option
-    
-    ; Otherwise, they selected "Continue"...
-
-    CALL VerifyChecksum              ; Then verify checksum to ensure save game integrity
-    BCS @NewGame                    ;  if it failed, do a new game
-    
-    ; Continue saved game
-    LDX #$00
-    : LDA   sram, X                 ; Copy all of SRAM to unsram
-      STA unsram, X
-      LDA   sram+$100, X
-      STA unsram+$100, X
-      LDA   sram+$200, X
-      STA unsram+$200, X
-      LDA   sram+$300, X
-      STA unsram+$300, X
-      INX
-      BNE :-
-    JUMP @Begin                      ; Then begin the game
-    
-    
-  @NewGame:
-    FARCALL NewGamePartyGeneration      ; create a new party
-    CALL NewGame_LoadStartingStats   ;   and set their starting stats
-
-    ; New Game and Continue meet here -- actually start up the game
-  @Begin:
-    CALL ClearZeroPage               ; clear Zero Page for good measure
-    
-    LDA unsram_ow_scroll_x          ; fetch OW scroll from unsram
-    STA ow_scroll_x
-    LDA unsram_ow_scroll_y
-    STA ow_scroll_y
-    
-    LDA unsram_vehicle              ; fetch vehicle from unsram (wouldn't
-    STA vehicle_next                ;   this always be 'on-foot'?)
-    STA vehicle
-    
-    NOJUMP DoOverworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1738,72 +1632,6 @@ EnterOW_PalCyc:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  NewGame_LoadStartingStats  [$C76D :: 0x3C77D]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NewGame_LoadStartingStats:
-    LDA #BANK_STARTINGSTATS ; swap in bank containing starting stats
-    CALL SwapPRG
-    
-    LDX #$00                ; load up the starting stats for each character
-    CALL @LoadStats
-    LDX #$40
-    CALL @LoadStats
-    LDX #$80
-    CALL @LoadStats
-    LDX #$C0
-  ; JUMP @LoadStats
-    
-
-  @LoadStats:
-    LDA ch_class, X         ; get the class
-    ASL A                   ; $10 bytes of starting data for each class
-    ASL A
-    ASL A
-    ASL A
-    TAY                     ; source index in Y
-    
-    ;; lut_ClassStartingStats table contains $B bytes of data, padded to $10
-    ;;   byte 0 is a redundant and unused class ID byte.
-    ;;   The rest is as outlined below
-    
-    LDA lut_ClassStartingStats+1, Y ; starting HP
-    STA ch_curhp, X
-    STA ch_maxhp, X
-    
-    LDA lut_ClassStartingStats+2, Y ; base stats
-    STA ch_str, X
-    LDA lut_ClassStartingStats+3, Y
-    STA ch_agil, X
-    LDA lut_ClassStartingStats+4, Y
-    STA ch_int, X
-    LDA lut_ClassStartingStats+5, Y
-    STA ch_vit, X
-    LDA lut_ClassStartingStats+6, Y
-    STA ch_luck, X
-    
-    LDA lut_ClassStartingStats+7, Y ; sub stats
-    STA ch_dmg, X
-    LDA lut_ClassStartingStats+8, Y
-    STA ch_hitrate, X
-    LDA lut_ClassStartingStats+9, Y
-    STA ch_evade, X
-    LDA lut_ClassStartingStats+$A, Y
-    STA ch_magdef, X
-    
-    ; Award starting MP if the class ID is >= RM, but < KN
-    LDA ch_class, X
-    CMP #CLS_RM
-    BCC :+
-      CMP #CLS_KN
-      BCS :+
-        LDA #$02                ; start with 2 MP
-        STA ch0_curmp, X
-        STA ch0_maxmp, X
-  : RTS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6405,6 +6233,8 @@ AltarFrame:
 ;;  this totals 114 cycles (DEX+BNE = 5 cycles) which is 1 dot longer than a scanline.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.align $100
 
 WaitAltarScanline:   ; CALL to routine = 6 cycles
     LDY #18          ; +2 = 8
@@ -12200,7 +12030,7 @@ OnReset:
     FARCALL ResetRAM
 
     CALL DisableAPU
-    JUMP GameStart           ; jump to the start of the game!
+    FARJUMP GameStart           ; jump to the start of the game!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
