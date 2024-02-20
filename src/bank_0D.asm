@@ -1228,16 +1228,6 @@ MiniGame_ProcessInput:
   @Exit:
     RTS               ; then exit
 
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Another little  jump table  [$B000 :: 0x37010]
-;;
-
-MusicPlay_L:    JMP MusicPlay
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Music_NewSong  [$B003 :: 0x37013]

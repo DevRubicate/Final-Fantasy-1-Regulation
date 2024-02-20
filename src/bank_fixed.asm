@@ -12251,11 +12251,6 @@ SwapBtlTmpBytes:
     RTS
     
 
-
-    
-WaitForVBlank_L: JUMP WaitForVBlank
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Entry / Reset  [$FE2E :: 0x3FE3E]
