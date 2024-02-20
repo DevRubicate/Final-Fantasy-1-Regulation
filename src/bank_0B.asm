@@ -235,7 +235,7 @@ DoCrossPageJump:
     ADC #>BankC_CrossBankJumpList
     STA btltmp+7
     LDA #$0C
-    JMP BattleCrossPageJump
+    JUMP BattleCrossPageJump
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -266,11 +266,11 @@ PrepBattleVarsAndEnterBattle:
     STA btldraw_blockptrstart+1
     STA btldraw_blockptrend+1
     
-    JSR ConvertOBStatsToIB      ; convert all stats to in-battle format
-    JSR PrepareEnemyFormation   ; build the enemy formation
+    CALL ConvertOBStatsToIB      ; convert all stats to in-battle format
+    CALL PrepareEnemyFormation   ; build the enemy formation
     
     LDA #$06
-    JMP DoCrossPageJump         ; jump to FinishBattlePrepAndFadeIn in bank C
+    JUMP DoCrossPageJump         ; jump to FinishBattlePrepAndFadeIn in bank C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -359,12 +359,12 @@ ConvertOBStatsToIB:
     STA btl_tmpchar
     
   @CharacterLoop:
-    JSR Shift6TAX                   ; Convert 0-based character to a char index (00,40,80,C0)
+    CALL Shift6TAX                   ; Convert 0-based character to a char index (00,40,80,C0)
     STX btl_tmpindex                ; store it
     
     LDA ch_ailments, X              ; Get out of battle ailment marker
-    JSR ConvertOBAilmentToIB        ; convert it to in-battle ailment
-    JSR WriteAilment_PrepMagicPtr   ; write it back and prep btlptr to point this character's magic data
+    CALL ConvertOBAilmentToIB        ; convert it to in-battle ailment
+    CALL WriteAilment_PrepMagicPtr   ; write it back and prep btlptr to point this character's magic data
     
     INC ch_level, X                 ; Convert their level to be 1-based rather than 0-based
     
@@ -443,11 +443,11 @@ ConvertIBStatsToOB:
     STA btl_tmpchar             ; char index and loop up-counter
     
 @CharLoop:
-    JSR Shift6TAX
+    CALL Shift6TAX
     STX btl_tmpindex
     LDA ch_ailments, X              ; get IB ailment for this character
-    JSR ConvertIBAilmentToOB        ; convert it back to OB
-    JSR WriteAilment_PrepMagicPtr   ; write it back, and prep btlptr to point to magic data
+    CALL ConvertIBAilmentToOB        ; convert it back to OB
+    CALL WriteAilment_PrepMagicPtr   ; write it back, and prep btlptr to point to magic data
     DEC ch_level, X                 ; convert level back to 0-based
     
     ; Then we have to convert the character's magic from IB format back to the really, really
@@ -547,7 +547,7 @@ BattleOver_ProcessResult:
     LDA #BANK_THIS              ; set callback bank for music
     STA a:cur_bank
     
-    JSR ConvertIBStatsToOB      ; convert IB stats back to OB
+    CALL ConvertIBStatsToOB      ; convert IB stats back to OB
     
     LDA btl_result              ; check the result
     CMP #$03
@@ -564,12 +564,12 @@ BattleOver_ProcessResult:
     BNE :+                  ; if we just killed Chaos....
       LDA #$FF                  ; set btl_result to $FF to create a dramatic pause after fadeout
       STA btl_result
-      JSR ChaosDeath            ; do the fancy dissolve effect
-      JMP ExitBattle            ; then exit battle
+      CALL ChaosDeath            ; do the fancy dissolve effect
+      JUMP ExitBattle            ; then exit battle
                                 ;  (note that no GP/EXP is awarded for battle $7B)
     
-  : JSR EndOfBattleWrapUp   ; otherwise (not Chaos), award Gp/Exp and stuff
-    JMP ExitBattle          ; then exit battle
+  : CALL EndOfBattleWrapUp   ; otherwise (not Chaos), award Gp/Exp and stuff
+    JUMP ExitBattle          ; then exit battle
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -578,8 +578,8 @@ BattleOver_ProcessResult:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleOver_Run:
-    JSR Battle_FlipAllChars         ; Flip all chars so they look like they're running away.
-  ; JMP ExitBattle                  ; <- Flow into ExitBattle to return to the main game.
+    CALL Battle_FlipAllChars         ; Flip all chars so they look like they're running away.
+  ; JUMP ExitBattle                  ; <- Flow into ExitBattle to return to the main game.
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -594,7 +594,7 @@ ExitBattle:
     PLA                         ; current return address is to BattleLogicLoop in bank C
     PLA                         ; drop that -- new return address is to whatever called EnterBattle.
     LDA #$00                    ;   That is... when this routine exits, it will return to whoever called EnterBattle
-    JMP DoCrossPageJump         ; jump to ExitBattle in bank C
+    JUMP DoCrossPageJump         ; jump to ExitBattle in bank C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -614,12 +614,12 @@ GameOver:
     
     LDA #$04                    ; draw the "Party Perished" text
     LDX #$09                    ;  in combat box 4 (bottom/wide one)
-    JSR DrawEOBCombatBox
+    CALL DrawEOBCombatBox
     
-    JSR WaitForAnyInput                     ; wait for user to press any button
-    JSR RespondDelay_UndrawAllCombatBoxes   ; then undraw "Party Perished" box
+    CALL WaitForAnyInput                     ; wait for user to press any button
+    CALL RespondDelay_UndrawAllCombatBoxes   ; then undraw "Party Perished" box
     LDA #$03                    ; Fade out, and restart the game
-    JMP DoCrossPageJump         ; jump to BattleFadeOutAndRestartGame
+    JUMP DoCrossPageJump         ; jump to BattleFadeOutAndRestartGame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -637,14 +637,14 @@ EndOfBattleWrapUp:
     
     TAX
     LDA #$04
-    JSR DrawEOBCombatBox            ; draw "mosters perished" in combat box 4
+    CALL DrawEOBCombatBox            ; draw "mosters perished" in combat box 4
     
-    JSR WaitForAnyInput                     ; wait for the user to press any button
-    JSR RespondDelay_UndrawAllCombatBoxes   ; then delay and undraw all boxes
+    CALL WaitForAnyInput                     ; wait for the user to press any button
+    CALL RespondDelay_UndrawAllCombatBoxes   ; then delay and undraw all boxes
         
     LDY #en_exp                 ; get the EXP reward for this battle
-    JSR SumBattleReward
-    JSR DivideRewardBySurvivors ; divide that reward by the number of surviving players
+    CALL SumBattleReward
+    CALL DivideRewardBySurvivors ; divide that reward by the number of surviving players
     
     LDA battlereward
     STA eob_exp_reward
@@ -656,7 +656,7 @@ EndOfBattleWrapUp:
       INC eob_exp_reward        ;   ... inc it.  Minimum of 1 EXP for reward.
       
   : LDY #en_gp                  ; get the GP reward and store it in eob_gp_reward for it to be printed
-    JSR SumBattleReward         ; this is *kind of* bugged, as the game will properly award a 3-byte
+    CALL SumBattleReward         ; this is *kind of* bugged, as the game will properly award a 3-byte
     LDA battlereward            ;   GP value, but only 2 bytes will be printed.  So if you somehow
     STA eob_gp_reward           ;   receive over $FFFF GP in a single battle, it will be awarded properly,
     LDA battlereward+1          ;   but the reward will not be printed correctly.  But... this isn't really
@@ -667,25 +667,25 @@ EndOfBattleWrapUp:
     LDA #>gold
     STA btl_varB
     
-    JSR GiveRewardToParty
+    CALL GiveRewardToParty
     
     LDA #$00                    ; Draw 4 EoB boxes.
     STA eobbox_slotid           ;  Exp Up  |  ####P
     LDA #$01                    ;  Gold    |  ####G
     STA eobbox_textid
-    JSR Draw4EobBoxes
+    CALL Draw4EobBoxes
     
-    JSR WaitForAnyInput                         ; wait for input
-    JSR RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
+    CALL WaitForAnyInput                         ; wait for input
+    CALL RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
     
     LDA #$00                    ; award XP to all 4 party members
-    JSR LvlUp_AwardAndUpdateExp
+    CALL LvlUp_AwardAndUpdateExp
     LDA #$01
-    JSR LvlUp_AwardAndUpdateExp
+    CALL LvlUp_AwardAndUpdateExp
     LDA #$02
-    JSR LvlUp_AwardAndUpdateExp
+    CALL LvlUp_AwardAndUpdateExp
     LDA #$03
-    JMP LvlUp_AwardAndUpdateExp
+    JUMP LvlUp_AwardAndUpdateExp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -696,11 +696,11 @@ EndOfBattleWrapUp:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LvlUp_AwardAndUpdateExp:
-    JSR LvlUp_AwardExp          ; award exp to this player
+    CALL LvlUp_AwardExp          ; award exp to this player
     
     ; Now that XP is updated, update the 'ch_exptonext' stat
-    JSR LvlUp_GetCharExp        ; get the Xp pointer
-    JSR LvlUp_GetExpToAdvance   ; and Xp to advance pointer
+    CALL LvlUp_GetCharExp        ; get the Xp pointer
+    CALL LvlUp_GetExpToAdvance   ; and Xp to advance pointer
     
     LDY #ch_level - ch_stats    ; see if they're at level 50
     LDA (lvlup_chstats), Y
@@ -709,7 +709,7 @@ LvlUp_AwardAndUpdateExp:
       LDA #$00                  ; if at level 50, just set "0" for exptonext
       PHA               ; push low
       PHA               ; push high
-      JMP @UpdateToAdvance
+      JUMP @UpdateToAdvance
     
   : LDX #$03                    ; if not level 50, subtract curexp from exptoadvance
     LDY #$00                    ;  and push the result (low byte first)
@@ -773,14 +773,14 @@ LvlUp_AwardExp:
     LDA eob_exp_reward+1
     STA battlereward+1
     
-    JSR LvlUp_GetCharExp            ; get this char's exp pointer
-    JSR GiveRewardToParty           ; add the exp reward to it
+    CALL LvlUp_GetCharExp            ; get this char's exp pointer
+    CALL GiveRewardToParty           ; add the exp reward to it
     
         ; <-- "jump here" point  (see end of LvlUp_LevelUp for explanation of this note)
     
-    JSR LvlUp_GetExpToAdvance       ; Get exp to advance
+    CALL LvlUp_GetExpToAdvance       ; Get exp to advance
     LDY #3 - 1                      ; compare 3 bytes (lvlup_curexp to lvlup_exptoadv)
-    JSR MultiByteCmp
+    CALL MultiByteCmp
     
     BCS LvlUp_LevelUp               ; if curexp >= exptoadvance, LEVEL UP
     
@@ -884,14 +884,14 @@ LvlUp_LevelUp:
     LDA (lvlup_chstats), Y
     CLC
     ADC lut_LvlUpHitRateBonus, X
-    JSR CapAAt200                   ; cap hit rate at 200
+    CALL CapAAt200                   ; cap hit rate at 200
     STA (lvlup_chstats), Y
     
     LDY #ch_magdef - ch_stats       ; assign Magic Defense bonus
     LDA (lvlup_chstats), Y
     CLC
     ADC lut_LvlUpMagDefBonus, X
-    JSR CapAAt200                   ; cap at 200
+    CALL CapAAt200                   ; cap at 200
     STA (lvlup_chstats), Y
     
     ;;---- increase spell charges!
@@ -962,8 +962,8 @@ LvlUp_LevelUp:
     BEQ :+                  ; if this is a strong level....
       LDA #20               ;   get an additional HP bonus of rand[20,25]
       LDX #25
-      JSR RandAX
-      JMP :++
+      CALL RandAX
+      JUMP :++
   : LDA #$00                ; for non-strong levels, no extra bonus
   
   : STA temporary_1               ; store strong bonus in scratch ram
@@ -983,7 +983,7 @@ LvlUp_LevelUp:
     ADC #$00
     STA btl_varB
     
-    JSR GiveHpBonusToChar   ; Finally, apply the HP bonus!
+    CALL GiveHpBonusToChar   ; Finally, apply the HP bonus!
     
     ;;---- other stat gains (str/vit/etc)
     ASL statbyte               ; drop the high 3 bits of the stat byte, other bits
@@ -1062,7 +1062,7 @@ LvlUp_LevelUp:
       BEQ :+
         STA (lvlup_chstats), Y
     
-  : JSR LvlUp_AdjustBBSubStats  ; adjust dmg and absorb for BB/Masters
+  : CALL LvlUp_AdjustBBSubStats  ; adjust dmg and absorb for BB/Masters
   
   
     ;;---- Display the actual ... display to indicate to the user that they levelled up
@@ -1071,7 +1071,7 @@ LvlUp_LevelUp:
     STA eobbox_slotid           ;   Level Up | <Name> L##
     LDA #$05                    ;   HP Max   | ### pts.
     STA eobbox_textid
-    JSR Draw4EobBoxes
+    CALL Draw4EobBoxes
     
     ; Now we need to loop through all of the base stats (str/int/etc) and print
     ;  a "Str Up!" msg if that stat increased.
@@ -1106,13 +1106,13 @@ LvlUp_LevelUp:
       LDA #$04
       LDX #<displaybuffer
       LDY #>displaybuffer
-      JSR DrawCombatBox           ; draw this string in combat box 4
+      CALL DrawCombatBox           ; draw this string in combat box 4
       
-      JSR RespondDelay              ; wait a bit for them to read it
-      JSR WaitForAnyInput           ; wait a bit more for the user to press something
+      CALL RespondDelay              ; wait a bit for them to read it
+      CALL WaitForAnyInput           ; wait a bit more for the user to press something
       
       LDA #$01
-      JSR UndrawNBattleBlocks     ; then undraw the box we just drew
+      CALL UndrawNBattleBlocks     ; then undraw the box we just drew
       
   @DisplayLoop_Next:
     INC displaymsgcode             ; inc msg code to refer to next stat name
@@ -1122,14 +1122,14 @@ LvlUp_LevelUp:
     BNE @DisplayLoop
     
     ; The delay, undraw all boxes, and exit!
-    JMP RespondDelay_UndrawAllCombatBoxes
+    JUMP RespondDelay_UndrawAllCombatBoxes
     
     ;; BUGGED - If the character gains so much EXP that they should level up more than once,
     ;;   This code will only level them up the first time, and they'll have to complete another battle
     ;;   to level up again.
     ;;
     ;;   This is actually very easy to fix... instead of exiting this routine here... you could just
-    ;; JMP back to the "jump here" point I marked in LvlUp_AwardExp.  That will keep checking for
+    ;; JUMP back to the "jump here" point I marked in LvlUp_AwardExp.  That will keep checking for
     ;; and performing level ups until they're all done.
 
     
@@ -1149,7 +1149,7 @@ Draw4EobBoxes:
   @Loop:
       LDA eobbox_slotid         ; draw one EOB box
       LDX eobbox_textid
-      JSR DrawEOBCombatBox
+      CALL DrawEOBCombatBox
       
       INC eobbox_slotid         ; inc slot and text
       INC eobbox_textid
@@ -1246,7 +1246,7 @@ CapAAt200:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GiveRewardToParty:
-    JSR AddBattleRewardToVal        ; add reward to target buffer
+    CALL AddBattleRewardToVal        ; add reward to target buffer
     
     LDA #<data_MaxRewardPlusOne     ; set $82 to point to reward max+1 (1000000)
     STA btl_varC
@@ -1254,7 +1254,7 @@ GiveRewardToParty:
     STA btl_varD
     
     LDY #3 - 1                      ; compare 3 bytes
-    JSR MultiByteCmp                ;  current value compared to max
+    CALL MultiByteCmp                ;  current value compared to max
     
     BCC @Exit                       ; less than the max, just exit
     
@@ -1268,7 +1268,7 @@ GiveRewardToParty:
       BNE :-
       
     ; Then, because we're working with Max+1 for some stupid reason, subtract 1:
-    JMP SubtractOneFromVal
+    JUMP SubtractOneFromVal
     
   @Exit:
     RTS
@@ -1288,7 +1288,7 @@ GiveRewardToParty:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GiveHpBonusToChar:
-    JSR AddBattleRewardToVal    ; add reward (which is the HP bonus)
+    CALL AddBattleRewardToVal    ; add reward (which is the HP bonus)
     
     LDA #<data_MaxHPPlusOne     ; copy HP cap to $82,83
     STA btl_varC
@@ -1296,7 +1296,7 @@ GiveHpBonusToChar:
     STA btl_varD
     
     LDY #2 - 1                  ; compare 2 byte value (char max HP to HP cap)
-    JSR MultiByteCmp
+    CALL MultiByteCmp
     BCC @Done                   ; if max HP < cap, jump ahead to @Done
     
     LDY #$00                    ; copy the cap over to the max HP
@@ -1306,7 +1306,7 @@ GiveHpBonusToChar:
       CPY #$02
       BNE :-
       
-    JSR SubtractOneFromVal      ; then subtract 1, because the cap is retardedly 1 over the maximum
+    CALL SubtractOneFromVal      ; then subtract 1, because the cap is retardedly 1 over the maximum
  
   @Done:
     LDY #$00                    ; finally, copy the new max HP to eobtext_print_hp so
@@ -1544,7 +1544,7 @@ RandAX:
     
     FARCALL BattleRNG
     LDX temp_68b6
-    JSR MultiplyXA  ; random()*range
+    CALL MultiplyXA  ; random()*range
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
     CLC
@@ -1580,7 +1580,7 @@ DrawEOBCombatBox:
     TAY
     
     LDA temporary_1               ; restore combo box ID in A
-    JSR DrawCombatBox     ; A = box ID, YX = pointer to string
+    CALL DrawCombatBox     ; A = box ID, YX = pointer to string
     
     INC btl_combatboxcount  ; count this combat box
     RTS                     ; and exit!
@@ -1594,9 +1594,9 @@ DrawEOBCombatBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RespondDelay_UndrawAllCombatBoxes:
-    JSR RespondDelay                ; this is all self explanitory...
+    CALL RespondDelay                ; this is all self explanitory...
     LDA btl_combatboxcount
-    JSR UndrawNBattleBlocks
+    CALL UndrawNBattleBlocks
     LDA #$00
     STA btl_combatboxcount
     RTS
@@ -1615,8 +1615,8 @@ RespondDelay:
     LDA btl_responddelay
     STA tmp_6ad0               ; loop counter
   @Loop:
-      JSR WaitForVBlank   ; Do a frame
-      JSR MusicPlay         ; update music
+      CALL WaitForVBlank   ; Do a frame
+      CALL MusicPlay         ; update music
       DEC tmp_6ad0             ; repeat for desired number of frames
       BNE @Loop
     RTS
@@ -1632,10 +1632,10 @@ RespondDelay:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForAnyInput:
-    JSR GetJoyInput         ; get input
+    CALL GetJoyInput         ; get input
     PHA                     ; back it up
-    JSR WaitForVBlank     ; wait a frame
-    JSR MusicPlay           ; do music for that frame
+    CALL WaitForVBlank     ; wait a frame
+    CALL MusicPlay           ; do music for that frame
     PLA                     ; get input
     BEQ WaitForAnyInput     ; keep looping if no buttons pressed
     
@@ -1658,7 +1658,7 @@ MusicPlay:
       LDA btl_followupmusic ;   ... load followup music
       STA a:music_track     ;   and play it   (not sure why this is necessary)
       
-  : JMP CallMusicPlay 
+  : JUMP CallMusicPlay 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1678,16 +1678,16 @@ Battle_FlipAllChars:
     LDA #$00                ; loop up-counter and character index
     STA btl_tmpvar1
   @Loop:
-      JSR Battle_FlipCharSprite ; flip this character sprite
+      CALL Battle_FlipCharSprite ; flip this character sprite
       
-      JSR WaitForVBlank       ; wait for a frame
+      CALL WaitForVBlank       ; wait for a frame
       LDA #>oam                 ;  so we can update OAM
       STA OAMDMA
-      JSR MusicPlay             ; update music (since we waited a frame)
+      CALL MusicPlay             ; update music (since we waited a frame)
       
       LDA #15
       STA btl_responddelay      ; change respond delay to 15 (battle is over, so respond rate doesn't matter anymore)
-      JSR RespondDelay          ; wait 15 frames
+      CALL RespondDelay          ; wait 15 frames
       
       INC btl_tmpvar1                   ; Inc counter and loop until all 4 characters flipped.
       LDA btl_tmpvar1
@@ -1713,7 +1713,7 @@ Battle_FlipAllChars:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_FlipCharSprite:
-    JSR Shift6TAX           ; convert char ID to index
+    CALL Shift6TAX           ; convert char ID to index
     LDA ch_ailments, X      ; get ailment
     CMP #$01
     BEQ @Skip               ; if they're dead, skip them
@@ -1736,12 +1736,12 @@ Battle_FlipCharSprite:
     STA (btl_tmpvar3), Y
     
     LDY #<oam_a              ; Then set the "flip-X" attribute bit for each tile
-    JSR @FlipTile
+    CALL @FlipTile
     LDY #<oam_a+4
-    JSR @FlipTile
+    CALL @FlipTile
     
     LDA #$08                ; pointer += 8 to move to next row of tiles
-    JSR @AddToPtr           ;   (4 bytes per tile, 2 tiles per row)
+    CALL @AddToPtr           ;   (4 bytes per tile, 2 tiles per row)
     
     DEX                     ; Loop until all 3 rows flipped
     BNE @Loop
@@ -1843,15 +1843,15 @@ ChaosDeath:
     LDA #110
     STA temporary_1           ;   loop down counter
   @WaitLoop:                ; wait for 110 frames (wait for the fanfare music to get 
-      JSR WaitForVBlank   ;   through the main jingle part)
-      JSR MusicPlay
+      CALL WaitForVBlank   ;   through the main jingle part)
+      CALL MusicPlay
       DEC temporary_1
       BNE @WaitLoop
       
     LDA #$80                ; stop music playback
     STA a:music_track
     STA btl_followupmusic
-    JSR MusicPlay
+    CALL MusicPlay
     
     LDA #$08                ; silence all channels except Noise
     STA PAPU_EN
@@ -1859,7 +1859,7 @@ ChaosDeath:
     ; a bunch of local vars
     LDA #$00                    ; Start the Low-pitch noise rumble
     STA chaosdeath_screamcounter; See ChaosDeath_FadeNoise for details
-    JSR ChaosDeath_FadeNoise
+    CALL ChaosDeath_FadeNoise
 
     LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness
   @TableFillLoop:
@@ -1891,16 +1891,16 @@ ChaosDeath:
         LDA chaosdeath_innerctr               ; update the noise playback halfway through the inner loop
         CMP #$80
         BNE :+
-          JSR ChaosDeath_FadeNoise
+          CALL ChaosDeath_FadeNoise
           
       : LDA #$00                    ; The one **AND ONLY** RNG call to choose a tile to erase
         LDX #$79
-        JSR RandAX
+        CALL RandAX
         
         STA chaosdeath_rval                   ; store the tile number for later use
         
         LDX #$10                    ; multiply the tile ID by $10 to get the PPU addr to that
-        JSR MultiplyXA              ;  tile's CHR
+        CALL MultiplyXA              ;  tile's CHR
         STA chaosdeath_ppuaddr
         STX chaosdeath_ppuaddr+1
         
@@ -1920,15 +1920,15 @@ ChaosDeath:
         ADC #$00
         STA chaosdeath_ppuaddr+1
         
-        JSR WaitForVBlank         ; Wait for VBlank
+        CALL WaitForVBlank         ; Wait for VBlank
         
         LDA #$00
-        JSR @SetPpuAddr         ; set ppu addr to low bitplane
+        CALL @SetPpuAddr         ; set ppu addr to low bitplane
         LDA #$00
         STA PPUDATA               ; erase it
         
         LDA #$01
-        JSR @SetPpuAddr         ; set ppu addr to high bitplane
+        CALL @SetPpuAddr         ; set ppu addr to high bitplane
         LDA #$00
         STA PPUDATA               ; erase it
         
@@ -1950,7 +1950,7 @@ ChaosDeath:
         INX
         BNE :-
       
-      JSR ChaosDeath_FadeNoise  ; update noise effect
+      CALL ChaosDeath_FadeNoise  ; update noise effect
       DEC chaosdeath_outerctr
       BNE @OuterLoop            ; outer loop 8 times
     ;- end outer loop
@@ -1963,7 +1963,7 @@ ChaosDeath:
     LDA #120
     STA btltemppointer                 ; 120 frames = 2 seconds
   @Wait2SecondLoop:
-      JSR WaitForVBlank
+      CALL WaitForVBlank
       LDA #$00
       : SEC                 ; small inner loop to burn cycles so that we don't call WaitForVBlank
         SBC #$01            ; immediately at the start of VBlank (even though that shouldn't be
@@ -2072,9 +2072,9 @@ PrepareEnemyFormation:
     
     CMP #$02
     BNE :+
-      JMP PrepareEnemyFormation_Mix         ; type=2    : prepare the 'Mix' enemy formation
+      JUMP PrepareEnemyFormation_Mix         ; type=2    : prepare the 'Mix' enemy formation
 :   BCC PrepareEnemyFormation_SmallLarge    ; type=0,1  : prepare the '9Small' or '4Large' enemy formation
-      JMP PrepareEnemyFormation_FiendChaos  ; type=3,4  : prepare the 'Fiend'/'Chaos' enemy formation
+      JUMP PrepareEnemyFormation_FiendChaos  ; type=3,4  : prepare the 'Fiend'/'Chaos' enemy formation
       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2123,7 +2123,7 @@ PrepareEnemyFormation_SmallLarge:
     ROR A                       ; isolate $03 graphic bits, move to $C0
     LDY #$02
     STY btltmp+2                ; load group 0 (+2)
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ; enemy group 1
     LDA btlform_enplt           ; palette assignment
@@ -2141,7 +2141,7 @@ PrepareEnemyFormation_SmallLarge:
     ASL A                       ; isolate $0C graphic bits, move to $C0
     LDY #$03
     STY btltmp+2                ; load group 1 (+2)
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ; enemy group 2
     LDA btlform_enplt           ; palette assignment
@@ -2157,7 +2157,7 @@ PrepareEnemyFormation_SmallLarge:
     ASL A                       ; isolate $30 graphic bits, move to $C0
     LDY #$04
     STY btltmp+2                ; load group 2 (+2)
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ; enemy group 3
     LDA btlform_enplt           ; palette assignment
@@ -2172,10 +2172,10 @@ PrepareEnemyFormation_SmallLarge:
     AND #$C0                    ; isolate $C0 graphic bits
     LDY #$05
     STY btltmp+2                ; load group 3 (+2)
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ; Once the enemies have been generated - draw them!
-    JMP DrawFormation_NonFiend
+    JUMP DrawFormation_NonFiend
     
 ;;  Support routine to generate an enemy group  [A202 :: 0x2E212]
 ;;
@@ -2200,7 +2200,7 @@ PrepareEnemyFormation_SmallLarge:
     LDA btl_formdata, Y     ; pointless:  Get the ID of this enemy, but never use it
     LDY btltmp+2            ; Get the group index
     
-    JSR IncYBy4             ; add 4 to get the index to the enemy quantities
+    CALL IncYBy4             ; add 4 to get the index to the enemy quantities
     LDA (btltmp+10), Y      ; Get the quantity for this enemy
     AND #$0F
     TAX                     ; but low 4 bits (max) in X
@@ -2210,7 +2210,7 @@ PrepareEnemyFormation_SmallLarge:
     LSR A
     LSR A
     
-    JSR RandAX              ; with A=min and X=max, get a random number of enemies
+    CALL RandAX              ; with A=min and X=max, get a random number of enemies
     ORA #$00                ; ORA with 0 just to update the Z flag
     BEQ @Exit2              ; If there are no enemies, jump ahead to an RTS
     
@@ -2297,7 +2297,7 @@ lut_FiendTSAPtrs:
 PrepareEnemyFormation_FiendChaos:
     CMP #$04
     BNE PrepareEnemyFormation_Fiend
-    JMP PrepareEnemyFormation_Chaos
+    JUMP PrepareEnemyFormation_Chaos
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2306,7 +2306,7 @@ PrepareEnemyFormation_FiendChaos:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrepareEnemyFormation_Fiend:
-    JSR ReadAttributesFromPPU   ; Read the Attributes into btltmp_attr
+    CALL ReadAttributesFromPPU   ; Read the Attributes into btltmp_attr
     
     ; First, draw the Fiend's NT data
     LDA btlform_engfx           ; get the assigned graphic for this formation
@@ -2332,7 +2332,7 @@ PrepareEnemyFormation_Fiend:
   @RowLoop:
       LDA #$08
       STA btltmp+8              ; copy 8 bytes
-      JSR Battle_WritePPUData ; Do the PPU writing with the given params
+      CALL Battle_WritePPUData ; Do the PPU writing with the given params
       
       CLC
       LDA btltmp+4              ; add 8 to the source pointer to point to next row of tiles
@@ -2341,13 +2341,13 @@ PrepareEnemyFormation_Fiend:
       BCC :+
         INC btltmp+5
         
-    : JSR BtlTmp6_NextRow       ; update the dest PPU address to point to next row
+    : CALL BtlTmp6_NextRow       ; update the dest PPU address to point to next row
     
       DEC temp_6bcf                 ; dec row counter
       BNE @RowLoop              ; loop until all 8 rows are drawn
     
-    JSR ApplyPalette_FiendChaos             ; apply this fiend's palette
-    JMP FinalizeEnemyFormation_FiendChaos   ; then finalize (write palettes to PPU, other crap)
+    CALL ApplyPalette_FiendChaos             ; apply this fiend's palette
+    JUMP FinalizeEnemyFormation_FiendChaos   ; then finalize (write palettes to PPU, other crap)
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2414,7 +2414,7 @@ ApplyPalette_FiendChaos:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
 PrepareEnemyFormation_Chaos:
-    JSR ReadAttributesFromPPU
+    CALL ReadAttributesFromPPU
     
     LDA #$0C
     STA temp_6bcf               ; row counter (used as loop down-counter).  Draw $C rows
@@ -2436,7 +2436,7 @@ PrepareEnemyFormation_Chaos:
       LDA #$0E
       STA btltmp+8              ; draw $0E tiles
       
-      JSR Battle_WritePPUData ; do the actual drawing for this row
+      CALL Battle_WritePPUData ; do the actual drawing for this row
       
       CLC                   ; add $0E to source pointer to point to next row
       LDA btltmp+4
@@ -2445,13 +2445,13 @@ PrepareEnemyFormation_Chaos:
       BCC :+
         INC btltmp+5
         
-    : JSR BtlTmp6_NextRow   ; adjust dest pointer to point to next row
+    : CALL BtlTmp6_NextRow   ; adjust dest pointer to point to next row
     
       DEC temp_6bcf             ; dec row counter and loop until we've drawn all rows
       BNE @RowLoop
     
     ; Once all rows are drawn, apply Chaos's palette
-    JSR ApplyPalette_FiendChaos
+    CALL ApplyPalette_FiendChaos
     
     ; code continues into FinalizeEnemyFormation_FiendChaos
     
@@ -2470,7 +2470,7 @@ FinalizeEnemyFormation_FiendChaos:
     STA btl_enemycount      ; There is exactly 1 enemy for Fiend/Chaos formations
     LDA btlform_enids       ; Just use the first enemy ID as the only enemy in this formation
     STA btl_enemyIDs
-    JMP WriteAttributes_ClearUnusedEnStats
+    JUMP WriteAttributes_ClearUnusedEnStats
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2514,7 +2514,7 @@ PrepareEnemyFormation_Mix:
     ASL A                       ; Extract $03 bits, move into $C0 bits
     LDY #$00
     STY btltmp+2                ; indicate we want to load group 0
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ;; Group 1
     LDA btlform_enplt           ; pallete assignment
@@ -2532,7 +2532,7 @@ PrepareEnemyFormation_Mix:
     ASL A                       ; extract $0C bits, move to $C0 bits
     LDY #$01
     STY btltmp+2                ; load group 1
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ;; Group 2
     LDA btlform_enplt           ; pallete assignment
@@ -2550,7 +2550,7 @@ PrepareEnemyFormation_Mix:
     ASL A                       ; extract $30 bits, move to $C0 bits
     LDY #$02
     STY btltmp+2                ; load group 2
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     ;; Group 3
     LDA btlform_enplt           ; pallete assignment
@@ -2564,11 +2564,11 @@ PrepareEnemyFormation_Mix:
     AND #$C0                    ; extract $C0 bits
     LDY #$03
     STY btltmp+2                ; load group 3
-    JSR @GenerateEnemyGroup     ; GENERATE
+    CALL @GenerateEnemyGroup     ; GENERATE
     
     
     ;; Once all enemy groups have been generated, do the PPU drawing!
-    JMP DrawFormation_NonFiend
+    JUMP DrawFormation_NonFiend
     
     
 ;;  Support routine to generate an enemy group  [A3B3 :: 0x2D3C3]
@@ -2613,7 +2613,7 @@ PrepareEnemyFormation_Mix:
     LSR A
     LSR A
     LSR A                   ; put min in X
-    JSR RandAX              ; get a random enemy count for this group
+    CALL RandAX              ; get a random enemy count for this group
     ORA #$00                ; ORA just to update the Z flag
     BEQ @LargeExit          ; If there are no enemies to generate, just exit
     
@@ -2657,7 +2657,7 @@ PrepareEnemyFormation_Mix:
     LSR A
     LSR A                   ; min goes in A
     
-    JSR RandAX              ; get a random quantity
+    CALL RandAX              ; get a random quantity
     ORA #$00                ; ORA to update Z flag
     BEQ @SmallExit          ; if no enemies in this group, then exit
     
@@ -2717,7 +2717,7 @@ DrawFormation_NonFiend:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 DrawFormation_9Small:
-    JSR ReadAttributesFromPPU       ; Read the attribute table into btltmp_attr
+    CALL ReadAttributesFromPPU       ; Read the attribute table into btltmp_attr
     LDA btl_enemycount
     STA btltmp+6                    ; put the number of enemies in btltmp+6, used as a loop counter
     
@@ -2774,7 +2774,7 @@ DrawFormation_9Small:
     AND #$01
     BEQ :+
       LDA #$80              ; if low bit set, A=80
-      JMP @PlotAttributes
+      JUMP @PlotAttributes
     
     : LDA #$40              ; if low bit clear, A=40
     
@@ -2782,20 +2782,20 @@ DrawFormation_9Small:
     ;  shifted into the high 2 bits -- which is the 'lower-right' attribute portion.
     ;  Which, as explained above, coresponds to the 'upper-left' enemy graphic position
   @PlotAttributes:
-    JSR @ApplyAtAndShift        ; Write upper-left enemy graphic attributes
+    CALL @ApplyAtAndShift        ; Write upper-left enemy graphic attributes
     INY                         ; Inc attritube index by 1 (next attribute byte)
-    JSR @ApplyAtAndShift        ; Write upper-right
-    JSR IncYBy7                 ; Iny by 7 (next row)
-    JSR @ApplyAtAndShift        ; Write lower-left
+    CALL @ApplyAtAndShift        ; Write upper-right
+    CALL IncYBy7                 ; Iny by 7 (next row)
+    CALL @ApplyAtAndShift        ; Write lower-left
     INY
-    JSR @ApplyAtAndShift        ; Write lower-right
+    CALL @ApplyAtAndShift        ; Write lower-right
     
     INX                         ; increment src counter
     INC temp_6bcf                   ; increment dest counter
     DEC btltmp+6                ; count down the number of enemies we have left to draw
     BNE @AttributeLoop          ; Loop until there are no more remaining
     
-    JMP @DrawNT                 ; Jump ahead to draw nametable bytes
+    JUMP @DrawNT                 ; Jump ahead to draw nametable bytes
     
     ;;  Support subroutine used by @PlotAttributes to actually update the attribute table
     @ApplyAtAndShift:
@@ -2827,14 +2827,14 @@ DrawFormation_9Small:
     BPL :+                  ; if set...
       INC btltmp+2          ;    use graphic 1 instead
       
-  : JSR DrawSmallEnemy      ; draw the enemy at the given coords
+  : CALL DrawSmallEnemy      ; draw the enemy at the given coords
     INY
     
     DEC btltmp+6
     BNE @NTLoop             ; Loop until there are no enemies left to draw
     
     ; Finally, clear unused enemy stats, update attributes, then exit
-    JMP WriteAttributes_ClearUnusedEnStats
+    JUMP WriteAttributes_ClearUnusedEnStats
     
 @lut_NTAddress:
   .WORD $2142, $20C2, $21C2     ; Left column of enemies
@@ -2858,7 +2858,7 @@ DrawFormation_9Small:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawFormation_4Large:
-    JSR ReadAttributesFromPPU
+    CALL ReadAttributesFromPPU
     
     ; Begin an unrolled loop to apply the attributes for each of the 4 enemies.
     ; Large enemies are layed out like so in the attribute tables:
@@ -2879,27 +2879,27 @@ DrawFormation_4Large:
     AND #$01
     STA btl_tmppltassign    ; put it in tmppltassign
     LDY #$08                ; its attribute position starts at $08
-    JSR @ApplyAtTop         ; apply it as top-row enemy
+    CALL @ApplyAtTop         ; apply it as top-row enemy
     
     LDA btl_enemygfxplt+1   ; do same for enemy 1
     AND #$01
     STA btl_tmppltassign
     LDY #$18                ; start at $18
-    JSR @ApplyAtBottom      ; bottom row
+    CALL @ApplyAtBottom      ; bottom row
     
     LDA btl_enemygfxplt+2   ; repeat for enemies 2,3
     AND #$01
     STA btl_tmppltassign
     LDY #$0A
-    JSR @ApplyAtTop
+    CALL @ApplyAtTop
     
     LDA btl_enemygfxplt+3
     AND #$01
     STA btl_tmppltassign
     LDY #$1A
-    JSR @ApplyAtBottom 
+    CALL @ApplyAtBottom 
     
-    JMP @DrawNT
+    JUMP @DrawNT
     
     
     ; applies all attributes for one large enemy in the Top Row
@@ -2914,16 +2914,16 @@ DrawFormation_4Large:
     ;   .A|AA
   @ApplyAtTop:
     LDA #%01000000      ; lower-right sector only
-    JSR @ApplyAtByte
+    CALL @ApplyAtByte
     INY
     LDA #%01010000      ; lower sectors
-    JSR @ApplyAtByte
-    JSR IncYBy7         ; (inc by 7 to go to next row)
+    CALL @ApplyAtByte
+    CALL IncYBy7         ; (inc by 7 to go to next row)
     LDA #%01000100      ; right sectors only
-    JSR @ApplyAtByte
+    CALL @ApplyAtByte
     INY
     LDA #%01010101      ; all sectors
-    JMP @ApplyAtByte
+    JUMP @ApplyAtByte
     
     ; applies all attributes for one large enemy in the Bottom Row
     ;                Y = position of attribute byte
@@ -2937,16 +2937,16 @@ DrawFormation_4Large:
     ;   ..|..
   @ApplyAtBottom:
     LDA #%01000100      ; right sectors
-    JSR @ApplyAtByte
+    CALL @ApplyAtByte
     INY
     LDA #%01010101      ; all sectors
-    JSR @ApplyAtByte
-    JSR IncYBy7         ; (inc by 7 to go to next row)
+    CALL @ApplyAtByte
+    CALL IncYBy7         ; (inc by 7 to go to next row)
     LDA #%00000100      ; upper-right sector
-    JSR @ApplyAtByte
+    CALL @ApplyAtByte
     INY
     LDA #%00000101      ; upper sectors
-    JMP @ApplyAtByte
+    JUMP @ApplyAtByte
     
     ; applies attributes to the desired sector of the desired byte.
     ;                A = low bit set in each attribute sector to update
@@ -2981,12 +2981,12 @@ DrawFormation_4Large:
       BPL :+
         INC btltmp+2        ; bit 7 of the enemygraphic set indicates we should use image 1
         
-    : JSR DrawLargeEnemy    ; draw the enemy
+    : CALL DrawLargeEnemy    ; draw the enemy
       INY
       DEC btltmp+6
       BNE @NTLoop           ; loop until no more enemies to draw
       
-    JMP WriteAttributes_ClearUnusedEnStats
+    JUMP WriteAttributes_ClearUnusedEnStats
     
 @lut_NTAddress:
   .WORD $20C2, $2182
@@ -3007,7 +3007,7 @@ DrawFormation_4Large:
 
     
 DrawFormation_Mix:
-    JSR ReadAttributesFromPPU
+    CALL ReadAttributesFromPPU
     LDA btl_enemyIDs+0
     CMP #$FF
     BEQ @SmallEnemyAttr     ; if there are no large enemies, skip ahead to small enemies
@@ -3016,7 +3016,7 @@ DrawFormation_Mix:
     LDA btl_enemygfxplt+0
     AND #$01
     BEQ :+
-      JSR IncYBy4
+      CALL IncYBy4
       
   : LDA @lut_LargeEn0_Attributes, Y
     STA btltmp_attr + $08   ; do a straight copy of the large enemy attributes from
@@ -3040,7 +3040,7 @@ DrawFormation_Mix:
     LDA btl_enemygfxplt+1
     AND #$01
     BEQ :+
-      JSR IncYBy4
+      CALL IncYBy4
       
   : LDA @lut_LargeEn1_Attributes, Y
     STA btltmp_attr + $18   ; straight copy from lut
@@ -3134,7 +3134,7 @@ DrawFormation_Mix:
     ROL A
     ROL A
     STA btltmp+2
-    JSR DrawLargeEnemy      ; then actually draw it
+    CALL DrawLargeEnemy      ; then actually draw it
     
     ;; All the same, but for large enemy #1
     LDA btl_enemyIDs+1
@@ -3151,7 +3151,7 @@ DrawFormation_Mix:
     ROL A
     ROL A
     STA btltmp+2
-    JSR DrawLargeEnemy
+    CALL DrawLargeEnemy
     
     
   @DrawSmallEnemies:
@@ -3165,7 +3165,7 @@ DrawFormation_Mix:
       LDA btl_enemyIDs, X           ; see if this enemy exists
       CMP #$FF
       BNE :+
-        JMP @DrawNextSmallEnemy     ; if not, skip it  (note that is actually could/should jump to WriteAttribute_ClearUnusedEnState to exit the routine
+        JUMP @DrawNextSmallEnemy     ; if not, skip it  (note that is actually could/should jump to WriteAttribute_ClearUnusedEnState to exit the routine
                                     ; since there will never be any more enemies to draw after this.  But whatever.
         
     : LDA #$00                  ; move bit 7 of this enemy's graphic to bit 0 of btltmp+2
@@ -3182,14 +3182,14 @@ DrawFormation_Mix:
       INC temp_6bcf
       INC temp_6bcf                     ; increment small index
       
-      JSR DrawSmallEnemy
+      CALL DrawSmallEnemy
   @DrawNextSmallEnemy:
       INC temp_6c91             ; inc actual index and loop until all small enemies drawn
       LDA temp_6c91
       CMP #$09
       BNE @DrawSmallLoop
       
-    JMP WriteAttributes_ClearUnusedEnStats
+    JUMP WriteAttributes_ClearUnusedEnStats
     
     
     ; These two attribute LUTs are used for the large enemies in this formation.
@@ -3252,7 +3252,7 @@ ReadAttributesFromPPU:
     LDA #$40                ; read $40 bytes
     STA btltmp+8
     
-    JMP Battle_ReadPPUData    ; do the reading, and exit
+    JUMP Battle_ReadPPUData    ; do the reading, and exit
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3281,7 +3281,7 @@ WriteAttributesToPPU:
     LDA #BANK_THIS          ; from this bank (although it's actually from RAM, so this
     STA btltmp+9            ;   isn't strictly necessary)
     
-    JSR Battle_WritePPUData   ; actually do the write, then exit
+    CALL Battle_WritePPUData   ; actually do the write, then exit
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3303,7 +3303,7 @@ DrawSmallEnemy:
     PHA
     TXA
     PHA                 ; backup A and X
-    JSR WaitForVBlank ; wait for VBlank
+    CALL WaitForVBlank ; wait for VBlank
     
     ; See which enemy graphic this tile is using.
     ;   Small enemy graphics start at tiles $12 and $22
@@ -3316,11 +3316,11 @@ DrawSmallEnemy:
     STA btltmp+3        ; loop counter to draw each row
     
   @Loop:
-      JSR SetPpuAddr_BtlTmp     ; set desired PPU addr
-      JSR Draw4TilesFromX       ; draw one row of tiles for this enemy
+      CALL SetPpuAddr_BtlTmp     ; set desired PPU addr
+      CALL Draw4TilesFromX       ; draw one row of tiles for this enemy
       TXA
       PHA                       ; backup tile ID
-      JSR BtlTmp_NextRow        ; update btltmp to point to next row
+      CALL BtlTmp_NextRow        ; update btltmp to point to next row
       PLA                       ; restore tile ID - note this backup and restore isn't strictly necessary because
       TAX                       ;  BtlTmp_NextRow does not modify X.  Maybe he did this "just in case"
       
@@ -3391,7 +3391,7 @@ DrawLargeEnemy:
     PHA
     TXA
     PHA
-    JSR WaitForVBlank
+    CALL WaitForVBlank
     LDX #$32                ; image 0 starts at tile $32
     LDA btltmp+2
     BEQ :+
@@ -3400,11 +3400,11 @@ DrawLargeEnemy:
   : LDA #$06                ; 6 rows
     STA btltmp+3
   @Loop:
-      JSR SetPpuAddr_BtlTmp
-      JSR Draw6TilesFromX   ; 6 tiles in each row
+      CALL SetPpuAddr_BtlTmp
+      CALL Draw6TilesFromX   ; 6 tiles in each row
       TXA
       PHA
-      JSR BtlTmp_NextRow
+      CALL BtlTmp_NextRow
       PLA
       TAX
       DEC btltmp+3
@@ -3521,7 +3521,7 @@ IncYBy4:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 WriteAttributes_ClearUnusedEnStats:
-    JSR WriteAttributesToPPU
+    CALL WriteAttributesToPPU
     
     LDA #$00
     STA btltmp+2            ; loop up-counter - the current enemy we're looking at
@@ -3533,7 +3533,7 @@ WriteAttributes_ClearUnusedEnStats:
     BNE @NextEnemy          ; if it's actually being used, then skip it.  Otherwise...
     
     LDA btltmp+2
-    JSR GetEnemyStatPtr     ; Get the stat pointer for this enemy, put it in btltmp+0
+    CALL GetEnemyStatPtr     ; Get the stat pointer for this enemy, put it in btltmp+0
     STA btltmp+0
     STX btltmp+1
     
@@ -3573,7 +3573,7 @@ WriteAttributes_ClearUnusedEnStats:
 GetEnemyStatPtr:
     STY tmp_6c87               ; back-up Y
     LDX #$14                ; multiply enemy index by $14  (number of bytes per enemy)
-    JSR MultiplyXA
+    CALL MultiplyXA
     
     CLC                     ; then add btl_enemystats to the result
     ADC #<btl_enemystats

@@ -134,8 +134,8 @@ lut_EnemyAi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExitBattle:
-    JSR ReSortPartyByAilment        ; rearrange party to put sick/dead members in the back
-    JSR BattleFadeOut               ; Fade to black
+    CALL ReSortPartyByAilment        ; rearrange party to put sick/dead members in the back
+    CALL BattleFadeOut               ; Fade to black
     
     LDA btl_result                  ; check battle result
     CMP #$FF                        ; if not $FF...
@@ -150,8 +150,8 @@ ExitBattle:
 
 BankC_CrossBankJumpList:
 
-ExitBattle_L:                   JMP ExitBattle                  ; $9000
-BattleFadeOutAndRestartGame_L:  JMP BattleFadeOutAndRestartGame ; $9003
+ExitBattle_L:                   JUMP ExitBattle                  ; $9000
+BattleFadeOutAndRestartGame_L:  JUMP BattleFadeOutAndRestartGame ; $9003
 FinishBattlePrepAndFadeIn_L:                                    ; $9006
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -161,24 +161,24 @@ FinishBattlePrepAndFadeIn_L:                                    ; $9006
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FinishBattlePrepAndFadeIn:
-    JSR LoadEnemyStats              ; this is all pretty self explanitory
+    CALL LoadEnemyStats              ; this is all pretty self explanitory
     
     LDA #$08                        ; enable BG drawing, but not sprites
     STA btl_soft2000
     LDA #$0E
     STA btl_soft2001
     
-    JSR ClearBattleMessageBuffer
-    JSR BattleFadeIn
+    CALL ClearBattleMessageBuffer
+    CALL BattleFadeIn
     
     LDA #$1E
     STA btl_soft2001                ; enable BG and sprites
     
-    JSR EnterBattlePrepareSprites
-    JSR LoadAllCharacterIBStats
-    JSR DrawCharacterStatus
+    CALL EnterBattlePrepareSprites
+    CALL LoadAllCharacterIBStats
+    CALL DrawCharacterStatus
     
-    JMP Battle_AfterFadeIn
+    JUMP Battle_AfterFadeIn
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -196,7 +196,7 @@ FinishBattlePrepAndFadeIn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitFrames_BattleResult:
-    JSR WaitForVBlank     ; wait a frame
+    CALL WaitForVBlank     ; wait a frame
     
     LDA #$00                ; burn a bunch of CPU time -- presumably so that 
     : SEC                   ;  WaitForVBlank isn't called again so close to start of
@@ -227,7 +227,7 @@ CheckForEndOfBattle:
       
   : CMP #$02                    ; if battle result == 2, the party is victorious
     BNE :+
-      JSR PlayFanfareAndCheer   ; play fanfare music and do cheering animation
+      CALL PlayFanfareAndCheer   ; play fanfare music and do cheering animation
       
   : LDA #<BattleOver_ProcessResult    ; For all non-zero battle results, the battle is over
     STA btltmp+6                        ; Hand off control to another routine in bank B
@@ -235,7 +235,7 @@ CheckForEndOfBattle:
     STA btltmp+7
     
     LDA #$0B
-    JMP BattleCrossPageJump
+    JUMP BattleCrossPageJump
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -244,10 +244,10 @@ CheckForEndOfBattle:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleFadeOutAndRestartGame:
-    JSR BattleFadeOut
+    CALL BattleFadeOut
     PLA                 ; drop the return address (this is pointless, because GameStart resets the
     PLA                 ;  stack pointer anyway)
-    JMP GameStart     ; then jump to GameStart, which returns the user to the title screen.
+    JUMP GameStart     ; then jump to GameStart, which returns the user to the title screen.
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -281,7 +281,7 @@ SetCharacterBattleCommand:
     STA btl_charcmdbuf, Y       ; [0] = A
     
     LDA btlcmd_curchar
-    JMP CharWalkAnimationRight  ; Then walk the char back to the right
+    JUMP CharWalkAnimationRight  ; Then walk the char back to the right
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -312,7 +312,7 @@ UndoCharacterBattleCommand:
     ; Otherwise, try to back up more...
     SEC                                 ; get the prev char's stats
     SBC #$01
-    JSR PrepCharStatPointers
+    CALL PrepCharStatPointers
     LDY # ch_ailments - ch_stats
     
     LDA (btl_ob_charstat_ptr), Y        ; see if they have ailments that would stop them from doing anything
@@ -320,7 +320,7 @@ UndoCharacterBattleCommand:
     BEQ @UndoPrevCharDrink              ; if they are able to input a command
     
     DEC btlcmd_curchar                  ; if they can't, dec curchar to go to the prev character
-    JMP UndoCharacterBattleCommand      ;  and try again
+    JUMP UndoCharacterBattleCommand      ;  and try again
     
   @UndoPrevCharDrink:
     LDY btlcmd_curchar                  ; get the current char
@@ -396,18 +396,18 @@ Battle_AfterFadeIn:
     STA btl_mathbuf     ; mathbuf0 = (agil+luck)/8   -- party leader's stats only
     
     LDX #100
-    JSR RandAX          ; random value between that and 100
+    CALL RandAX          ; random value between that and 100
     TAX
     
     LDA #$00
-    JSR MathBuf_Add     ; add random value, effectively creating range of [2*stat, stat+100], where 'stat' is above agil+luck value
+    CALL MathBuf_Add     ; add random value, effectively creating range of [2*stat, stat+100], where 'stat' is above agil+luck value
     LDX btlform_surprise; get surprise rate
     LDA #$00
-    JSR MathBuf_Sub     ; subtracts surprise rate from that value
+    CALL MathBuf_Sub     ; subtracts surprise rate from that value
     
     LDY btl_mathbuf         ; put value in XY
     LDX btl_mathbuf+1
-    JSR ZeroXYIfNegative    ; clip at 0 (pointless, because MathBuf_Sub already does this)
+    CALL ZeroXYIfNegative    ; clip at 0 (pointless, because MathBuf_Sub already does this)
     
     TYA                     ; drop high byte and check low byte
     CMP #11
@@ -417,15 +417,15 @@ Battle_AfterFadeIn:
     
       ; otherwise (>= 90), STRIKE FIRST
       LDA #BTLMSG_STRIKEFIRST
-      JSR DrawBtlMsg_ClearCombatBoxes   ; draw strike first message
+      CALL DrawBtlMsg_ClearCombatBoxes   ; draw strike first message
       INC btl_strikingfirst             ; set flag
-      JMP BattleLogicLoop               ; and jump ahead to logic loop
+      JUMP BattleLogicLoop               ; and jump ahead to logic loop
     
     ; surprised code
   @Surprised:
     LDA #BTLMSG_SURPRISED
-    JSR DrawBtlMsg_ClearCombatBoxes
-    JMP BattleLogicLoop_DoCombat        ; skip over first round of player input, and just do combat
+    CALL DrawBtlMsg_ClearCombatBoxes
+    JUMP BattleLogicLoop_DoCombat        ; skip over first round of player input, and just do combat
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -446,10 +446,10 @@ Battle_AfterFadeIn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleLogicLoop:
-    JSR RebuildEnemyRoster          ; Rebuild the roster in case some enemies died
-    JSR DrawRosterBox             ; Draw the roster box
-    JSR DrawCommandBox            ; and the command box
-    JSR UpdateSprites_BattleFrame   ; then do a frame with updated battle sprites
+    CALL RebuildEnemyRoster          ; Rebuild the roster in case some enemies died
+    CALL DrawRosterBox             ; Draw the roster box
+    CALL DrawCommandBox            ; and the command box
+    CALL UpdateSprites_BattleFrame   ; then do a frame with updated battle sprites
     
     LDY #$1C
     LDA #$00
@@ -468,28 +468,28 @@ BattleLogicLoop:
     
                                 __GetCharacterBattleCommand_Backtrack_0:
     LDA #$00
-    JSR GetCharacterBattleCommand
+    CALL GetCharacterBattleCommand
                                 __GetCharacterBattleCommand_Backtrack_1:
     LDA #$01
-    JSR GetCharacterBattleCommand
+    CALL GetCharacterBattleCommand
                                 __GetCharacterBattleCommand_Backtrack_2:
     LDA #$02
-    JSR GetCharacterBattleCommand
+    CALL GetCharacterBattleCommand
 
     LDA #$03
-    JSR GetCharacterBattleCommand
+    CALL GetCharacterBattleCommand
     
     ;; ----
     ;;  Once all commands are input
     
     LDA #$02                    ; undraw the Roster and Battle menu battle blocks.
-    JSR UndrawNBattleBlocks
+    CALL UndrawNBattleBlocks
     
     ; And then do the actual combat!
   BattleLogicLoop_DoCombat:     ; alternative entry point for when the party is surprised
-    JSR DoBattleRound
-    JSR CheckForEndOfBattle
-    JMP BattleLogicLoop
+    CALL DoBattleRound
+    CALL CheckForEndOfBattle
+    JUMP BattleLogicLoop
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -544,7 +544,7 @@ BacktrackBattleCommand:
 GetCharacterBattleCommand:
     STA btlcmd_curchar              ; record the character
     LDA btlcmd_curchar              ; <- (pointless)
-    JSR PrepCharStatPointers        ; Prep the stat pointers (this persists through all the sub menus)
+    CALL PrepCharStatPointers        ; Prep the stat pointers (this persists through all the sub menus)
     
     LDY # ch_ailments - ch_stats    ; See if this character has any ailment that would prevent them from inputting
     LDA (btl_ob_charstat_ptr), Y    ;   any commands
@@ -573,16 +573,16 @@ GetCharacterBattleCommand:
     
 InputCharacterBattleCommand:
     LDA btlcmd_curchar
-    JSR CharWalkAnimationLeft                   ; walk this character left
-    JSR PrepAndGetBattleMainCommand             ; get the main menu command
+    CALL CharWalkAnimationLeft                   ; walk this character left
+    CALL PrepAndGetBattleMainCommand             ; get the main menu command
     CMP #$02
     BNE Battle_MainMenu_APressed                ; If they pressed A, jump ahead to get their sub-menu selection
     
     ; if B pressed in main menu
     LDA btlcmd_curchar
-    JSR CharWalkAnimationRight                  ; walk this character back to the right
-    JSR UndoCharacterBattleCommand              ; undo the previously input command
-    JMP BacktrackBattleCommand                  ; and backtrack to previous character.
+    CALL CharWalkAnimationRight                  ; walk this character back to the right
+    CALL UndoCharacterBattleCommand              ; undo the previously input command
+    JUMP BacktrackBattleCommand                  ; and backtrack to previous character.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -599,8 +599,8 @@ InputCharacterBattleCommand:
 
 CancelBattleAction:
     LDA btlcmd_curchar
-    JSR CharWalkAnimationRight      ; walk the character back to the right
-    JMP InputCharacterBattleCommand ; then jump back to restart the battle action
+    CALL CharWalkAnimationRight      ; walk the character back to the right
+    JUMP InputCharacterBattleCommand ; then jump back to restart the battle action
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -619,7 +619,7 @@ Battle_MainMenu_APressed:
       ORA #$80                  ; get character index, put in Y
       TAY
       LDA #$20
-      JMP SetCharacterBattleCommand     ; command '20 ?? TT' for running, where 'TT' is character running and ?? is unused.
+      JUMP SetCharacterBattleCommand     ; command '20 ?? TT' for running, where 'TT' is character running and ?? is unused.
     
     ; Otherwise, A was pressed in the left column
   : LDA btlcurs_y               ; use the selected row to index the sub menu jump table
@@ -654,12 +654,12 @@ lut_BattleSubMenu:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleSubMenu_Fight:
-    JSR SelectEnemyTarget           ; Pick a target
+    CALL SelectEnemyTarget           ; Pick a target
     CMP #$02
     BNE :+                          ; If they pressed B....
-      JMP CancelBattleAction        ; ... cancel
+      JUMP CancelBattleAction        ; ... cancel
   : LDA #$04                        ; If they pressed A, record the command
-    JMP SetCharacterBattleCommand   ; Command:   04 xx TT    attack enemy slot TT (xx appears to be unused)
+    JUMP SetCharacterBattleCommand   ; Command:   04 xx TT    attack enemy slot TT (xx appears to be unused)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -671,16 +671,16 @@ BattleSubMenu_Fight:
 
 BattleSubMenu_Magic:
     LDA btlcmd_curchar              ; <- This is never used
-    JSR MenuSelection_Magic
+    CALL MenuSelection_Magic
     
     PHA                             ; backup A/B button press
     LDA #$01
-    JSR UndrawNBattleBlocks       ; undraw the magic box
+    CALL UndrawNBattleBlocks       ; undraw the magic box
     PLA                             ; restore A/B state
     
     CMP #$02
     BNE :+                          ; if they pressed B to exit the menu box
-      JMP CancelBattleAction        ;   then cancel this action
+      JUMP CancelBattleAction        ;   then cancel this action
       
   : LDA btlcmd_curchar
     ASL A
@@ -721,8 +721,8 @@ BattleSubMenu_Magic:
     BNE :+                          ; if they selected an empty slot, do the @NothingBox -- otherwise skip over it
     
   @NothingBox:
-      JSR DoNothingMessageBox       ; Show the nothing box
-      JMP BattleSubMenu_Magic       ; and redo the magic selection submenu from the beginning
+      CALL DoNothingMessageBox       ; Show the nothing box
+      JUMP BattleSubMenu_Magic       ; and redo the magic selection submenu from the beginning
       
   : STA tmp_6b7d                       ; store spell in 6B7D
     LDA btlcurs_y                   ; get Y selection (effectively the spell level)
@@ -742,7 +742,7 @@ BattleSubMenu_Magic:
     
     DEC tmp_6b7d                       ; dec index of selected spell (make it 0 based instead of 1 based)
     LDA tmp_6b7d
-    JSR GetPointerToMagicData
+    CALL GetPointerToMagicData
     STA btl_varA                         ; $80,81 points to this spell's data
     STX btl_varB
     
@@ -772,18 +772,18 @@ BattleSubMenu_Magic:
       LDY #$FF
       LDA #$40                      ;  command = 40 xx FF  (where xx = spell index)
       LDX tmp_6b7d
-      JMP SetCharacterBattleCommand ; set command and exit
+      JUMP SetCharacterBattleCommand ; set command and exit
   
   @CheckTarget_02:                  ; target 02 = target one enemy
     LSR A
     BCC @CheckTarget_04
-      JSR SelectEnemyTarget         ; puts target in Y
+      CALL SelectEnemyTarget         ; puts target in Y
       CMP #$02
       BNE :+                        ; if they pressed B to exit
-        JMP BattleSubMenu_Magic     ; redo magic submenu from the beginnning
+        JUMP BattleSubMenu_Magic     ; redo magic submenu from the beginnning
     : LDA #$40
       LDX tmp_6b7d
-      JMP SetCharacterBattleCommand ; command = 40 xx TT  (xx = spell, TT = enemy target)
+      JUMP SetCharacterBattleCommand ; command = 40 xx TT  (xx = spell, TT = enemy target)
     
   @CheckTarget_04:                  ; target 04 = target self
     LSR A
@@ -793,7 +793,7 @@ BattleSubMenu_Magic:
       TAY
       LDA #$40
       LDX tmp_6b7d
-      JMP SetCharacterBattleCommand
+      JUMP SetCharacterBattleCommand
     
   @CheckTarget_08:                  ; target 08 = target whole party
     LSR A
@@ -801,21 +801,21 @@ BattleSubMenu_Magic:
       LDA #$40
       LDY #$FE                      ; 'FE' targets party
       LDX tmp_6b7d
-      JMP SetCharacterBattleCommand ; 40 xx FE
+      JUMP SetCharacterBattleCommand ; 40 xx FE
 
   @Target_10:                       ; target 10 = target one player
     LDA btlcmd_curchar
-    JSR SelectPlayerTarget          ; get a player target?
+    CALL SelectPlayerTarget          ; get a player target?
     CMP #$02                        ; did they press B to exit
     BNE :+
-      JMP BattleSubMenu_Magic       ; if yes, jump back to magic submenu
+      JUMP BattleSubMenu_Magic       ; if yes, jump back to magic submenu
   : LDA btlcurs_y
     AND #$03
     ORA #$80                        ; otherwise, put the player target in Y
     TAY
     LDA #$40
     LDX tmp_6b7d
-    JMP SetCharacterBattleCommand   ; 40 xx TT
+    JUMP SetCharacterBattleCommand   ; 40 xx TT
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -829,19 +829,19 @@ BattleSubMenu_Drink:
     LDA btl_potion_heal         ; see if there are any Heal/Pure potions remaining
     ORA btl_potion_pure
     BNE :+                      ; if there are no potions...
-      JSR DoNothingMessageBox   ; show the 'Nothing' box
-      JMP CancelBattleAction    ; then cancel
+      CALL DoNothingMessageBox   ; show the 'Nothing' box
+      JUMP CancelBattleAction    ; then cancel
     
-  : JSR DrawDrinkBox          ; otherwise (have at least 1 potion), draw the drink box
+  : CALL DrawDrinkBox          ; otherwise (have at least 1 potion), draw the drink box
   
-    JSR MenuSelection_Drink     ; get menu selection from the player  
+    CALL MenuSelection_Drink     ; get menu selection from the player  
     PHA                         ; backup the A/B button press
     LDA #$01
-    JSR UndrawNBattleBlocks   ; undraw the drink menu
+    CALL UndrawNBattleBlocks   ; undraw the drink menu
     PLA
     CMP #$02
     BNE :+                      ; was B pressed to get out of the drink menu?
-      JMP CancelBattleAction    ;   if yes, cancel the action
+      JUMP CancelBattleAction    ;   if yes, cancel the action
       
   : LDA btlcurs_y               ; see if they selected Heal or Pure potion
     AND #$01
@@ -849,28 +849,28 @@ BattleSubMenu_Drink:
     BNE @PureSelected           ; see which they selected?  If heal....
       LDA btl_potion_heal       ;   ... make sure they have at least 1 heal potion
       BNE @HealOK               ; if they don't
-      JSR DoNothingMessageBox   ;   show the "nothing" box and cancel
-      JMP CancelBattleAction
+      CALL DoNothingMessageBox   ;   show the "nothing" box and cancel
+      JUMP CancelBattleAction
     
   @PureSelected:                ; if pure selected, make sure they have a Pure potion
     LDA btl_potion_pure
     BNE :+                      ; if none, show "nothing" and cancel
-      JSR DoNothingMessageBox
-      JMP CancelBattleAction
+      CALL DoNothingMessageBox
+      JUMP CancelBattleAction
       
   : LDA #$01
     STA btl_drink_selection                   ; store menu selection for pure potion in temp mem btl_drink_selection
-    JMP @GetTarget              ;  (this means both 6856 AND 6B7D both contain the item being used -- why both?)
+    JUMP @GetTarget              ;  (this means both 6856 AND 6B7D both contain the item being used -- why both?)
   @HealOK:
     LDA #$00                    ; for heal potion
     STA btl_drink_selection
 
   @GetTarget:
     LDA btlcmd_curchar          ; get input for SelectPlayerTarget
-    JSR SelectPlayerTarget      ; and call it!
+    CALL SelectPlayerTarget      ; and call it!
     CMP #$02
     BNE :+                      ; if they pressed B...
-      JMP BattleSubMenu_Drink   ; ... return to the Drink sub menu
+      JUMP BattleSubMenu_Drink   ; ... return to the Drink sub menu
       
   : LDY btlcmd_curchar
     LDA #$02
@@ -891,7 +891,7 @@ BattleSubMenu_Drink:
     ADC #$40                ; + $40.
     TAX                     ; X=40 for heal / 41 for pure
     LDA #$08
-    JMP SetCharacterBattleCommand
+    JUMP SetCharacterBattleCommand
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -914,20 +914,20 @@ BattleSubMenu_Item:
     BNE :+                          ; if all slots were 0 (no items), flow into @NothingBox, otherwise skip ahead
     
   @NothingBox:
-      JSR DoNothingMessageBox       ; Show the "nothing" box
-      JMP CancelBattleAction        ; And cancel this battle action
+      CALL DoNothingMessageBox       ; Show the "nothing" box
+      JUMP CancelBattleAction        ; And cancel this battle action
       
-  : JSR DrawBattleItemBox         ; Draw the item box
-    JSR MenuSelection_Item          ; and run the logic for selecting an item
+  : CALL DrawBattleItemBox         ; Draw the item box
+    CALL MenuSelection_Item          ; and run the logic for selecting an item
     
     PHA                             ; backup A/B state
     LDA #$01
-    JSR UndrawNBattleBlocks       ; undraw the item box
+    CALL UndrawNBattleBlocks       ; undraw the item box
     PLA                             ; restore A/B state
     
     CMP #$02
     BNE :+                          ; if B pressed
-      JMP CancelBattleAction        ; cancel action
+      JUMP CancelBattleAction        ; cancel action
       
   : LDA btlcurs_x               ; Selected column
     AND #$01
@@ -959,8 +959,8 @@ BattleSubMenu_Item:
     STA btl_charcmditem, Y      ; record it in command buffer as item being used
     
     LDA btl_tmpvar2                     ; get weapon index
-    JSR GetPointerToWeaponData  ; get a pointer to that weapon's data (in XA)
-    JMP @GetSpellCast
+    CALL GetPointerToWeaponData  ; get a pointer to that weapon's data (in XA)
+    JUMP @GetSpellCast
 
   @GetArmorSpell:
     LDA btl_tmpvar2                     ; armor index
@@ -970,7 +970,7 @@ BattleSubMenu_Item:
     STA btl_charcmditem, Y      ; record as item being used
     
     LDA btl_varJ
-    JSR GetPointerToArmorData   ; pointer to armor data in XA
+    CALL GetPointerToArmorData   ; pointer to armor data in XA
     
   @GetSpellCast:
     STA btl_tmpvar1                     ; store pointer to wep/armor data in temporary_3,temporary_4
@@ -982,7 +982,7 @@ BattleSubMenu_Item:
     DEX                             ; DEX to make it 0-based (FF becomes "no spell")
     LDY btlcmd_curchar              ; Y=cur char -- default to targetting yourself
     LDA #$10
-    JMP SetCharacterBattleCommand
+    JUMP SetCharacterBattleCommand
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -997,14 +997,14 @@ DoNothingMessageBox:
     LDA #$04                    ; Draw the "Nothing" combat box
     LDX #<data_NothingText
     LDY #>data_NothingText
-    JSR DrawCombatBox
+    CALL DrawCombatBox
     
   @InputLoop:                   ; Wait for the player to provide
-      JSR DoFrame_WithInput     ;   ANY input
+      CALL DoFrame_WithInput     ;   ANY input
     BEQ @InputLoop
     
     LDA #$01                    ; then undraw the "Nothing" box and exit
-    JMP UndrawNBattleBlocks
+    JUMP UndrawNBattleBlocks
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1017,7 +1017,7 @@ DoNothingMessageBox:
 
 GetPointerToMagicData:
     LDX #$08                ; *8 (8 bytes per spell)
-    JSR MultiplyXA
+    CALL MultiplyXA
     CLC
     ADC #<lut_MagicData     ; low byte
     STA tmp_68b3
@@ -1041,9 +1041,9 @@ EnterBattlePrepareSprites:
     STA btl_drawflagsA      ; clear drawflags
     STA btl_drawflagsB
     
-    JSR BattleClearOAM      ; clear shadow OAM
-    JSR BattleFrame         ; do a frame with oam updated to clear actual oam)
-    JSR BattleUpdatePPU     ; reset scroll and stuffs
+    CALL BattleClearOAM      ; clear shadow OAM
+    CALL BattleFrame         ; do a frame with oam updated to clear actual oam)
+    CALL BattleUpdatePPU     ; reset scroll and stuffs
     
     LDA #$00
     STA btl_msgdraw_blockcount  ; clear the block count
@@ -1075,7 +1075,7 @@ EnterBattlePrepareSprites:
     LDA #$60
     STA btl_chardraw_gfxset + $C
     
-  ; JMP SetAllNaturalPose       ; <- flow into
+  ; JUMP SetAllNaturalPose       ; <- flow into
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1087,13 +1087,13 @@ EnterBattlePrepareSprites:
 
 SetAllNaturalPose:
     LDA #$00
-    JSR SetNaturalPose
+    CALL SetNaturalPose
     LDA #$01
-    JSR SetNaturalPose
+    CALL SetNaturalPose
     LDA #$02
-    JSR SetNaturalPose
+    CALL SetNaturalPose
     LDA #$03
-    JMP SetNaturalPose
+    JUMP SetNaturalPose
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1122,11 +1122,11 @@ BattleUpdatePPU:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleFrame:
-    JSR BattleWaitForVBlank   ; Wait for VBlank 
+    CALL BattleWaitForVBlank   ; Wait for VBlank 
     LDA PPUSTATUS
     LDA #>oam
     STA OAMDMA                   ; Do OAM DMA
-    JMP BattleUpdateAudio       ; Update audio
+    JUMP BattleUpdateAudio       ; Update audio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1192,7 +1192,7 @@ DoFrame_WithInput:
     DEY
     BNE @Loop           ; repeat for all buttons
     
-    JSR DoMiniFrame     ; do a frame
+    CALL DoMiniFrame     ; do a frame
     LDA btl_input       ; reload the controller state, now in A
     RTS
     
@@ -1299,29 +1299,29 @@ UpdateSprites_BattleFrame:
       STA btl8x8spr_a
       LDA #$F0          ; use tile $F0
       STA btl8x8spr_t
-      JSR Draw16x8SpriteRow ; draw 16x16 sprite
-      JSR Draw16x8SpriteRow
+      CALL Draw16x8SpriteRow ; draw 16x16 sprite
+      CALL Draw16x8SpriteRow
     
   @DrawChars:
     LDA #$04            ; draw char 0 at oam 4
     STA btl8x8spr_i
     LDA #$00
-    JSR DrawCharacter
+    CALL DrawCharacter
     
     LDA #$0A            ; draw char 1 at oam 10
     STA btl8x8spr_i
     LDA #$01
-    JSR DrawCharacter
+    CALL DrawCharacter
     
     LDA #$10            ; draw char 2 at oam 16
     STA btl8x8spr_i
     LDA #$02
-    JSR DrawCharacter
+    CALL DrawCharacter
     
     LDA #$16            ; draw char 3 at oam 22
     STA btl8x8spr_i
     LDA #$03
-    JSR DrawCharacter
+    CALL DrawCharacter
     
   ; Draw Weapon Swing graphic
     LDA btl_drawflagsA
@@ -1337,8 +1337,8 @@ UpdateSprites_BattleFrame:
       STA btl8x8spr_y
       STA btl8x8spr_y+1
       LDX btlattackspr_pose     ; get pose (0 or 8 depending on whether or not to flip the graphic)
-      JSR DrawWeaponGraphicRow  ; draw 2 rows of tiles.  No need to set tile here, as DrawWeaponGraphicRow
-      JSR DrawWeaponGraphicRow  ;    takes care of that
+      CALL DrawWeaponGraphicRow  ; draw 2 rows of tiles.  No need to set tile here, as DrawWeaponGraphicRow
+      CALL DrawWeaponGraphicRow  ;    takes care of that
     
     
     LDA btlattackspr_hidell     ; See if we need to hide the lower-left tile
@@ -1352,7 +1352,7 @@ UpdateSprites_BattleFrame:
     LDA btl_drawflagsA
     AND #$40
     BEQ @Done
-      JSR DoMagicFlash          ; flash the background color
+      CALL DoMagicFlash          ; flash the background color
       
       LDA #$00                  ; put magic sprite at oam slot 0
       STA btl8x8spr_i
@@ -1371,11 +1371,11 @@ UpdateSprites_BattleFrame:
       ADC btlattackspr_pose     ; add pose to adjust for magic animation
       STA btl8x8spr_t
       
-      JSR Draw16x8SpriteRow     ; then just draw the 16x16 sprite
-      JSR Draw16x8SpriteRow
+      CALL Draw16x8SpriteRow     ; then just draw the 16x16 sprite
+      CALL Draw16x8SpriteRow
      
   @Done:
-    JSR BattleFrame             ; Lastly, do a frame
+    CALL BattleFrame             ; Lastly, do a frame
     LDA btl_drawflagsA          ; and clear drawflags (other than 'dead' bits)
     AND #$0F
     STA btl_drawflagsA
@@ -1442,8 +1442,8 @@ DrawCharacter:
     ADC #$08
     STA btl8x8spr_y
     
-    JSR DrawCharacter_DeadRow   ; Then draw 2 rows of tiles, and exit
-    JMP DrawCharacter_DeadRow
+    CALL DrawCharacter_DeadRow   ; Then draw 2 rows of tiles, and exit
+    JUMP DrawCharacter_DeadRow
     
   @DrawNotDead:
     ;;;;;;;;;;;;;;
@@ -1464,8 +1464,8 @@ DrawCharacter:
     
   @DrawChar:
     LDX btl_chardraw_pose, Y    ; X becomes our index for the pose TSA lut
-    JSR @DrawPoseRow            ; draw 3 rows, properly incrementing after each one
-    JSR @DrawPoseRow            ;   2 JSRs, and the 3rd just flows into @DrawPoseRow
+    CALL @DrawPoseRow            ; draw 3 rows, properly incrementing after each one
+    CALL @DrawPoseRow            ;   2 JSRs, and the 3rd just flows into @DrawPoseRow
     
   @DrawPoseRow:
     LDA btl_chardraw_gfxset, Y      ; get the graphic set
@@ -1492,8 +1492,8 @@ DrawCharacter:
 Draw16x8SpriteRow:
     LDA btl8x8spr_x+1           ; restore backup X position
     STA btl8x8spr_x
-    JSR BattleDraw8x8Sprite     ; draw 1 tile
-    JSR DrawCharacter_NextTile  ; then increment, then draw another tile
+    CALL BattleDraw8x8Sprite     ; draw 1 tile
+    CALL DrawCharacter_NextTile  ; then increment, then draw another tile
     INC btl8x8spr_i             ; then increment again
     INC btl8x8spr_t
     LDA btl8x8spr_y             ; add 8 to Y to move to next row
@@ -1515,9 +1515,9 @@ DrawCharacter_DeadRow:
     LDA btl8x8spr_x+1           ; restore original X position for this row
     STA btl8x8spr_x
     
-    JSR BattleDraw8x8Sprite     ; draw first tile
-    JSR DrawCharacter_NextTile  ; then inc+draw 2 more
-    JSR DrawCharacter_NextTile
+    CALL BattleDraw8x8Sprite     ; draw first tile
+    CALL DrawCharacter_NextTile  ; then inc+draw 2 more
+    CALL DrawCharacter_NextTile
     INC btl8x8spr_i             ; then inc oam pos and tile index
     INC btl8x8spr_t
     LDA btl8x8spr_y             ; lastly, add 8 to Y position so next time this is called
@@ -1542,7 +1542,7 @@ DrawCharacter_NextTile:
     CLC
     ADC #$08
     STA btl8x8spr_x
-    JMP BattleDraw8x8Sprite ; draw & exit
+    JUMP BattleDraw8x8Sprite ; draw & exit
 
     
     
@@ -1571,7 +1571,7 @@ DrawWeaponGraphicRow:
     STA btl8x8spr_t                 ; record it
     LDA lut_WeaponSwingTSA+4, X     ; get attribute & record it
     STA btl8x8spr_a
-    JSR BattleDraw8x8Sprite         ; draw this tile
+    CALL BattleDraw8x8Sprite         ; draw this tile
     
     INC btl8x8spr_i                 ; inc the oam position
     INX                             ; inc the TSA index
@@ -1586,7 +1586,7 @@ DrawWeaponGraphicRow:
     STA btl8x8spr_t
     LDA lut_WeaponSwingTSA+4, X
     STA btl8x8spr_a
-    JSR BattleDraw8x8Sprite
+    CALL BattleDraw8x8Sprite
     
     LDA btl8x8spr_y                 ; add 8 to Y position
     CLC
@@ -1610,7 +1610,7 @@ PrepAndGetBattleMainCommand:
       STA btlcurs_positions-1, Y
       DEY
       BNE :-
-    JMP MenuSelection_2x4
+    JUMP MenuSelection_2x4
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1644,28 +1644,28 @@ SelectPlayerTarget:
     AND #$01                    ; if char 0 is dead
     BEQ :+
       LDA #$00
-      JSR @PushLeft             ; push char 0 left
+      CALL @PushLeft             ; push char 0 left
       
   : LDA btl_drawflagsA          ; do same for char 1
     AND #$02
     BEQ :+
       LDA #$01
-      JSR @PushLeft
+      CALL @PushLeft
       
   : LDA btl_drawflagsA          ; and char 2
     AND #$04
     BEQ :+
       LDA #$02
-      JSR @PushLeft
+      CALL @PushLeft
 
   : LDA btl_drawflagsA          ; and char 3
     AND #$08
     BEQ :+
       LDA #$03
-      JSR @PushLeft
+      CALL @PushLeft
     
-  : JSR @PushCurChar            ; push the current character
-    JMP MenuSelection_2x4       ; then do the menu logic!
+  : CALL @PushCurChar            ; push the current character
+    JUMP MenuSelection_2x4       ; then do the menu logic!
     
   @PushCurChar:
     LDA #16                 ; current char gets pushed left 16 pixels
@@ -1738,8 +1738,8 @@ lut_EnemyTargetMenuJumpTbl:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnemyTargetMenu_FiendChaos:
-    JSR BattleClearVariableSprite   ; clear the cursor sprite
-    JSR BattleFrame                 ; update PPU to refresh OAM
+    CALL BattleClearVariableSprite   ; clear the cursor sprite
+    CALL BattleFrame                 ; update PPU to refresh OAM
     LDY #$00                        ; output: Y = the target slot
     LDA #$01                        ; output: A = 1 ('A' button pressed)
     RTS
@@ -1780,7 +1780,7 @@ EnemyTargetMenu_9Small:
     ; 8 is the max target slot (0-8)
     LDA #$08
     STA btlcurs_max
-    JMP EnemyTargetMenu
+    JUMP EnemyTargetMenu
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1815,7 +1815,7 @@ EnemyTargetMenu_4Large:
       
     LDA #$03
     STA btlcurs_max
-    JMP EnemyTargetMenu
+    JUMP EnemyTargetMenu
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1848,7 +1848,7 @@ EnemyTargetMenu_Mix:
     
     LDA #$07
     STA btlcurs_max
-  ; JMP EnemyTargetMenu         ; <- Flow into
+  ; JUMP EnemyTargetMenu         ; <- Flow into
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1866,7 +1866,7 @@ EnemyTargetMenu_Mix:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnemyTargetMenu:
-    JSR BattleTarget_DownSub        ; move down to the first legal slot
+    CALL BattleTarget_DownSub        ; move down to the first legal slot
 
   @MainLoop:
     LDA btl_drawflagsA              ; set the flag to show the cursor
@@ -1881,16 +1881,16 @@ EnemyTargetMenu:
     LDA btlcurs_positions+1, Y
     STA btlcursspr_y
     
-    JSR UpdateSprites_BattleFrame   ; do frame to draw the cursor
-    JSR DoFrame_WithInput           ; do ANOTHER frame to get input
+    CALL UpdateSprites_BattleFrame   ; do frame to draw the cursor
+    CALL DoFrame_WithInput           ; do ANOTHER frame to get input
     
     CMP btlinput_prevstate
     BNE :+                          ; if no change in input...
-      JSR UpdateInputDelayCounter
+      CALL UpdateInputDelayCounter
       BEQ @MainLoop                 ; ... update input delay, and loop if input delay still in effect
       LDA #$03                      ; otherwise, reset input delay (pointless, since UpdateInputDelayCounter does this)
       STA inputdelaycounter
-      JMP @CheckInput               ; and process input
+      JUMP @CheckInput               ; and process input
       
   : LDA #$05                        ; there was a change in input, so reset the input delay counter
     STA inputdelaycounter           ;    to a slightly longer time than usual
@@ -1903,14 +1903,14 @@ EnemyTargetMenu:
     AND #$03
     BEQ :+                          ; see if A or B were pressed.  If yes...
       PHA
-      JSR BattleClearVariableSprite ; clear the cursor sprite in shadow OAM
-      JSR BattleFrame               ; do a frame to clear it in the PPU
+      CALL BattleClearVariableSprite ; clear the cursor sprite in shadow OAM
+      CALL BattleFrame               ; do a frame to clear it in the PPU
       LDY btlcmd_target             ; put the target in Y
       PLA                           ; and the A/B button state in A, and exit!
       RTS
     
-  : JSR @ProcessDPad                ; Otherwise, A/B not pressed, check the DPad
-    JMP @MainLoop                   ; Rinse, repeat
+  : CALL @ProcessDPad                ; Otherwise, A/B not pressed, check the DPad
+    JUMP @MainLoop                   ; Rinse, repeat
     
   @ProcessDPad:
     LDA btl_input           ; check the DPad
@@ -1940,7 +1940,7 @@ BattleTarget_Down:
       LDA #-1
       STA btlcurs
   : INC btlcurs             ; inc to next slot
-  ; JMP BattleTarget_DownSub            ; <- flows into
+  ; JUMP BattleTarget_DownSub            ; <- flows into
 
 BattleTarget_DownSub:
     LDY btlcurs                 ; put the cursor in Y
@@ -1991,7 +1991,7 @@ MenuSelection_Item:
       STA btlcurs_positions-1, Y
       DEY
       BNE :-
-    JMP MenuSelection_2x4
+    JUMP MenuSelection_2x4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2007,7 +2007,7 @@ MenuSelection_Drink:
       STA btlcurs_positions-1, Y    ;  the drink menu
       DEY
       BNE :-
-    JMP MenuSelection_2x4           ; and do the logic
+    JUMP MenuSelection_2x4           ; and do the logic
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2024,8 +2024,8 @@ MenuSelection_Magic:
     LDA #$00
     STA tmp_6af8                   ; set page number to 0 (draw top page of magic box)
     
-    JSR DrawBattleMagicBox    ; draw it!
-    JMP @MenuSelection          ; pointless jump, as this code immediately follws
+    CALL DrawBattleMagicBox    ; draw it!
+    JUMP @MenuSelection          ; pointless jump, as this code immediately follws
     
 @MenuSelection:
     LDA #$00
@@ -2054,16 +2054,16 @@ MenuSelection_Magic:
     LDA lut_MagicCursorPos+1, Y
     STA btlcursspr_y
     
-    JSR UpdateSprites_BattleFrame   ; Do a frame to update the cursor
-    JSR DoFrame_WithInput           ; And another frame to get input
+    CALL UpdateSprites_BattleFrame   ; Do a frame to update the cursor
+    CALL DoFrame_WithInput           ; And another frame to get input
     
     CMP btlinput_prevstate          ; See if there was any change in input
     BNE @InputChanged               ; if yes, jump ahead to process it
-      JSR UpdateInputDelayCounter   ; if no, update input delay to see if we should ignore input or not
+      CALL UpdateInputDelayCounter   ; if no, update input delay to see if we should ignore input or not
       BEQ @MainLoop                 ; if we're to ignore it, just loop
       LDA #$03
       STA inputdelaycounter         ; otherwise, reset the counter and proceed to process it
-      JMP :+
+      JUMP :+
   @InputChanged:
       LDA #$05                      ; if input changed, reset the counter to a higher value
       STA inputdelaycounter         ;   then process the input
@@ -2083,16 +2083,16 @@ MenuSelection_Magic:
       AND #$03
       STA btlcurs_x
       
-      JSR BattleClearVariableSprite ; hide the cursor sprite
-      JSR BattleFrame               ; do a frame to hide it from view
+      CALL BattleClearVariableSprite ; hide the cursor sprite
+      CALL BattleFrame               ; do a frame to hide it from view
       
       LDY btlcurs_y                 ; put Y cursor pos in Y (why?  haha)
       PLA                           ; restore A/B state
       RTS
     
     ; jumps here if A/B were not pressed
-  : JSR @CheckDPad
-    JMP @MainLoop
+  : CALL @CheckDPad
+    JUMP @MainLoop
     
   @CheckDPad:
     LDA btl_input
@@ -2117,8 +2117,8 @@ MenuSelection_Magic:
       RTS                       ; page 1 = do nothing
   : INC tmp_6af8                   ; page 0 = inc to page 1
     LDA #$01
-    JSR UndrawNBattleBlocks   ; undraw the page 0 magic box
-    JSR DrawBattleMagicBox    ; draw the page 1 magic box
+    CALL UndrawNBattleBlocks   ; undraw the page 0 magic box
+    CALL DrawBattleMagicBox    ; draw the page 1 magic box
   @NormalMove_Down:
     INC btlcurs_y
     RTS
@@ -2133,8 +2133,8 @@ MenuSelection_Magic:
       RTS                       ; page 0?  exit
   : DEC tmp_6af8                   ; page 1?  move to page 0, and redraw it
     LDA #$01
-    JSR UndrawNBattleBlocks
-    JSR DrawBattleMagicBox
+    CALL UndrawNBattleBlocks
+    CALL DrawBattleMagicBox
   @NormalMove_Up:
     DEC btlcurs_y
     RTS
@@ -2204,15 +2204,15 @@ MenuSelection_2x4:
     LDA btlcurs_positions+1, Y
     STA btlcursspr_y
     
-    JSR UpdateSprites_BattleFrame   ; Update sprites & do a frame
-    JSR DoFrame_WithInput           ; Do *ANOTHER* frame and get input in A
+    CALL UpdateSprites_BattleFrame   ; Update sprites & do a frame
+    CALL DoFrame_WithInput           ; Do *ANOTHER* frame and get input in A
     CMP btlinput_prevstate
     BNE :+                          ; If there was no change in input...
-      JSR UpdateInputDelayCounter   ; update delay counter
+      CALL UpdateInputDelayCounter   ; update delay counter
       BEQ @MainLoop                 ; not accepting input, repeat from main loop
       LDA #$03
       STA inputdelaycounter         ; otherwise reset delay counter (pointless, since UpdateInputDelayCounter
-      JMP @CheckButtons             ;   already does this), then check buttons
+      JUMP @CheckButtons             ;   already does this), then check buttons
       
   : LDA #$05                        ; if there was a change of input, reset the delay counter (make it a little
     STA inputdelaycounter           ;   longer than normal), and then check buttons
@@ -2233,15 +2233,15 @@ MenuSelection_2x4:
       AND #$01
       STA btlcurs_x
       
-      JSR BattleClearVariableSprite ; erase the cursor sprite (in shadow oam)
-      JSR BattleFrame               ; redraw the screen (to erase it in the PPU)
+      CALL BattleClearVariableSprite ; erase the cursor sprite (in shadow oam)
+      CALL BattleFrame               ; redraw the screen (to erase it in the PPU)
       
       LDY btlcurs_y                 ; put cursor selection in Y (though Fight/Run column selection is still in btlcurs_x
       PLA                           ; put A/B button state in A
       RTS                           ; exit!
     
-  : JSR @MoveCursor                 ; if A/B are not pressed, then check arrow buttons to move the cursor
-    JMP @MainLoop                   ; and repeat
+  : CALL @MoveCursor                 ; if A/B are not pressed, then check arrow buttons to move the cursor
+    JUMP @MainLoop                   ; and repeat
     
   @MoveCursor:
     LDA btl_input
@@ -2359,10 +2359,10 @@ CharWalkAnimationRight:
 :   STA tmp_68ab       ; 68AB = walk direction
     PLA
     STA btl_animatingchar
-    JSR CharacterWalkAnimation
+    CALL CharacterWalkAnimation
     LDA btl_animatingchar
-    JSR SetNaturalPose          ; after animation is complete, revert this character to their natural pose
-    JMP UpdateSprites_TwoFrames ; update, then return
+    CALL SetNaturalPose          ; after animation is complete, revert this character to their natural pose
+    JUMP UpdateSprites_TwoFrames ; update, then return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2406,7 +2406,7 @@ CharacterWalkAnimation:
       ADC tmp_68ab
       STA btl_chardraw_x, X
       
-      JSR UpdateSprites_TwoFrames   ; update sprites, do 2 frames of animation
+      CALL UpdateSprites_TwoFrames   ; update sprites, do 2 frames of animation
       
       DEC tmp_6aa8
       BNE @Loop                 ; keep looping
@@ -2437,13 +2437,13 @@ PlayFanfareAndCheer:
       STA btl_chardraw_pose+$8
       STA btl_chardraw_pose+$C
       
-      JSR UpdateSprites_TwoFrames   ; draw!
+      CALL UpdateSprites_TwoFrames   ; draw!
       
       DEC tmp_6aa8
       BNE @Loop
       
-    JSR SetAllNaturalPose           ; afterwards, give everyone their natural pose
-    JMP UpdateSprites_TwoFrames     ; draw, and exit
+    CALL SetAllNaturalPose           ; afterwards, give everyone their natural pose
+    JUMP UpdateSprites_TwoFrames     ; draw, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2466,7 +2466,7 @@ WalkForwardAndStrike:
     
     LDA #-2
     STA tmp_68ab                   ; walk the character to the left
-    JSR CharacterWalkAnimation
+    CALL CharacterWalkAnimation
     
     LDA #$08                    ; 6AA8 is the loop counter (loop 8 times), alternates between 
     STA tmp_6aa8                   ;   animation frames every 2 iterations.
@@ -2479,19 +2479,19 @@ WalkForwardAndStrike:
     LDA tmp_6aa8
     AND #$02                            ; every other frame...
     BEQ @BFrame
-        JSR PrepAttackSprite_AFrame     ; alternate between AFrame of animation
-        JMP :+
+        CALL PrepAttackSprite_AFrame     ; alternate between AFrame of animation
+        JUMP :+
     @BFrame:
-        JSR PrepAttackSprite_BFrame     ; ... and BFrame of animation
+        CALL PrepAttackSprite_BFrame     ; ... and BFrame of animation
         
-    : JSR UpdateSprites_TwoFrames       ; redraw sprites on screen, do 2 frames.
+    : CALL UpdateSprites_TwoFrames       ; redraw sprites on screen, do 2 frames.
     
       DEC tmp_6aa8
       BNE @DoAttackAnimationLoop        ; loop until counter expires
     
     
-    JSR BattleClearVariableSprite       ; Finally, once attack animation complete, clear the weapon/magic sprite
-    JSR BattleFrame                     ; Do another frame to make sure it's erased  (seems silly to do that here... since
+    CALL BattleClearVariableSprite       ; Finally, once attack animation complete, clear the weapon/magic sprite
+    CALL BattleFrame                     ; Do another frame to make sure it's erased  (seems silly to do that here... since
                                         ;   we do another frame shortly...)
 
     LDA btl_animatingchar
@@ -2500,16 +2500,16 @@ WalkForwardAndStrike:
     TAX
     LDA #CHARPOSE_STAND
     STA btl_chardraw_pose, X            ; reset the character's pose to 'standing'
-    JSR UpdateSprites_TwoFrames         ; then update sprites and do 2 frames.
+    CALL UpdateSprites_TwoFrames         ; then update sprites and do 2 frames.
     
     LDA #2
     STA tmp_68ab
-    JSR CharacterWalkAnimation          ; Do the animation to walk the character back to the right
+    CALL CharacterWalkAnimation          ; Do the animation to walk the character back to the right
     
     LDA btl_animatingchar
-    JSR SetNaturalPose                  ; reset character back to their natural pose
-    JSR BattleClearVariableSprite       ; clear the wep/mag sprite (again?  Pointless to do here)
-  ; JMP UpdateSprites_TwoFrames         ; <- flow into.  Update sprites and do 2 frames
+    CALL SetNaturalPose                  ; reset character back to their natural pose
+    CALL BattleClearVariableSprite       ; clear the wep/mag sprite (again?  Pointless to do here)
+  ; JUMP UpdateSprites_TwoFrames         ; <- flow into.  Update sprites and do 2 frames
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2521,8 +2521,8 @@ WalkForwardAndStrike:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateSprites_TwoFrames:
-    JSR UpdateSprites_BattleFrame
-    JMP BattleFrame
+    CALL UpdateSprites_BattleFrame
+    JUMP BattleFrame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2541,7 +2541,7 @@ PrepAttackSprite_AFrame:
     ;; [$9ED6 :: 0x31EE6]
     ;;  Support routine:  Sets the btlattackspr to the 'A' frame for magic    
 __PrepAttackSprite_Magic_AFrame:
-    JSR __PrepAttackSprite_Weapon_AFrame    ; magic AFrame is the same as weapon AFrame, but with some changes:
+    CALL __PrepAttackSprite_Weapon_AFrame    ; magic AFrame is the same as weapon AFrame, but with some changes:
     LDA #CHARPOSE_CHEER
     STA btl_chardraw_pose, X                ; player is cheering rather than swinging
     
@@ -2591,7 +2591,7 @@ __PrepAttackSprite_Weapon_AFrame:
 PrepAttackSprite_BFrame:
     LDA btlattackspr_wepmag                 ; weapon or magic?
     BEQ :+                                  ; if magic...
-      JSR __PrepAttackSprite_Magic_AFrame   ; Same setup as AFrame
+      CALL __PrepAttackSprite_Magic_AFrame   ; Same setup as AFrame
       LDA #$04
       STA btlattackspr_pose                 ; just the pose is different.
       RTS
@@ -2902,23 +2902,23 @@ DoMagicFlash:
     LDA btl_palettes + $10          ; get the original BG color
     STA tmp_6d16                       ; back it up (probably unnecessary, since btl_palettes is never changed)
     
-    JSR @FrameNoPaletteChange       ; Draw a normal frame
+    CALL @FrameNoPaletteChange       ; Draw a normal frame
     
     LDA btl_tmpvar2                         ; change the BG color to the flash color
-    JSR @FramePaletteChange         ;  and draw 2 more frames
-    JSR @FrameNoPaletteChange
+    CALL @FramePaletteChange         ;  and draw 2 more frames
+    CALL @FrameNoPaletteChange
     
     LDA tmp_6d16                       ; restore original BG color and draw another frame
-  ; JMP @FramePaletteChange         ;   <- code flows into this routine
+  ; JUMP @FramePaletteChange         ;   <- code flows into this routine
     
   @FramePaletteChange:
     STA btl_usepalette + $10
-    JMP DoFrame_UpdatePalette
+    JUMP DoFrame_UpdatePalette
     
   @FrameNoPaletteChange:
-    JSR WaitForVBlank
-    JSR BattleUpdatePPU
-  ; JMP BattleUpdateAudio  ; <- code flows into this routine
+    CALL WaitForVBlank
+    CALL BattleUpdatePPU
+  ; JUMP BattleUpdateAudio  ; <- code flows into this routine
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2935,8 +2935,8 @@ BattleUpdateAudio:
     BPL :+                  ; if the high bit of the music track is set (indicating the current song is finished)...
       LDA btl_followupmusic ;   then play the followup music
       STA a:music_track
-:   JSR CallMusicPlay     ; Call music playback to keep it playing
-    JMP UpdateBattleSFX     ; and update sound effects to keep them playing
+:   CALL CallMusicPlay     ; Call music playback to keep it playing
+    JUMP UpdateBattleSFX     ; and update sound effects to keep them playing
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2972,7 +2972,7 @@ DrawBattleMessageCombatBox:
     TAX             ; Move battle message ID to X
     LDA #$04        ; A=4 is the bottom (wide) combat box.
     LDY #$0F        ; 0F is the control code for printing battle messages (see FormatBattleString)
-  ; JMP PrepareAndDrawSimpleCombatBox    ; <- flow into
+  ; JUMP PrepareAndDrawSimpleCombatBox    ; <- flow into
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3015,7 +3015,7 @@ PrepareAndDrawSimpleCombatBox:
     INC btl_combatboxcount      ; count this combat box
     
     PLA                         ; restore combat box ID in A
-    JMP DrawCombatBox         ; draw the combat box!
+    JUMP DrawCombatBox         ; draw the combat box!
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3040,9 +3040,9 @@ lut_UnformattedCombatBoxBuffer:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RespondDelay_ClearCombatBoxes:
-    JSR RespondDelay            ; respond rate wait
+    CALL RespondDelay            ; respond rate wait
     LDA btl_combatboxcount
-    JSR UndrawNBattleBlocks   ; clear all combat boxes
+    CALL UndrawNBattleBlocks   ; clear all combat boxes
     LDA #$00
     STA btl_combatboxcount      ; zero combat box count
     RTS
@@ -3059,8 +3059,8 @@ RespondDelay_ClearCombatBoxes:
 RespondDelay:
     LDA btl_responddelay        ; get the delay
     STA tmp_6ad0                   ; stuff it in temp ram as loop counter
-    : JSR WaitForVBlank       ; wait that many frames
-      JSR BattleUpdateAudio     ; updating audio each frame
+    : CALL WaitForVBlank       ; wait that many frames
+      CALL BattleUpdateAudio     ; updating audio each frame
       DEC tmp_6ad0
       BNE :-
     RTS
@@ -3128,7 +3128,7 @@ FlashCharacterSprite:
       BNE @ShowSpriteLoop
   
   @NextIteration:
-    JSR BattleFrame     ; Do a frame and update sprites
+    CALL BattleFrame     ; Do a frame and update sprites
     DEC tmp_6bad
     BNE @MainLoop       ; Keep looping until main counter expires
     
@@ -3213,11 +3213,11 @@ DoBattleRound:
   @ShuffleTurnOrderLoop:
     LDA #$00
     LDX #$0C
-    JSR RandAX                  ; pick two random indexes
+    CALL RandAX                  ; pick two random indexes
     PHA
     LDA #$00
     LDX #$0C
-    JSR RandAX
+    CALL RandAX
     TAY                         ; one in Y
     PLA
     TAX                         ; one in X
@@ -3250,9 +3250,9 @@ DoBattleRound:
       TYA                       ; otherwise, put the SLOT ID in A, and take their turn
       
   @TakeTurn:
-    JSR Battle_DoTurn                       ; do their turn
-    JSR DrawCharacterStatus                 ; update character on-screen stats
-    JSR BattleTurnEnd_CheckForBattleEnd     ; wrap up / see if battle is over (will double-RTS if battle is over)
+    CALL Battle_DoTurn                       ; do their turn
+    CALL DrawCharacterStatus                 ; update character on-screen stats
+    CALL BattleTurnEnd_CheckForBattleEnd     ; wrap up / see if battle is over (will double-RTS if battle is over)
   @NextTurn:
     INC btl_curturn
     LDA btl_curturn
@@ -3264,7 +3264,7 @@ DoBattleRound:
     LDA #$00
     STA btl_strikingfirst       ; clear striking first flag so enemies can now act.
     
-    JSR ApplyEndOfRoundEffects
+    CALL ApplyEndOfRoundEffects
   DoBattleRound_RTS:
     RTS
 
@@ -3303,9 +3303,9 @@ BattleTurnEnd_CheckForBattleEnd:
       STA btl_enemyIDs, Y       ; otherwise, remove this enemy from the lineup
       TYA
       STA btl_defender
-      JSR EraseEnemyGraphic     ; and erase the enemy graphic
+      CALL EraseEnemyGraphic     ; and erase the enemy graphic
       
-      JMP CheckForBattleEnd     ; Then check for battle end
+      JUMP CheckForBattleEnd     ; Then check for battle end
     
   @PlayerKilled:                ; if killed defender was a player
     LDA battle_defender_index   ; get ID of the killed/stoned player
@@ -3315,7 +3315,7 @@ BattleTurnEnd_CheckForBattleEnd:
     TAY
     LDA #$00
     STA btl_charcmdbuf, Y       ; erase their buffered command (can't perform actions when you're dead!)
-  ; JMP CheckForBattleEnd       ; <- flow into -- check to see if the battle is over.
+  ; JUMP CheckForBattleEnd       ; <- flow into -- check to see if the battle is over.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3373,7 +3373,7 @@ ApplyRegenToAllEnemies:
     
   @MainLoop:
     LDA regen_id
-    JSR GetEnemyStatPtr
+    CALL GetEnemyStatPtr
     STA regen_ramstats
     STX regen_ramstats+1              ; get the pointer to RAM stats and record it
     
@@ -3399,7 +3399,7 @@ ApplyRegenToAllEnemies:
     
     LDA #$00
     LDX #$03
-    JSR MathBuf_Add             ; regenerative enemies recover 3 HP
+    CALL MathBuf_Add             ; regenerative enemies recover 3 HP
     
     LDY #ENROMSTAT_HPMAX        ; put HP max in mathbuf2
     LDA (regen_romstats), Y               ;  ... because a normal CMP would be too simple
@@ -3410,7 +3410,7 @@ ApplyRegenToAllEnemies:
     
     LDY #$00                    ; compare HP and MaxHP buffers
     LDX #$01
-    JSR MathBuf_Compare         ; C will be set if HP >= HPMax
+    CALL MathBuf_Compare         ; C will be set if HP >= HPMax
     
     BCC :+                      ; cap at Max HP
       LDA btl_mathbuf+2
@@ -3446,18 +3446,18 @@ ApplyRegenToAllEnemies:
 
 ApplyEndOfRoundEffects:
     LDA #$00                    ; apply poison to all 4 players
-    JSR ApplyPoisonToPlayer
+    CALL ApplyPoisonToPlayer
     LDA #$01
-    JSR ApplyPoisonToPlayer
+    CALL ApplyPoisonToPlayer
     LDA #$02
-    JSR ApplyPoisonToPlayer
+    CALL ApplyPoisonToPlayer
     LDA #$03
-    JSR ApplyPoisonToPlayer
+    CALL ApplyPoisonToPlayer
     
-    JSR DrawCharacterStatus     ; redraw character stats to reflect post-poison HP
-    JSR ApplyRegenToAllEnemies  ; apply regen to all enemies
+    CALL DrawCharacterStatus     ; redraw character stats to reflect post-poison HP
+    CALL ApplyRegenToAllEnemies  ; apply regen to all enemies
     
-    JMP CheckForBattleEnd       ; poison may have killed the party -- check for battle end.
+    JUMP CheckForBattleEnd       ; poison may have killed the party -- check for battle end.
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3495,16 +3495,16 @@ ApplyPoisonToPlayer:
     
     LDA #$00
     LDX #$02
-    JSR MathBuf_Sub     ; subtract 2 HP for poison
+    CALL MathBuf_Sub     ; subtract 2 HP for poison
     
     LDY btl_mathbuf         ; GRAAAH DRIVE ME INSANE GAME DRIVE ME INSANE!!!  GRAAAH
     LDX btl_mathbuf+1       ;  (this clips at zero, but is 100% unnecessary.  I rant about
-    JSR ZeroXYIfNegative    ;   this elsewhere in the code)
+    CALL ZeroXYIfNegative    ;   this elsewhere in the code)
     STY btl_mathbuf
     STX btl_mathbuf+1
     
     LDA #$00
-    JSR MathBuf_NZ          ; update NZ flags according to math buffer
+    CALL MathBuf_NZ          ; update NZ flags according to math buffer
     BNE @ExtractFromMathBuf ; if the poison has killed them....
     
       LDA #$00                  ; clip their HP at zero.... again... because...
@@ -3560,7 +3560,7 @@ WalkForwardAndCastMagic:
     
     LDA btlcmd_magicgfx+1, Y    ; A = palette
     LDX #$01                    ; X = nonzero to indicate magic palette
-    JSR UpdateVariablePalette   ; update the palette
+    CALL UpdateVariablePalette   ; update the palette
     
     PLA
     TAY                         ; retore 2*char index in Y  (pointless because we never use it)
@@ -3568,7 +3568,7 @@ WalkForwardAndCastMagic:
     TAX                         ; restore graphic ID in X
     PLA                         ; restore character index in A
     LDY #$01                    ; Y = nonzero to indicate doing the magic effect
-    JSR WalkForwardAndStrike    ; walk forward and strike with magic!!!
+    CALL WalkForwardAndStrike    ; walk forward and strike with magic!!!
     
     LDA #$00
     STA btlattackspr_nodraw     ; clear the nodraw flag
@@ -3617,7 +3617,7 @@ WalkForwardAndCastMagic:
 
 Battle_DoTurn:
     BMI Battle_DoPlayerTurn     ; if high bit set, this is a player, do a player turn
-    JMP Battle_DoEnemyTurn      ; otherwise, do an enemy turn
+    JUMP Battle_DoEnemyTurn      ; otherwise, do an enemy turn
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3643,7 +3643,7 @@ Battle_DoPlayerTurn:
     BCC :+                      ; if set... attack the enemy
       LDX btl_charcmdbuf+2, Y           ; X = enemy target
       LDA battleturn_playerid                     ; A = attacker
-      JMP PlayerAttackEnemy_Physical    ; Do the attack!
+      JUMP PlayerAttackEnemy_Physical    ; Do the attack!
       
   : LSR A                       ; shift out bit 3 ('drink' bit)
     BCC :+                      ; if set... drink a potion!
@@ -3660,19 +3660,19 @@ Battle_DoPlayerTurn:
       LDA btl_charcmdbuf+1, Y       ; get the effect ID in A ($40 for heal, $41 for pure)
       LDX btl_charcmdbuf+2, Y       ; get the target in X
       LDY battleturn_playerid                 ; get the actor in Y
-      JMP Player_DoDrink
+      JUMP Player_DoDrink
       
   : LSR A                       ; shift out bit 4 ('item' bit)
     BCC :+                      ; if set... use item!
       LDA btl_charcmdbuf+1, Y       ; A = effect ID
       LDX btl_charcmdbuf+2, Y       ; X = target
       LDY battleturn_playerid                 ; Y = attacker
-      JMP Player_DoItem
+      JUMP Player_DoItem
       
   : LSR A                       ; shift out bit 5 ('run' bit)
     BCC :+
       LDA battleturn_playerid                 ; load this player's ID
-      JMP Battle_PlayerTryRun       ; try to run!
+      JUMP Battle_PlayerTryRun       ; try to run!
       
   : LSR A                       ; shift out bit 6 ('magic' bit)
     BCC :+
@@ -3689,7 +3689,7 @@ Battle_DoPlayerTurn:
         LDA btl_charcmdbuf+1, Y     ; A = effect
         LDX btl_charcmdbuf+2, Y     ; X = target
         LDY battleturn_playerid               ; Y = attacker
-        JMP Player_DoMagic
+        JUMP Player_DoMagic
     
     ;;  Code reaches here if the player had no command, which would only happen if they are
     ;;  immobilized or dead.
@@ -3697,7 +3697,7 @@ Battle_DoPlayerTurn:
     :
 
     LDA battleturn_playerid
-    JSR PrepCharStatPointers        ; load player's ailments
+    CALL PrepCharStatPointers        ; load player's ailments
     LDY #ch_ailments - ch_stats
     LDA (btl_ob_charstat_ptr), Y
     STA battleturn_ail
@@ -3705,13 +3705,13 @@ Battle_DoPlayerTurn:
     AND #AIL_SLEEP          ; are they asleep?
     BEQ :+
       LDA battleturn_playerid         ; if yes, try to wake up
-      JMP Battle_PlayerTryWakeup
+      JUMP Battle_PlayerTryWakeup
       
   : LDA battleturn_ail
     AND #AIL_STUN           ; are they stunned?
     BEQ :+
       LDA battleturn_playerid
-      JMP Battle_PlayerTryUnstun    ; if yes, try to unstun
+      JUMP Battle_PlayerTryUnstun    ; if yes, try to unstun
       
     ; otherwise, they simply don't have an action or they're dead/stone
     ;   so just exit without doing anything
@@ -3732,10 +3732,10 @@ Battle_DoPlayerTurn:
 
 Battle_PlayerTryRun:
     PHA                             ; backup player ID
-    JSR DrawPlayerAttackerCombatBox ; draw attacker box
+    CALL DrawPlayerAttackerCombatBox ; draw attacker box
     PLA                             ; restore ID
     
-    JSR PrepCharStatPointers        ; prep stat pointers for later
+    CALL PrepCharStatPointers        ; prep stat pointers for later
     
     LDA btl_strikingfirst           ; are we striking first?
     BNE @Success                    ; If yes, run success is guaranteed
@@ -3763,7 +3763,7 @@ Battle_PlayerTryRun:
     
     LDA #$00
     STA btl_mathbuf+3               ; zero high byte of math buffer
-    JSR RandAX                      ; random[ 0, level+15 ]
+    CALL RandAX                      ; random[ 0, level+15 ]
     TAX                             ; random value in X
     
     LDY #ch_luck - ch_stats         ; get player luck
@@ -3774,11 +3774,11 @@ Battle_PlayerTryRun:
     
     STA btl_mathbuf+2               ; mathbuf+2 now has the player's luck
     LDA #$01
-    JSR MathBuf_Sub                 ; mathbuf+2 is now luck-randomval
+    CALL MathBuf_Sub                 ; mathbuf+2 is now luck-randomval
     
     LDY btl_mathbuf+2               ; clip at zero.  WHY THE FUCK DO YOU KEEP DOING THIS AFTER EVERY SINGLE CALL TO
     LDX btl_mathbuf+3               ; MATHBUF_SUB, FINAL FANTASY!?!?  MATHBUF_SUB ALREADY FREAKING CLIPS THE VALUE! THERE
-    JSR ZeroXYIfNegative            ; IS NO NEED TO WASTE FIFTEEN FUCKING BYTES TO DO SOMETHING THAT WAS ALREADY DONE. YOU
+    CALL ZeroXYIfNegative            ; IS NO NEED TO WASTE FIFTEEN FUCKING BYTES TO DO SOMETHING THAT WAS ALREADY DONE. YOU
     STY btl_mathbuf+2               ; DO IT EVERY TIME, IT IS DRIVING ME CRAZY! MY BRAIN IS GOING TO EXPLODE!!!!!1
     STX btl_mathbuf+3               ; GRAAAAAAAAAH
     
@@ -3787,11 +3787,11 @@ Battle_PlayerTryRun:
     
   @Fail:
     LDA #BTLMSG_CANTRUN             ; on failure, print 'Can't Run' 
-    JMP DrawBtlMsg_ClearCombatBoxes ; then clear all combat boxes and exit
+    JUMP DrawBtlMsg_ClearCombatBoxes ; then clear all combat boxes and exit
   
   @Success:
     LDA #BTLMSG_CLOSECALL           ; on success, print 'Close Call....' 
-    JSR DrawBtlMsg_ClearCombatBoxes ; then clear all combat boxes
+    CALL DrawBtlMsg_ClearCombatBoxes ; then clear all combat boxes
     
     LDA #$03
     STA btl_result                  ; Set the battle result to 3 (party ran)
@@ -3817,10 +3817,10 @@ Battle_PlayerTryRun:
 
 Battle_PlayerTryWakeup:
     PHA                             ; backup ID
-    JSR DrawPlayerAttackerCombatBox ; draw attacker
+    CALL DrawPlayerAttackerCombatBox ; draw attacker
     PLA                             ; retore ID
     
-    JSR PrepCharStatPointers
+    CALL PrepCharStatPointers
     
     LDY #ch_maxhp - ch_stats        ; put max HP in mathbuf
     LDA (btl_ob_charstat_ptr), Y
@@ -3831,24 +3831,24 @@ Battle_PlayerTryWakeup:
     
     LDA #$00
     LDX #$50
-    JSR RandAX                      ; random[$00,$50]
+    CALL RandAX                      ; random[$00,$50]
     
     TAX
     LDA #$00
-    JSR MathBuf_Sub                 ; mathbuf -= random
+    CALL MathBuf_Sub                 ; mathbuf -= random
     
     LDY btl_mathbuf                 ; clip at zero (pointless, MathBuf_Sub already does this!!!)
     LDX btl_mathbuf+1
-    JSR ZeroXYIfNegative
+    CALL ZeroXYIfNegative
     STY btl_mathbuf
     STX btl_mathbuf+1
     
     LDA #$00
-    JSR MathBuf_NZ                  ; See if mathbuf is zero
+    CALL MathBuf_NZ                  ; See if mathbuf is zero
     
     BNE :+                          ; if it is, stay asleep
         LDA #BTLMSG_SLEEPING            ; print "Sleeping" message, and exit
-        JMP DrawBtlMsg_ClearCombatBoxes
+        JUMP DrawBtlMsg_ClearCombatBoxes
     
   : LDY #btlch_ailments             ; remove sleep ailment from IB stats
     LDA (btl_ib_charstat_ptr), Y
@@ -3861,7 +3861,7 @@ Battle_PlayerTryWakeup:
     STA (btl_ob_charstat_ptr), Y
     
     LDA #BTLMSG_WOKEUP              ; print "Woke up" message and exit
-    JMP DrawBtlMsg_ClearCombatBoxes
+    JUMP DrawBtlMsg_ClearCombatBoxes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3875,16 +3875,16 @@ Battle_PlayerTryWakeup:
 
 Battle_PlayerTryUnstun:
     PHA                                 ; backup player ID
-    JSR DrawPlayerAttackerCombatBox     ; draw the attacker box
+    CALL DrawPlayerAttackerCombatBox     ; draw the attacker box
     PLA                                 ; restore player ID
     
-    JSR PrepCharStatPointers            ; Get pointers to stats
+    CALL PrepCharStatPointers            ; Get pointers to stats
     
     FARCALL BattleRNG
     AND #$03                            ; random [0,3]
     BEQ :+                              ; unstun if 0 (25% chance)
       LDA #BTLMSG_PARALYZED_B               ; otherwise, if nonzero, stay stunned
-      JMP DrawBtlMsg_ClearCombatBoxes       ; print "Paralyzed" message, then clear boxes and end turn.
+      JUMP DrawBtlMsg_ClearCombatBoxes       ; print "Paralyzed" message, then clear boxes and end turn.
       
   : LDY #btlch_ailments                 ; remove Stun ailment from IB ailments
     LDA (btl_ib_charstat_ptr), Y
@@ -3897,7 +3897,7 @@ Battle_PlayerTryUnstun:
     STA (btl_ob_charstat_ptr), Y
     
     LDA #BTLMSG_CURED                   ; print "Cured!" message, and exit!
-    JMP DrawBtlMsg_ClearCombatBoxes
+    JUMP DrawBtlMsg_ClearCombatBoxes
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3948,13 +3948,13 @@ PlayerAttackEnemy_Physical:
     AND #$03
     STA battle_attacker_index       ; set player attacker index
         ; btl_attacker is updated later
-    JSR PrepCharStatPointers        ; get pointer to attacker's OB and IB stats
+    CALL PrepCharStatPointers        ; get pointer to attacker's OB and IB stats
     
     STX battle_defender_index       ; set defender index
     STX btl_defender
     
     TXA
-    JSR GetEnemyStatPtr
+    CALL GetEnemyStatPtr
     STA btl_varE                         ; btl_varE,85 points to enemy stats in RAM
     STX btl_varF
     LDY #en_romptr
@@ -4044,7 +4044,7 @@ PlayerAttackEnemy_Physical:
     STA btl_attacker
     
     ;;;;;;;;;;;;;;;;;;;;
-    JSR DoPhysicalAttack            ; Do the attack!!
+    CALL DoPhysicalAttack            ; Do the attack!!
     ;;;;;;;;;;;;;;;;;;;;
     
     LDY #en_ailments                ; IB ailements
@@ -4082,12 +4082,12 @@ EnemyAttackPlayer_Physical:
     AND #$03
     STA battle_defender_index       ; record the defender index
                                     ; btl_defender is set later
-    JSR PrepCharStatPointers        ; get pointer to char stats in btl_ib_charstat_ptr and btl_ob_charstat_ptr
+    CALL PrepCharStatPointers        ; get pointer to char stats in btl_ib_charstat_ptr and btl_ob_charstat_ptr
     
     STX battle_attacker_index       ; record attacker index
     STX btl_attacker
     TXA
-    JSR GetEnemyStatPtr             ; get pointer to enemy stats in XA
+    CALL GetEnemyStatPtr             ; get pointer to enemy stats in XA
     
     STA btl_varE                 ; pointer to enemy RAM stats at btl_varE,85
     STX btl_varF
@@ -4182,7 +4182,7 @@ EnemyAttackPlayer_Physical:
     STA btl_defender
     
     ;;;;;;;;;;;;;;;;;;;;;;
-    JSR DoPhysicalAttack                ; Do the freaking attack!!!!
+    CALL DoPhysicalAttack                ; Do the freaking attack!!!!
     ;;;;;;;;;;;;;;;;;;;;;;
     
     LDY #en_ailments                ; update attacker's ailments
@@ -4275,14 +4275,14 @@ DoPhysicalAttack:
     LDA #$00        ; print '02 00 00' to combat box 0
     TAX             ;  (attacker name in attacker combat box)
     LDY #$02
-    JSR PrepareAndDrawSimpleCombatBox
+    CALL PrepareAndDrawSimpleCombatBox
     
     LDA #$02        ; print '03 00 00' to combat box 2
     LDY #$03        ;  (defender name in defender combat box)
     LDX #$00
-    JSR PrepareAndDrawSimpleCombatBox
+    CALL PrepareAndDrawSimpleCombatBox
     
-    JSR ClearMathBufHighBytes   ; zero high bytes of math buffers
+    CALL ClearMathBufHighBytes   ; zero high bytes of math buffers
     
     LDA #168                    ; base hit chance of 168
     STA math_hitchance
@@ -4322,10 +4322,10 @@ DoPhysicalAttack:
     BEQ :+                              ; if any weaknesses found...
       LDA #MATHBUF_HITCHANCE            ; +40 bonus to hit chance
       LDX #40
-      JSR MathBuf_Add
+      CALL MathBuf_Add
       LDY math_hitchance
       LDX math_hitchance+1
-      JSR CapXYAtFF
+      CALL CapXYAtFF
       STY math_hitchance
       STX math_hitchance+1              ; maximum hit chance of 255
       
@@ -4350,24 +4350,24 @@ DoPhysicalAttack:
       BCC :+                    ; (jump past the @DefenderMobile block)
         LDA #$FF
         STA math_basedamage     ; cap at 255 base damage
-        JMP :+                  ; (jump past the @DefenderMobile block)
+        JUMP :+                  ; (jump past the @DefenderMobile block)
   
   @DefenderMobile:                      ; if the defender is mobile (not asleep of stunned)
       LDA #MATHBUF_HITCHANCE            ; add their hit rate to their hit chance
       LDX btl_attacker_hitrate          ;   This seems strange to me.  Shouldn't this be done even if defender
-      JSR MathBuf_Add                   ;    is immobile?  Is this BUGGED?
+      CALL MathBuf_Add                   ;    is immobile?  Is this BUGGED?
       LDY math_hitchance
       LDX math_hitchance+1
-      JSR CapXYAtFF                     ; cap at 255
+      CALL CapXYAtFF                     ; cap at 255
       STY math_hitchance
       STX math_hitchance+1
     
       LDA #MATHBUF_HITCHANCE            ; and subtract the defender's evade rate from
       LDX btl_defender_evade            ;  the hit chance.
-      JSR MathBuf_Sub
+      CALL MathBuf_Sub
       LDY math_hitchance
       LDX math_hitchance+1
-      JSR ZeroXYIfNegative              ; cap at 0  (not necessary to do here, since
+      CALL ZeroXYIfNegative              ; cap at 0  (not necessary to do here, since
       STY math_hitchance                ;   MathBuf_Sub already does this. Whatever)
       STX math_hitchance+1
     
@@ -4384,7 +4384,7 @@ DoPhysicalAttack:
       
   : LDA btl_attacker_numhits            ; get proper number of hits (numhits * mult)
     LDX btl_attacker_numhitsmult        ;  the mult is essentially the multiplier for the FAST spell
-    JSR MultiplyXA
+    CALL MultiplyXA
     STA math_numhits
     
     LDA math_numhits
@@ -4393,7 +4393,7 @@ DoPhysicalAttack:
       
   : LDA btl_attacker_varplt     ; palette to use (unimportant/unused for enemy attacks)
     LDX #$00                    ; 0 for physical/weapon attacks, nonzero for magic attacks
-    JSR UpdateVariablePalette
+    CALL UpdateVariablePalette
     
     LDA battle_defenderisplayer
     BNE @EnemyAttackingPlayer   ; jump ahead if enemy is attacking a player
@@ -4406,12 +4406,12 @@ DoPhysicalAttack:
   : LDX btl_attacker_graphic    ; weapon graphic
     LDY #$00                    ; 0 to indicate swinging a weapon
     LDA battle_attacker_index   ; the attacker (0-3)
-    JSR WalkForwardAndStrike    ; Do the animation to walk the character forward, swing their weapon, and walk back
+    CALL WalkForwardAndStrike    ; Do the animation to walk the character forward, swing their weapon, and walk back
     
     LDA btl_defender_ailments
     AND #AIL_DEAD | AIL_STONE
     BNE :+                      ; if the enemy target is not already dead or stone...
-      JSR DoExplosionEffect     ; play the "cha" sound effect and draw explosion animation on the enemy
+      CALL DoExplosionEffect     ; play the "cha" sound effect and draw explosion animation on the enemy
       
   : LDA #$00
     STA btlattackspr_nodraw     ; clear the 'nodraw' flag for the attack sprites
@@ -4419,15 +4419,15 @@ DoPhysicalAttack:
     
   @EnemyAttackingPlayer:
     LDA #$01
-    JSR PlayBattleSFX           ; play the "boom bash" sound effect
-    JSR BattleScreenShake     ; do the 'screen shake' animation
+    CALL PlayBattleSFX           ; play the "boom bash" sound effect
+    CALL BattleScreenShake     ; do the 'screen shake' animation
     
     LDA btl_defender_ailments
     AND #AIL_DEAD | AIL_STONE
     BNE :+
       LDA battle_defender_index
       AND #$03                  ; if the player target is not already dead or stone...
-      JSR FlashCharacterSprite  ; flash their character sprite
+      CALL FlashCharacterSprite  ; flash their character sprite
     
     
     ;;;;;;;
@@ -4435,7 +4435,7 @@ DoPhysicalAttack:
     AND #AIL_DEAD | AIL_STONE
     BEQ :+                              ; if defender is dead/stone
       LDA #BTLMSG_INEFFECTIVE           ; draw the "Ineffective" battle message, clear all combat boxes, and exit
-      JMP DrawBtlMsg_ClearCombatBoxes
+      JUMP DrawBtlMsg_ClearCombatBoxes
       
   : LDA #$00
     STA battle_critsconnected
@@ -4447,19 +4447,19 @@ DoPhysicalAttack:
     STA tmp_6bad                   ; 6BAD is temp space for base damage.  Moved here because we will be writing over math_basedamage
     
   @HitLoop:             ;  [A7DD :: 327ED]
-    JSR ClearMathBufHighBytes   ; A=0
+    CALL ClearMathBufHighBytes   ; A=0
     STA math_dmgcalc            ; zero damage calculation
     LDX #200
-    JSR RandAX                  ; [0,200]
+    CALL RandAX                  ; [0,200]
     STA math_randhit
     LDA math_randhit
     CMP #200
     BNE :+
-       JMP @NextHitIteration    ; skip if got 200 exactly (guaranteed miss)
+       JUMP @NextHitIteration    ; skip if got 200 exactly (guaranteed miss)
        
   : LDX tmp_6bad
     LDA #$00
-    JSR RandAX
+    CALL RandAX
     CLC
     ADC tmp_6bad
     STA math_basedamage     ; random between [basedmg, basedmg*2]
@@ -4475,11 +4475,11 @@ DoPhysicalAttack:
     STA math_dmgcalc                        ;   take random calculated damage
     LDA #(math_dmgcalc - btl_mathbuf) / 2
     LDX btl_defender_absorb
-    JSR MathBuf_Sub                         ;   subtract defender's absorb
+    CALL MathBuf_Sub                         ;   subtract defender's absorb
     
     LDY math_dmgcalc            ; really inefficient way to set minimum of 1 damage
     LDX math_dmgcalc+1
-    JSR ZeroXYIfNegative
+    CALL ZeroXYIfNegative
     STY math_dmgcalc
     STX math_dmgcalc+1
     LDA math_dmgcalc
@@ -4495,13 +4495,13 @@ DoPhysicalAttack:
     BCC :+                                  ; if it was... we scored a critical
       LDA #MATHBUF_DMGCALC
       LDX math_basedamage                   ; add random damage to our total
-      JSR MathBuf_Add
+      CALL MathBuf_Add
       INC battle_critsconnected
       
   : LDA #MATHBUF_TOTALDAMAGE
     LDX #MATHBUF_TOTALDAMAGE
     LDY #MATHBUF_DMGCALC
-    JSR MathBuf_Add16               ; total damage += dmgcalc
+    CALL MathBuf_Add16               ; total damage += dmgcalc
     
     LDA battle_defenderisplayer
     BEQ @NextHitIteration           ; we're done if player is attacking
@@ -4525,21 +4525,21 @@ DoPhysicalAttack:
       
   : LDA #MATHBUF_AILMENTCHANCE
     LDX btl_defender_magdef         ; subtract defender's magdef from ailment chance
-    JSR MathBuf_Sub
+    CALL MathBuf_Sub
     LDY math_ailmentchance
     LDX math_ailmentchance+1
-    JSR ZeroXYIfNegative
+    CALL ZeroXYIfNegative
     STY math_ailmentchance
     STX math_ailmentchance+1        ; another pointless clipping at zero even though MathBuf_Sub already does it
     
     LDA #MATHBUF_AILMENTCHANCE
-    JSR MathBuf_NZ
+    CALL MathBuf_NZ
     BNE :+
       INC math_ailmentchance        ; minimum ailment chance of 1
       
   : LDA #$00
     LDX #200
-    JSR RandAX
+    CALL RandAX
     STA battle_ailmentrandchance    ; random value between [0,200]
     
     CMP #200
@@ -4552,7 +4552,7 @@ DoPhysicalAttack:
       EOR #$FF                      ;  the defender does not already have.
       AND btl_attacker_attackailment
       
-      JSR PrintPlayerAilmentMessageFromAttack   ; print the message for those ailments
+      CALL PrintPlayerAilmentMessageFromAttack   ; print the message for those ailments
       
       LDA btl_defender_ailments     ; apply the ailment
       ORA btl_attacker_attackailment
@@ -4562,7 +4562,7 @@ DoPhysicalAttack:
   @NextHitIteration:
     DEC math_numhits
     BEQ :+
-      JMP @HitLoop
+      JUMP @HitLoop
       
   : LDA battle_hitsconnected
     CMP #$02                    ; if they connected with 2 or more hits, draw the # of Hits box
@@ -4581,7 +4581,7 @@ DoPhysicalAttack:
       LDA #$01                          ; draw it in combat box 1
       LDX #<(btl_unfmtcbtbox_buffer + $10)
       LDY #>(btl_unfmtcbtbox_buffer + $10)
-      JSR DrawCombatBox
+      CALL DrawCombatBox
       
       INC btl_combatboxcount            ; inc box counter
       
@@ -4613,27 +4613,27 @@ DoPhysicalAttack:
     LDA #$03                            ; output either damage or "Missed!"
     LDX #<(btl_unfmtcbtbox_buffer + $30);  to the #3 combat box
     LDY #>(btl_unfmtcbtbox_buffer + $30)
-    JSR DrawCombatBox
+    CALL DrawCombatBox
     INC btl_combatboxcount              ; and inc combatbox count
     
     LDA battle_critsconnected
     BEQ :+                              ; if any criticals connected...
       LDA #BTLMSG_CRITICALHIT           ; print the Critical Hit!! combat message box
-      JSR DrawBattleMessageCombatBox
-      JSR RespondDelay
+      CALL DrawBattleMessageCombatBox
+      CALL RespondDelay
       
   : LDA #MATHBUF_DEFENDERHP
     LDX #MATHBUF_DEFENDERHP
     LDY #MATHBUF_TOTALDAMAGE
-    JSR MathBuf_Sub16           ; defender_hp -= totaldamage
+    CALL MathBuf_Sub16           ; defender_hp -= totaldamage
     LDY btl_defender_hp
     LDX btl_defender_hp+1
-    JSR ZeroXYIfNegative
+    CALL ZeroXYIfNegative
     STY btl_defender_hp
     STX btl_defender_hp+1
     
     LDA #MATHBUF_DEFENDERHP
-    JSR MathBuf_NZ
+    CALL MathBuf_NZ
     BNE DoPhysicalAttack_Exit           ; done if HP is > 0
     
     LDA #AIL_DEAD                       ; otherwise (HP == 0)
@@ -4644,11 +4644,11 @@ DoPhysicalAttack:
       BNE @DeathMsg
   : LDA #BTLMSG_TERMINATED              ; otherwise, print the "Terminated" battle message
   @DeathMsg:
-    JSR DrawBattleMessageCombatBox
-  ; JMP DoPhysicalAttack_Exit    <- flow into
+    CALL DrawBattleMessageCombatBox
+  ; JUMP DoPhysicalAttack_Exit    <- flow into
 
 DoPhysicalAttack_Exit:
-    JMP RespondDelay_ClearCombatBoxes
+    JUMP RespondDelay_ClearCombatBoxes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4670,46 +4670,46 @@ PrintPlayerAilmentMessageFromAttack:
     BCC :+                      ; bit 7 set = confusion
       PHA
       LDA #BTLMSG_CONFUSED
-      JSR DrawBtlMsg_ClearIt
+      CALL DrawBtlMsg_ClearIt
       PLA
   : ASL A                       ; bit 6 set = mute
     BCC :+
       PHA
       LDA #BTLMSG_SILENCED
-      JSR DrawBtlMsg_ClearIt
+      CALL DrawBtlMsg_ClearIt
       PLA
   : ASL A                       ; bit 5 set = sleep (removes action)
     BCC :+
       PHA
       LDA #BTLMSG_ASLEEP
-      JSR DrawBtlMsg_ClearIt
-      JSR @RemoveDefenderAction
+      CALL DrawBtlMsg_ClearIt
+      CALL @RemoveDefenderAction
       PLA
   : ASL A                       ; bit 4 set = stun (removes action)
     BCC :+
       PHA
       LDA #BTLMSG_PARALYZED_A
-      JSR DrawBtlMsg_ClearIt
-      JSR @RemoveDefenderAction
+      CALL DrawBtlMsg_ClearIt
+      CALL @RemoveDefenderAction
       PLA
   : ASL A                       ; bit 3 set = dark
     BCC :+
       PHA
       LDA #BTLMSG_DARKNESS
-      JSR DrawBtlMsg_ClearIt
+      CALL DrawBtlMsg_ClearIt
       PLA
   : ASL A                       ; bit 2 set = poison
     BCC :+
       PHA
       LDA #BTLMSG_POISONED
-      JSR DrawBtlMsg_ClearIt
+      CALL DrawBtlMsg_ClearIt
       PLA
   : ASL A                       ; bit 1 set = stone (removes action)
     BCC :+
       PHA
       LDA #BTLMSG_STOPPED
-      JSR DrawBtlMsg_ClearIt
-      JSR @RemoveDefenderAction
+      CALL DrawBtlMsg_ClearIt
+      CALL @RemoveDefenderAction
       PLA
   : ASL A                       ; bit 1 set = dead (removes action)
     BCC :+
@@ -4717,8 +4717,8 @@ PrintPlayerAilmentMessageFromAttack:
       STA btl_defender_hp
       STA btl_defender_hp+1
       LDA #BTLMSG_SLAIN
-      JSR DrawBtlMsg_ClearIt
-      JSR @RemoveDefenderAction
+      CALL DrawBtlMsg_ClearIt
+      CALL @RemoveDefenderAction
       PLA                       ; Drop the return address.  Do not return to DoPhysicalAttack, but instead return 
       PLA                       ;  to whoever called it.  This will prevent attack damage from being drawn on
                                 ;  screen (which would be pointless because the player just died)
@@ -4726,7 +4726,7 @@ PrintPlayerAilmentMessageFromAttack:
       LDA btl_defender_ailments         ; apply dead ailment
       ORA btl_attacker_attackailment
       STA btl_defender_ailments
-      JMP DoPhysicalAttack_Exit ; Then jump to erase all combat boxes
+      JUMP DoPhysicalAttack_Exit ; Then jump to erase all combat boxes
       
   : RTS
     
@@ -4764,8 +4764,8 @@ PrintPlayerAilmentMessageFromAttack:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBtlMsg_ClearCombatBoxes:
-    JSR DrawBattleMessageCombatBox
-    JMP RespondDelay_ClearCombatBoxes
+    CALL DrawBattleMessageCombatBox
+    JUMP RespondDelay_ClearCombatBoxes
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4778,11 +4778,11 @@ DrawBtlMsg_ClearCombatBoxes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBtlMsg_ClearIt:
-    JSR DrawBattleMessageCombatBox  ; Draw the box
-    JSR RespondDelay                ; Wait
+    CALL DrawBattleMessageCombatBox  ; Draw the box
+    CALL RespondDelay                ; Wait
     DEC btl_combatboxcount          ; Then dec the combat box count to erase the battle message
     LDA #$01
-    JMP UndrawNBattleBlocks       ; and undraw the battle message
+    JUMP UndrawNBattleBlocks       ; and undraw the battle message
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4802,7 +4802,7 @@ YXDivideA:
     STA btltmp_divV
     STX btltmp_divLo
     STY btltmp_divHi
-    JSR DoDivision
+    CALL DoDivision
     LDA btltmp_divLo
     LDX btltmp_divV
     RTS
@@ -4830,13 +4830,13 @@ FormatHPForText:
     STA btl_hp_text_buf+1           ; start with a space
     
     LDA #100
-    JSR YXDivideA       ; get the 100s digit
+    CALL YXDivideA       ; get the 100s digit
     ORA #$80            ; convert to tile
     STA btl_hp_text_buf+3        ; print 100s digit
     
     LDY #$00
     LDA #10
-    JSR YXDivideA       ; divide to get 10s and 1s
+    CALL YXDivideA       ; divide to get 10s and 1s
     
     ORA #$80
     STA btl_hp_text_buf+5          ; print 10s
@@ -4863,15 +4863,15 @@ FormatHPForText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawCharacterStatus:
-    JSR SetAllNaturalPose
-    JSR UpdateSprites_BattleFrame
+    CALL SetAllNaturalPose
+    CALL UpdateSprites_BattleFrame
     
     LDA #$00
     STA tmp_685e                           ; temp var for character index/loop counter
     
 @CharacterLoop:
     LDA tmp_685e
-    JSR PrepCharStatPointers
+    CALL PrepCharStatPointers
     LDY #ch_ailments - ch_stats
     LDA (btl_ob_charstat_ptr), Y        ; get OB ailments (why not IB?)
     DEY                                 ; Convert the ailment byte to a status string by finding first set bit
@@ -4904,12 +4904,12 @@ DrawCharacterStatus:
     INY
     LDA (btl_ob_charstat_ptr), Y
     TAY                             ; YX = current HP
-    JSR FormatHPForText             ; prints HP string to $6856 (interleaved).  This is done here instead of
+    CALL FormatHPForText             ; prints HP string to $6856 (interleaved).  This is done here instead of
                                     ;   below by the actual HP printing so as not to burn valuable VBlank time.
     
     LDX #<tmp_6b5e                 ; YX = pointer to our "<name><ailment>" string to be formatted
     LDY #>tmp_6b5e
-    JSR FormatBattleString    ; format it (printed to btl_stringoutputbuf).  Note again that
+    CALL FormatBattleString    ; format it (printed to btl_stringoutputbuf).  Note again that
                                 ;  FormatBattleString creates an interleaved string.
     
     LDA tmp_685e                   ; use a LUT to get the target PPU address at which to draw this
@@ -4920,18 +4920,18 @@ DrawCharacterStatus:
     LDA lut_CharStatusPPUAddr+1, Y
     STA btl_tmpvar2                     ; put the target PPU address at temporary_3,temporary_4
     
-    JSR WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
+    CALL WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
     LDA PPUSTATUS                   ; clear toggle
     
             ; remember at this point, btl_stringoutputbuf contains our "<name><ailment>" string
     LDY #$00                    ; draw top row of char's name (all blank spaces)
-    JSR DrawStatusRow           ;   see DrawStatusRow for more details
+    CALL DrawStatusRow           ;   see DrawStatusRow for more details
     LDY #$01
-    JSR DrawStatusRow           ; draw bottom row of char's name (their actual name)
+    CALL DrawStatusRow           ; draw bottom row of char's name (their actual name)
     LDY #$08
-    JSR DrawStatusRow           ; draw top row of ailment/status (all blank spaces)
+    CALL DrawStatusRow           ; draw top row of ailment/status (all blank spaces)
     LDY #$09
-    JSR DrawStatusRow           ; draw bottom row of ailment/status
+    CALL DrawStatusRow           ; draw bottom row of ailment/status
     
     ; Interleaved HP string is stored at $6856
     LDY #$08
@@ -4955,16 +4955,16 @@ DrawCharacterStatus:
       BNE @ClearZerosLoop               ;   once Y=4, we exit
       
 :   LDY #$00
-    JSR DrawStatusRow                   ; draw the final status row (player's current HP)
+    CALL DrawStatusRow                   ; draw the final status row (player's current HP)
     
-    JSR BattleUpdatePPU                 ; reset scroll
-    JSR BattleUpdateAudio               ; update audio for the frame we just waited for
+    CALL BattleUpdatePPU                 ; reset scroll
+    CALL BattleUpdateAudio               ; update audio for the frame we just waited for
     
     INC tmp_685e                   ; inc char index/loop counter
     LDA tmp_685e
     CMP #$04
     BEQ :+
-      JMP @CharacterLoop        ; loop for all 4 characters
+      JUMP @CharacterLoop        ; loop for all 4 characters
 :   RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5038,8 +5038,8 @@ lut_CharStatusPPUAddr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoMiniFrame:
-    JSR WaitForVBlank
-    JMP BattleUpdateAudio
+    CALL WaitForVBlank
+    JUMP BattleUpdateAudio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5058,7 +5058,7 @@ DoMiniFrame:
 
 UpdateVariablePalette:
     PHA
-    JSR ResetUsePalette
+    CALL ResetUsePalette
     PLA
     STA btl_usepalette + $19        ; set first shade
     SEC
@@ -5073,7 +5073,7 @@ UpdateVariablePalette:
     BEQ DoFrame_UpdatePalette       ; if weapon, jump ahead to update the PPU
       LDA #$30                      ; if magic, replace third shade with white
       STA btl_usepalette + $1B
-    ; JMP DoFrame_UpdatePalette     ; then update PPU  (flow into)
+    ; JUMP DoFrame_UpdatePalette     ; then update PPU  (flow into)
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5089,7 +5089,7 @@ UpdateVariablePalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_UpdatePalette:
-    JSR BattleWaitForVBlank       ; wait for VBlank
+    CALL BattleWaitForVBlank       ; wait for VBlank
     
     LDA #$3F            ; set PPU addr to point to palettes
     STA PPUADDR
@@ -5111,8 +5111,8 @@ DoFrame_UpdatePalette:
     STA PPUADDR
     STA PPUADDR
     
-    JSR BattleUpdatePPU     ; reset scroll & apply soft2001
-    JMP BattleUpdateAudio   ; update audio and exit
+    CALL BattleUpdatePPU     ; reset scroll & apply soft2001
+    JUMP BattleUpdateAudio   ; update audio and exit
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5142,19 +5142,19 @@ ResetUsePalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleFadeIn:
-    JSR BattleClearOAM          ; Clear OAM
+    CALL BattleClearOAM          ; Clear OAM
     LDA #$00
     STA a:soft2000              ; clear other PPU settings
     STA PPUMASK                   ; including disabling rendering, though since btl_soft2001 has
                                 ;   rendering enabled, rendering will be re-enabled when palettes are updated
     
-    JSR WaitForVBlank         ; wait for VBlank
+    CALL WaitForVBlank         ; wait for VBlank
     LDA PPUSTATUS
     LDA #>oam
     STA OAMDMA                   ; Do DMA (clearing actual PPU OAM)
     LDA #$04
     STA tmp_68b4                   ; loop downcounter.  Looping 4 times -- once for each shade
-    JSR BattleUpdateAudio       ; since we just did a frame, keep audio updated
+    CALL BattleUpdateAudio       ; since we just did a frame, keep audio updated
     
     ; This fades in by using the fadeout routine.  Basically it will reset the palette each iteration
     ;   fading it out less and less each time, giving the appearance that it is fading it.
@@ -5162,19 +5162,19 @@ BattleFadeIn:
     ; next frame will reset, then fade out 3 shades, then draw
     ; next will reset, fade 2 shades, etc
   @Loop:
-      JSR ResetUsePalette       ; reset palette
+      CALL ResetUsePalette       ; reset palette
       
       LDX tmp_68b4
-      : JSR FadeOutOneShade     ; fade out X shades, where X is our loop down-counter
+      : CALL FadeOutOneShade     ; fade out X shades, where X is our loop down-counter
         DEX
         BNE :-
         
-      JSR Do3Frames_UpdatePalette   ; draw palette (and turn on PPU)
+      CALL Do3Frames_UpdatePalette   ; draw palette (and turn on PPU)
       DEC tmp_68b4
       BNE @Loop                 ; loop until down-counter exhausted
       
-    JSR ResetUsePalette         ; Reset to fully-faded in palette
-    JMP DoFrame_UpdatePalette   ; Then draw it and exit
+    CALL ResetUsePalette         ; Reset to fully-faded in palette
+    JUMP DoFrame_UpdatePalette   ; Then draw it and exit
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5186,12 +5186,12 @@ BattleFadeIn:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 BattleFadeOut:
-    JSR ResetUsePalette ; reset usepalette
+    CALL ResetUsePalette ; reset usepalette
     LDA #$04
     STA tmp_68b4           ; Loop down counter (loop 4 shades, enough to make solid black)
   @Loop:
-      JSR FadeOutOneShade           ; fade out one shade
-      JSR Do3Frames_UpdatePalette   ; draw it
+      CALL FadeOutOneShade           ; fade out one shade
+      CALL Do3Frames_UpdatePalette   ; draw it
       DEC tmp_68b4
       BNE @Loop                     ; repeat 4 times
     RTS
@@ -5239,9 +5239,9 @@ FadeOutOneShade:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Do3Frames_UpdatePalette:
-    JSR DoMiniFrame
-    JSR DoFrame_UpdatePalette
-    JMP DoMiniFrame
+    CALL DoMiniFrame
+    CALL DoFrame_UpdatePalette
+    JUMP DoMiniFrame
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5255,7 +5255,7 @@ Do3Frames_UpdatePalette:
 
 GetPointerToWeaponData:
     LDX #$08
-    JSR MultiplyXA          ; multiply by 8 (8 bytes per weapon)
+    CALL MultiplyXA          ; multiply by 8 (8 bytes per weapon)
     
     CLC
     ADC #<lut_WeaponData    ; add to low byte of data
@@ -5278,7 +5278,7 @@ GetPointerToWeaponData:
 
 GetPointerToArmorData:
     LDX #$04
-    JSR MultiplyXA      ; 4 bytes per armor, so mulitply index by 4
+    CALL MultiplyXA      ; 4 bytes per armor, so mulitply index by 4
     CLC
     ADC #<lut_ArmorData
     PHA
@@ -5372,13 +5372,13 @@ GetCharOBMagDataPointers:
 SwapCharsForSorting:
     LDA btl_tmpvar1                 ; Swap ch_stats
     LDX btl_varJ
-    JSR GetCharOBPointers
-    JSR SwapCharOBStats
+    CALL GetCharOBPointers
+    CALL SwapCharOBStats
     
     LDA btl_tmpvar1                 ; Swap ch_magic
     LDX btl_varJ
-    JSR GetCharOBMagDataPointers
-    JSR SwapCharOBStats
+    CALL GetCharOBMagDataPointers
+    CALL SwapCharOBStats
     
     LDA btl_tmpvar1                 ; put char IDs in X,Y
     TAY
@@ -5500,7 +5500,7 @@ ReSortPartyByAilment:
         LDA char_order_buf+1, Y       ;  in loopctr_alignmentsort!  This actually should be swapping loopctr_alignmentsort and loopctr_alignmentsort+1... you
         AND #$03                      ;  know... the slots we actually checked.
         STA btl_tmpvar2                       ; Because of this, it's possible the routine will screw up the sorting.
-        JSR SwapCharsForSorting
+        CALL SwapCharsForSorting
     
     : INC loopctr_alignmentsort                  ; do inner loop 3 times (not 4, because we check slot+1)
       LDA loopctr_alignmentsort
@@ -5546,13 +5546,13 @@ TransferByte:
 
 LoadAllCharacterIBStats:
     LDA #$00                    ; just load each of them one at a time
-    JSR LoadOneCharacterIBStats
+    CALL LoadOneCharacterIBStats
     LDA #$01
-    JSR LoadOneCharacterIBStats
+    CALL LoadOneCharacterIBStats
     LDA #$02
-    JSR LoadOneCharacterIBStats
+    CALL LoadOneCharacterIBStats
     LDA #$03
-    JMP LoadOneCharacterIBStats
+    JUMP LoadOneCharacterIBStats
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5564,7 +5564,7 @@ LoadAllCharacterIBStats:
 
 LoadOneCharacterIBStats:
     STA btl_tmpindex                ; store char index (temporarily)
-    JSR PrepCharStatPointers        ; prep stat pointers
+    CALL PrepCharStatPointers        ; prep stat pointers
     
     LDY #ch_class - ch_stats
     LDA (btl_ob_charstat_ptr), Y    ; get char class
@@ -5582,43 +5582,43 @@ LoadOneCharacterIBStats:
     ;   A = dst index
     LDY #ch_class      - ch_stats
     LDA #btlch_class
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_ailments   - ch_stats
     LDA #btlch_ailments
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_curhp      - ch_stats
     LDA #btlch_hp
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_curhp + 1  - ch_stats
     LDA #btlch_hp + 1
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_hitrate    - ch_stats
     LDA #btlch_hitrate
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_magdef     - ch_stats
     LDA #btlch_magdef
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_evade      - ch_stats
     LDA #btlch_evade
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_absorb     - ch_stats
     LDA #btlch_absorb
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_dmg        - ch_stats
     LDA #btlch_dmg
-    JSR TransferByte
+    CALL TransferByte
     
     LDY #ch_resist     - ch_stats
     LDA #btlch_elemresist
-    JSR TransferByte
+    CALL TransferByte
     
     ; Set initial hit multiplier to 1
     LDA #$01
@@ -5674,7 +5674,7 @@ LoadOneCharacterIBStats:
     
         SEC                         ; weapon index is 1-based (convert to 0 based)
         SBC #$01
-        JSR GetPointerToWeaponData  ; get a pointer to the weapon data
+        CALL GetPointerToWeaponData  ; get a pointer to the weapon data
         STA btl_tmpvar1                     ; put the pointer at temporary_3
         STX btl_varJ
       
@@ -5740,7 +5740,7 @@ LoadOneCharacterIBStats:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MathBuf_Compare:
-    JSR DoubleXAndY         ; Double X,Y so we can use them as proper indexes
+    CALL DoubleXAndY         ; Double X,Y so we can use them as proper indexes
     LDA btl_mathbuf+1, Y    ; Get high byte of Y entry
     CMP btl_mathbuf+1, X    ; Compare to high byte of X entry
     BEQ :+                  ;  if not equal...
@@ -5868,7 +5868,7 @@ RandAX:
     
     FARCALL BattleRNG
     LDX temp_68b6
-    JSR MultiplyXA  ; random()*range
+    CALL MultiplyXA  ; random()*range
     
     TXA             ; drop the low 8 bits, put high 8 bits in A  (effectively:  divide by 256)
     CLC
@@ -5889,7 +5889,7 @@ RandAX:
 
 MathBuf_Add16:
     PHA                     ; backup target index
-    JSR DoubleXAndY         ; double X,Y so they are usable indexes
+    CALL DoubleXAndY         ; double X,Y so they are usable indexes
     
     LDA btl_mathbuf, Y
     CLC
@@ -5931,7 +5931,7 @@ MathBuf_Add16:
 
 MathBuf_Sub16:
     PHA
-    JSR DoubleXAndY
+    CALL DoubleXAndY
     
     LDA btl_mathbuf, X
     SEC
@@ -6075,7 +6075,7 @@ MathBuf_NZ:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MathBuf_CopyXToY:
-    JSR DoubleXAndY         ; double X,Y so they are usable indexes
+    CALL DoubleXAndY         ; double X,Y so they are usable indexes
     LDA btl_mathbuf, X      ; copy low byte
     STA btl_mathbuf, Y
     LDA btl_mathbuf+1, X    ; high byte
@@ -6119,17 +6119,17 @@ LoadEnemyStats:
     
   @EnemyLoop:
     LDA tmp_6bd2               ; Put a pointer to the current enemy's stat RAM
-    JSR GetEnemyStatPtr     ;    in btltmp+A
+    CALL GetEnemyStatPtr     ;    in btltmp+A
     STA btltmp+$A
     STX btltmp+$B
     
     LDX tmp_6bd2               ; Check to see if this enemy even exists
-    JSR DoesEnemyXExist
+    CALL DoesEnemyXExist
     BNE :+
-      JMP @NextEnemy        ; if it doesn't, skip ahead...
+      JUMP @NextEnemy        ; if it doesn't, skip ahead...
       
   : LDX #$14                ; multiply current enemy ID by #$14  ($14 bytes of data per enemy)
-    JSR MultiplyXA          ;   add the result to data_EnemyStats to generate a pointer to the enemy
+    CALL MultiplyXA          ;   add the result to data_EnemyStats to generate a pointer to the enemy
     CLC                     ;   data in ROM.
     ADC #<data_EnemyStats   ; Store that pointer in btltmp+$C,D
     STA btltmp+$C
@@ -6144,24 +6144,24 @@ LoadEnemyStats:
     ; Copy $C bytes of enemy stat data from ROM to RAM
     LDA #$00
     STA tmp_6c8e           ; 6C8E is used as an index to lut_RomRamMapping, and is also the loop counter
-  :   JSR @MoveOneByte
+  :   CALL @MoveOneByte
       LDA tmp_6c8e
       CMP #$0C * 2      ; Loop until all C bytes have been copied (*2 because the loop counter increases by 2 for
       BNE :-            ;    each byte)
       
-    JMP @Part2  ; Jump ahead over these small subroutines
+    JUMP @Part2  ; Jump ahead over these small subroutines
     
     ; support subroutine
     ; moves 1 byte of enemy stats from ROM to RAM
     ;   btltmp+A has the dest pointer   (RAM ptr)
     ;   btltmp+C has the src pointer    (ROM ptr)
   @MoveOneByte:
-    JSR @GetNextLutIndex        ; Get the next index for our LUT in X
+    CALL @GetNextLutIndex        ; Get the next index for our LUT in X
     LDA @lut_RomRamMapping, X   ; put Source offset in Y
     TAY
     LDA (btltmp+$C), Y          ; reads source ROM byte
     PHA                         ; push it
-    JSR @GetNextLutIndex        
+    CALL @GetNextLutIndex        
     LDA @lut_RomRamMapping, X   ; Get Dest offset in Y
     TAY
     PLA                         ; restore source byte
@@ -6220,8 +6220,8 @@ LoadEnemyStats:
     INC tmp_6bd2           ; inc up-counter to look at next enemy
     DEC tmp_6bd1           ; dec down-counter
     BEQ :+
-      JMP @EnemyLoop    ; loop until all 9 enemies processed
-  : JMP BattleUpdatePPU
+      JUMP @EnemyLoop    ; loop until all 9 enemies processed
+  : JUMP BattleUpdatePPU
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6267,13 +6267,13 @@ ClearAllCombatBoxes:
     LDA btl_combatboxcount_alt  ; undraw all counted combat boxes
     BEQ :+
     BMI :+
-      JSR UndrawNBattleBlocks
+      CALL UndrawNBattleBlocks
   : LDA #$00
     STA btl_combatboxcount_alt  ; zero the counter
     
-    JSR ClearAltMessageBuffer   ; Clear alt message buffer
-    JSR RespondDelay            ; wait a bit
-  ; JMP RestoreAXY              ; then restore and exit  (FLOW INTO)
+    CALL ClearAltMessageBuffer   ; Clear alt message buffer
+    CALL RespondDelay            ; wait a bit
+  ; JUMP RestoreAXY              ; then restore and exit  (FLOW INTO)
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6309,19 +6309,19 @@ RespondDelay_UndrawAllBut2Boxes:
     PHA
     TYA
     PHA
-    JSR RespondDelay                ; delay!
+    CALL RespondDelay                ; delay!
     
   @Loop:
       LDA btl_combatboxcount_alt
       CMP #$03
       BCC @Done                     ; if there are < 3 blocks, we're done
       LDA #$01
-      JSR UndrawNBattleBlocks     ; otherwise, undraw one
+      CALL UndrawNBattleBlocks     ; otherwise, undraw one
       DEC btl_combatboxcount_alt    ; and loop (always branches)
       BNE @Loop
       
   @Done:
-    JMP RestoreAXY
+    JUMP RestoreAXY
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6347,7 +6347,7 @@ DrawCombatBox_Attacker:
     
     LDA #$00                ; combat box 0 = attacker box
     
-    JMP DrawCombatBox_RestoreAXY    ; draw the box, then restore and exit
+    JUMP DrawCombatBox_RestoreAXY    ; draw the box, then restore and exit
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6376,7 +6376,7 @@ DrawCombatBox_Attack:
     BCS :+                  ; if it's magic...
       CLC
       ADC #MG_START         ; add MG_START to the index to convert from a magic index to an item index.
-  : JMP @Print   
+  : JUMP @Print   
     
   @NotMagic:
     CMP #$01                ; if source=1, it's a DRINK
@@ -6403,7 +6403,7 @@ DrawCombatBox_Attack:
     INC btl_combatboxcount_alt      ; inc the combat box counter
     
     LDA #$01                        ; draw the attack name in box 1
-    JMP DrawCombatBox_RestoreAXY
+    JUMP DrawCombatBox_RestoreAXY
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6425,7 +6425,7 @@ DrawCombatBox_Defender:
     LDY #>(btltmp_altmsgbuffer + 9)
     INC btl_combatboxcount_alt          ; inc combat box counter
     LDA #$02                            ; then print defender combat box
-  ; JMP DrawCombatBox_RestoreAXY
+  ; JUMP DrawCombatBox_RestoreAXY
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6436,8 +6436,8 @@ DrawCombatBox_Defender:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawCombatBox_RestoreAXY:
-    JSR DrawCombatBox
-    JMP RestoreAXY
+    CALL DrawCombatBox
+    JUMP RestoreAXY
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6467,7 +6467,7 @@ DrawDamageCombatBox:
     LDY #>tmp_6d1c
     INC btl_combatboxcount_alt      ; increment combat box counter
     LDA #$03                        ; combat box ID 3
-    JMP DrawCombatBox_RestoreAXY    ; Draw the combat box and exit
+    JUMP DrawCombatBox_RestoreAXY    ; Draw the combat box and exit
     
     @Data:                          ; data for "###DMG"
       .byte $0C                     ; format number
@@ -6522,12 +6522,12 @@ ShowAltBattleMessage:
     LDY #>btltmp_altmsgbuffer
     LDA #$04                    ; combat box 4 is the bottom battle message box
     
-    JSR DrawCombatBox         ; show the box
-    JSR RespondDelay            ; wait
+    CALL DrawCombatBox         ; show the box
+    CALL RespondDelay            ; wait
     LDA #$01
-    JSR UndrawNBattleBlocks   ; hide the box
+    CALL UndrawNBattleBlocks   ; hide the box
     
-    JMP RestoreAXY              ; restore & exit
+    JUMP RestoreAXY              ; restore & exit
     
   ; converts ALTBLTMSG_XXX ID to matching BTLMSG_XXX ID.
       @AltMessageLut:               
@@ -6571,14 +6571,14 @@ BtlMag_PrintMagicMessage:
     
     LDA btlmag_spellconnected       ; see if the spell connected
     BNE :+
-      JSR Battle_ShowIneffective    ; if not, just show the 'Ineffective' message and exit
-      JMP @Exit
+      CALL Battle_ShowIneffective    ; if not, just show the 'Ineffective' message and exit
+      JUMP @Exit
       
   : LDA btl_attackid               ; otherwise, get the attack type
     CMP #$42                        ; if >= $42, it indicates an enemy attack
     BCC :+                          ;   These messages are printed elsewhere, so just delay and exit
-      JSR RespondDelay              ;   Note that instead of BCC and these calls, it could just "BCS @DelayAndExit"
-      JMP @Exit                     ;   and save 6 bytes.  Whatev.
+      CALL RespondDelay              ;   Note that instead of BCC and these calls, it could just "BCS @DelayAndExit"
+      JUMP @Exit                     ;   and save 6 bytes.  Whatev.
       
   : LDX btl_attackid               ; attack type in X
     CPX #$40                        ; if >= $40, it is either a heal potion ($40), or a pure potion ($41)
@@ -6604,18 +6604,18 @@ BtlMag_PrintMagicMessage:
     LDX #<tmp_6d19
     LDY #>tmp_6d19                     ; YA is pointer to the text to print
     LDA #$04                        ; combat box 4 (battle message box)
-    JSR DrawCombatBox             ; Draw it!
+    CALL DrawCombatBox             ; Draw it!
     
-    JSR RespondDelay                ; Wait a bit so they can read it
+    CALL RespondDelay                ; Wait a bit so they can read it
     
     LDA #$01
-    JSR UndrawNBattleBlocks       ; Undraw it!
-    JMP RestoreAXY                  ; Then restore and exit!
+    CALL UndrawNBattleBlocks       ; Undraw it!
+    JUMP RestoreAXY                  ; Then restore and exit!
     
   @DelayAndExit:
-    JSR RespondDelay
+    CALL RespondDelay
   @Exit:
-    JMP RestoreAXY
+    JUMP RestoreAXY
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6648,14 +6648,14 @@ Battle_DoEnemyTurn:
     STA btl_attacker
     STA btl_attacker_alt
     
-    JSR GetEnemyStatPtr
+    CALL GetEnemyStatPtr
     STA battleturn_enramstats                  ; put pointer to this enemy's stats in $9A,9B
     STX battleturn_enramstats+1
     
     LDA #$02
     STA btlmag_playerhitsfx     ; enemy->player magic plays the "cha" sound effect (ID 2)
     
-    JSR ClearAltMessageBuffer
+    CALL ClearAltMessageBuffer
     LDA #$00
     STA btlmag_magicsource      ; Enemies can't use potions or items -- so their magic source is always 'magic'
     
@@ -6665,7 +6665,7 @@ Battle_DoEnemyTurn:
     BEQ @EnemyActive
     
     ;;;;  This block runs if enemy is stunned or asleep
-    JSR DrawCombatBox_Attacker      ; draw the attacker box
+    CALL DrawCombatBox_Attacker      ; draw the attacker box
     
     AND #AIL_SLEEP                  ; see if they are asleep
     BNE @Asleep                     ;  if yes, jump ahead to asleep code                    
@@ -6675,7 +6675,7 @@ Battle_DoEnemyTurn:
     CMP #25                 ; if that number is less than 25 (less than 10% chance)
     BCS :+                  ; then the paralysis is cured:
       LDA #~AIL_STUN
-      JSR ApplyEnemyAilmentMask     ; remove STUN ailment mask
+      CALL ApplyEnemyAilmentMask     ; remove STUN ailment mask
       LDA #ALTBTLMSG_CURED_2        ; display "Cured!" message and end their turn
       BNE @PrintAndEnd
   : LDA #ALTBTLMSG_PARALYZED_B
@@ -6691,21 +6691,21 @@ Battle_DoEnemyTurn:
     
     LDA #$00
     LDX #$50
-    JSR RandAX              ; then pick a random number between [0,$50]
+    CALL RandAX              ; then pick a random number between [0,$50]
     TAX
     LDA #$01                ; And subtract that number from THE WRONG MATH BUFFER!!!  A should be 0 here, not 1
-    JSR MathBuf_Sub
+    CALL MathBuf_Sub
     LDA btl_mathbuf+1       ; Then check the high byte
     BMI :+                          ; if negative, keep sleeping.  Note again, this is IMPOSSIBLE because the value
       LDA #~AIL_SLEEP               ;  MathBuf_Sub *CAPS THE DIFFERENCE AT ZERO* so it will NEVER result in a negative number.
-      JSR ApplyEnemyAilmentMask     ;  This is so broken.
+      CALL ApplyEnemyAilmentMask     ;  This is so broken.
       LDA #ALTBTLMSG_WOKEUP
       BNE @PrintAndEnd              ; Regardless, the end result is that an enemy will ALWAYS immediately wake up when asleep.
       
   : LDA #ALTBTLMSG_SLEEPING
     
   @PrintAndEnd:
-    JMP ShowAltBattleMessage_ClearAllBoxes
+    JUMP ShowAltBattleMessage_ClearAllBoxes
 
   @EnemyActive:                         ; jumps here if enemy is active (not stunned or asleep)
     LDY #en_ailments
@@ -6717,17 +6717,17 @@ Battle_DoEnemyTurn:
     CMP #$40
     BCS :+                              ; cured if < $40  (25% chance)
       LDA #~AIL_CONF
-      JSR ApplyEnemyAilmentMask
-      JSR DrawCombatBox_Attacker
+      CALL ApplyEnemyAilmentMask
+      CALL DrawCombatBox_Attacker
       LDA #ALTBTLMSG_CURED_1
       BNE @PrintAndEnd
       
-  : JSR DrawCombatBox_Attacker          ; otherwise, the enemy is confused....
+  : CALL DrawCombatBox_Attacker          ; otherwise, the enemy is confused....
     LDA #MG_FIRE - MG_START             ;   cast FIRE on a random enemy  -- which is totally lame.  I would expect stronger
     STA btl_attackid                    ;   enemies to have a stronger attack.
-    JSR Battle_PrepareMagic             ; Note that even though we are casting FIRE, the attack combat box is never drawn, so
-    JSR Battle_CastMagicOnRandEnemy     ;   it *looks* like a physical attack.
-    JMP ClearAllCombatBoxes             ; then clear all combat boxes and exit
+    CALL Battle_PrepareMagic             ; Note that even though we are casting FIRE, the attack combat box is never drawn, so
+    CALL Battle_CastMagicOnRandEnemy     ;   it *looks* like a physical attack.
+    JUMP ClearAllCombatBoxes             ; then clear all combat boxes and exit
             ;; NOTE:  This is BUGGED!!!!  As it does a magic effect but does not call Battle_EndMagicTurn so
             ;;   DoTurn output is not properly prepared.  This means that if the last enemy kills himself
             ;;   through confusion, the battle will not end and the game will potentially hang.
@@ -6769,7 +6769,7 @@ Battle_DoEnemyTurn:
     STA btltemppointer             ; store Morale-L in btltemppointer
     LDA #$00
     LDX #$32
-    JSR RandAX          ; random between [$00-$32]
+    CALL RandAX          ; random between [$00-$32]
     CLC
     ADC btltemppointer             ; A is now 'V' above... X+Morale-L
     BCS Enemy_DoAi      ; if > 255, do not run
@@ -6778,14 +6778,14 @@ Battle_DoEnemyTurn:
     ; Otherwise, fall through to @RunAway
     
   @RunAway:
-    JSR DrawCombatBox_Attacker
+    CALL DrawCombatBox_Attacker
     LDA #ALTBTLMSG_RUNAWAY
-    JSR ShowAltBattleMessage
+    CALL ShowAltBattleMessage
     
-    JSR TargetSelf                  ; Target self
+    CALL TargetSelf                  ; Target self
     STA battle_defender_index       ; record as defender index (See Battle_DoTurn for why this is important)
     
-    JSR EraseEnemyGraphic
+    CALL EraseEnemyGraphic
     LDA #AIL_DEAD
     STA btl_defender_ailments       ; Mark ourselves as dead (See Battle_DoTurn for why this is important)
     LDY #en_ailments
@@ -6801,8 +6801,8 @@ Battle_DoEnemyTurn:
       BNE :-
       
     LDX btl_attacker
-    JSR ClearEnemyID
-    JMP ClearAllCombatBoxes
+    CALL ClearEnemyID
+    JUMP ClearAllCombatBoxes
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6827,8 +6827,8 @@ ClearEnemyID:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShowAltBattleMessage_ClearAllBoxes:
-    JSR ShowAltBattleMessage
-    JMP ClearAllCombatBoxes
+    CALL ShowAltBattleMessage
+    JUMP ClearAllCombatBoxes
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6844,7 +6844,7 @@ EnemyAi_ShouldPerformAction:
     STA temp_6bcf       ; store rate
     LDA #$00
     LDX #$80
-    JSR RandAX      ; rand[ 0, 128 ]
+    CALL RandAX      ; rand[ 0, 128 ]
     CMP temp_6bcf       ; C clear if rand is less than rate (action should be performed)
     RTS
 
@@ -6868,11 +6868,11 @@ Enemy_DoAi:
     LDA (battleturn_enromstats), Y
     CMP #$FF                    ; get AI id from ROM (if it's read from ROM, why is it stored in RAM?)
     BNE :+
-      JMP ChooseAndAttackPlayer ; no AI -- just attack a random player
+      JUMP ChooseAndAttackPlayer ; no AI -- just attack a random player
       
     ; use enemy AI
   : LDX #$10                ; get a pointer to this enemy's AI data
-    JSR MultiplyXA          ; $10 bytes per AI entry
+    CALL MultiplyXA          ; $10 bytes per AI entry
     CLC                     ;   end result, of this math:  battleturn_enai points to this enemy's AI data
     ADC #<lut_EnemyAi
     STA battleturn_enai
@@ -6882,14 +6882,14 @@ Enemy_DoAi:
     
     LDY #$00
     LDA (battleturn_enai), Y                 ; Get byte 0 (magic rate)
-    JSR EnemyAi_ShouldPerformAction ; See if we should do a magic attack
+    CALL EnemyAi_ShouldPerformAction ; See if we should do a magic attack
     BCS @CheckSpecialAttack         ; if not, jump ahead to check for special attacks
     
   @DoMagicAttack:
     LDY #en_aimagpos
     LDA (battleturn_enramstats), Y
     AND #$07                        ; get current magic pos
-    JSR @IncrementAiPos             ; increment magic position
+    CALL @IncrementAiPos             ; increment magic position
     ADC #$02                        ; position+2 is the index to the spell to cast
     TAY
     LDA (battleturn_enai), Y                 ; get the spell to cast
@@ -6898,9 +6898,9 @@ Enemy_DoAi:
       LDA #$00                      ; ...reset position, and start over
       LDY #en_aimagpos
       STA (battleturn_enramstats), Y
-      JMP @DoMagicAttack            ; keep going until we find a non-empty spell slot
+      JUMP @DoMagicAttack            ; keep going until we find a non-empty spell slot
     
-  : JMP Enemy_DoMagicEffect         ; with the magic spell in A, do the magic attack
+  : JUMP Enemy_DoMagicEffect         ; with the magic spell in A, do the magic attack
     
     ;;  This is like a mini-subroutine used by the surrounding code
     ;;    it is always JSR'd to, never branched to.  So RTS is OK.
@@ -6915,7 +6915,7 @@ Enemy_DoAi:
   @CheckSpecialAttack:
     LDY #$01
     LDA (battleturn_enai), Y                 ; get special attack rate
-    JSR EnemyAi_ShouldPerformAction ; see if we should do it
+    CALL EnemyAi_ShouldPerformAction ; see if we should do it
     BCS ChooseAndAttackPlayer       ; if not, just do a normal attack
     
     ; otherwise, do a special attack
@@ -6923,7 +6923,7 @@ Enemy_DoAi:
     LDY #en_aiatkpos            ; This block is the same as @DoMagicAttack -- the only difference
     LDA (battleturn_enramstats), Y             ;   is it cycles through the 4 enemy attack slots instead of the
     AND #$03                    ;   8 magic slots.
-    JSR @IncrementAiPos
+    CALL @IncrementAiPos
     ADC #$0B
     TAY
     LDA (battleturn_enai), Y
@@ -6932,10 +6932,10 @@ Enemy_DoAi:
       LDA #$00
       LDY #en_aiatkpos
       STA (battleturn_enramstats), Y
-      JMP @DoSpecialAttack
+      JUMP @DoSpecialAttack
   : CLC
     ADC #$42                    ; add $42 to the special attack ID to indicate it's a special attack (0-3F are magic, and 40,41 are heal/pure potions)
-    JMP Enemy_DoMagicEffect     ; and perform the special attack
+    JUMP Enemy_DoMagicEffect     ; and perform the special attack
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6946,10 +6946,10 @@ Enemy_DoAi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChooseAndAttackPlayer:
-    JSR GetRandomPlayerTarget       ; get random target
+    CALL GetRandomPlayerTarget       ; get random target
     LDA btl_randomplayer
     LDX btl_attacker                ; attacker slot
-    JMP EnemyAttackPlayer_Physical  ; do the attack and exit
+    JUMP EnemyAttackPlayer_Physical  ; do the attack and exit
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7029,7 +7029,7 @@ Battle_PrepareMagic:
     
     ; At this point, A has the attack ID which is in the range [$00,$3F] and contains a magic index
     LDX #$08
-    JSR MultiplyXA                  ; Do a bunch of math
+    CALL MultiplyXA                  ; Do a bunch of math
     STA btl_magdataptr              ; end result:  btl_magdataptr = lut_MagicData + (attackid * 8)
     STX btl_magdataptr+1            ;   and therefore points to the data for this spell
     LDA #<lut_MagicData             ;   (each spell has 8 bytes of data)
@@ -7059,7 +7059,7 @@ Battle_PrepareMagic:
         LDA btl_attacker
         AND #$03                        ; mask out character index from the attacker ID
         LDX #$01                        ; X=1 to indicate to NOT draw magic sprite.
-        JSR WalkForwardAndCastMagic     ; do the walk/magic animation
+        CALL WalkForwardAndCastMagic     ; do the walk/magic animation
         
         LDA btlmag_magicsource
         CMP #$02
@@ -7067,7 +7067,7 @@ Battle_PrepareMagic:
           LDA #ALTBTLMSG_NOTHINGHAPPENS ; source=02 (item)
           BNE :++
         : LDA #ALTBTLMSG_INEFFECTIVENOW ; source=00 or 01 (magic or drink)
-      : JSR ShowAltBattleMessage_ClearAllBoxes  ; Show the battle message, then clear all boxes
+      : CALL ShowAltBattleMessage_ClearAllBoxes  ; Show the battle message, then clear all boxes
       
         PLA                             ; Double-RTS to abort player's turn
         PLA
@@ -7103,7 +7103,7 @@ Battle_PrepareMagic:
 Player_DoItem:
     STA btl_attackid        ; record the attack ID
     LDA #$02                ; source = item
-    JMP Player_DoMagicEffect
+    JUMP Player_DoMagicEffect
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7114,7 +7114,7 @@ Player_DoItem:
 Player_DoDrink:
     STA btl_attackid        ; record the attack ID
     LDA #$01                ; source = drink
-    JMP Player_DoMagicEffect
+    JUMP Player_DoMagicEffect
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7125,7 +7125,7 @@ Player_DoDrink:
 Player_DoMagic:             ; Player Magic
     STA btl_attackid        ; record the attack ID
     LDA #$00                ; source = magic
-  ; JMP Player_DoMagicEffect; <- flow into
+  ; JUMP Player_DoMagicEffect; <- flow into
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7154,26 +7154,26 @@ Player_DoMagicEffect:
     LDA #$00
     STA btlmag_playerhitsfx     ; player->player magic plays the 'heal' sound effect (ID 0)
     
-    JSR ClearAltMessageBuffer   ; Clear alt message buffer
-    JSR DrawCombatBox_Attacker  ; Draw the attacker name box
-    JSR DrawCombatBox_Attack    ; Draw the spell name box
+    CALL ClearAltMessageBuffer   ; Clear alt message buffer
+    CALL DrawCombatBox_Attacker  ; Draw the attacker name box
+    CALL DrawCombatBox_Attack    ; Draw the spell name box
     
     LDA btl_attacker            ; Load attacker's stat pointer
-    JSR PrepEntityPtr_Player
+    CALL PrepEntityPtr_Player
         
     LDY #ch_ailments - ch_stats ; check their ailments to see if they're muted.  This is weird, as it's done for
     LDA (btl_entityptr_obrom), Y; Magic (makes sense), items (weird), and DRINK (no sense at all)
     AND #AIL_MUTE               ; You could argue this is BUGGED
     BEQ :+
       LDA #ALTBTLMSG_SILENCED_1                 ; if muted, just print "Silenced" message
-      JMP ShowAltBattleMessage_ClearAllBoxes    ; clear all boxes, and exit (don't actually do the spell effect)
+      JUMP ShowAltBattleMessage_ClearAllBoxes    ; clear all boxes, and exit (don't actually do the spell effect)
       
   : LDA #$00
     STA btlmag_fakeout_ailments             ; clear the fakeout ailments
     
-    JSR Battle_PrepareMagic                 ; Otherwise, load up magic effect info
-    JSR Battle_PlayerMagic_CastOnTarget     ; And actually cast the spell
-    JMP Battle_EndMagicTurn                 ; End the turn
+    CALL Battle_PrepareMagic                 ; Otherwise, load up magic effect info
+    CALL Battle_PlayerMagic_CastOnTarget     ; And actually cast the spell
+    JUMP Battle_EndMagicTurn                 ; End the turn
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7183,17 +7183,17 @@ Player_DoMagicEffect:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PlayerMagic_CastOnTarget:
-    JSR PreparePlayerMagAttack          ; load some attacker stats and walk the player forward
+    CALL PreparePlayerMagAttack          ; load some attacker stats and walk the player forward
     
     LDY #MAGDATA_TARGET                 ; Check the target for the spell they're casting
     LDA (btl_magdataptr), Y
     
     LSR A
     BCC :+
-      JMP Battle_PlMag_TargetAllEnemies ; bit 0 set = target all opponents
+      JUMP Battle_PlMag_TargetAllEnemies ; bit 0 set = target all opponents
   : LSR A
     BCC :+
-      JMP Battle_PlMag_TargetOneEnemy   ; bit 1 set = target one opponent
+      JUMP Battle_PlMag_TargetOneEnemy   ; bit 1 set = target one opponent
   : LSR A
     BCC :+
       BCS Battle_PlMag_TargetSelf       ; bit 2 set = target self
@@ -7208,9 +7208,9 @@ Battle_PlayerMagic_CastOnTarget:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PlMag_TargetSelf:
-    JSR TargetSelf                      ; set target to yourself
-    JSR DrawCombatBox_Defender          ; draw defender box
-    JMP Battle_CastMagicOnPlayer        ; and cast the spell
+    CALL TargetSelf                      ; set target to yourself
+    CALL DrawCombatBox_Defender          ; draw defender box
+    JUMP Battle_CastMagicOnPlayer        ; and cast the spell
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7239,12 +7239,12 @@ Battle_PlMag_IsPlayerValid:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PlMag_TargetOnePlayer:
-    JSR DrawCombatBox_Defender              ; Draw defender box
-    JSR BtlMag_LoadPlayerDefenderStats      ; Load defender stats (and do "hit with magic" animation/sound)
-    JSR Battle_PlMag_IsPlayerValid          ; Is this a valid target?
+    CALL DrawCombatBox_Defender              ; Draw defender box
+    CALL BtlMag_LoadPlayerDefenderStats      ; Load defender stats (and do "hit with magic" animation/sound)
+    CALL Battle_PlMag_IsPlayerValid          ; Is this a valid target?
     BEQ :+
-      JMP Battle_ShowIneffective            ; if not, show "Ineffective" and exit
-  : JMP Battle_CastMagicOnPlayer_NoLoad     ; otherwise, do the actual spell (noload because we already loaded above)
+      JUMP Battle_ShowIneffective            ; if not, show "Ineffective" and exit
+  : JUMP Battle_CastMagicOnPlayer_NoLoad     ; otherwise, do the actual spell (noload because we already loaded above)
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7265,17 +7265,17 @@ Battle_PlMag_TargetAllPlayers:
     ORA #$80                            ; set high bit to indicate it is a player target
     STA btl_defender                    ; set as defender
     
-    JSR DrawCombatBox_Defender          ; ... do magic casting stuff
-    JSR BtlMag_LoadPlayerDefenderStats
-    JSR Battle_PlMag_IsPlayerValid
+    CALL DrawCombatBox_Defender          ; ... do magic casting stuff
+    CALL BtlMag_LoadPlayerDefenderStats
+    CALL Battle_PlMag_IsPlayerValid
     BEQ :+
-      JSR Battle_ShowIneffective        ; show Ineffective if target is dead/stone
-      JMP @Next
-  : JSR Battle_CastMagicOnPlayer_NoLoad ; (NoLoad because we loaded above)
+      CALL Battle_ShowIneffective        ; show Ineffective if target is dead/stone
+      JUMP @Next
+  : CALL Battle_CastMagicOnPlayer_NoLoad ; (NoLoad because we loaded above)
   
   @Next:
-    JSR RespondDelay_UndrawAllBut2Boxes ; undraw all but the Attacker/Attack boxes
-    JSR DrawCharacterStatus             ; update player status' (redraw their HP and stuff)
+    CALL RespondDelay_UndrawAllBut2Boxes ; undraw all but the Attacker/Attack boxes
+    CALL DrawCharacterStatus             ; update player status' (redraw their HP and stuff)
     
     INC temp_6bce                           ; loop through all 4 players.
     LDA temp_6bce
@@ -7291,14 +7291,14 @@ Battle_PlMag_TargetAllPlayers:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PlMag_TargetOneEnemy:
-    JSR DrawCombatBox_Defender      ; draw the defender box (even if they no longer exist)
+    CALL DrawCombatBox_Defender      ; draw the defender box (even if they no longer exist)
     LDX btl_defender
-    JSR DoesEnemyXExist
+    CALL DoesEnemyXExist
     BNE :+                          ; if the enemy does not exist
-      JSR Battle_ShowIneffective    ;  just show "Ineffective" message, and exit
+      CALL Battle_ShowIneffective    ;  just show "Ineffective" message, and exit
       BNE @Exit                     ; (always branches... why doesn't it just RTS?)
   : TXA
-    JSR Battle_CastMagicOnEnemy     ; otherwise, if they exist, cast the magic on them!
+    CALL Battle_CastMagicOnEnemy     ; otherwise, if they exist, cast the magic on them!
   @Exit:
     RTS
 
@@ -7319,9 +7319,9 @@ Battle_PlMag_TargetAllEnemies:
     BEQ @Next
       LDA temp_6bce                             ; otherwise, if not FF, it's a valid target.
       STA btl_defender                      ; make it the defender
-      JSR DrawCombatBox_Defender            ; draw the Defender box
-      JSR Battle_CastMagicOnEnemy           ; do the actual spell
-      JSR RespondDelay_UndrawAllBut2Boxes   ; undraw all but attacker and attack boxes
+      CALL DrawCombatBox_Defender            ; draw the Defender box
+      CALL Battle_CastMagicOnEnemy           ; do the actual spell
+      CALL RespondDelay_UndrawAllBut2Boxes   ; undraw all but attacker and attack boxes
       
   @Next:
     INC temp_6bce
@@ -7344,7 +7344,7 @@ Battle_PlMag_TargetAllEnemies:
 
 
 PrepEntityPtr_Enemy:
-    JSR GetEnemyStatPtr             ; get the RAM pointer in XA
+    CALL GetEnemyStatPtr             ; get the RAM pointer in XA
     STA btl_entityptr_ibram
     STX btl_entityptr_ibram+1
     
@@ -7372,33 +7372,33 @@ PrepEntityPtr_Enemy:
 Enemy_DoMagicEffect:
     
     STA btl_attackid                        ; store spell/attack we're using
-    JSR ClearAltMessageBuffer
+    CALL ClearAltMessageBuffer
     LDA btl_attacker_alt                    ; get attacker slot index (why doesn't this just load btl_attacker?!?!?!)
-    JSR PrepEntityPtr_Enemy
-    JSR DrawCombatBox_Attacker
+    CALL PrepEntityPtr_Enemy
+    CALL DrawCombatBox_Attacker
     
     LDA #$00
     STA btlmag_magicsource                  ; set magic source as 'magic'
-    JSR DrawCombatBox_Attack
+    CALL DrawCombatBox_Attack
     
     LDA #$00
     STA btlmag_fakeout_ailments             ; clear the fakeout ailments
     
-    JSR Battle_PrepareMagic                 ; load magic's stats
-    JSR PrepareEnemyMagAttack               ; load attacker's stats (never used!  Pointless!)
+    CALL Battle_PrepareMagic                 ; load magic's stats
+    CALL PrepareEnemyMagAttack               ; load attacker's stats (never used!  Pointless!)
     
     LDY #en_ailments
     LDA (battleturn_enramstats), Y                         ; get this enemy's ailments
     AND #AIL_MUTE                           ; are they muted?
     BEQ :+
-      JSR DrawCombatBox_Attack              ; if yes, draw their attack name
+      CALL DrawCombatBox_Attack              ; if yes, draw their attack name
       LDA #ALTBTLMSG_INEFFECTIVE            ; but then just say "ineffective"
-      JMP ShowAltBattleMessage_ClearAllBoxes; then clear boxes and exit
+      JUMP ShowAltBattleMessage_ClearAllBoxes; then clear boxes and exit
     
   : LDY #MAGDATA_TARGET                 ; get the spell's Target byte
     LDA (btl_magdataptr), Y
-    JSR Battle_EnemyMagic_CastOnTarget  ; and use it to cast this spell!
-  ; JMP Battle_EndMagicTurn             ; <- flow into -- end the turn
+    CALL Battle_EnemyMagic_CastOnTarget  ; and use it to cast this spell!
+  ; JUMP Battle_EndMagicTurn             ; <- flow into -- end the turn
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7409,7 +7409,7 @@ Enemy_DoMagicEffect:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_EndMagicTurn:
-    JSR ClearAllCombatBoxes
+    CALL ClearAllCombatBoxes
     
     LDA btlmag_fakeout_ailments     ; copy the 'fakeout' values to output
     STA btl_defender_ailments       ; See Battle_DoTurn for explanation
@@ -7435,11 +7435,11 @@ Battle_EndMagicTurn:
 Battle_EnemyMagic_CastOnTarget:
     LSR A
     BCC :+
-      JMP Battle_CastMagicOnAllPlayers      ; 01 = target all opponents
+      JUMP Battle_CastMagicOnAllPlayers      ; 01 = target all opponents
       
   : LSR A
     BCC :+
-      JMP Battle_CastMagicOnRandomPlayer    ; 02 = target one opponent
+      JUMP Battle_CastMagicOnRandomPlayer    ; 02 = target one opponent
       
   : LSR A
     BCC :+
@@ -7449,7 +7449,7 @@ Battle_EnemyMagic_CastOnTarget:
     BCC :+
       BCS Battle_CastMagicOnAllEnemies      ; 08 = target all allies
       
-  : JMP Battle_CastMagicOnRandEnemy         ; 10 (others) = target one ally
+  : JUMP Battle_CastMagicOnRandEnemy         ; 10 (others) = target one ally
 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7472,9 +7472,9 @@ TargetSelf:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_CastMagicOnSelf_Enemy:           ; pretty straight forward....
-    JSR TargetSelf
-    JSR DrawCombatBox_Defender
-    JMP Battle_CastMagicOnEnemy
+    CALL TargetSelf
+    CALL DrawCombatBox_Defender
+    JUMP Battle_CastMagicOnEnemy
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7486,16 +7486,16 @@ Battle_CastMagicOnRandEnemy:
   @Loop:
     LDA #$00
     LDX #$08
-    JSR RandAX
+    CALL RandAX
     TAX                     ; random enemy slot [0,8]
     
-    JSR DoesEnemyXExist     ; does an enemy exist in that slot?
+    CALL DoesEnemyXExist     ; does an enemy exist in that slot?
     BEQ @Loop               ; loop until we find an enemy that exists
     
     ; once we have an enemy that exists
     STX btl_defender            ; set it as the defender
-    JSR DrawCombatBox_Defender  ; print defender box
-    JMP Battle_CastMagicOnEnemy ; and cast the spell!
+    CALL DrawCombatBox_Defender  ; print defender box
+    JUMP Battle_CastMagicOnEnemy ; and cast the spell!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7513,16 +7513,16 @@ Battle_CastMagicOnAllEnemies:
     BEQ @Next                   ;  should skip the caster.  It doesn't behave this way for players.
     
     TAX                         ; Skip the enemy if the slot is empty
-    JSR DoesEnemyXExist
+    CALL DoesEnemyXExist
     BEQ @Next
     
     ; Otherwise, the enemy exists!  Do it!
     LDA temp_6bce
     STA btl_defender                    ; set defender
-    JSR PrepEntityPtr_Enemy             ; prep pointers
-    JSR DrawCombatBox_Defender          ; Draw defender box
-    JSR Battle_CastMagicOnEnemy         ; cast it!
-    JSR RespondDelay_UndrawAllBut2Boxes ; undraw all boxes except for attacker/attack
+    CALL PrepEntityPtr_Enemy             ; prep pointers
+    CALL DrawCombatBox_Defender          ; Draw defender box
+    CALL Battle_CastMagicOnEnemy         ; cast it!
+    CALL RespondDelay_UndrawAllBut2Boxes ; undraw all boxes except for attacker/attack
     
   @Next:
     INC temp_6bce
@@ -7539,9 +7539,9 @@ Battle_CastMagicOnAllEnemies:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_CastMagicOnEnemy:
-    JSR BtlMag_LoadEnemyDefenderStats   ; load enemy stats into defender mem
-    JSR BtlMag_PerformSpellEffect       ; do the spell (modifying defender's stats)
-    JMP BtlMag_SaveEnemyDefenderStats   ; update changed enemy stats.
+    CALL BtlMag_LoadEnemyDefenderStats   ; load enemy stats into defender mem
+    CALL BtlMag_PerformSpellEffect       ; do the spell (modifying defender's stats)
+    JUMP BtlMag_SaveEnemyDefenderStats   ; update changed enemy stats.
  
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7551,13 +7551,13 @@ Battle_CastMagicOnEnemy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_CastMagicOnRandomPlayer:
-    JSR GetRandomPlayerTarget       ; set the defender to a random player target
+    CALL GetRandomPlayerTarget       ; set the defender to a random player target
     LDA btl_randomplayer
     ORA #$80
     STA btl_defender
     
-    JSR DrawCombatBox_Defender      ; draw defender box
-    JMP Battle_CastMagicOnPlayer    ; then cast the magic and exit!
+    CALL DrawCombatBox_Defender      ; draw defender box
+    JUMP Battle_CastMagicOnPlayer    ; then cast the magic and exit!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7566,10 +7566,10 @@ Battle_CastMagicOnRandomPlayer:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_CastMagicOnPlayer:
-    JSR BtlMag_LoadPlayerDefenderStats
+    CALL BtlMag_LoadPlayerDefenderStats
 Battle_CastMagicOnPlayer_NoLoad:
-    JSR BtlMag_PerformSpellEffect
-    JMP BtlMag_SavePlayerDefenderStats
+    CALL BtlMag_PerformSpellEffect
+    JUMP BtlMag_SavePlayerDefenderStats
     
     
     
@@ -7585,7 +7585,7 @@ Battle_CastMagicOnAllPlayers:
     
   @Loop:
     LDA temp_6bce
-    JSR PrepEntityPtr_Player                ; prep pointers to this player
+    CALL PrepEntityPtr_Player                ; prep pointers to this player
     
     LDY #ch_ailments - ch_stats             ; if they are dead or stoned, skip them
     LDA (btl_entityptr_obrom), Y            ;  (OB ailments!  why does IB exist?!?!)
@@ -7596,11 +7596,11 @@ Battle_CastMagicOnAllPlayers:
       ORA #$80
       STA btl_defender                      ; set defender (high bit set to indicate it's a player)
       
-      JSR BtlMag_LoadPlayerDefenderStats    ; load their stats, play sound effect, and flash player graphic
-      JSR DrawCombatBox_Defender            ; THEN draw the defender combat box (slightly BUGGED - shouldn't it do this before flashing the character?)
-      JSR Battle_CastMagicOnPlayer_NoLoad   ; the cast the magic on the player (NoLoad because we already loaded them above)
-      JSR RespondDelay_UndrawAllBut2Boxes   ; undraw all but the attacker and attack boxes
-      JSR DrawCharacterStatus               ; And redraw character stats to show updated HP
+      CALL BtlMag_LoadPlayerDefenderStats    ; load their stats, play sound effect, and flash player graphic
+      CALL DrawCombatBox_Defender            ; THEN draw the defender combat box (slightly BUGGED - shouldn't it do this before flashing the character?)
+      CALL Battle_CastMagicOnPlayer_NoLoad   ; the cast the magic on the player (NoLoad because we already loaded them above)
+      CALL RespondDelay_UndrawAllBut2Boxes   ; undraw all but the attacker and attack boxes
+      CALL DrawCharacterStatus               ; And redraw character stats to show updated HP
       
   : INC temp_6bce                   ; inc loop counter
     LDA temp_6bce
@@ -7654,14 +7654,14 @@ PrepEntityPtr_Player:
 
 BtlMag_LoadPlayerDefenderStats:
     LDA btlmag_playerhitsfx
-    JSR PlayBattleSFX               ; play the appropriate sound effect for this spell
+    CALL PlayBattleSFX               ; play the appropriate sound effect for this spell
     
     LDA btl_defender
     AND #$03
-    JSR FlashCharacterSprite        ; flash this character's graphic
+    CALL FlashCharacterSprite        ; flash this character's graphic
     
     LDA btl_defender
-    JSR PrepEntityPtr_Player        ; prep entityptr's
+    CALL PrepEntityPtr_Player        ; prep entityptr's
     
     LDY #ch_class - ch_stats        ; load category from OB
     LDA (btl_entityptr_obrom), Y    ;  BUGGED - this is actually using the character's class as the category.
@@ -7778,17 +7778,17 @@ PreparePlayerMagAttack:
     LDX btlmag_magicsource
     BNE :+                          ; if zero, it's magic... so...
       LDA #$00                      ; ...play magic sfx.  Although this is slightly BUGGED
-      JSR PlayBattleSFX             ;  since the sound effect is audible before you walk forward.  It
+      CALL PlayBattleSFX             ;  since the sound effect is audible before you walk forward.  It
       LDA btl_attacker              ;  would make more sense to do this in WalkForwardAndCastMagic
       AND #$7F
       
   : LDX btlmag_magicsource          ; X=0 for magic (indicating we should do magic casting animation)
-    JSR WalkForwardAndCastMagic
+    CALL WalkForwardAndCastMagic
     
     ; Everything below this is loading the useless attacker stats.
     ;   As with PrepareEnemyMagAttack, this is all entirely pointless.
     LDA btl_attacker
-    JSR PrepEntityPtr_Player
+    CALL PrepEntityPtr_Player
     
     LDY #ch_ailments - ch_stats
     LDA (btl_entityptr_obrom), Y
@@ -7825,7 +7825,7 @@ PreparePlayerMagAttack:
 
 BtlMag_LoadEnemyDefenderStats:
     LDA btl_defender
-    JSR PrepEntityPtr_Enemy
+    CALL PrepEntityPtr_Enemy
     
     LDY #en_hp                      ; get HP from RAM stats
     LDA (btl_entityptr_ibram), Y
@@ -7882,8 +7882,8 @@ BtlMag_LoadEnemyDefenderStats:
     
     ;  Lastly, do the explosion effect and exit
     LDA #$02
-    JSR PlayBattleSFX                   ; "cha" sound effect (unnecessary, as DoExplosionEffect does this already)
-    JMP DoExplosionEffect
+    CALL PlayBattleSFX                   ; "cha" sound effect (unnecessary, as DoExplosionEffect does this already)
+    JUMP DoExplosionEffect
     
     
     
@@ -7907,7 +7907,7 @@ BtlMag_LoadEnemyDefenderStats:
 
 PrepareEnemyMagAttack:
     LDA btl_attacker
-    JSR PrepEntityPtr_Enemy
+    CALL PrepEntityPtr_Enemy
     
     LDY #en_ailments
     LDA (btl_entityptr_ibram), Y
@@ -7945,7 +7945,7 @@ PrepareEnemyMagAttack:
 
 BtlMag_SaveEnemyDefenderStats:
     LDA btl_defender                ; get defender slot index
-    JSR PrepEntityPtr_Enemy         ; use it to get a pointer to their stats in RAM
+    CALL PrepEntityPtr_Enemy         ; use it to get a pointer to their stats in RAM
     
     LDA btlmag_defender_hp          ; update their HP
     LDY #en_hp
@@ -7990,7 +7990,7 @@ BtlMag_SaveEnemyDefenderStats:
 
 BtlMag_SavePlayerDefenderStats:
     LDA btl_defender
-    JSR PrepEntityPtr_Player
+    CALL PrepEntityPtr_Player
     
     ;; Update OB stats (WHY!?!!??!?!?!??  This stuff is in IB!!!  Why is it using OB HP and ailments?!?!
     ;;  WTF GAME YOU DON'T MAKE ANY SENSE WHY DID YOU PUT HP/AILMENTS IN IB IF YOU'RE NEVER GOING TO USE THEM!
@@ -8059,11 +8059,11 @@ BtlMag_PerformSpellEffect:
     LDA #0
     STA btlmag_spellconnected       ; initialize spell connected (have it miss by default)
     
-    JSR @DoMagicEffect              ; Do the actual effect!
-    JSR BtlMag_PrintMagicMessage    ; print appropriate battle message for this spell effect
+    CALL @DoMagicEffect              ; Do the actual effect!
+    CALL BtlMag_PrintMagicMessage    ; print appropriate battle message for this spell effect
     
     LDA #MATHBUF_MAGDEFENDERHP      ; if the spell reduced their HP to or below 0, add the 'DEAD' ailment
-    JSR MathBuf_NZ
+    CALL MathBuf_NZ
     BEQ @AddDeadAilment
     BMI @AddDeadAilment
     BPL :+                          ; HP > 0, so jump ahead to HandleAilmentChanges
@@ -8073,7 +8073,7 @@ BtlMag_PerformSpellEffect:
       ORA #AIL_DEAD
       STA btlmag_defender_ailments
       
-  : JMP BtlMag_HandleAilmentChanges ; Handle changes to defender's ailments... and exit!
+  : JUMP BtlMag_HandleAilmentChanges ; Handle changes to defender's ailments... and exit!
     
   @DoMagicEffect:
     CLC
@@ -8117,22 +8117,22 @@ BtlMag_PerformSpellEffect:
 BtlMag_PrepHitAndDamage:
     LDA #MATHBUF_HITCHANCE
     LDX btlmag_hitrate
-    JSR MathBuf_Add             ; math_hitchance += spell's base hit rate
+    CALL MathBuf_Add             ; math_hitchance += spell's base hit rate
     
     LDA #MATHBUF_HITCHANCE
     LDX btlmag_defender_magdef
-    JSR MathBuf_Sub             ; math_hitchance -= defender's magdef
+    CALL MathBuf_Sub             ; math_hitchance -= defender's magdef
     
     LDA #0
     LDX math_basedamage
-    JSR RandAX
+    CALL RandAX
     TAX                         ; X = rand[ 0, spelldamage ]
     
     LDA #MATHBUF_BASEDAMAGE
-    JSR MathBuf_Add             ; math_basedamage = rand[ spelldamage, spelldamage*2 ]
+    CALL MathBuf_Add             ; math_basedamage = rand[ spelldamage, spelldamage*2 ]
     
-    JSR Random_0_200
-    JMP WriteAToMagRandHit      ; math_magrandhit = rand[ 0, 200 ]
+    CALL Random_0_200
+    JUMP WriteAToMagRandHit      ; math_magrandhit = rand[ 0, 200 ]
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8144,7 +8144,7 @@ BtlMag_PrepHitAndDamage:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_CalcElemHitChance:
-    JSR BtlMag_LoadBaseHitChance        ; load base hit chance
+    CALL BtlMag_LoadBaseHitChance        ; load base hit chance
     
     LDA btlmag_element
     AND btlmag_defender_elemresist
@@ -8158,7 +8158,7 @@ BtlMag_CalcElemHitChance:
     BEQ BtlMag_LoadBaseHitChance_RTS    ; (RTS)
     LDA #0                              ; if defender is weak to element
     LDX #40                             ;   add +40 to hit chance
-    JMP MathBuf_Add
+    JUMP MathBuf_Add
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8193,7 +8193,7 @@ BtlMag_LoadBaseHitChance_RTS:
 BtlMag_DidSpellConnect:
     LDY #MATHBUF_HITCHANCE      ; compare hit chance
     LDX #MATHBUF_MAGRANDHIT     ; to mag rand hit
-    JMP MathBuf_Compare
+    JUMP MathBuf_Compare
 
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8234,7 +8234,7 @@ BtlMag_ZeroHitChance:
 
 Battle_ShowIneffective:
     LDA #ALTBTLMSG_INEFFECTIVE
-    JMP ShowAltBattleMessage
+    JUMP ShowAltBattleMessage
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8245,14 +8245,14 @@ Battle_ShowIneffective:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_Damage:
-    JSR BtlMag_MarkSpellConnected           ; damage spells always connect
-    JSR BtlMag_LoadBaseHitChance            ; load base hit chance (since damage always hits, this becomes more of a "critical" chance)
-    JSR PutEffectivityInDamageMathBuf       ; Load spell effectivity into 'damage' math buffer
+    CALL BtlMag_MarkSpellConnected           ; damage spells always connect
+    CALL BtlMag_LoadBaseHitChance            ; load base hit chance (since damage always hits, this becomes more of a "critical" chance)
+    CALL PutEffectivityInDamageMathBuf       ; Load spell effectivity into 'damage' math buffer
     
     LDA btlmag_element
     AND btlmag_defender_elemresist          ; see if the defender resists this element
     BEQ :+                                  ; if they do...
-      JSR BtlMag_ZeroHitChance              ; ... zero the hit/crit chance
+      CALL BtlMag_ZeroHitChance              ; ... zero the hit/crit chance
       LSR math_basedamage+1                 ; and halve the damage
       ROR math_basedamage
       
@@ -8261,12 +8261,12 @@ BtlMag_Effect_Damage:
     BEQ :+                                  ; if yes...
       LDA #MATHBUF_HITCHANCE
       LDX #40
-      JSR MathBuf_Add                       ; crit bonus of +40
+      CALL MathBuf_Add                       ; crit bonus of +40
       
                                             ; damage *= 1.5
       LDX #MATHBUF_BASEDAMAGE               ;   copy 1x damage into temp buffer
       LDY #$02                              ;  (use math buf 2 as a temp buffer)
-      JSR MathBuf_CopyXToY
+      CALL MathBuf_CopyXToY
       
       LSR math_basedamage+1                 ;   damage *= 0.5
       ROR math_basedamage
@@ -8274,11 +8274,11 @@ BtlMag_Effect_Damage:
       LDA #MATHBUF_BASEDAMAGE               ;   then add the backup back into the damage
       LDX #$02                              ;   resulting in 1.5 damage
       LDY #MATHBUF_BASEDAMAGE
-      JSR MathBuf_Add16
+      CALL MathBuf_Add16
       
     ; Once damage is set up...
-  : JSR BtlMag_PrepHitAndDamage             ; Get hit/damage stuff into math buffers
-  ; JMP BtlMag_ApplyDamage                  ; <- Flow into
+  : CALL BtlMag_PrepHitAndDamage             ; Get hit/damage stuff into math buffers
+  ; JUMP BtlMag_ApplyDamage                  ; <- Flow into
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8290,7 +8290,7 @@ BtlMag_ApplyDamage:
     LDA math_magrandhit
     CMP #200
     BEQ :+                          ; if the hit/crit roll was 200, this is NOT a crit
-      JSR BtlMag_DidSpellConnect    ; See if the spell connected as a critical
+      CALL BtlMag_DidSpellConnect    ; See if the spell connected as a critical
       BCC :+                        ; if yes...
         ASL math_basedamage         ; ... do 2x damage
         ROL math_basedamage+1
@@ -8298,8 +8298,8 @@ BtlMag_ApplyDamage:
   : LDA #MATHBUF_MAGDEFENDERHP
     LDX #MATHBUF_MAGDEFENDERHP
     LDY #MATHBUF_BASEDAMAGE
-    JSR MathBuf_Sub16               ; HP -= damage
-    JMP DrawDamageCombatBox         ; Then draw the damage combat box and exit.
+    CALL MathBuf_Sub16               ; HP -= damage
+    JUMP DrawDamageCombatBox         ; Then draw the damage combat box and exit.
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8331,9 +8331,9 @@ PutEffectivityInDamageMathBuf:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_DamageUndead:
-    JSR BtlMag_LoadBaseHitChance        ; Load base hit/crit chance
-    JSR PutEffectivityInDamageMathBuf   ; load up base damage
-    JSR BtlMag_PrepHitAndDamage         ; crit rate, randomize damage
+    CALL BtlMag_LoadBaseHitChance        ; Load base hit/crit chance
+    CALL PutEffectivityInDamageMathBuf   ; load up base damage
+    CALL BtlMag_PrepHitAndDamage         ; crit rate, randomize damage
     
     LDA btlmag_defender_category        ; Check defender category to see if they are undead...
     AND #CATEGORY_UNDEAD
@@ -8347,8 +8347,8 @@ BtlMag_Effect_DamageUndead:
       RTS                               ; and exit.
       
     ; Otherwise, if defender is undead..
-  : JSR BtlMag_MarkSpellConnected       ; Mark the spell as connected
-    JMP BtlMag_ApplyDamage              ; And do the actual damage!
+  : CALL BtlMag_MarkSpellConnected       ; Mark the spell as connected
+    JUMP BtlMag_ApplyDamage              ; And do the actual damage!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8359,8 +8359,8 @@ BtlMag_Effect_DamageUndead:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_DoStatPrep:
-    JSR BtlMag_CalcElemHitChance        ; apply elemental bonus/penalty to spell hit chance
-    JMP BtlMag_PrepHitAndDamage
+    CALL BtlMag_CalcElemHitChance        ; apply elemental bonus/penalty to spell hit chance
+    JUMP BtlMag_PrepHitAndDamage
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8371,14 +8371,14 @@ BtlMag_DoStatPrep:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_InflictAilment:
-    JSR BtlMag_DoStatPrep
+    CALL BtlMag_DoStatPrep
     LDA math_magrandhit             ; get random hit roll
     CMP #200                        ; if rolled an even 200, skip ahead to a 'miss'
     BEQ @Miss
-      JSR BtlMag_DidSpellConnect
+      CALL BtlMag_DidSpellConnect
       BCC @Miss
-        JSR BtlMag_ApplyAilments
-        JMP BtlMag_MarkSpellConnected
+        CALL BtlMag_ApplyAilments
+        JUMP BtlMag_MarkSpellConnected
   
   @Miss:
     LDA #0            
@@ -8398,7 +8398,7 @@ BtlMag_ApplyAilments:
     PHA                             ; back it up
     AND btlmag_defender_ailments    ; See if defender has this ailment (or really, any of these ailment) already
     BEQ :+                          ;   If yes...
-      JSR Battle_ShowIneffective    ;   ... show "Ineffective" message
+      CALL Battle_ShowIneffective    ;   ... show "Ineffective" message
       
   : PLA                             ; restore ailment byte
     ORA btlmag_defender_ailments    ; add to existing ailments
@@ -8419,14 +8419,14 @@ BtlMag_ApplyAilments:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_Slow:
-    JSR BtlMag_DoStatPrep           ; Load up hit chance w/ element applied
+    CALL BtlMag_DoStatPrep           ; Load up hit chance w/ element applied
     LDA math_magrandhit
     CMP #200                        ; hit roll of 200 = guaranteed miss
     BEQ @Done
-    JSR BtlMag_DidSpellConnect      ; See if they connected.  If not...
+    CALL BtlMag_DidSpellConnect      ; See if they connected.  If not...
     BCC @Done                       ;  ... miss
     
-    JSR BtlMag_MarkSpellConnected   ; Otherwise, mark that this connected
+    CALL BtlMag_MarkSpellConnected   ; Otherwise, mark that this connected
     DEC btlmag_defender_numhitsmult ; Decrease their hit multiplier
     BPL @Done                       ;   if it wrapped...
     INC btlmag_defender_numhitsmult ;   ... INC it to undo it.  (This is where the 'bug' is, btlmag_spellconnected should be zero'd here)
@@ -8445,12 +8445,12 @@ BtlMag_Effect_Slow_RTS:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_LowerMorale:
-    JSR BtlMag_DoStatPrep           ; Load up hit chance w/ element applied
+    CALL BtlMag_DoStatPrep           ; Load up hit chance w/ element applied
     LDA math_magrandhit
     CMP #200                        ; hit roll of 200 = automatic miss
     BEQ BtlMag_Effect_Slow_RTS
     
-    JSR BtlMag_DidSpellConnect      ; see if the spell connected
+    CALL BtlMag_DidSpellConnect      ; see if the spell connected
     BCC BtlMag_Effect_CureAil_RTS   ; if not, jump ahead to an RTS
     
     LDA btlmag_defender_morale      ; subtract spell effectivity from defender morale
@@ -8459,7 +8459,7 @@ BtlMag_Effect_LowerMorale:
     BCS :+
         LDA #0                      ; cap at 0 (don't let it wrap)
   : STA btlmag_defender_morale
-    JMP BtlMag_MarkSpellConnected   ; then mark the spell as connected and exit.
+    JUMP BtlMag_MarkSpellConnected   ; then mark the spell as connected and exit.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8468,7 +8468,7 @@ BtlMag_Effect_LowerMorale:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_RecoverHP:
-    JSR BtlMag_MarkSpellConnected   ; HP recovery always connects (doesn't it miss if dead?)
+    CALL BtlMag_MarkSpellConnected   ; HP recovery always connects (doesn't it miss if dead?)
     
     LDA btlmag_defender_ailments    ; Check defender ailment
     AND #AIL_DEAD
@@ -8477,7 +8477,7 @@ BtlMag_Effect_RecoverHP:
     LDA btlmag_effectivity          ; This block just does:  X = rand[ effectivity, effectivity*2 ], capping at 255
     TAX
     LDA #0
-    JSR RandAX                      ;   random between [0,effectivity]
+    CALL RandAX                      ;   random between [0,effectivity]
     CLC
     ADC btlmag_effectivity          ;   random between [effectivity, effectivity*2]
     BCC :+
@@ -8485,13 +8485,13 @@ BtlMag_Effect_RecoverHP:
   : TAX
   
     LDA #MATHBUF_MAGDEFENDERHP      ; Add X to defender's HP
-    JSR MathBuf_Add
+    CALL MathBuf_Add
     
     LDX #MATHBUF_MAGDEFENDERMAXHP
     LDY #MATHBUF_MAGDEFENDERHP
-    JSR MathBuf_Compare             ; Compare current HP with max HP
+    CALL MathBuf_Compare             ; Compare current HP with max HP
     BCC BtlMag_Effect_CureAil_RTS   ; if hp < maxhp, just exit
-    JMP BtlMag_SetHPToMax           ; otherwise, set HP to the maximum   (strangely, this could just flow into it, but it actually JMPs)
+    JUMP BtlMag_SetHPToMax           ; otherwise, set HP to the maximum   (strangely, this could just flow into it, but it actually JMPs)
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8502,7 +8502,7 @@ BtlMag_Effect_RecoverHP:
 BtlMag_SetHPToMax:
     LDX #MATHBUF_MAGDEFENDERMAXHP   ; just copy the defender's max HP over to their actual HP
     LDY #MATHBUF_MAGDEFENDERHP
-    JMP MathBuf_CopyXToY
+    JUMP MathBuf_CopyXToY
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8523,7 +8523,7 @@ BtlMag_Effect_CureAilment:
     EOR #$FF
     AND btlmag_defender_ailments
     STA btlmag_defender_ailments
-    JSR BtlMag_MarkSpellConnected   ; and mark the spell as connected
+    CALL BtlMag_MarkSpellConnected   ; and mark the spell as connected
   ; RTS                             ; <- flow into
   
     
@@ -8543,7 +8543,7 @@ BtlMag_Effect_AbsorbUp:
     BCC :+
       LDA #$FF                      ; (cap at 255)
   : STA btlmag_defender_absorb      ; that's our new absorb!
-    JMP BtlMag_MarkSpellConnected   ; This spell always connects.
+    JUMP BtlMag_MarkSpellConnected   ; This spell always connects.
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8555,7 +8555,7 @@ BtlMag_Effect_ElemResist:
     LDA btlmag_effectivity          ; pretty straight forward...
     ORA btlmag_defender_elemresist
     STA btlmag_defender_elemresist
-    JMP BtlMag_MarkSpellConnected
+    JUMP BtlMag_MarkSpellConnected
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8569,7 +8569,7 @@ BtlMag_Effect_AttackUp:
     BCC :+
       LDA #$FF
   : STA btlmag_defender_strength
-    JMP BtlMag_MarkSpellConnected
+    JUMP BtlMag_MarkSpellConnected
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8578,7 +8578,7 @@ BtlMag_Effect_AttackUp:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_Fast:
-    JSR BtlMag_MarkSpellConnected   ; Always connects (except when maxed -- this will be undone then)
+    CALL BtlMag_MarkSpellConnected   ; Always connects (except when maxed -- this will be undone then)
     INC btlmag_defender_numhitsmult ; Increase hit multiplier
     
     LDA btlmag_defender_numhitsmult
@@ -8604,7 +8604,7 @@ BtlMag_Effect_AttackUp2:
       LDA #$FF                      ;   some other part of mem.  Note that this doesn't matter in the original
   : STA btlmag_attacker_unk6884     ;   game, as TMPR and SABR both have 0 for the spell's hit rate.
   
-            ; Code here is a duplicate of BtlMag_Effect_AttackUp.  You could just JMP there and save
+            ; Code here is a duplicate of BtlMag_Effect_AttackUp.  You could just JUMP there and save
             ;   all this space.
     LDA btlmag_effectivity          ; Add the spell effectivity to the defender's attack power.
     CLC
@@ -8612,25 +8612,25 @@ BtlMag_Effect_AttackUp2:
     BCC :+
       LDA #$FF                      ; cap at 255
   : STA btlmag_defender_strength
-    JMP BtlMag_MarkSpellConnected   ; Indicate spell connected.
+    JUMP BtlMag_MarkSpellConnected   ; Indicate spell connected.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BtlMag_Effect_EvadeDown  [$BA46 :: 0x33A56]
 ;;
 ;;      This spell effect is BUGGED and will always miss its target.  It's actually a very easy
-;;  fix -- all you have to do is change the offending JMP to a BEQ
+;;  fix -- all you have to do is change the offending JUMP to a BEQ
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_EvadeDown:
-    JSR BtlMag_DoStatPrep           ; prep hit rate & apply elemental resistance and stuff
+    CALL BtlMag_DoStatPrep           ; prep hit rate & apply elemental resistance and stuff
     LDA math_magrandhit
     CMP #200                        ; hit roll of 200 = automatic miss
-    JMP @Done                       ; BUGGED -- this should be BEQ, not JMP.  Since it always jumps,
+    JUMP @Done                       ; BUGGED -- this should be BEQ, not JMP.  Since it always jumps,
                                     ;   this means the spell never has any effect and always misses!
         ; due to bug, this code is never reached, but it works as you'd expect:
-    JSR BtlMag_DidSpellConnect      ; see if the spell connected
+    CALL BtlMag_DidSpellConnect      ; see if the spell connected
     BCC @Done                       ; if not, exit
     LDA btlmag_defender_evade       ; if yes, subtract effectivity from defender's evade
     SEC
@@ -8638,7 +8638,7 @@ BtlMag_Effect_EvadeDown:
     BCS :+
       LDA #0                        ; clip at 0
   : STA btlmag_defender_evade
-    JSR BtlMag_MarkSpellConnected   ; then mark that the spell connected
+    CALL BtlMag_MarkSpellConnected   ; then mark that the spell connected
   @Done:
     RTS
 
@@ -8649,10 +8649,10 @@ BtlMag_Effect_EvadeDown:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_CureAll:
-    JSR BtlMag_SetHPToMax           ; Fill HP to max
+    CALL BtlMag_SetHPToMax           ; Fill HP to max
     LDA #0                          ; and zero ailments, curing all of them
     STA btlmag_defender_ailments
-    JMP BtlMag_MarkSpellConnected   ; mark as connected
+    JUMP BtlMag_MarkSpellConnected   ; mark as connected
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8666,7 +8666,7 @@ BtlMag_Effect_EvadeUp:
     BCC :+
       LDA #$FF
   : STA btlmag_defender_evade
-    JMP BtlMag_MarkSpellConnected
+    JUMP BtlMag_MarkSpellConnected
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8682,7 +8682,7 @@ BtlMag_Effect_EvadeUp:
 Random_0_200:
     LDA #0
     LDX #200
-    JSR RandAX
+    CALL RandAX
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8730,11 +8730,11 @@ WriteAToMagRandHit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BtlMag_Effect_RemoveResist:
-    JSR BtlMag_LoadBaseHitChance        ; load base hit chance (148)
+    CALL BtlMag_LoadBaseHitChance        ; load base hit chance (148)
     LDA btlmag_element
     AND btlmag_defender_elemresist
     BEQ :+
-      JSR BtlMag_ZeroHitChance          ; if defender resists, hit chance = 0
+      CALL BtlMag_ZeroHitChance          ; if defender resists, hit chance = 0
   : LDA btlmag_element
     AND btlmag_defender_elemweakness
     BEQ :+                              ; if defender is weak,
@@ -8743,21 +8743,21 @@ BtlMag_Effect_RemoveResist:
       
   : LDA #MATHBUF_HITCHANCE
     LDX btlmag_hitrate
-    JSR MathBuf_Add                     ; add spell's hit rate to chance
+    CALL MathBuf_Add                     ; add spell's hit rate to chance
     LDA #MATHBUF_HITCHANCE
     LDX btlmag_defender_magdef
-    JSR MathBuf_Sub                     ; subtract defender's magdef from hit chance
+    CALL MathBuf_Sub                     ; subtract defender's magdef from hit chance
     
-    JSR Random_0_200                    ; get hit roll
+    CALL Random_0_200                    ; get hit roll
     CMP #200                            ; 200 = always miss
     BEQ BtlMag_Effect_RemRst_RTS
     
-    JSR WriteAToMagRandHit              ; record hit roll
-    JSR BtlMag_DidSpellConnect          ; check to see if spell connected
+    CALL WriteAToMagRandHit              ; record hit roll
+    CALL BtlMag_DidSpellConnect          ; check to see if spell connected
     BCC BtlMag_Effect_RemRst_RTS        ; if it did...
     LDA #0
     STA btlmag_defender_elemresist      ; clear all defender's elemental resistance
-    JSR BtlMag_MarkSpellConnected       ; and mark that the spell connected.
+    CALL BtlMag_MarkSpellConnected       ; and mark that the spell connected.
     
   ; RTS                                 ; <- flow into
 
@@ -8786,12 +8786,12 @@ BtlMag_Effect_InflictAilment2:
     STA math_magrandhit+1
     LDY #MATHBUF_MAGRANDHIT
     LDX #MATHBUF_MAGDEFENDERHP
-    JSR MathBuf_Compare                 ; see if defender's HP is under 300
+    CALL MathBuf_Compare                 ; see if defender's HP is under 300
     
     BCC BtlMag_Effect_RemRst_RTS        ; if not, FAIL/exit
     
-    JSR BtlMag_ApplyAilments            ; otherwise, apply the ailments
-    JMP BtlMag_MarkSpellConnected       ; and mark as connected, and exit
+    CALL BtlMag_ApplyAilments            ; otherwise, apply the ailments
+    JUMP BtlMag_MarkSpellConnected       ; and mark as connected, and exit
 
 
     
@@ -8853,8 +8853,8 @@ BtlMag_HandleAilmentChanges:
     BPL :+                                          ; if yes...
       CLC                                           ; ... switch to "Slain" message instead
       ADC #(ALTBTLMSG_SLAIN - ALTBTLMSG_TERMINATED) ;  (why doesn't this just LDA?  Why the weird addition?)
-  : JSR ShowAltBattleMessage                        ; Show Terminated/Slain
-    JMP @DoneWithAilMessages                        ; And exit this loop (no point in checking other ailments)
+  : CALL ShowAltBattleMessage                        ; Show Terminated/Slain
+    JUMP @DoneWithAilMessages                        ; And exit this loop (no point in checking other ailments)
     
   @AilmentAdded:
     TXA                             ; use loop counter to figure out which message to draw
@@ -8862,8 +8862,8 @@ BtlMag_HandleAilmentChanges:
     ADC #ALTBTLMSG_CONFUSED-1       ; -1 because loop counter is 1 based
     
   @PrintMessageAndNext:
-    JSR ShowAltBattleMessage        ; Show the message
-    JMP @NextAilment                ; And continue looping through ailments.
+    CALL ShowAltBattleMessage        ; Show the message
+    JUMP @NextAilment                ; And continue looping through ailments.
     
   @AilmentCured:
     TXA                             ; use loop counter to get message
@@ -8881,9 +8881,9 @@ BtlMag_HandleAilmentChanges:
     LDA btlmag_defender_ailments    ; See if the enemy has been killed/stoned
     AND #(AIL_DEAD | AIL_STONE)
     BEQ :+                          ; if yes....
-      JSR EraseEnemyGraphic         ;  Erase their graphic
+      CALL EraseEnemyGraphic         ;  Erase their graphic
       LDX btl_defender
-      JSR ClearEnemyID              ;  Remove them from the battle
+      CALL ClearEnemyID              ;  Remove them from the battle
       
       LDA btlmag_defender_ailments
       STA btlmag_fakeout_ailments   ; record their ailments to fakeout output to show that
@@ -8932,7 +8932,7 @@ BtlMag_HandleAilmentChanges:
 GetEnemyStatPtr:
     STY tmp_6c87               ; back-up Y
     LDX #$14                ; multiply enemy index by $14  (number of bytes per enemy)
-    JSR MultiplyXA
+    CALL MultiplyXA
     
     CLC                     ; then add btl_enemystats to the result
     ADC #<btl_enemystats
@@ -8987,7 +8987,7 @@ RebuildEnemyRoster:
     LDY #$00        ;Y=0.  Y will be the roster index
     
   @FillLoop:
-      JSR ShouldAddEnemyToRoster    ; should we add this enemy to the roster?
+      CALL ShouldAddEnemyToRoster    ; should we add this enemy to the roster?
       LDA tmp_6bd1
       BEQ :+                        ; if yes...
         LDA btl_enemyIDs, X         ; put the enemy in the roster
@@ -9034,7 +9034,7 @@ ShouldAddEnemyToRoster:
     TYA
     PHA
     
-    JSR DoesEnemyXExist     ; if this enemy slot is empty
+    CALL DoesEnemyXExist     ; if this enemy slot is empty
     BEQ @Exit               ;  just exit
     
     LDY #$00                ; otherwise, loop over the existing roster to see if the enemy
@@ -9070,7 +9070,7 @@ ShouldAddEnemyToRoster:
 
 EraseEnemyGraphic:
     INC btl_enemyeffect         ; make enemyeffect nonzero
-    JSR DrawEnemyEffect         ; draw the erase effect
+    CALL DrawEnemyEffect         ; draw the erase effect
     LDA #$00
     STA btl_enemyeffect         ; then zero enemy effect again
     RTS
@@ -9089,8 +9089,8 @@ EraseEnemyGraphic:
 
 DoExplosionEffect:
     LDA #$02
-    JSR PlayBattleSFX           ; the the "cha" sound effect.
-  ; JMP DrawEnemyEffect         ; <- then flow into drawing the enemy effect.
+    CALL PlayBattleSFX           ; the the "cha" sound effect.
+  ; JUMP DrawEnemyEffect         ; <- then flow into drawing the enemy effect.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9110,16 +9110,16 @@ DoExplosionEffect:
 DrawEnemyEffect:
     LDA btl_defender
     PHA
-    JSR SwapBtlTmpBytes
+    CALL SwapBtlTmpBytes
     LDX btl_battletype
     BNE :+
-      JMP DrawEnemyEffect_9Small          ; 9small formation
+      JUMP DrawEnemyEffect_9Small          ; 9small formation
   : DEX
     BNE :+
-      JMP DrawEnemyEffect_4Large          ; 4large formation
+      JUMP DrawEnemyEffect_4Large          ; 4large formation
   :   DEX
     BNE :+
-      JMP DrawEnemyEffect_Mix          ; mix formation
+      JUMP DrawEnemyEffect_Mix          ; mix formation
     
     ;; The rest of this is for Fiends/Chaos -- but is the same
     ;;  idea as DrawEnemyEffect_9Small.  See that routine for
@@ -9136,7 +9136,7 @@ DrawEnemyEffect:
     STA explode_max_y
     LDA #$14
     STA explode_count
-    JSR DrawExplosions
+    CALL DrawExplosions
     
     LDA btl_enemyeffect
     BEQ @Exit               ; exit if we don't want to erase the enemy
@@ -9154,17 +9154,17 @@ DrawEnemyEffect:
     STA tmp_6d16
     
   @EraseLoop:
-      JSR WaitForVBlank           ; Vblank
+      CALL WaitForVBlank           ; Vblank
       LDA tmp_6d16                     ; Set PPU Addr
       STA PPUADDR
       LDA tmp_6d15
       STA PPUADDR
       
       LDA #$00
-      JSR WriteAToPPU6Times         ; clear 12 tiles in this row
-      JSR WriteAToPPU6Times
+      CALL WriteAToPPU6Times         ; clear 12 tiles in this row
+      CALL WriteAToPPU6Times
       
-      JSR BattleUpdatePPU           ; reset scroll, etc
+      CALL BattleUpdatePPU           ; reset scroll, etc
       
       CLC                           ; move PPU addr to next row
       LDA tmp_6d15
@@ -9172,12 +9172,12 @@ DrawEnemyEffect:
       STA tmp_6d15
       BCC :+
         INC tmp_6d16
-    : JSR BattleUpdateAudio         ; update audio for the frame
+    : CALL BattleUpdateAudio         ; update audio for the frame
       DEC loop_counter
       BNE @EraseLoop
       
   @Exit:
-    JMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes_Local
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9191,7 +9191,7 @@ DrawEnemyEffect:
 
 VBlank_SetPPUAddr:
     PHA                         ; backup A
-    JSR WaitForVBlank         ; VBlank
+    CALL WaitForVBlank         ; VBlank
     LDA btltmp+$B               ; set ppu addr
     STA PPUADDR
     LDA btltmp+$A
@@ -9212,7 +9212,7 @@ VBlank_SetPPUAddr:
 DrawExplosions_PreserveX:
     TXA                 ; backup X
     PHA
-    JSR DrawExplosions  ; draw explosions
+    CALL DrawExplosions  ; draw explosions
     PLA
     TAX                 ; restore X
     LDA btl_enemyeffect ; load btl_enemyeffect
@@ -9252,7 +9252,7 @@ DrawEnemyEffect_9Small:
     LDA #$06                ; set the number of explosions for this enemy
     STA explode_count
     
-    JSR DrawExplosions_PreserveX        ; Draw the actual explosion
+    CALL DrawExplosions_PreserveX        ; Draw the actual explosion
     BEQ __DrawEnemyEffect_9Small_Exit   ; branches if btl_enemyeffect is zero
         
     ; This code only runs if btl_enemyeffect is nonzero (erase the enemy)
@@ -9262,7 +9262,7 @@ DrawEnemyEffect_9Small:
     STA btltmp+$A
     LDA lut_EraseEnemyPPUAddress_9Small+1, X
     STA btltmp+$B
-  ; JMP EraseSmallEnemy                     ; <- flow into
+  ; JUMP EraseSmallEnemy                     ; <- flow into
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9277,14 +9277,14 @@ DrawEnemyEffect_9Small:
 EraseSmallEnemy:
     LDA #$04                        ; loop counter (clearing 4 rows)
     STA btltmp
-    : JSR VBlank_SetPPUAddr         ; set the PPU addr
+    : CALL VBlank_SetPPUAddr         ; set the PPU addr
       LDA #$00
-      JSR WriteAToPPU4Times         ; clear 4 tiles
-      JSR MoveDown1Row_UpdateAudio  ; finish the frame and prep for next row
+      CALL WriteAToPPU4Times         ; clear 4 tiles
+      CALL MoveDown1Row_UpdateAudio  ; finish the frame and prep for next row
       DEC btltmp
       BNE :-                        ; dec loop counter and loop
       
-    JMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes_Local
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9295,7 +9295,7 @@ EraseSmallEnemy:
 
 __DrawEnemyEffect_9Small_Exit:
     PLA
-    JMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes_Local
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9304,10 +9304,10 @@ __DrawEnemyEffect_9Small_Exit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteAToPPU6Times:
-    JSR WriteAToPPU2Times
+    CALL WriteAToPPU2Times
     
 WriteAToPPU4Times:
-    JSR WriteAToPPU2Times
+    CALL WriteAToPPU2Times
     
 WriteAToPPU2Times:
     STA PPUDATA
@@ -9327,7 +9327,7 @@ WriteAToPPU2Times:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MoveDown1Row_UpdateAudio:
-    JSR BattleUpdatePPU         ; reset scroll and stuffs
+    CALL BattleUpdatePPU         ; reset scroll and stuffs
     LDA btltmp+$A               ; update soft ppu addr to point to next row
     CLC
     ADC #$20
@@ -9335,7 +9335,7 @@ MoveDown1Row_UpdateAudio:
     LDA btltmp+$B
     ADC #$00
     STA btltmp+$B
-    JMP BattleUpdateAudio       ; update audio and exit
+    JUMP BattleUpdateAudio       ; update audio and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9386,7 +9386,7 @@ DrawEnemyEffect_4Large:
     LDA #$08
     STA explode_count
     
-    JSR DrawExplosions_PreserveX
+    CALL DrawExplosions_PreserveX
     BEQ @Exit
     
     PLA                         ; again, this is pointless, as the value is throw away.
@@ -9398,17 +9398,17 @@ DrawEnemyEffect_4Large:
     
     LDA #$06                        ; 6 rows for large enemies
     STA btltmp
-    : JSR VBlank_SetPPUAddr
+    : CALL VBlank_SetPPUAddr
       LDA #$00
-      JSR WriteAToPPU6Times
-      JSR MoveDown1Row_UpdateAudio
+      CALL WriteAToPPU6Times
+      CALL MoveDown1Row_UpdateAudio
       DEC btltmp
       BNE :-
-    JMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes_Local
 
   @Exit:
     PLA
-    JMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes_Local
 
   ; [$BD7A :: 0x33D8A]
   @lut_ExplosionCoords_4Large:
@@ -9431,7 +9431,7 @@ DrawEnemyEffect_Mix:
     CMP #$02                        ; if slot is < 2
     BCS :+
       PLA                           ; undo our pointless push
-      JMP DrawEnemyEffect_4Large    ; and jump to the 4Large version -- since the first 2 enemies in this formation
+      JUMP DrawEnemyEffect_4Large    ; and jump to the 4Large version -- since the first 2 enemies in this formation
                                     ;   are large and are placed in the same spot as the 4large formation
     
     ; Jumps here if slot >= 2 (one of the small enemies)
@@ -9456,7 +9456,7 @@ DrawEnemyEffect_Mix:
     LDA #$0F                    ; way more explosions for small enemies in the mix formation than in the 9small formation
     STA explode_count           ;  is this BUGGED?
     
-    JSR DrawExplosions          ; doesn't call the Preserve X version -- the one time it would actually make sense to...
+    CALL DrawExplosions          ; doesn't call the Preserve X version -- the one time it would actually make sense to...
     
     PLA                         ; pull the target... ONLY TO THROW IT AWAY!!!! wtf Nasir this makes no sense!
     LDA btl_defender            ; instead, use the defender as the target.
@@ -9472,7 +9472,7 @@ DrawEnemyEffect_Mix:
     STA btltmp+$A
     LDA lut_EraseEnemyPPUAddress_Mix_Small+1, X
     STA btltmp+$B
-    JMP EraseSmallEnemy         ; reuse the EraseSmallEnemy routine used in the 9Small formation
+    JUMP EraseSmallEnemy         ; reuse the EraseSmallEnemy routine used in the 9Small formation
     
     ;; [$BDCC :: 0x33DDC]
   @lut_ExplosionCoords_6Small:
@@ -9493,7 +9493,7 @@ DrawEnemyEffect_Mix:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwapBtlTmpBytes_Local:
-    JMP SwapBtlTmpBytes
+    JUMP SwapBtlTmpBytes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9518,14 +9518,14 @@ DrawExplosions:
     STA btltmp+2            ; btltmp+2 is a loop counter
     : LDA #$00              ;  loop 3 times, drawing an explosion sprite in each explosion slot
       LDX #$02              ; get a random value, one of:  F4, F8, or FC
-      JSR RandAX            ; this will be used as the explosion graphic tile
+      CALL RandAX            ; this will be used as the explosion graphic tile
       ASL A
       ASL A
       CLC
       ADC #$F4
       
       LDX btltmp+2              ; use the loop counter as the slot
-      JSR DrawExplosion_Frame   ; draw the graphic and do a frame
+      CALL DrawExplosion_Frame   ; draw the graphic and do a frame
       
       INC btltmp+2              ; inc loop counter (and slot index)
       LDA btltmp+2
@@ -9545,10 +9545,10 @@ DrawExplosions:
       DEY
       BNE :-
       
-    JSR WaitForVBlank     ; Do one more frame
+    CALL WaitForVBlank     ; Do one more frame
     LDA #>oam               ; so we can update sprite data in the PPU
     STA OAMDMA
-    JMP BattleUpdateAudio   ; update audio since we did a frame
+    JUMP BattleUpdateAudio   ; update audio since we did a frame
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9579,34 +9579,34 @@ DrawExplosion_Frame:
     
     LDA explode_min_x
     LDX explode_max_x
-    JSR RandAX                  ; get a random X coordinate
+    CALL RandAX                  ; get a random X coordinate
     LDY #oam_x - oam
-    JSR Explosion_Write_0808    ; write X coords to all 4 sprites
+    CALL Explosion_Write_0808    ; write X coords to all 4 sprites
     
     LDA explode_min_y
     LDX explode_max_y
-    JSR RandAX                  ; get a random Y coordinate
+    CALL RandAX                  ; get a random Y coordinate
     LDY #oam_y - oam
-    JSR Explosion_Write_0088    ; write Y coords
+    CALL Explosion_Write_0088    ; write Y coords
     
     LDA #$02                    ; attribute = no flipping, use palette 2 (the weapon/magic palette)
     LDY #oam_a - oam
-    JSR Explosion_Write_0808
+    CALL Explosion_Write_0808
     
     PLA                         ; get the tile
     LDY #oam_t - oam
     LDX #$04
     : STA (btltmp), Y           ; set the tile for all 4 sprites
-      JSR IncYBy4
+      CALL IncYBy4
       CLC
       ADC #$01
       DEX
       BNE :-
       
-    JSR WaitForVBlank         ; do a frame
+    CALL WaitForVBlank         ; do a frame
     LDA #>oam                   ; where OAM is updated
     STA OAMDMA
-    JMP BattleUpdateAudio       ; update music/sfx during this frame as well
+    JUMP BattleUpdateAudio       ; update music/sfx during this frame as well
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9622,11 +9622,11 @@ Explosion_Write_0808:
     PHA
     CLC
     ADC #$08                    ; write +8 value
-    JSR IncYBy4_WriteToOam
+    CALL IncYBy4_WriteToOam
     
     PLA
-    JSR IncYBy4_WriteToOam      ; write +0 value
-    JSR IncYBy4
+    CALL IncYBy4_WriteToOam      ; write +0 value
+    CALL IncYBy4
     CLC
     ADC #$08
     STA (btltmp), Y             ; write +8 value
@@ -9644,11 +9644,11 @@ Explosion_Write_0808:
 
 Explosion_Write_0088:
     STA (btltmp), Y             ; write +0 value
-    JSR IncYBy4_WriteToOam      ; write +0 value
+    CALL IncYBy4_WriteToOam      ; write +0 value
     CLC
     ADC #$08
-    JSR IncYBy4_WriteToOam      ; write +8 value
-    JMP IncYBy4_WriteToOam      ; write +8 value
+    CALL IncYBy4_WriteToOam      ; write +8 value
+    JUMP IncYBy4_WriteToOam      ; write +8 value
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9660,7 +9660,7 @@ Explosion_Write_0088:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IncYBy4_WriteToOam:
-    JSR IncYBy4
+    CALL IncYBy4
     STA (btltmp), Y
     RTS
 
@@ -9711,7 +9711,7 @@ lut_EraseEnemyPPUAddress_Mix_Small:
 
 PlayBattleSFX:
     PHA                             ; backup the desired sfx
-    JSR SwapBattleSFXBytes          ; swap in sound effect data
+    CALL SwapBattleSFXBytes          ; swap in sound effect data
     PLA
     ASL A                           ; double sfx ID and use as index to pointer table lut
     TAX
@@ -9755,12 +9755,12 @@ PlayBattleSFX:
     LDA #$01
     STA btlsfxsq2_framectr      ; init frame counters for sqare/noise to 1, so that when we call the below Update
     STA btlsfxnse_framectr      ;  routines, it will force the channel to be updated
-    JSR UpdateBattleSFX_Square
-    JSR UpdateBattleSFX_Noise
+    CALL UpdateBattleSFX_Square
+    CALL UpdateBattleSFX_Noise
     
     LDA #$0F
     STA PAPU_EN                   ; make sure channels are enabled
-    JSR SwapBattleSFXBytes      ; swap out sfx bytes
+    CALL SwapBattleSFXBytes      ; swap out sfx bytes
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9772,13 +9772,13 @@ PlayBattleSFX:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateBattleSFX:
-    JSR SwapBattleSFXBytes
+    CALL SwapBattleSFXBytes
     LDA btlsfx_framectr
     BEQ :+
-      JSR UpdateBattleSFX_Square
-      JSR UpdateBattleSFX_Noise
+      CALL UpdateBattleSFX_Square
+      CALL UpdateBattleSFX_Noise
       DEC btlsfx_framectr
-  : JSR SwapBattleSFXBytes
+  : CALL SwapBattleSFXBytes
     RTS
     
     
