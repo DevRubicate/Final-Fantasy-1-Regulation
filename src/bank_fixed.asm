@@ -145,7 +145,7 @@ GameStart:
     STA vehicle_next                ;   this always be 'on-foot'?)
     STA vehicle
     
-  ; JUMP DoOverworld                 ; <- Flow into DoOverworld!
+    NOJUMP DoOverworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -156,10 +156,9 @@ GameStart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoOverworld:
-    CALL PrepOverworld       ; do all overworld preparation
-    CALL ScreenWipe_Open     ; then do the screen wipe effect
-                            ; then enter the overworld loop
-  ; JUMP EnterOverworldLoop  ; <- flow into
+    CALL PrepOverworld          ; do all overworld preparation
+    CALL ScreenWipe_Open        ; then do the screen wipe effect
+    NOJUMP EnterOverworldLoop   ; then enter the overworld loop
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1208,8 +1207,7 @@ OWCanMove:
     AND #%00111000     ; and mask out the high bits -- this is the row of the domain grid
     ORA tmp            ; OR with column for the desired domain.
                        ;  A is now the desired domain number
-
-              ; no JUMP or RTS -- flow seamlessly into GetBattleFormation
+    NOJUMP GetBattleFormation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2045,9 +2043,7 @@ MinigameReward:
 
 DoStandardMap:
     CALL EnterStandardMap     ; load and prep map stuff
-                             ;  then flow seamlessly into StandardMapLoop
-     ; no JUMP or RTS
-
+    NOJUMP StandardMapLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6754,7 +6750,7 @@ DrawDialogueString:
       SBC #30
 :   STA dest_y
 
-    JUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
+    NOJUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8417,7 +8413,7 @@ LoadOWBGCHR:
     STA tmp+1        ; source address is $8000
     LDX #$10         ; 16 rows to load (full pattern table)
     LDA #0           ; dest address is $0000
-    JUMP CHRLoadToA
+    NOJUMP CHRLoadToA
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10027,7 +10023,7 @@ DrawBattleBackdropRow:
 
     LDY #6               ; do 6 columns for the second section
     STY btltmp+11
-    JUMP @Section         ; draw second section and exit
+    NOJUMP @Section         ; draw second section and exit
 
 
   @Section:
@@ -10239,7 +10235,7 @@ Battle_UpdatePPU_UpdateAudio_FixedBank:
     LDA #$00            ; reset scroll
     STA PPUSCROLL
     STA PPUSCROLL
-  ; JUMP BattleUpdateAudio_FixedBank  ; <- flow continues to this routine
+    NOJUMP BattleUpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10587,7 +10583,7 @@ DrawBattleBox_FetchBlock:
       INY
       CPY #$05
       BNE :-
-  ; JUMP DrawBattleBox_Exit          ; <- flow into it
+    NOJUMP DrawBattleBox_Exit
     
     
 DrawBattleBox_Exit:
@@ -11723,7 +11719,7 @@ DrawBattleString_Code0C:            ; print a number (indirect)
     CALL DrawBattle_IncSrcPtr
     LDA (btldraw_src), Y
     STA btldraw_subsrc+1
-  ; JUMP DrawBattle_Number           ; flow into this routine
+    NOJUMP DrawBattle_Number
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12000,7 +11996,7 @@ DrawEntityName:
     TAX             ; put in X to index
     
     LDA btl_enemystats + en_enemyid, X   ; get this enemy's ID
-  ; JUMP DrawEnemyName               ; <- flow into
+    NOJUMP DrawEnemyName
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12026,7 +12022,7 @@ DrawEnemyName:
     LDA data_EnemyNames+1, X
     STA btldraw_subsrc+1
     
-  ; JUMP DrawBattleSubString_Max8   ; <- flow into drawing routine (max 8 characters)
+    NOJUMP DrawBattleSubString_Max8
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12039,7 +12035,7 @@ DrawEnemyName:
 DrawBattleSubString_Max8:
     LDA #$08
     STA btldraw_max
-    JUMP DrawBattleSubString
+    NOJUMP DrawBattleSubString
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12261,7 +12257,7 @@ WaitForVBlank:
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
 @LoopForever:
-    JUMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
+    JMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -12504,7 +12500,7 @@ CallMinimapDecompress:
     CALL SwapPRG
     JSR MinimapDecompress
     LDA #BANK_MINIMAP
-    JUMP SwapPRG
+    NOJUMP SwapPRG
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

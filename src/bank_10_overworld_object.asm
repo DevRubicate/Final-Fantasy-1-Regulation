@@ -21,7 +21,7 @@
 DrawSMSprites:
     LDY #1
     CALL DrawPlayerMapmanSprite    ; draw the player mapman sprite (on foot -- no ship/airship/etc)
-    JUMP UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
+    NOJUMP UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -127,8 +127,8 @@ AnimateAndDrawMapObject:
 
       LDA mapobj_physY, X    ; and copy physical pos to graphical pos
       STA mapobj_gfxY, X
+      NOJUMP DrawMapObject
 
-   ; no JUMP or RTS, code flows seamlessly into DrawMapObject
 
 
 
@@ -325,8 +325,7 @@ DrawMMV_OnFoot:
     LDA #>lut_PlayerMapmanSprTbl   ; include carry in high byte of pointer
     ADC #0
     STA tmp+1                      ; then draw it and exit
-
-       ; no JUMP or RTS -- flows seamlessly into Draw2x2Sprite
+    NOJUMP Draw2x2Sprite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -637,40 +636,6 @@ lut_OWObjectSprTbl:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw 2x2 Vehicle  [$E2DE :: 0x3E2EE]
-;;
-;;  IN:  tmp         = sprite table pointer offset
-;;       spr_x,spr_y = sprite coords
-;;       A           = tile additive (Draw2x2Vehicle only)
-;;       tmp+2       = tile additive (Draw2x2Vehicle_Set only)
-;;
-;;    The tile additive should be one of the following to draw the desired vehicle:
-;;   canoe   = $50
-;;   ship    = $20
-;;   airship = $38
-;;
-;;    The two entry points just look for the tile additive in different places.  Other
-;;  than that, they're the same
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Draw2x2Vehicle:
-    STA tmp+2                 ; store tile additive (in A) to tmp+2
-                              ;  then proceed to 'Set' version of routine
-
-Draw2x2Vehicle_Set:
-    LDA tmp                   ; add low byte of sprite table
-    CLC                       ; to our offset
-    ADC #<lut_VehicleSprTbl
-    STA tmp                   ; and store as low byte of our pointer
-
-    LDA #>lut_VehicleSprTbl   ; then inclue any carry in the high byte of our pointer
-    ADC #0
-    STA tmp+1
-
-    JUMP Draw2x2Sprite         ; draw the 2x2 sprite, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -761,17 +726,12 @@ ConvertOWToSprite:
     RTS                 ; and exit
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawMMV_Canoe    [$E2DC :: 0x3E2EC]
-;;
-;;    Support routine for DrawPlayerMapmanSprite.  Draws the canoe MapMan Vehicle (MMV)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawMMV_Canoe:
-    LDA #$50          ; tile additive = $50 (canoe graphics)
-             ; flows seamlessly into Draw2x2Vehicle
+
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -785,6 +745,61 @@ DrawMMV_Ship:
     LDA #$20
     STA tmp+2               ; tile additive = $20 (ship graphics)
     JUMP Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawMMV_Canoe    [$E2DC :: 0x3E2EC]
+;;
+;;    Support routine for DrawPlayerMapmanSprite.  Draws the canoe MapMan Vehicle (MMV)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawMMV_Canoe:
+    LDA #$50          ; tile additive = $50 (canoe graphics)
+    NOJUMP Draw2x2Vehicle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw 2x2 Vehicle  [$E2DE :: 0x3E2EE]
+;;
+;;  IN:  tmp         = sprite table pointer offset
+;;       spr_x,spr_y = sprite coords
+;;       A           = tile additive (Draw2x2Vehicle only)
+;;       tmp+2       = tile additive (Draw2x2Vehicle_Set only)
+;;
+;;    The tile additive should be one of the following to draw the desired vehicle:
+;;   canoe   = $50
+;;   ship    = $20
+;;   airship = $38
+;;
+;;    The two entry points just look for the tile additive in different places.  Other
+;;  than that, they're the same
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Draw2x2Vehicle:
+    STA tmp+2                 ; store tile additive (in A) to tmp+2
+                              ;  then proceed to 'Set' version of routine
+    NOJUMP Draw2x2Vehicle_Set
+
+Draw2x2Vehicle_Set:
+    LDA tmp                   ; add low byte of sprite table
+    CLC                       ; to our offset
+    ADC #<lut_VehicleSprTbl
+    STA tmp                   ; and store as low byte of our pointer
+
+    LDA #>lut_VehicleSprTbl   ; then inclue any carry in the high byte of our pointer
+    ADC #0
+    STA tmp+1
+
+    JUMP Draw2x2Sprite         ; draw the 2x2 sprite, then exit
+
+
+
+
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -847,8 +862,7 @@ DrawPlayerMapmanSprite:
     LDA #$38
     STA tmp+2               ; tile additive = $38 (airship graphics)
     CALL Draw2x2Vehicle_Set  ; draw the 2x2 vehicle
-          
-            ; then flow seamlessly into DrawAirshipShadow
+    NOJUMP DrawAirshipShadow      
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

@@ -1075,7 +1075,7 @@ EnterBattlePrepareSprites:
     LDA #$60
     STA btl_chardraw_gfxset + $C
     
-  ; JUMP SetAllNaturalPose       ; <- flow into
+    NOJUMP SetAllNaturalPose
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1473,7 +1473,8 @@ DrawCharacter:
     ADC lut_CharacterPoseTSA, X     ; add our pose TSA to it
     STA btl8x8spr_t                 ; that is the tile to draw
     INX                             ; inc TSA index so next pose row we'll use different tiles
-            ; Flow continues into Draw16x8SpriteRow, which will draw the tiles
+    NOJUMP Draw16x8SpriteRow        ; Flow continues into Draw16x8SpriteRow, which will draw the tiles
+
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2025,7 +2026,7 @@ MenuSelection_Magic:
     STA tmp_6af8                   ; set page number to 0 (draw top page of magic box)
     
     CALL DrawBattleMagicBox    ; draw it!
-    JUMP @MenuSelection          ; pointless jump, as this code immediately follws
+    NOJUMP @MenuSelection          ; pointless jump, as this code immediately follws
     
 @MenuSelection:
     LDA #$00
@@ -5552,7 +5553,7 @@ LoadAllCharacterIBStats:
     LDA #$02
     CALL LoadOneCharacterIBStats
     LDA #$03
-    JUMP LoadOneCharacterIBStats
+    NOJUMP LoadOneCharacterIBStats
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7557,7 +7558,7 @@ Battle_CastMagicOnRandomPlayer:
     STA btl_defender
     
     CALL DrawCombatBox_Defender      ; draw defender box
-    JUMP Battle_CastMagicOnPlayer    ; then cast the magic and exit!
+    NOJUMP Battle_CastMagicOnPlayer    ; then cast the magic and exit!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8491,7 +8492,7 @@ BtlMag_Effect_RecoverHP:
     LDY #MATHBUF_MAGDEFENDERHP
     CALL MathBuf_Compare             ; Compare current HP with max HP
     BCC BtlMag_Effect_CureAil_RTS   ; if hp < maxhp, just exit
-    JUMP BtlMag_SetHPToMax           ; otherwise, set HP to the maximum   (strangely, this could just flow into it, but it actually JMPs)
+    NOJUMP BtlMag_SetHPToMax           ; otherwise, set HP to the maximum   (strangely, this could just flow into it, but it actually JMPs)
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9648,7 +9649,7 @@ Explosion_Write_0088:
     CLC
     ADC #$08
     CALL IncYBy4_WriteToOam      ; write +8 value
-    JUMP IncYBy4_WriteToOam      ; write +8 value
+    NOJUMP IncYBy4_WriteToOam      ; write +8 value
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

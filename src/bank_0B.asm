@@ -685,7 +685,7 @@ EndOfBattleWrapUp:
     LDA #$02
     CALL LvlUp_AwardAndUpdateExp
     LDA #$03
-    JUMP LvlUp_AwardAndUpdateExp
+    NOJUMP LvlUp_AwardAndUpdateExp
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2946,7 +2946,7 @@ DrawFormation_4Large:
     CALL @ApplyAtByte
     INY
     LDA #%00000101      ; upper sectors
-    JUMP @ApplyAtByte
+    NOJUMP @ApplyAtByte
     
     ; applies attributes to the desired sector of the desired byte.
     ;                A = low bit set in each attribute sector to update
