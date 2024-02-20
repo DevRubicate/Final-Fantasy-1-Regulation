@@ -8406,8 +8406,7 @@ LoadBridgeSceneGFX:
                         ;  PPUCTRL and $2400 identical!  This is used for visual effects
 
 
-    FARJUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc)
-                        ;  and exit
+    FARJUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc) and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

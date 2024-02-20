@@ -770,6 +770,7 @@ MiniGame_VertSlide:
 ;;  text is used for Bridge and Ending scenes and is displayed one 'page'
 ;;  at a time.  Each string in this text cooresponds to one page.
 
+.align $100
 lut_StoryText:
   .incbin "bin/0D_A800_storytext.bin"
 
