@@ -21,7 +21,7 @@
 DrawSMSprites:
     LDY #1
     CALL DrawPlayerMapmanSprite    ; draw the player mapman sprite (on foot -- no ship/airship/etc)
-    CALL UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
+    JUMP UpdateAndDrawMapObjects   ; then update and draw all map objects, and exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
