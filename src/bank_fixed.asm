@@ -105,11 +105,9 @@ GameStart:
       LDA #BANK_INTRO               ; If we just came in from a cold boot...
       CALL SwapPRG                 ; swap in the intro story bank
       JSR EnterIntroStory           ; And do the intro story!
-      
-      
-  : LDA #BANK_TITLE                 ; Then swap in the title bank
-    CALL SwapPRG                   ; to do the title screen
-    JSR EnterTitleScreen
+    : 
+
+    FARCALL EnterTitleScreen
     
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option
     
@@ -134,10 +132,8 @@ GameStart:
     
     
   @NewGame:
-    LDA #BANK_PARTYGEN              ; swap in party generation bank
-    CALL SwapPRG
-    JSR NewGamePartyGeneration      ; create a new party
-    JSR NewGame_LoadStartingStats   ;   and set their starting stats
+    FARCALL NewGamePartyGeneration      ; create a new party
+    CALL NewGame_LoadStartingStats   ;   and set their starting stats
 
     ; New Game and Continue meet here -- actually start up the game
   @Begin:
@@ -275,9 +271,7 @@ DoOWTransitions:
       CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
 
       CALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
-      LDA #BANK_BRIDGESCENE
-      CALL SwapPRG          ; swap to bank containing bridge scene
-      JSR EnterBridgeScene ; do the bridge scene.
+      FARCALL EnterBridgeScene ; do the bridge scene.
 
       LDA #$04
       CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
