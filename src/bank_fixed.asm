@@ -20,7 +20,7 @@
 .import ResetRAM, SetRandomSeed, GetRandom
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart
+.import GameStart, LoadOWTilesetData
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
@@ -476,51 +476,7 @@ ProcessOWInput:
     BCC @StartMove      ; if yes, do it!
     BCS @CantMove       ; otherwise, can't move (always branches)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Overworld Tileset Data  [$C30F :: 0x3C31F]
-;;
-;;    Copies $400 bytes of overworld tileset data to RAM.
-;;
-;;  This fills the following buffers:
-;;    tileset_prop
-;;    tsa_ul, tsa_ur, tsa_dl, tsa_dr
-;;    tsa_attr
-;;    load_map_pal
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-LoadOWTilesetData:
-    LDA #BANK_OWINFO
-    CALL SwapPRG       ; swap to bank containing OW tileset data
-
-    LDA #0              ; set low bytes of
-    STA tmp             ;  source pointer
-    STA tmp+2           ;  and dest pointer
-
-    LDA #>lut_OWTileset ; high byte of source pointer
-    STA tmp+1
-
-    LDA #>tileset_data  ; high byte of dest pointer
-    STA tmp+3
-
-    LDX #4              ; high byte of loop counter ($400 iterations)
-    LDY #0              ; low byte of loop counter and index
-
-  @Loop:
-    LDA (tmp), Y        ; copy over a byte
-    STA (tmp+2), Y
-    INY                 ; inc our index
-    BNE @Loop           ; loop until it wraps
-
-    INC tmp+1           ; once it wraps, inc high bytes of both pointers
-    INC tmp+3
-    DEX                 ; and decrement overall loop counter
-
-    BNE @Loop           ; and keep looping until that expires ($400 iterations)
-
-    RTS                 ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1574,7 +1530,7 @@ PrepOverworld:
     STA mapflags        ; zeroing map flags indicates we're on the overworld map
 
     CALL LoadOWCHR           ; load up necessary CHR
-    CALL LoadOWTilesetData   ; the tileset
+    FARCALL LoadOWTilesetData   ; the tileset
     CALL LoadMapPalettes     ; palettes
     CALL DrawFullMap         ; then draw the map
 
@@ -5316,6 +5272,8 @@ ScreenWipeFrame:
 ;;  cycles.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+.align $100
 
 WaitScanline:
     LDY #16          ; +2 cycles
