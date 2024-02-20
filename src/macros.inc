@@ -68,6 +68,3 @@
     .byte <(_address - 1)
     .byte (_bank * 2) | %10000000
 .endmacro
-
-
-

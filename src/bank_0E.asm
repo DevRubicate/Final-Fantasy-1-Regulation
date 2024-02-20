@@ -4078,14 +4078,14 @@ EnterShop_Equip:
       ;  Need to do all this work here so that stats are adjusted if you're
       ;  selling an item that is currently equipped
 
-      CALL UnadjustEquipStats       ; unadjust equipment stats
+      FARCALL UnadjustEquipStats       ; unadjust equipment stats
 
       LDX shop_charindex           ; erase the item from char's inventory
       LDA #0
       STA ch_stats, X
 
       CALL SortEquipmentList        ; sort the equipment list
-      CALL ReadjustEquipStats       ; and readjust stats.
+      FARCALL ReadjustEquipStats       ; and readjust stats.
 
     PLA                    ; pull backed up shop type
     STA shop_type          ; and restore it
@@ -8821,7 +8821,7 @@ EnterEquipMenu:
     CALL SortEquipmentList           ; sort the equipment list to remove gaps
     CALL DrawEquipMenu               ; draw the equip menu (but not the item text)
     CALL CopyEquipToItemBox          ; copy equipment from inventory to item_box so it's easier to work with
-    CALL UnadjustEquipStats          ; unadjust equipment stats so they can be readjusted later
+    FARCALL UnadjustEquipStats          ; unadjust equipment stats so they can be readjusted later
     CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on  (even though item names have not been drawn)
 
     LDA #1
@@ -8852,7 +8852,7 @@ EnterEquipMenu:
   @B_Pressed:                 ; if B pressed....
     CALL CopyEquipFromItemBox  ;  move all equipment from item box back to player inventory
     CALL SortEquipmentList     ;  sort equipment list to remove gaps
-    JUMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
+    FARJUMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
 
 
   @GoToSubMenu:
