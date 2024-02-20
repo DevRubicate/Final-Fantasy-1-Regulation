@@ -30,9 +30,8 @@
     JSR _address
 .endmacro
 
-.macro JUMP _address
-    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARJUMP instead"
-    JMP _address
+.macro DEBUG
+    .byte $1A
 .endmacro
 
 .macro FARCALL _address
@@ -43,6 +42,11 @@
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
+.macro JUMP _address
+    .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARJUMP instead"
+    JMP _address
+.endmacro
+
 .macro FARJUMP _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
     JSR Impl_FARJUMP
@@ -51,6 +55,13 @@
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
-.macro DEBUG
-    .byte $1A
+.macro FIXEDCALL _address, _bank
+    .assert .bank(_address) = $FF, warning, "FIXEDCALL: Address must be in fixed bank"
+    JSR Impl_FARCALL
+    .byte >(_address - 1)
+    .byte <(_address - 1)
+    .byte (_bank * 2) | %10000000
 .endmacro
+
+
+

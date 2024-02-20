@@ -84,7 +84,6 @@ BANK_MINIMAP      = $09
 BANK_MENUCHR      = $09
 BANK_BATTLECHR    = $07
 BANK_STANDARDMAPS = $04   ; used with ORA, so low 2 bits of bank number must be clear
-BANK_TILESETCHR   = $03
 BANK_MAPCHR       = $02
 BANK_OWMAP        = $01
 BANK_OBJINFO      = $00

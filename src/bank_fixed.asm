@@ -19,7 +19,7 @@
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .import ResetRAM, SetRandomSeed, GetRandom
 .import OpenTreasureChest, AddGPToParty, LoadPrice
-.import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes
+.import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 
 .export SwapPRG
 .export GameStart
@@ -8445,7 +8445,7 @@ LoadSMCHR:                     ; standard map -- does not any palettes
     LDA #BANK_MAPCHR
     CALL SwapPRG
     CALL LoadPlayerMapmanCHR
-    CALL LoadTilesetAndMenuCHR
+    FARCALL LoadTilesetAndMenuCHR
     JUMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
@@ -8572,33 +8572,6 @@ CHRLoad_Cont:
     DEX               ; and decrement our row counter (256 bytes = a full row of tiles)
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Tileset and Menu CHR Loading   [$E975 :: 0x3E985]
-;;
-;;   Loads CHR for the tileset of the current map (Standard maps -- not OW)
-;;   Also loads menu CHR
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadTilesetAndMenuCHR:
-    LDA #BANK_TILESETCHR
-    CALL SwapPRG     ; swap to bank containing tileset CHR
-    LDA #0
-    STA tmp           ; set low byte of src pointer to $00
-    LDA cur_tileset   ; get current tileset
-    ASL A
-    ASL A
-    ASL A             ; * 8 (8 rows of tiles per tileset)
-    ORA #$80          ; set high byte of src pointer to $80+(tileset * 8)
-    STA tmp+1
-    LDA #0            ; dest address = $0000
-    LDX #8            ; 8 rows to load
-    CALL CHRLoadToA
-    FARJUMP LoadMenuCHR
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
