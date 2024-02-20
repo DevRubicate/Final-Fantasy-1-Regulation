@@ -101,10 +101,7 @@ GameStart:
     BEQ :+                          ; if it is any value other than $4D, we can assume we just powered on...
       LDA #$4D                      ; ... so initilize it to $4D.  From this point forward, it will always be initlialized.
       STA startintrocheck           ; This is how the game makes the distinction between cold boot and warm reset
-      
-      LDA #BANK_INTRO               ; If we just came in from a cold boot...
-      CALL SwapPRG                 ; swap in the intro story bank
-      JSR EnterIntroStory           ; And do the intro story!
+      FARCALL EnterIntroStory       ; And do the intro story!
     : 
 
     FARCALL EnterTitleScreen
@@ -284,10 +281,7 @@ DoOWTransitions:
       CALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
       LDA #$00
       CALL CyclePalettes   ; cycle out the palette
-
-      LDA #BANK_MENUS
-      CALL SwapPRG       ; swap to bank containing shops
-      JSR EnterShop       ; and enter the shop!
+      FARCALL EnterShop       ; and enter the shop!
       JUMP EnterOW_PalCyc  ; then re-enter overworld
 
   @SkipShop:
@@ -308,10 +302,7 @@ DoOWTransitions:
       CALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
       LDA #$00
       CALL CyclePalettes   ; cycle out the palette
-
-      LDA #BANK_MENUS
-      CALL SwapPRG       ; swap to bank containing menus
-      JSR EnterMainMenu   ; and enter the main menu
+      FARCALL EnterMainMenu   ; and enter the main menu
       JUMP EnterOW_PalCyc  ; then re-enter the overworld
 
   @SkipStart:
@@ -327,21 +318,15 @@ DoOWTransitions:
       BEQ @Lineup         ;  if not... jump to the lineup menu.  Otherwise do the minimap screen
 
       @Minimap:
-        LDA #BANK_MINIMAP
-        CALL SwapPRG        ; swap to bank containing the minimap
-        JSR EnterMinimap     ; do the minimap
+        FARCALL EnterMinimap     ; do the minimap
         JUMP EnterOW_PalCyc   ; then re-enter overworld
 
       @Lineup:
-        LDA #BANK_MENUS
-        CALL SwapPRG        ; swap to bank containing menus
-        JSR EnterLineupMenu  ; enter the lineup menu
+        FARCALL EnterLineupMenu  ; enter the lineup menu
         JUMP EnterOW_PalCyc   ; then re-enter overworld
 
   @Exit:
    RTS
-
-
 
   @Battle:
     CALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
@@ -501,9 +486,7 @@ ProcessOWInput:
     LDA #0                  ; otherwise... they activated the minigame!
     CALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
     CALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
-    LDA #BANK_MINIGAME
-    CALL SwapPRG        ; swap to bank containing minigame
-    JSR EnterMiniGame    ; and do it!
+    FARCALL EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
       CALL MinigameReward ;  ... give them their reward
 
@@ -1569,19 +1552,10 @@ IsOnCanal:
 
 
 CallMusicPlay_NoSwap:
-    LDA #BANK_MUSIC     ; swap to music bank (where MusicPlay is)
-    CALL SwapPRG
-    JMP MusicPlay     ; jump to it, and return (do not swap back)
-
+    FARJUMP MusicPlay     ; jump to it, and return (do not swap back)
 
 CallMusicPlay:
-    LDA #BANK_MUSIC     ; swap to music bank (for MusicPlay)
-    CALL SwapPRG
-    JSR MusicPlay     ; call MusicPlay
-    LDA cur_bank        ; then swap back to previously supplied bank
-    JUMP SwapPRG       ;   before returning
-
-
+    FARCALL MusicPlay     ; call MusicPlay
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2135,10 +2109,7 @@ StandardMapLoop:
     STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
     LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
     CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
-
-    LDA #BANK_MENUS         ; swap to menu bank
-    CALL SwapPRG
-    JSR EnterShop           ; enter the shop
+    FARCALL EnterShop           ; enter the shop
     CALL ReenterStandardMap  ;  then reenter the map
     JUMP StandardMapLoop     ;  and continue looping
 
@@ -2164,9 +2135,7 @@ StandardMapLoop:
 
     @VictoryLoop:
       CALL LoadEpilogueSceneGFX
-      LDA #BANK_ENDINGSCENE
-      CALL SwapPRG
-      JSR EnterEndingScene
+      FARCALL EnterEndingScene
       JUMP @VictoryLoop
 
 :   CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
@@ -2301,10 +2270,7 @@ ProcessSMInput:
 
         LDA #0
         STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
-
-        LDA #BANK_TALKTOOBJ ; swap to bank containing TalkToObject routine
-        CALL SwapPRG
-        JSR TalkToObject    ; then talk to this object.
+        FARCALL TalkToObject    ; then talk to this object.
         JUMP @DialogueBox
 
 
@@ -2355,11 +2321,7 @@ ProcessSMInput:
       CALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
       LDA #$02
       CALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
-
-      LDA #BANK_MENUS
-      CALL SwapPRG
-      JSR EnterMainMenu        ; enter the main menu
-
+      FARCALL EnterMainMenu        ; enter the main menu
       JUMP ReenterStandardMap   ; then reenter the map
 
   ;; if neither A nor Start pressed... jumps here to check select
@@ -2377,9 +2339,7 @@ ProcessSMInput:
       STA joy_select
       LDA #$02
       CALL CyclePalettes
-      LDA #BANK_MENUS
-      CALL SwapPRG
-      JSR EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
+      FARCALL EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
       JUMP ReenterStandardMap
 
   ;; A, Start, Select -- none of them pressed.  Now check directional buttons
@@ -3615,7 +3575,6 @@ PlayDoorSFX:
 EnterStandardMap:
     CALL LoadStandardMapAndObjects   ; decompress the map, load objects
     CALL PrepStandardMap             ; draw it, do other prepwork
-    CALL AssertNasirCRC              ; do the NASIR CRC
     JUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
 
 
@@ -3726,48 +3685,6 @@ PrepStandardMap:
 
   @lut_TilesetMusicTrack:
     .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Assert Nasir CRC  [$CFCB :: 0x3CFDB]
-;;
-;;    This is the "NASIR CRC".  It's a sort of ?antipiracy? measure to prevent you from removing
-;;  NASIR's name in the credits during the bridge scene (though it checks an entire page of text
-;;  in the bridge scene, as well as the pointer tables -- so it will likely fail if you make any
-;;  changes to the credits).
-;;
-;;    It is called when you enter any standard map, and if the checksum fails, the game simply
-;;  crashes.  However the routine is easily defeated by simply RTSing out of it immediately (or
-;;  removing the CALL to it)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-AssertNasirCRC:
-    LDA #BANK_BRIDGESCENE        ; swap to bank containing the bridge scene (credits text)
-    CALL SwapPRG
-
-    LDY #$25                     ; going to sum $25+1 bytes
-    LDX __Nasir_CRC_High_Byte    ; get the high byte of pointer
-    STX tmp+1                    ; and record it (points to lut_CreditsText)
-    STA tmp                      ; zero low byte of pointer (A is zero from SwapPRG)
-
-    CLC
-  @Loop:
-      ADC (tmp), Y          ; sum bytes, including carry between additions
-      DEY
-      BPL @Loop             ; loop until Y wraps ($26 iterations)
-
-    EOR #$AE                ; make sure sum=$AE
-    BEQ @Exit               ; if it does, exit (checksum passed)
-
-    PLA                ; otherwise (checksum failed), pull bytes from stack
-    PLA                ; to corrupt it, then RTS (jumps to crap -- crashing the game)
-    PLA
-
-  @Exit:
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7152,9 +7069,7 @@ DrawComplexString:
 
     ;;; Control code $04 -- draws current gold
     CALL @Save               ; this is a substring we'll need to draw, so save 
-    LDA #BANK_MENUS
-    CALL SwapPRG           ;  swap to menu bank (for "PrintGold" routine)
-    JSR PrintGold           ;  PrintGold to temp buffer
+    FARCALL PrintGold           ;  PrintGold to temp buffer
     CALL @StallAndDraw       ;  recursively call this routine to draw temp buffer
     JUMP @Restore            ; then restore original string state and continue
 
@@ -7244,10 +7159,8 @@ DrawComplexString:
   @DrawCharStat:           ; this paticular stat code is going to be handled in a routine in another bank
     TAX                    ;  temporarily put the code in X
     CALL @Save              ;  save string data (we'll be drawing a substring)
-    LDA #BANK_MENUS
-    CALL SwapPRG          ;  swap to menu bank (has the PrintCharStat routine)
     TXA                    ;  put the stat code back in A
-    JSR PrintCharStat      ;  print it to temp string buffer
+    FARCALL PrintCharStat      ;  print it to temp string buffer
     CALL @StallAndDraw      ; draw it to the screen
     JUMP @Restore           ; restore original string data and continue
 
@@ -7425,10 +7338,8 @@ DrawComplexString:
 
 :   CALL @Save            ; Save string info (item price is a substring)
     TAX                  ; put item ID in X temporarily
-    LDA #BANK_MENUS
-    CALL SwapPRG        ; swap to bank (for PrintPrice routine)
     TXA                  ; get back the item ID
-    JSR PrintPrice       ; print the price to temp string buffer
+    FARCALL PrintPrice       ; print the price to temp string buffer
     CALL @StallAndDraw    ; recursivly draw it
     JUMP @Restore         ; then restore original string state and continue
 
@@ -9675,11 +9586,7 @@ DrawItemBox:
        TAX                     ; put item ID in X
        LDA items, X            ; use it to index inventory to see how many of this item we have
        STA tmp                 ;  put the qty in tmp
-       LDA #BANK_MENUS
-       STA ret_bank            ; set return bank again (unnecessary -- was already done above)
-       CALL SwapPRG           ; also swap to BANK_MENUS (for PrintNumber routines)
-       JSR PrintNumber_2Digit  ; print the 2 digit number
-
+       FARCALL PrintNumber_2Digit  ; print the 2 digit number
        LDA format_buf+5        ; copy the printed 2 digit number from the format buffer
        STA str_buf+$25         ;  to the end of our string buffer (just before the null terminator)
        LDA format_buf+6
