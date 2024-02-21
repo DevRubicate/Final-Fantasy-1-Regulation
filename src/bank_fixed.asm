@@ -21,7 +21,7 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
-.import ClearOAM, OW_MovePlayer, OWCanMove
+.import ClearOAM, OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
@@ -36,7 +36,7 @@
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
-.export SetOWScroll_PPUOn, CallMusicPlay_NoSwap
+.export CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 .export DisableAPU, VerifyChecksum, DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
 
@@ -79,7 +79,7 @@ EnterOverworldLoop:
     LDA #>oam                  ; and do sprite DMA
     STA OAMDMA
 
-    CALL OverworldMovement      ; do any pending movement animations and whatnot
+    FARCALL OverworldMovement      ; do any pending movement animations and whatnot
                                ;   also does any required map drawing and updates
                                ;   the scroll appropriately
 
@@ -384,7 +384,8 @@ ProcessOWInput:
     BCC :+               ; if they compelted the minigame successfully...
       CALL MinigameReward ;  ... give them their reward
 
-:   LDA #$04             ; cycle palettes out from the minigame screen
+    :   
+    LDA #$04             ; cycle palettes out from the minigame screen
     CALL CyclePalettes    ; code=4 (zero scroll, cycle out)
     JUMP EnterOW_PalCyc   ; then re-enter overworld
   @Exit:
@@ -479,68 +480,6 @@ ProcessOWInput:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld movement  [$C335 :: 0x3C345]
-;;
-;;    This moves the party on the overworld, and deals them poison damage
-;;  when appropriate.  It also sets the scroll appropriately.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OverworldMovement:
-    LDA move_speed        ; check movement speed
-    BEQ SetOWScroll_PPUOn ; if zero (we're not moving), just set the scroll and exit
-
-    FARCALL OW_MovePlayer     ; otherwise... process party movement
-
-    LDA vehicle           ; check the current vehicle
-    CMP #$01              ; are they on foot?
-    BNE :+                ; if not, just exit
-      JUMP MapPoisonDamage ; if they are... distribute poison damage
-    :   
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Set OW Scroll  [$C346 :: 0x3C356]
-;;
-;;    Sets the scroll for the overworld map.  And optionally
-;;  turns the screen on (seperate entry point)
-;;
-;;    Changes to SetOWScroll can impact the timing of some raster effects.
-;;  See ScreenWipeFrame for details.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetOWScroll_PPUOn:
-    LDA #$1E
-    STA PPUMASK           ; turn the PPU on!
-
-SetOWScroll:
-    LDA NTsoft2000      ; get the NT scroll bits
-    STA soft2000        ; and record them in both soft2000
-    STA PPUCTRL           ; and the actual PPUCTRL
-
-    LDA PPUSTATUS           ; reset PPU toggle
-
-    LDA ow_scroll_x     ; get the overworld scroll position (use this as a scroll_x,
-    ASL A               ;    since there is no scroll_x)
-    ASL A
-    ASL A
-    ASL A               ; *16 (tiles are 16 pixels wide)
-    ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA PPUSCROLL           ; write this as our X scroll
-
-    LDA scroll_y        ; get scroll_y
-    ASL A
-    ASL A
-    ASL A
-    ASL A               ; *16 (tiles are 16 pixels tall)
-    ORA move_ctr_y      ; OR with move counter
-    STA PPUSCROLL           ; and set as Y scroll
-
-    RTS                 ; then exit
 
 
 
@@ -1052,7 +991,7 @@ PrepOverworld:
 
     CALL WaitForVBlank       ; wait for a VBlank
     CALL DrawMapPalette        ; before drawing the palette
-    CALL SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
+    FARCALL SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
     LDA #0                    ;  .. but then immediately turn PPU off!
     STA PPUMASK                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
 
@@ -1140,94 +1079,6 @@ MapTileDamage:
                   ; damage is only assigned at end of move because we only want to assign damage once per
                   ; step, whereas this routine is called once per frame.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Map Poison Damage [$C7FB :: 0x3C80B]
-;;
-;;    Deals poison damage (-1 HP) to any poisoned party member, and plays
-;;  the harsh "you're poisoned" sound effect.
-;;
-;;    It is called only when the player is moving.  If it is called when the player
-;;  is stationary, then the sound effect would never stop, and party HP would rapidly
-;;  drain (1 HP per frame!)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MapPoisonDamage:       ; first thing is to check if ANY characters are poisoned.
-    LDA ch_ailments    ; if nobody is poisoned, do nothing.
-    CMP #$03                     ; get char 0's ailments... see if they=3 (poison)
-    BEQ @DoIt                    ; if yes... "DoIt"
-
-    LDA ch_ailments + (1<<6)     ; and do the same with chars 1,2 and 3
-    CMP #$03
-    BEQ @DoIt
-    LDA ch_ailments + (2<<6)
-    CMP #$03
-    BEQ @DoIt
-    LDA ch_ailments + (3<<6)
-    CMP #$03
-    BEQ @DoIt
-
-    RTS                          ; if nobody poisoned, just exit
-
-  @DoIt:
-                            ; play the "you're poisoned" sound effect
-    LDA #%00111010          ; 12.5% duty (harsh), volume=$A
-    STA PAPU_CTL2
-    LDA #%10000001          ; sweep downward in pitch
-    STA PAPU_RAMP2
-    LDA #$60
-    STA PAPU_FT2               ; start at F=$060
-    STA PAPU_CT2
-
-    LDA #$06                ; indicate sq2 is busy with sound effects for 6 frames
-    STA sq2_sfx
-
-    LDA move_speed          ; see if party is moving (or really, "has moved")
-    BEQ @DoDamage           ; if not... do damage
-    RTS                     ; otherwise... don't do damage... just exit.
-            ;   This might take some explaining.  This seems contradictory to what I say in the routine
-            ; description ("It is called only when the player is moving").  Due to the order in which
-            ; this routine is called... move_speed will be zero at this point if the player just completed
-            ; a move across a tile (ie:  they moved a full 16 pixels).  move_speed will be nonzero if they
-            ; moved less than that.
-            ;   Without doing this check, poisoned characters would be damaged every FRAME rather than every step
-            ; (which would end up being -16 HP per step, since the player moves 1 pixel per frame).  With this check,
-            ; damage is only dealt once the move is completed (so only once per step)
-
-  @DoDamage:
-    LDX #0         ; X will be our loop counter and char index
-
-  @DmgLoop:
-    LDA ch_ailments, X    ; get this character's ailments
-    CMP #$03              ; see if it = 3 (poison)
-    BNE @DmgSkip          ; if not... skip this character
-
-    LDA ch_curhp+1, X     ; check high byte of HP
-    BNE @DmgSubtract      ; if nonzero (> 255 HP), deal this character damage
-
-    LDA ch_curhp, X       ; otherwise, check low byte of HP
-    CMP #2                ; see if >= 2 (don't take away their last HP)
-    BCC @DmgSkip          ; if < 2, skip this character
-                          ; otherwise... deal him damage
-
-  @DmgSubtract:
-    LDA ch_curhp, X       ; subtract 1 from HP
-    SEC
-    SBC #1
-    STA ch_curhp, X
-    LDA ch_curhp+1, X
-    SBC #0
-    STA ch_curhp+1, X
-
-  @DmgSkip:
-    TXA                   ; add $40 char index
-    CLC
-    ADC #$40
-    TAX
-
-    BNE @DmgLoop          ; and loop until it wraps (4 iterations)
-    RTS                   ; then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2203,7 +2054,7 @@ StandardMapMovement:
     BEQ SetSMScroll       ; if not, just skip ahead and set the scroll
                           ; the rest of this is only done during movement
       CALL SM_MovePlayer     ; Move the player in the desired direction
-      CALL MapPoisonDamage   ; do poison damage
+      FARCALL MapPoisonDamage   ; do poison damage
 
       LDA tileprop          ; get the properties for this tile
       AND #TP_SPEC_MASK     ; mask out the special bits
@@ -4663,8 +4514,9 @@ ScreenWipeFrame_Prep:
     LDA mapflags        ; see if we're on the overworld or standard map
     LSR A
     BCS :+
-      JUMP SetOWScroll   ; and set scroll appropriately
-:   JUMP SetSMScroll     ;  then exit
+      FARJUMP SetOWScroll   ; and set scroll appropriately
+    :   
+    JUMP SetSMScroll     ;  then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5153,7 +5005,7 @@ BattleTransition:
       CALL SetSMScroll         ; set SM scroll if SM
       JUMP @Continue
   @OW:
-      CALL SetOWScroll_PPUOn   ; or OW scroll if OW
+      FARCALL SetOWScroll_PPUOn   ; or OW scroll if OW
 
   @Continue:
     LDA tmp+12       ; get loop counter
@@ -5349,7 +5201,7 @@ PalCyc_SetScroll:
     BNE @Do_SM           ; and branch appropriately
 
   @Do_OW:
-    CALL SetOWScroll_PPUOn  ; set overworld scroll
+    FARCALL SetOWScroll_PPUOn  ; set overworld scroll
     LDA #$0A
     STA PPUMASK              ; disable sprites
     RTS                    ; exit
