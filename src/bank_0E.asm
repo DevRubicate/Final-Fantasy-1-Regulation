@@ -4084,7 +4084,7 @@ EnterShop_Equip:
       LDA #0
       STA ch_stats, X
 
-      CALL SortEquipmentList        ; sort the equipment list
+      FARCALL SortEquipmentList        ; sort the equipment list
       FARCALL ReadjustEquipStats       ; and readjust stats.
 
     PLA                    ; pull backed up shop type
@@ -8818,7 +8818,7 @@ EnterEquipMenu:
     STA joy_b
     STA menustall         ; and turn off menu stalling (since the PPU is off)
 
-    CALL SortEquipmentList           ; sort the equipment list to remove gaps
+    FARCALL SortEquipmentList           ; sort the equipment list to remove gaps
     CALL DrawEquipMenu               ; draw the equip menu (but not the item text)
     CALL CopyEquipToItemBox          ; copy equipment from inventory to item_box so it's easier to work with
     FARCALL UnadjustEquipStats          ; unadjust equipment stats so they can be readjusted later
@@ -8851,7 +8851,7 @@ EnterEquipMenu:
 
   @B_Pressed:                 ; if B pressed....
     CALL CopyEquipFromItemBox  ;  move all equipment from item box back to player inventory
-    CALL SortEquipmentList     ;  sort equipment list to remove gaps
+    FARCALL SortEquipmentList     ;  sort equipment list to remove gaps
     FARJUMP ReadjustEquipStats    ;  adjust stats to reflect new equipment.  Then exit.
 
 

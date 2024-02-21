@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.export FindEmptyWeaponSlot, FindEmptyArmorSlot, OpenTreasureChest, AddGPToParty, LoadPrice
+.export FindEmptyWeaponSlot, FindEmptyArmorSlot, OpenTreasureChest, AddGPToParty, LoadPrice, SortEquipmentList
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -250,6 +250,75 @@ AddGPToParty:
   @Exit:
     RTS
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Sort Equipment List  [$EFFC :: 0x3F00C]
+;;
+;;    Rearranges an equipment list (weapons/armor) so that gaps in between character
+;;  inventory are removed.  Personally I always hated this "feature".. it prevents you from
+;;  ordering your inventory list the way you want it.  However, it is required for the game
+;;  because the equipment shops are coded poorly and can only sell equipment if the inventory
+;;  list has no gaps (see EquipMenu_BuildSellBox).
+;;
+;;  IN:   equipoffset = offset from ch_stats to the start of the equipment list
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SortEquipmentList:
+    LDY #$04         ; Y will be our down counter for the loop (loop 4 times, once for each char)
+    LDX equipoffset  ; put the equip offset in X for indexing
+
+   @Loop:
+      CALL @SortOne   ; sort one char's inventory
+
+      TXA            ; move the index to A
+      CLC
+      ADC #$40       ; so we can add $40 (look at next character)
+      AND #$FC       ; snap back to start of this character's inventory
+      TAX            ; then move back to X for indexing
+
+      DEY            ; decrement our loop counter
+      BNE @Loop      ; and keep looping until it expires
+
+    RTS              ; once it does... exit
+
+  @SortOne:
+    LDA ch_stats, X     ; copy all this char's equipment over to temp ram
+    STA tmp
+    LDA ch_stats+1, X
+    STA tmp+1
+    LDA ch_stats+2, X
+    STA tmp+2
+    LDA ch_stats+3, X
+    STA tmp+3
+
+    LDA #0              ; then erase all their equipment
+    STA ch_stats, X
+    STA ch_stats+1, X
+    STA ch_stats+2, X
+    STA ch_stats+3, X
+
+    LDA tmp             ; now step through each temp byte, and place them back into inventory
+    BEQ :+              ;  only if they're nonzero (not blank).  If they're zero, simply skip over them
+      STA ch_stats, X
+      INX
+
+:   LDA tmp+1
+    BEQ :+
+      STA ch_stats, X
+      INX
+
+:   LDA tmp+2
+    BEQ :+
+      STA ch_stats, X
+      INX
+
+:   LDA tmp+3
+    BEQ :+
+      STA ch_stats, X  ; do not INX a 4th time
+
+:   RTS                ; exit once all the gaps are removed
 
 
 
