@@ -21,7 +21,7 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
-.import ClearOAM
+.import ClearOAM, OW_MovePlayer
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
@@ -38,7 +38,7 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export SetOWScroll_PPUOn, CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-.export DisableAPU, VerifyChecksum, DoOverworld
+.export DisableAPU, VerifyChecksum, DoOverworld, DoMapDrawJob
 
 
 
@@ -97,15 +97,15 @@ EnterOverworldLoop:
     CMP #1
     BNE :+
       CALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
-
-  :   LDA move_speed             ; check to see if the player is currently moving
+    :
+    LDA move_speed             ; check to see if the player is currently moving
     BNE :+                     ; if not....
       LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
       STA vehicle
       CALL DoOWTransitions      ; check for any transitions that need to be done
       CALL ProcessOWInput       ; process overworld input
-
-  :   FARCALL ClearOAM           ; clear OAM
+    :
+    FARCALL ClearOAM           ; clear OAM
     FARCALL DrawOWSprites      ; and draw all overworld sprites
 
     LDA vehicle       ; Get currnt vehicle
@@ -492,13 +492,14 @@ OverworldMovement:
     LDA move_speed        ; check movement speed
     BEQ SetOWScroll_PPUOn ; if zero (we're not moving), just set the scroll and exit
 
-    CALL OW_MovePlayer     ; otherwise... process party movement
+    FARCALL OW_MovePlayer     ; otherwise... process party movement
 
     LDA vehicle           ; check the current vehicle
     CMP #$01              ; are they on foot?
     BNE :+                ; if not, just exit
       JUMP MapPoisonDamage ; if they are... distribute poison damage
-:   RTS
+    :   
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -540,242 +541,6 @@ SetOWScroll:
     STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Right  [$C36C :: 0x3C37C]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-OWMove_Right:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise, do the job
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn on PPU, set scroll
-
-    LDA move_ctr_x         ; add movement speed
-    CLC                    ;  to our X move counter
-    ADC move_speed
-    AND #$0F               ; mask low bits to keep within a tile
-    BEQ @FullTile          ; if result is zero, we've moved a full tile
-
-    STA move_ctr_x         ; otherwise, simply write back the counter
-    RTS                    ;  and exit
-
-  @FullTile:
-    STA move_speed         ; after moving a full tile, zero movement speed
-    STA move_ctr_x         ; and move counter
-
-    LDA ow_scroll_x        ; +1 to our overworld scroll X
-    CLC
-    ADC #$01
-    STA ow_scroll_x
-
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPUCTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    RTS                    ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Left  [$C396 :: 0x3C3A6]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Left:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise... do the job
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; set scroll and turn PPU on
-
-    LDA move_ctr_x         ; get the move counter.  If zero, we need to move one tile to left
-    BNE @NoTileChg         ;   otherwise we don't need to change tiles
-
-    LDA ow_scroll_x        ; subtract 1 from the OW X scroll
-    SEC
-    SBC #$01
-    STA ow_scroll_x
-
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPUCTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    LDA move_ctr_x         ; get the move counter
-
-  @NoTileChg:
-    SEC                    ; A=move counter at this point
-    SBC move_speed         ; subtract the move speed from the counter
-    AND #$0F               ; mask it to keep it in the tile
-    BEQ @FullTile          ; if zero, we've moved a full tile
-
-    STA move_ctr_x         ; otherwise, just write the move counter back
-    RTS                    ; and exit
-
-  @FullTile:
-    STA move_speed         ; if we've moved a full tile, zero our speed
-    STA move_ctr_x         ; and our counter
-    RTS                    ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Player  [$C3C4 :: 0x3C3D4]
-;;
-;;    This moves the player's sprite in the direction they're facing
-;;  at their current movement speed.  It also draw the necessary map
-;;  drawing jobs when apppropriate.
-;;
-;;    For vertical movement... drawing jobs are performed halfway between tiles
-;;  (8 pixels in).  For Horizontal movement, they're performed immediately.  The reason
-;;  for this is because the game is using Vertical mirroring, which means changes made to the
-;;  top of the screen can be seen on the bottom.  So drawing between tiles when moving vertically
-;;  minimizes garbage appearing at the top or bottom of the screen.  No such caution is needed
-;;  (or desired) for horizontal movement, because the extra nametable on the X axis prevents
-;;  such garbage from appearing altogether.
-;;
-;;    Note that most of the routines this jumps to are jumped to with branches
-;;  so this routine must be relatively close to all those routines.
-;;
-;;    This routine will set the PPU scroll BEFORE doing additional scrolling.  Basically
-;;  meaning that the scroll you see on-screen is 1 frame behind what the game is
-;;  tracking.  This is intentional, because all sprites also have this 'delay'... because
-;;  OAM has to wait until next frame before it can be DMA'd.  So this keeps the BG
-;;  and sprites both in sync by keeping them both a frame behind (otherwise, sprites
-;;  would appear to shift over 1 pixel during scrolling).
-;;
-;;    The scroll must be set AFTER all drawing is complete.  This is why each routine
-;;  jumped to here calls SetOWScroll_PPUOn instead of this routine just calling it once.
-;;  Since each routine needs to do drawing jobs under specific conditions... those drawing
-;;  jobs must be done BEFORE the scroll is set (has to do with how NES scrolling works).
-;;  Therefore, once this routine is called, the scroll is set, so no further drawing
-;;  can be done this frame!
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OW_MovePlayer:
-    LDA facing          ; check to see which way we're facing
-    LSR A
-    BCS OWMove_Right    ; moving right
-    LSR A
-    BCS OWMove_Left     ; moving left
-    LSR A
-    BCS OWMove_Down     ; moving down
-    JUMP OWMove_Up       ; moving up
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Down  [$C3D2 :: 0x3C3E2]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Down:
-    LDA mapdraw_job     ; see if a drawing job needs to be performed
-    BEQ @NoJob          ; if not... skip ahead
-
-    CMP #$01            ; if drawing job=1 (attributes)...
-    BEQ @Job            ;   do it right away
-
-    LDA move_ctr_y      ; otherwise, only do the job if we're halfway between tiles
-    CMP #$08            ;   (8 pixels between the move)
-    BNE @NoJob          ; if not 8 pixels between the move... don't do the job
-
-  @Job:
-    CALL DoMapDrawJob       ; do the map drawing job, then proceed normally
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn the PPU on, and set the appropriate overworld scroll
-
-    LDA move_ctr_y         ; get the Y move counter
-    CLC
-    ADC move_speed         ; add our movement speed to it
-    AND #$0F               ; and mask it to keep it within the current tile
-    BEQ @FullTile          ; if it's now zero, we've moved 1 full tile
-
-    STA move_ctr_y         ; otherwise, simply record the new move counter
-    RTS                    ; and exit
-
-  @FullTile:               ; if we've moved a full tile
-    STA move_speed         ; zero our move speed (A=0 here) to stop moving
-    STA move_ctr_y         ; also zero our move counter
-
-    INC ow_scroll_y        ; update the overworld scroll
-
-    LDA scroll_y           ; and update our map scroll
-    CLC
-    ADC #1                 ;   by adding 1 to it
-    CMP #$0F
-    BCC :+
-      SBC #$0F             ;   and make it wrap from E->0  (nametables are only 15 tiles tall.. not 16)
-:   STA scroll_y           ; write it back
-    RTS                    ; and exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Up  [$C406 :: 0x3C416]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Up:
-    LDA mapdraw_job        ; see if a job needs to be done
-    BEQ @NoJob             ; if not, no job
-
-    CMP #$01
-    BEQ @Job               ; if job=1, do it right away
-
-    LDA move_ctr_y         ; otherwise, only do it when we're halfway between tiles
-    CMP #$08
-    BNE @NoJob
-
-  @Job:
-    CALL DoMapDrawJob
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn PPU on and set scroll
-
-    LDA move_ctr_y         ; get move counter
-    BNE @NoTileChg         ; if it's zero, we need to change tiles.  Otherwise, skip ahead
-
-    DEC ow_scroll_y        ; dec the OW scroll
-
-    LDA scroll_y           ; subtract 1 from the map scroll Y
-    SEC
-    SBC #$01
-    BCS :+
-      ADC #$0F             ; and have it wrap from 0->E
-:   STA scroll_y           ; then write it back
-
-    LDA move_ctr_y         ; get move counter again
-
-  @NoTileChg:
-    SEC                    ; here, A=move counter
-    SBC move_speed         ; subtract the movement speed from the counter
-    AND #$0F               ; mask it to keep it in a 16x16 tile 
-    BEQ @FullTile          ; if it's now zero... we've moved a full tile
-
-    STA move_ctr_y         ; otherwise, simply write back the move counter
-    RTS                    ;  and exit
-
-  @FullTile:
-    STA move_speed         ; if we moved a full tile, zero the move speed (stop player from moving)
-    STA move_ctr_y         ; and zero the move counter
-    RTS                    ; then exit
 
 
 
