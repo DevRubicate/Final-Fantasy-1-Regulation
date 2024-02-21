@@ -10953,7 +10953,8 @@ OnReset:
     FARCALL ResetRAM
 
     CALL DisableAPU
-    FARJUMP GameStart           ; jump to the start of the game!
+    SWITCH GameStart
+    JMP GameStart           ; jump to the start of the game!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11009,8 +11010,8 @@ WaitForVBlank:
     STA PPUCTRL      ; and write it to PPU status reg
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
-@LoopForever:
-    JUMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
+    @LoopForever:
+    JMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11333,10 +11334,18 @@ Impl_FARJUMP:
     STA current_bank1
     STA MMC5_PRG_BANK1
 
+        PLA
+        STA trampoline_low
+        PLA
+        STA trampoline_high
+
+
     ; Load A
     LDA safecall_reg_a
     ; Load Y
     LDY safecall_reg_y
+        
+        JMP (trampoline_low)
 
     ; Activate the trampoline
     RTS
@@ -11344,6 +11353,7 @@ Impl_FARJUMP:
 Impl_FARCALL:
     ; Save A
     STA safecall_reg_a
+
     ; Save Y
     STY safecall_reg_y
 
@@ -11406,13 +11416,29 @@ Impl_FARCALL:
     STA current_bank1
     STA MMC5_PRG_BANK1
 
+
+        PLA
+        STA trampoline_low
+        PLA
+        STA trampoline_high
+
     ; Load A
     LDA safecall_reg_a
     ; Load Y
     LDY safecall_reg_y
 
+        JMP (trampoline_low)
+
     ; Activate the trampoline
     RTS
+
+
+
+
+
+
+
+
 
 .segment "VECTORS"
 

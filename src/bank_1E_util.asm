@@ -75,13 +75,13 @@ ClearOAM:
     LDX #$3F       ; use X as loop counter (looping $40 times)
     LDA #$F8       ; we'll be clearing to $F8
 
-  @Loop:
-      STA oam, X ; clear 4 bytes of OAM
-      STA oam + $40, X
-      STA oam + $80, X
-      STA oam + $C0, X
-      DEX          ; and continue looping until X expires
-      BPL @Loop
+    @Loop:
+        STA oam, X ; clear 4 bytes of OAM
+        STA oam + $40, X
+        STA oam + $80, X
+        STA oam + $C0, X
+        DEX          ; and continue looping until X expires
+        BPL @Loop
 
     LDA #0         ; set sprite index to 0
     STA sprindex

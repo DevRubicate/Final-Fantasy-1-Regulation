@@ -29,6 +29,15 @@
     .byte $1A
 .endmacro
 
+.macro SWITCH _address
+    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF && .bank(*) = $FF, warning, "SWITCH: Invalid use of bank switch"
+    PHA
+    LDA #((<.bank(_address)) * 2) | %10000000
+    STA current_bank1
+    STA MMC5_PRG_BANK1
+    PLA
+.endmacro
+
 .macro CALL _address
     .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "CALL: Address on different bank, use FARCALL instead"
     JSR _address
@@ -37,8 +46,8 @@
 .macro FARCALL _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARCALL: Address reachable without a bankswitch, use CALL instead"
     JSR Impl_FARCALL
-    .byte >(_address - 1)
-    .byte <(_address - 1)
+    .byte >(_address)
+    .byte <(_address)
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
@@ -51,8 +60,8 @@
 .macro FARJUMP _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
     JSR Impl_FARJUMP
-    .byte >(_address - 1)
-    .byte <(_address - 1)
+    .byte >(_address)
+    .byte <(_address)
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
@@ -64,7 +73,7 @@
 .macro FIXEDCALL _address, _bank
     .assert .bank(_address) = $FF, warning, "FIXEDCALL: Address must be in fixed bank"
     JSR Impl_FARCALL
-    .byte >(_address - 1)
-    .byte <(_address - 1)
+    .byte >(_address)
+    .byte <(_address)
     .byte (_bank * 2) | %10000000
 .endmacro
