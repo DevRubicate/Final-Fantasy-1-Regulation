@@ -21,10 +21,11 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
+.import ClearOAM
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
-.export ClearOAM, DrawPalette, CallMusicPlay, UpdateJoy
+.export DrawPalette, CallMusicPlay, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, CallMusicPlay, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
@@ -35,9 +36,9 @@
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
-.export SetOWScroll_PPUOn, ClearOAM, CallMusicPlay_NoSwap
+.export SetOWScroll_PPUOn, CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-.export DisableAPU, VerifyChecksum, ClearZeroPage, DoOverworld
+.export DisableAPU, VerifyChecksum, DoOverworld
 
 
 
@@ -104,7 +105,7 @@ EnterOverworldLoop:
       CALL DoOWTransitions      ; check for any transitions that need to be done
       CALL ProcessOWInput       ; process overworld input
 
-  :   CALL ClearOAM           ; clear OAM
+  :   FARCALL ClearOAM           ; clear OAM
     FARCALL DrawOWSprites      ; and draw all overworld sprites
 
     LDA vehicle       ; Get currnt vehicle
@@ -776,58 +777,7 @@ OWMove_Up:
     STA move_ctr_y         ; and zero the move counter
     RTS                    ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Clear OAM   [$C43C :: 0x3C44C]
-;;
-;;    Fills Shadow OAM with $F8 (which effectively clears it so no sprites are visible)
-;;  also resets the sprite index to zero, so that the next sprite drawn will
-;;  have top priority.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ClearOAM:
-    LDX #$3F       ; use X as loop counter (looping $40 times)
-    LDA #$F8       ; we'll be clearing to $F8
-
-  @Loop:
-      STA oam, X ; clear 4 bytes of OAM
-      STA oam + $40, X
-      STA oam + $80, X
-      STA oam + $C0, X
-      DEX          ; and continue looping until X expires
-      BPL @Loop
-
-    LDA #0         ; set sprite index to 0
-    STA sprindex
-    RTS            ; and exit
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Clear Zero Page  [$C454 :: 0x3C464]
-;;
-;;    Clears Zero Page RAM (or, more specifically, $0001-00EF -- not
-;;  quite all of zero page
-;;
-;;    This is done after game start as a preparation measure.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearZeroPage:
-    LDX #$EF          ; start from $EF and count down
-    LDA #0
-  @Loop:
-      STA 0, X
-      DEX
-      BNE @Loop       ; clear RAM from $01-EF
-
-    LDA #$1B          ; scramble the NPC directional RNG seed
-    ORA npcdir_seed   ;  to make it a little more random
-    STA npcdir_seed
-
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1877,7 +1827,7 @@ StandardMapLoop:
 
 :     CALL ProcessSMInput    ; if none of those things -- process input, and continue
   @Continue:
-    CALL ClearOAM            ; clear OAM
+    FARCALL ClearOAM            ; clear OAM
     FARCALL DrawSMSprites       ; and draw all sprites
     JUMP StandardMapLoop     ; then keep looping
 
@@ -5571,7 +5521,7 @@ _DrawPalette_Norm:
 
 
 WaitVBlank_NoSprites:
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
     CALL WaitForVBlank       ; wait for VBlank
     LDA #>oam
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)

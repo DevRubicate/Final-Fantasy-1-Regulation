@@ -99,7 +99,7 @@ GameStart:
 
     ; New Game and Continue meet here -- actually start up the game
   @Begin:
-    CALL ClearZeroPage               ; clear Zero Page for good measure
+    FARCALL ClearZeroPage               ; clear Zero Page for good measure
     
     LDA unsram_ow_scroll_x          ; fetch OW scroll from unsram
     STA ow_scroll_x

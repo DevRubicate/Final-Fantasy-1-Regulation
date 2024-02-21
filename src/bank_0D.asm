@@ -8,6 +8,7 @@
 .import DrawComplexString, DrawBox, UpdateJoy, DrawPalette
 .import WaitForVBlank
 .import GetRandom
+.import ClearOAM
 
 BANK_THIS = $0D
 
@@ -918,7 +919,7 @@ EnterMiniGame:
    ;   on... and begin the main loop
    ;
 
-    CALL ClearOAM_BankD       ; clear OAM
+    FARCALL ClearOAM       ; clear OAM
     CALL WaitForVBlank      ; then once in VBlank...
     LDA #>oam
     STA OAMDMA                ; do sprite DMA
@@ -1141,30 +1142,6 @@ MiniGame_CheckVictory:
 
   @Fail:
     CLC             ; CLC to indicate puzzle not solved
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ClearOAM_BankD   [$AFAB, 0x36FBB]
-;;
-;;    This is simply a copy of the ClearOAM routine found in the fixed bank.
-;;  It doesn't really need to be duplicated here since it could just call the main ClearOAM routine.
-;;  My guess is there were assembler limitations that made it difficult to export routines so that they
-;;  were visible in other banks (hence all the "_L" versions of routines).  Obviously today we don't
-;;  have these limitations... so this seems kind of wasteful.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearOAM_BankD:
-    LDX #0
-    STX sprindex
-    LDA #$F8
-
-  @Loop:
-      STA oam, X
-      INX
-      BNE @Loop
-
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2944,7 +2921,7 @@ lut_CreditsText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawAllPuzzlePieces:
-    CALL ClearOAM_BankD     ; clear OAM
+    FARCALL ClearOAM     ; clear OAM
 
     LDA #$48         ; set sprite coords to $48, $2F
     STA spr_x        ;  this is where we start drawing the puzzle pieces

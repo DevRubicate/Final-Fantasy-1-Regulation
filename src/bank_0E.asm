@@ -764,22 +764,6 @@ SetGameEventFlag:
     STA game_flags, Y   ; and write back
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Clear Game Event Flag  [$9088 :: 0x39098]
-;;
-;;  IN:  Y = object ID whose flag to clear
-;;
-;;  This routine is unused by the original game
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearGameEventFlag:
-    LDA game_flags, Y  ; get game flags
-    AND #~GMFLG_EVENT  ; clear event bit
-    STA game_flags, Y  ; write back
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  IsObjectVisible  [$9091 :: 0x390A1]
@@ -1514,7 +1498,7 @@ Talk_fight:
   ;;  note, though, that the label is in fact used (it is in the jump table)
 
 Talk_Unused:
-    RTS
+
 
   ;; Generic condition based on item index  [$94B8 :: 0x394C8]
   ;;  [1] if party contains at least one of item index [0]
@@ -1889,7 +1873,7 @@ EnterLineupMenu:
     STA PPUSCROLL
     STA PPUSCROLL
 
-    CALL ClearOAM                ; clear OAM
+    FARCALL ClearOAM                ; clear OAM
 
     CALL UpdateJoy               ; update joy data
     LDA joy                     ;  so we can fill our lu_joyprev
@@ -1925,7 +1909,7 @@ EnterLineupMenu:
     STA cur_bank
     CALL CallMusicPlay           ; call music routine
 
-    CALL ClearOAM                     ; clear OAM
+    FARCALL ClearOAM                     ; clear OAM
     CALL LineupMenu_DrawCharSprites   ; draw the character sprites
     CALL LineupMenu_DrawCursor        ; draw the cursor
     CALL LineupMenu_UpdateJoy         ; update joypad info
@@ -2588,7 +2572,7 @@ NewGamePartyGeneration:
     
     ; Once all 4 characters have been generated and named...
     CALL PtyGen_DrawScreen       ; Draw the screen one more time
-    CALL ClearOAM                ; Clear OAM
+    FARCALL ClearOAM                ; Clear OAM
     CALL PtyGen_DrawChars        ; Redraw char sprites
     CALL WaitForVBlank         ; Do a frame
     LDA #>oam                   ;   with a proper OAM update
@@ -2888,7 +2872,7 @@ DoNameInput:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_Frame:
-    CALL ClearOAM           ; wipe OAM then draw all sprites
+    FARCALL ClearOAM           ; wipe OAM then draw all sprites
     CALL PtyGen_DrawChars
     CALL PtyGen_DrawCursor
 
@@ -2912,7 +2896,7 @@ PtyGen_Frame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CharName_Frame:
-    CALL ClearOAM           ; wipe OAM then draw the cursor
+    FARCALL ClearOAM           ; wipe OAM then draw the cursor
     CALL CharName_DrawCursor
 
     CALL WaitForVBlank    ; VBlank and DMA
@@ -3483,7 +3467,7 @@ EnterTitleScreen:
   ;; This is the main logic loop for the Title screen.
 
   @Loop:
-    CALL ClearOAM            ; Clear OAM
+    FARCALL ClearOAM            ; Clear OAM
 
     LDX cursor              ; Draw the cursor sprite using a fixed X coord of $48
     LDA #$48                ;  and using the current cursor position to get the Y coord
@@ -4277,7 +4261,7 @@ EnterShop_Inn:
     CALL LoadShopBoxDims         ; erase shop box 3 (command box)
     CALL EraseBox
 
-    CALL ClearOAM                ; clear OAM (to remove the cursor)
+    FARCALL ClearOAM                ; clear OAM (to remove the cursor)
     CALL DrawShopPartySprites    ; draw the party
     CALL WaitForVBlank         ; then wait for VBlank before
     LDA #>oam                   ;   performing sprite DMA
@@ -4694,7 +4678,7 @@ ClinicBuildNameString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopFrame:
-    CALL ClearOAM               ; clear OAM
+    FARCALL ClearOAM               ; clear OAM
     CALL DrawShopPartySprites   ; draw the party sprites
     CALL DrawShopCursor         ; and the cursor
     CALL WaitForVBlank        ; the wait for VBlank
@@ -4708,10 +4692,8 @@ ShopFrame:
 
     JUMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
 
-    RTS                        ; useless RTS (impossible to reach)
-
 ShopFrameNoCursor:
-    CALL ClearOAM               ; do all the same things as above, in the same order
+    FARCALL ClearOAM               ; do all the same things as above, in the same order
     CALL DrawShopPartySprites   ;  only do not draw the cursor
     CALL WaitForVBlank
     LDA #>oam
@@ -6145,7 +6127,7 @@ ResumeMainMenu:
 
 
 MainMenuLoop:
-    CALL ClearOAM                  ; clear OAM (erasing all existing sprites)
+    FARCALL ClearOAM                  ; clear OAM (erasing all existing sprites)
     CALL DrawMainMenuCursor        ; draw the cursor
     CALL DrawMainMenuCharSprites   ; draw the character sprites
     CALL MenuFrame                 ; Do a frame
@@ -6258,7 +6240,7 @@ MainMenuSubTarget:
     STA cursor
 
   @Loop:
-    CALL ClearOAM                 ; clear OAM
+    FARCALL ClearOAM                 ; clear OAM
     CALL DrawMainMenuCharSprites  ; draw the main menu battle sprite
     CALL DrawMainMenuSubCursor    ; draw the sub target cursor
     CALL MenuFrame                ; do a frame
@@ -6316,7 +6298,7 @@ EnterMagicMenu:
     STA joy_prevdir           ; and previous joy directions
 
 MagicMenu_Loop:
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
     CALL DrawMagicMenuCursor   ; draw the cursor
     CALL MenuFrame             ; and do a frame
 
@@ -6533,7 +6515,7 @@ UseMagic_HealFamily:
     STA hp_recovery         ; store HP recovery for future use
     LDA #$2C
     CALL DrawItemDescBox     ; draw the relevent description text
-    CALL ClearOAM            ; clear OAM (no sprites)
+    FARCALL ClearOAM            ; clear OAM (no sprites)
     CALL MenuWaitForBtn      ; wait for the user to press a button
 
     LDA joy                 ; see whether the user pressed A or B
@@ -6785,7 +6767,7 @@ ResumeItemMenu:
     STA joy_prevdir    ; and previous joy directionals
 
 ItemMenu_Loop:
-    CALL ClearOAM            ; clear OAM
+    FARCALL ClearOAM            ; clear OAM
     CALL DrawItemMenuCursor  ; draw the cursor where it needs to be
     CALL MenuFrame           ; do a frame
 
@@ -7108,7 +7090,7 @@ UseItem_House:
 
 MenuSaveConfirm:
     CALL DrawItemDescBox       ; draw the description box
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
     CALL MenuWaitForBtn        ; then wait for player to press A or B
 
     LDA joy                   ; see if they pressed A or B
@@ -7284,7 +7266,7 @@ ItemTargetMenuLoop:
     STA joy_a       ; clear joy_a and joy_b so that a button press
     STA joy_b       ;  will be recognized
 
-    CALL ClearOAM               ; clear OAM
+    FARCALL ClearOAM               ; clear OAM
     CALL DrawItemTargetCursor   ; draw the cursor for this menu
     CALL MenuFrame              ; do a frame
 
@@ -7380,8 +7362,6 @@ DrawItemTargetMenu:
 
     CALL @DrawBoxBody                ; draw the box body
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen back on.  then exit
-
-    RTS     ; useless RTS -- impossible to reach
 
 
   ;;  this isn't really a local routine -- but it's only called by the above routine,
@@ -7494,7 +7474,7 @@ EnterStatusMenu:
     LDA #$28
     CALL DrawCharMenuString  ; 6th and final box drawn
 
-    CALL ClearOAM            ; clear OAM
+    FARCALL ClearOAM            ; clear OAM
 
     LDA #$58                ; set sprite coords to $58,$20
     STA spr_x
@@ -8071,7 +8051,7 @@ CloseDescBox:
 
 
 TurnMenuScreenOn_ClearOAM:
-    CALL ClearOAM             ; clear OAM
+    FARCALL ClearOAM             ; clear OAM
                              ;  then just do the normal stuff
 
 TurnMenuScreenOn:
@@ -8833,7 +8813,7 @@ EnterEquipMenu:
     STA eq_modecurs               ; reset the mode cursor to 0  ("Equip")
 
   @Loop:
-    CALL ClearOAM                  ; clear OAM
+    FARCALL ClearOAM                  ; clear OAM
     CALL DrawEquipMenuModeCurs     ; draw the mode cursor
     CALL EquipMenuFrame            ; then do an Equip Menu Frame
 
@@ -8876,7 +8856,7 @@ EnterEquipMenu:
 ;;
 
 EquipMenu_TRADE:              ; "TRADE" option selected
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
     CALL DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
     CALL EquipMenuFrame        ; do a frame
 
@@ -8896,7 +8876,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     STA cursor2               ; copy the primary cursor to the secondary cursor
                               ; then proceed to the Trade subloop
     @SubLoop:
-      CALL ClearOAM                      ; clear OAM
+      FARCALL ClearOAM                      ; clear OAM
       CALL DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
       CALL EquipMenuFrame                ; do a frame
 
@@ -8929,7 +8909,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
 ;;
 
 EquipMenu_EQUIP:
-    CALL ClearOAM             ; clear OAM
+    FARCALL ClearOAM             ; clear OAM
     CALL DrawEquipMenuCurs    ; draw the primary cursor
     CALL EquipMenuFrame       ; do a frame
 
@@ -8973,7 +8953,7 @@ EquipMenu_EQUIP:
 ;;
 
 EquipMenu_DROP:
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
     CALL DrawEquipMenuCurs     ; draw the primary cursor
     CALL EquipMenuFrame        ; do a frame
 
@@ -8996,7 +8976,7 @@ EquipMenu_DROP:
       JUMP EquipMenu_DROP      ;      and continue looping
 
   @ConfirmLoop:
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearOAM              ; clear OAM
 
     LDA framecounter          ; for confirmation, the cursor is to flicker.  Use the frame counter
     LSR A                     ;   and put bit 1 in C  (but remember that framecounter is INC'd by 2
@@ -9223,7 +9203,6 @@ EquipMenuFrame:
     CALL WaitForVBlank     ; wait for VBlank
     LDA #>oam
     STA OAMDMA               ; do sprite DMA
-    CALL UpdateEquipMenuModeAttrib   ; update mode attributes (useless, see this routine for why)
 
     LDA soft2000          ; reset scroll
     STA PPUCTRL
@@ -9612,58 +9591,6 @@ DrawEquipMenuModeCurs:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  Update Equip Menu Mode Attrib [$BEF7 :: 0x3BF07]
-;;
-;;    This updates the attributes at the top of the nametable
-;;  so that the currently selected "mode" (equip/trade/drop) is highlighted
-;;  to use a different palette (palette 2 instead of the normal 3).
-;;
-;;    This is useless because palette 2 and 3 consist of the exact same colors.  Also,
-;;  the attributes are only enough to change the first 4 letters (tiles) in the name, so
-;;  in "Equip" only the "Equi" would be highlighed.  This could probably be corrected, though.
-;;
-;;    My guess is this is a hold over from the japanese version which probably had shorter
-;;  titles up top, and thus could highlight them easier.  At any rate, in the US version,
-;;  this routine is 100% completely worthless.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-UpdateEquipMenuModeAttrib:
-    LDA eq_modecurs           ; get the mode cursor
-    ASL A
-    ASL A                     ; multiply it by 4 (4 bytes of attribute)
-    TAX                       ; and stuff in X
-
-    LDA #$C3
-    CALL SetPPUAddrTo_23aa     ; Set PPU address to $23C3 (relevent attribute bytes)
-
-    LDA @lut_Attr, X          ; copy over 4 bytes of attribute
-    STA PPUDATA
-    LDA @lut_Attr+1, X
-    STA PPUDATA
-    LDA @lut_Attr+2, X
-    STA PPUDATA
-    LDA @lut_Attr+3, X
-    STA PPUDATA
-
-    LDA #$00                  ; then reset the PPU address
-    STA PPUADDR
-    STA PPUADDR
-
-    RTS                       ; and exit
-
-
-                            ; all attribute changes made to row 1.
-  @lut_Attr:                ; row and column number are 16x16 blocks, zero based.
- ;column:   7 6 - -   9 8 - -   B A - -   D C - -
-    .byte %10101111,%11111111,%11111111,%11111111  ; highlight columns 6,7
-    .byte %11111111,%10111111,%11101111,%11111111  ; highlight columns 9,A
-    .byte %11111111,%11111111,%11111111,%10101111  ; highlight columns C,D
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;  SetPPUAddrTo_23aa  [$BF2E :: 0x3BF3E]
 ;;
 ;;     Itty bitty support routine.  Just sets the PPU address to $23xx where 'xx' is the value
@@ -9677,36 +9604,6 @@ SetPPUAddrTo_23aa:
     STY PPUADDR       ; set PPU address
     STA PPUADDR
     RTS             ; and exit
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Unused Phantom Code  [$BF3A :: 0x3BF4A]
-;;
-;;     Looks like this is remnants of code that used to exist, or just didn't
-;;  get overwritten by the assembler for whatever reason.  If you'll notice, it's
-;;  an echo of the above LUT from UpdateEquipMenuModeAttrib and the code
-;;  from SetPPUAddrTo_23aa.  It's as if the assembler pulled all that code back a few
-;;  bytes and just didn't overwrite this with zeros.
-;;
-;;     At any rate... this is totally unused and is included here only for
-;;  completeness sake.
-
-
-    .byte           %10111111,%11101111,%11111111
-    .byte %11111111,%11111111,%11111111,%10101111
-
-    BIT PPUSTATUS
-    LDY #$23
-    STY PPUADDR
-    STA PPUADDR
-    RTS
-
-; this is just more unused junk
-  .byte $00,$00,$00
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

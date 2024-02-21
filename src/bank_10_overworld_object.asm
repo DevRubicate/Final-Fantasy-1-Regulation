@@ -955,7 +955,7 @@ AirshipTransitionFrame:
     STA framecounter
 
     CALL SetOWScroll_PPUOn     ; Set Scroll
-    CALL ClearOAM              ; Clear OAM
+    FARCALL ClearOAM              ; Clear OAM
     CALL CallMusicPlay_NoSwap  ; And call music play
 
     LDA #$70
