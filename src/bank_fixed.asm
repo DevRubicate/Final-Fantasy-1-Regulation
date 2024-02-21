@@ -21,7 +21,7 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
-.import ClearOAM, OW_MovePlayer
+.import ClearOAM, OW_MovePlayer, OWCanMove
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
@@ -38,7 +38,7 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export SetOWScroll_PPUOn, CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-.export DisableAPU, VerifyChecksum, DoOverworld, DoMapDrawJob
+.export DisableAPU, VerifyChecksum, DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
 
 
 
@@ -406,7 +406,7 @@ ProcessOWInput:
     BEQ @MoveCanoe
 
   @MoveOnFoot:         ; otherwise we're on foot
-    CALL OWCanMove      ; see if they can move in given direction
+    FARCALL OWCanMove      ; see if they can move in given direction
     BCC @StartMove     ;  if yes, start the move
 
     LDA #0
@@ -439,7 +439,7 @@ ProcessOWInput:
 
 
   @MoveShip:           ; Here if trying to move when in the ship
-    CALL OWCanMove      ; see if they can move in desired direction
+    FARCALL OWCanMove      ; see if they can move in desired direction
     BCS @Ship_NoMove   ; if they can't... jump ahead
 
      CALL IsOnCanal       ; if they can... check to see if the canal is blocking them
@@ -467,7 +467,7 @@ ProcessOWInput:
 
 
   @MoveCanoe:           ; if in canoe
-    CALL OWCanMove       ; see if they can move
+    FARCALL OWCanMove       ; see if they can move
     BCC @StartMove      ; if yes... move
 
     CALL UnboardBoat     ; otherwise, see if they can unboard the canoe and proceed on foot
@@ -565,214 +565,6 @@ DisableAPU:
     RTS
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Can Move  [$C47D :: 0x3C48D]
-;;
-;;    Checks to see if the player can move in the given direction.  If they can,
-;;  it does a little additional work to prep everything for future action.
-;;
-;;  IN:      A = direction you're facing
-;;
-;;  OUT:     C = set if cannot move in this direction.  Cleared if can.
-;;       tmp+2 = X coord moved to (assuming move was successful)
-;;       tmp+3 = Y coord moved to (assuming move was successful)
-;;    tileprop = first byte of properties of tile you tried to move to
-;;
-;;
-;;    Additionally... if you can move in a direction (C cleared), the following information
-;;  is output:
-;;
-;;  tileprop+1 = bit 7 set if teleport, with low bits determining teleport ID
-;;
-;;  tileprop+1 = bit 7 clear and bit 6 set if you are to engage in a random encounter
-;;               after moving onto this tile
-;;
-;;  btlformation = if you are to engage in a random encounter, this is the battle formation
-;;                 ID to engage in.
-;;
-;;  entering_shop = nonzero if moving onto the caravan
-;;
-;;  shop_id       = set to caravan's shop ID number if entering caravan.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-OWCanMove:
-    LSR A         ; determine which direction we're moving
-    BCS @Right    ;   and branch accordingly
-    LSR A
-    BCS @Left
-    LSR A
-    BCS @Down
-
-  @Up:
-    LDX #7        ; for each direction, put x-coord add in X, and y-coord add in Y
-    LDY #7-1      ; these will be added to the map scroll to determine player position.
-    JUMP @Calc     ; Player is always 7 tiles from left, and 7 tiles from top of screen
-                  ; -- so base is 7.  For up, you'd add one less to Y (to move up one tile)
-  @Down:          ;  and so on for each directon.
-    LDX #7
-    LDY #7+1
-    JUMP @Calc
-
-  @Right:
-    LDX #7+1
-    LDY #7
-    JUMP @Calc
-
-  @Left:
-    LDX #7-1
-    LDY #7
-
-  @Calc:
-    TXA              ; get X add
-    CLC
-    ADC ow_scroll_x  ; add to it the OW scroll X
-    STA tmp          ; store as low byte of map pointer
-    STA tmp+2        ; and also throw in tmp+2 (uncompromised X coord)
-
-    TYA              ; get Y add
-    CLC
-    ADC ow_scroll_y  ; add to it the OW scroll Y
-    STA tmp+3        ; throw it in tmp+3 (uncompromised Y coord)
-    AND #$0F         ; then mask with F to keep it within the portion of the map that's loaded
-    ORA #>mapdata    ; and OR with high byte of mapdata pointer
-    STA tmp+1        ; and write as high byte of pointer
-
-    LDY #0                 ; zero Y for indexing
-    LDA (tmp), Y           ; get the tile at desired coords
-
-    ASL A                  ; double it and throw it in X (2 bytes per tile properties)
-    TAX
-    LDA tileset_prop, X    ; copy tile properties from tileset
-    STA tileprop
-    LDA tileset_prop+1, X
-    STA tileprop+1
-
-    LDA tileprop     ; get first byte of tile properties
-    AND vehicle      ; AND with current vehicle to find out whether or not this vehicle can move there
-    BEQ :+           ; if zero -- movement is allowed for this vehicle, jump ahead
-
-      SEC            ; otherwise SEC to indicate failure (movement forbidden for this vehicle)
-      RTS            ; and exit
-
-:   BIT tileprop+1   ; put bit 6 of tileprop+1 in V
-    BVS @Fighting    ; if bit 6 was set (fighting occurs on this tile), jump ahead
-
-    LDA vehicle      ; otherwise, get the vehicle
-    CMP #$01         ; check to see if we're on foot
-    BEQ @OnFoot      ; if we are, do additional checks
-
-  @Success_1:        ; otherwise (not on foot) Success!
-    CLC              ; CLC to indicate success
-    RTS              ; and exit
-
-  @OnFoot:
-    LDA tileprop         ; get tile properties
-    AND #OWTP_SPEC_MASK  ; mask out special bits
-    BEQ @Success_1       ; if nothing special, success!
-
-    CMP #OWTP_SPEC_CHIME ; is the chime necessary?
-    BEQ @NeedChime       ; if yes... check to make sure we have it
-
-    CMP #OWTP_SPEC_CARAVAN  ; is this the caravan?
-    BNE @Success_1          ; if not, success!
-
-  @Caravan:
-    LDA game_flags+OBJID_FAIRY
-    AND #$01             ; check the fairy map object to see if she's visible
-    BNE @Success_2       ; if she is (bottle has been opened already), prevent entering caravan (exit now)
-
-    LDA #$01             ; otherwise, we need to indicate the player is entering the caravan
-    STA entering_shop    ; set entering_shop to nonzero
-    LDA #70
-    STA shop_id          ; shop ID=70 ($46) = caravan's shop ID
-
-    @Success_2:
-      CLC
-      RTS
-
-  @NeedChime:
-    LDA item_chime       ; see if they have the chime in their inventory
-    BNE @Success_1       ; if they do -- success
-    SEC                  ; otherwise, failure
-    RTS
-
-  @Fighting:
-    LDA #10              ; 10 / 256 chance of getting in a random encounter normally
-    LDX vehicle          ; check the current vehicle
-    CPX #$04             ; see if it's the ship
-    BNE :+               ; if it is....
-       LDA #3            ;   ... 3 / 256 chance instead  (more infrequent battles at sea)
-
-:   STA tmp              ; store chance of battle in tmp
-    CALL BattleStepRNG    ; get a random number for battle steps
-    CMP tmp              ; compare it to our chance
-    BCC @DoEncounter     ; if the random number < our odds -- do a random encounter
-
-      LDA #0             ; otherwise, no random encounter
-      STA tileprop+1     ; clear tileprop+1 to indicate no battle yet
-      CLC                ; CLC for success
-      RTS                ; and exit
-
-  @DoEncounter:
-    LDA tileprop+1       ; find out which type of counter we're to do
-    AND #$03             ;   by checking the low 2 bytes of tileprop+1
-
-    BEQ @LandDomain      ; if 0, get battle from land domain
-
-    CMP #2
-    BEQ @SeaDomain       ; if 2, get battle from sea domain
-                         ;   else, get from river domain
-
-   ;; Note that river and land domains just add 7 to the scroll to get
-   ;;  player position... however this gets the player's position BEFORE
-   ;;  the move.  So if you get in a battle just as you cross a domain boundary,
-   ;;  the battle formation will be chosen from the domain you're leaving, rather
-   ;;  than the domain you're entering.  Some might say that's BUGGED -- especially
-   ;;  when you consider the ACTUAL player position has already been recorded to tmp+2
-   ;;  tmp+3 -- so it could just load those and not do any math.
-
-  @RiverDomain:
-    LDA ow_scroll_y      ; get OW Y scroll
-    CLC
-    ADC #7               ; add 7 to get player position
-
-    ASL A                ; rotate bit 7 ($80) into bit 0 ($01)
-    ROL A
-
-    AND #$01             ; isolate bit 1
-    ORA #$40             ; and add $40 to it  (ie:  domain $40 for upper half of map, $41 for lower half)
-    JUMP GetBattleFormation
-
-  @SeaDomain:
-    LDA #$42                ; all of the world's sea uses the same domain:  $42
-    BNE GetBattleFormation  ; always branches
-
-
-   ;; For land domains... the entire map is divided into an 8x8 grid.  Each element in this
-   ;;  grid has it's own domain -- and consists of 32x32 map tiles
-  @LandDomain:
-    LDA ow_scroll_x    ; get X scroll
-    CLC
-    ADC #$07           ; add 7 to get player X coord
-    ROL A              ; rotate left by 4
-    ROL A              ;   which ultimately is just a shorter way
-    ROL A              ;   of right-shifting by 5 (high 3 bits become the low 3 bits)
-    ROL A
-    AND #%00000111     ; mask out the low 3 bits
-    STA tmp            ; and write to tmp.  This is the column of the domain grid
-
-    LDA ow_scroll_y    ; get Y scroll
-    CLC
-    ADC #$07           ; add 7 to get player Y coord
-    LSR A              ; right shift by 2
-    LSR A
-    AND #%00111000     ; and mask out the high bits -- this is the row of the domain grid
-    ORA tmp            ; OR with column for the desired domain.
-                       ;  A is now the desired domain number
-    NOJUMP GetBattleFormation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
