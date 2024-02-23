@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .export EnterMinimap
-.import CallMinimapDecompress, UpdateJoy, CallMusicPlay, DrawPalette, WaitForVBlank
+.import CallMinimapDecompress, UpdateJoy, MusicPlay, DrawPalette, WaitForVBlank
 
 .incbin "bin/bank_09_data.bin"
 
@@ -4676,7 +4676,7 @@ MinimapFrame:
     LDA #$E8
     STA PPUSCROLL
 
-    CALL CallMusicPlay    ; keep the music playing
+    FARCALL MusicPlay    ; keep the music playing
 
     LDA #0
     STA joy_a              ; clear A and B button catchers
@@ -5081,11 +5081,6 @@ Minimap_YouAreHere:
 
     RTS               ; and exit!
 
-
-
-  ; unused
-  .byte 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0
-  .byte 0,0,0,0, 0,0,0,0, 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

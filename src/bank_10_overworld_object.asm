@@ -2,8 +2,8 @@
 
 .include "src/global-import.inc"
 
-.import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, CallMusicPlay_NoSwap
-.import DoMapDrawJob, BattleStepRNG, GetBattleFormation
+.import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
+.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll
@@ -1574,7 +1574,7 @@ AirshipTransitionFrame:
 
     CALL SetOWScroll_PPUOn     ; Set Scroll
     FARCALL ClearOAM              ; Clear OAM
-    CALL CallMusicPlay_NoSwap  ; And call music play
+    FARCALL MusicPlay  ; And call music play
 
     LDA #$70
     STA spr_x          ; draw the airship at x coord=$70 (same column that player is drawn)

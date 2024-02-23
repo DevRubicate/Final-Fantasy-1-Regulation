@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import GameStart
-.import CallMusicPlay
+.import MusicPlay
 .import SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox, BattleRNG, BattleWaitForVBlank
 .import DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .import BattleCrossPageJump, WaitForVBlank, ClearBattleMessageBuffer
@@ -2936,7 +2936,7 @@ BattleUpdateAudio:
     BPL :+                  ; if the high bit of the music track is set (indicating the current song is finished)...
       LDA btl_followupmusic ;   then play the followup music
       STA a:music_track
-:   CALL CallMusicPlay     ; Call music playback to keep it playing
+:   FARCALL MusicPlay     ; Call music playback to keep it playing
     JUMP UpdateBattleSFX     ; and update sound effects to keep them playing
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

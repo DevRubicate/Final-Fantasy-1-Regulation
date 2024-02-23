@@ -27,8 +27,8 @@
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
-.export DrawPalette, CallMusicPlay, UpdateJoy
-.export DrawBox, UpdateJoy, DrawPalette, CallMusicPlay, DrawComplexString
+.export DrawPalette, UpdateJoy
+.export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal
@@ -38,7 +38,6 @@
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
-.export CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 .export DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
 
@@ -93,7 +92,7 @@ EnterOverworldLoop:
     ADC #0
     STA framecounter+1
 
-    CALL CallMusicPlay_NoSwap   ; Keep the music playing
+    FARCALL MusicPlay   ; Keep the music playing
 
     LDA mapdraw_job            ; check to see if drawjob number 1 is pending
     CMP #1
@@ -804,26 +803,20 @@ IsOnCanal:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  CallMusicPlay   [$C681 :: 0x3C691]
+;;  MusicPlay   [$C681 :: 0x3C691]
 ;;
 ;;    Calls the music play routine.  Comes in two flavors.  Both are the same, only
-;;  CallMusicPlay_NoSwap does not swap the original bank back in.  Therefore CallMusicPlay_NoSwap
+;;  MusicPlay_NoSwap does not swap the original bank back in.  Therefore MusicPlay_NoSwap
 ;;  should only be called from this bank (bank F) and only if the bank that's swapped in
 ;;  is unimportant.
 ;;
 ;;    The Music Play routine should be called once per frame unless all sound is stopped.  If sound is active,
 ;;  failure to call the music Play routine will result in unsteady tempo and other ugly audio effects.
 ;;
-;;  IN:  cur_bank = bank to swap back to on exit (CallMusicPlay only)
+;;  IN:  cur_bank = bank to swap back to on exit (MusicPlay only)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-CallMusicPlay_NoSwap:
-    FARJUMP MusicPlay     ; jump to it, and return (do not swap back)
-
-CallMusicPlay:
-    FARCALL MusicPlay     ; call MusicPlay
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1147,7 +1140,7 @@ StandardMapLoop:
     ADC #0
     STA framecounter+1
 
-    CALL CallMusicPlay_NoSwap   ; keep music playing
+    FARCALL MusicPlay   ; keep music playing
 
     LDA mapdraw_job            ; check the map draw job
     CMP #1                     ;  if the next job is to draw attributes
@@ -1327,7 +1320,7 @@ ProcessSMInput:
       STA dlgflg_reentermap
 
       CALL WaitForVBlank      ; wait for VBlank and keep music playing
-      CALL CallMusicPlay_NoSwap ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
+      FARCALL MusicPlay ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
 
       LDA facing               ; use the direction the player is facing
       CALL GetSMTargetCoords    ;  as the direction to get SM target coords
@@ -1367,7 +1360,7 @@ ProcessSMInput:
       CALL SetSMScroll
       LDA #$1E
       STA PPUMASK
-      CALL CallMusicPlay_NoSwap
+      FARCALL MusicPlay
 
       CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
 
@@ -3872,7 +3865,7 @@ DrawDialogueBox:
       CALL WaitForVBlank        ; then wait for VBl
       CALL DrawMapRowCol          ; and draw what we just prepped
       CALL SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
-      CALL CallMusicPlay_NoSwap   ; and update the music
+      FARCALL MusicPlay                ; and update the music
 
       CALL PrepAttributePos       ; then prep attribute position data
       LDA mapdraw_nty            ; get dest NT address
@@ -3883,7 +3876,7 @@ DrawDialogueBox:
   :   CALL WaitForVBlank        ; then wait for VBl again
       CALL DrawMapAttributes      ; and draw the attributes for this row
       CALL SetSMScroll            ; then set the scroll to keep rendering looking good
-      CALL CallMusicPlay_NoSwap   ; and keep the music playing
+      FARCALL MusicPlay   ; and keep the music playing
 
       LDA mapdraw_nty            ; do the same check as above (see if this is the top/last row)
       CMP scroll_y
@@ -4301,7 +4294,7 @@ DialogueBox_Frame:
 
     LDA soft2000                   ; so get the normal "onscreen" NT
     STA PPUCTRL                      ; and set it
-    JUMP CallMusicPlay_NoSwap       ; then call the Music Play routine and exit
+    FARJUMP MusicPlay       ; then call the Music Play routine and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5081,7 +5074,7 @@ CyclePalettes:
     CALL WaitForVBlank       ; wait for VBlank
     CALL PalCyc_DrawPalette    ; draw the new palette
     CALL PalCyc_SetScroll      ; set the scroll
-    CALL CallMusicPlay_NoSwap  ; and update music  (all the typical frame work)
+    FARCALL MusicPlay  ; and update music  (all the typical frame work)
 
     PLA                       ; pull the frame counter
     CLC
@@ -5730,7 +5723,7 @@ DrawDialogueString:
       BNE @Loop            ; if it hasn't expired yet, keep drawing.  Otherwise...
 
         CALL SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
-        CALL CallMusicPlay    ; keep music playing
+        FARCALL MusicPlay    ; keep music playing
         CALL WaitForVBlank  ; then wait another frame before continuing drawing
 
         LDA #10
@@ -5817,7 +5810,7 @@ DrawDialogueString:
 
 @LineBreak:                ; wait a frame between each line break to help ensure we stay in VBlank
     CALL SetSMScroll        ; set the scroll
-    CALL CallMusicPlay      ; and keep music playing
+    FARCALL MusicPlay      ; and keep music playing
 
     LDA #8
     STA tmp+7              ; reload precautionary counter (but with only 8 instead of 10?)
@@ -6665,7 +6658,7 @@ MenuCondStall:
       STA PPUSCROLL            ;  scroll inside menus is always 0
       STA PPUSCROLL
 
-      CALL CallMusicPlay    ;  Keep the music playing
+      FARCALL MusicPlay    ;  Keep the music playing
       CALL WaitForVBlank  ; then wait a frame
 
 @Exit:
@@ -6683,7 +6676,7 @@ MenuCondStall:
 ;;  IN:  box_x, box_y, box_wd, box_ht, menustall
 ;;  TMP: tmp+11 used
 ;;
-;;   cur_bank must also be set appropriately, as this routine can call CallMusicPlay
+;;   cur_bank must also be set appropriately, as this routine can FARCALL MusicPlay
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -6709,7 +6702,7 @@ EraseBox:
        LDA #0
        STA PPUSCROLL
        STA PPUSCROLL
-       CALL CallMusicPlay    ; call music play routine
+       FARCALL MusicPlay    ; call music play routine
        CALL WaitForVBlank  ; and wait for vblank
 
    @NoStall:
@@ -8943,7 +8936,8 @@ BattleUpdateAudio_FixedBank:
     BPL :+
       LDA btl_followupmusic
       STA a:music_track
-:   JUMP CallMusicPlay
+    :   
+    FARJUMP MusicPlay
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11131,7 +11125,7 @@ PaletteFrame:
     LDA #0                   ; reset the scroll
     STA PPUSCROLL
     STA PPUSCROLL
-    JUMP CallMusicPlay       ; update music engine, then exit
+    FARJUMP MusicPlay       ; update music engine, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

@@ -6,8 +6,8 @@
 .export BattleOver_ProcessResult
 .export data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
 
-.import Battle_ReadPPUData, Battle_WritePPUData, CallMusicPlay, WaitForVBlank, UndrawNBattleBlocks
-.import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList
+.import Battle_ReadPPUData, Battle_WritePPUData, WaitForVBlank, UndrawNBattleBlocks
+.import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList, MusicPlay
 
 
 BANK_THIS = $0B
@@ -1616,7 +1616,7 @@ RespondDelay:
     STA tmp_6ad0               ; loop counter
   @Loop:
       CALL WaitForVBlank   ; Do a frame
-      CALL MusicPlay         ; update music
+      CALL StartMusicPlay         ; update music
       DEC tmp_6ad0             ; repeat for desired number of frames
       BNE @Loop
     RTS
@@ -1635,7 +1635,7 @@ WaitForAnyInput:
     CALL GetJoyInput         ; get input
     PHA                     ; back it up
     CALL WaitForVBlank     ; wait a frame
-    CALL MusicPlay           ; do music for that frame
+    CALL StartMusicPlay           ; do music for that frame
     PLA                     ; get input
     BEQ WaitForAnyInput     ; keep looping if no buttons pressed
     
@@ -1643,22 +1643,22 @@ WaitForAnyInput:
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  MusicPlay  [$9F86 :: 0x2DF96]
+;;  StartMusicPlay  [$9F86 :: 0x2DF96]
 ;;
 ;;    Call music play -- version for this bank
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MusicPlay:
-    LDA #BANK_THIS          ; tell CallMusicPlay which bank to swap back to
+StartMusicPlay:
+    LDA #BANK_THIS          ; tell StartMusicPlay which bank to swap back to
     STA a:cur_bank
     
     LDA a:music_track       ; check this track
     BPL :+                  ; if it's finished...
       LDA btl_followupmusic ;   ... load followup music
       STA a:music_track     ;   and play it   (not sure why this is necessary)
-      
-  : JUMP CallMusicPlay 
+    :
+    FARJUMP MusicPlay 
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1683,7 +1683,7 @@ Battle_FlipAllChars:
       CALL WaitForVBlank       ; wait for a frame
       LDA #>oam                 ;  so we can update OAM
       STA OAMDMA
-      CALL MusicPlay             ; update music (since we waited a frame)
+      CALL StartMusicPlay             ; update music (since we waited a frame)
       
       LDA #15
       STA btl_responddelay      ; change respond delay to 15 (battle is over, so respond rate doesn't matter anymore)
@@ -1844,14 +1844,14 @@ ChaosDeath:
     STA temporary_1           ;   loop down counter
   @WaitLoop:                ; wait for 110 frames (wait for the fanfare music to get 
       CALL WaitForVBlank   ;   through the main jingle part)
-      CALL MusicPlay
+      CALL StartMusicPlay
       DEC temporary_1
       BNE @WaitLoop
       
     LDA #$80                ; stop music playback
     STA a:music_track
     STA btl_followupmusic
-    CALL MusicPlay
+    CALL StartMusicPlay
     
     LDA #$08                ; silence all channels except Noise
     STA PAPU_EN

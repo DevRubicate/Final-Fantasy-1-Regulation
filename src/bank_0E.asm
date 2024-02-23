@@ -5,7 +5,7 @@
 .import GameStart
 .import lut_IntroStoryText
 .import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
-.import ClearOAM, DrawPalette, FindEmptyWeaponSlot, CallMusicPlay, UpdateJoy
+.import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
@@ -109,7 +109,7 @@ IntroStory_Joy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TitleScreen_Music:
-    CALL CallMusicPlay
+    FARCALL MusicPlay
     LDA joy_a
     RTS
 
@@ -1907,7 +1907,7 @@ EnterLineupMenu:
 
     LDA #BANK_THIS
     STA cur_bank
-    CALL CallMusicPlay           ; call music routine
+    FARCALL MusicPlay           ; call music routine
 
     FARCALL ClearOAM                     ; clear OAM
     CALL LineupMenu_DrawCharSprites   ; draw the character sprites
@@ -2882,7 +2882,7 @@ PtyGen_Frame:
 
     LDA #BANK_THIS         ; then keep playing music
     STA cur_bank
-    CALL CallMusicPlay
+    FARCALL MusicPlay
 
     JUMP PtyGen_Joy         ; and update joy data!
 
@@ -2911,7 +2911,7 @@ CharName_Frame:
 
     LDA #BANK_THIS         ; keep playing music
     STA cur_bank
-    CALL CallMusicPlay
+    FARCALL MusicPlay
 
       ; then update joy by running seamlessly into PtyGen_Joy
 
@@ -3482,7 +3482,7 @@ EnterTitleScreen:
     CALL TitleScreen_DrawRespondRate
 
     CALL UpdateJoy           ; update joypad data
-    LDA #BANK_THIS          ;  set cur_bank to this bank (for CallMusicPlay)
+    LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
     STA cur_bank
 
     CALL TitleScreen_Music   ; call music playback, AND get joy_a (weird little routine)
@@ -3815,9 +3815,9 @@ IntroStory_Frame:
     STA joy_a                  ; clear A and B button catchers
     STA joy_b
 
-    LDA #BANK_THIS             ; set current bank (needed when calling CallMusicPlay from
+    LDA #BANK_THIS             ; set current bank (needed when calling MusicPlay from
     STA cur_bank               ;   a swappable bank)
-    CALL CallMusicPlay          ; Then call music play to keep music playing!
+    FARCALL MusicPlay          ; Then call music play to keep music playing!
 
     CALL IntroStory_Joy         ; update joypad
 
@@ -4688,7 +4688,7 @@ ShopFrame:
 
     LDA #BANK_THIS
     STA cur_bank
-    CALL CallMusicPlay          ; set the current bank, and call music play
+    FARCALL MusicPlay          ; set the current bank, and call music play
 
     JUMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
 
@@ -4700,7 +4700,7 @@ ShopFrameNoCursor:
     STA OAMDMA
     LDA #BANK_THIS
     STA cur_bank
-    CALL CallMusicPlay          ; after we call MusicPlay, proceed to check the buttons
+    FARCALL MusicPlay          ; after we FARCALL MusicPlay, proceed to check the buttons
 
   _ShopFrame_CheckBtns:
     LDA joy                    ; get old joypad data for last frame
@@ -7779,7 +7779,7 @@ MenuFrame:
 
 :   LDA #BANK_THIS         ; record this bank as the return bank
     STA cur_bank           ; then call the music play routine (keep music playing)
-    CALL CallMusicPlay
+    FARCALL MusicPlay
 
     INC framecounter       ; increment the frame counter to count this frame
 
@@ -8052,9 +8052,9 @@ TurnMenuScreenOn:
     STA PPUSCROLL
     STA PPUSCROLL                ; reset scroll
 
-    LDA #BANK_THIS           ; record current bank and CallMusicPlay
+    LDA #BANK_THIS           ; record current bank and MusicPlay
     STA cur_bank
-    JUMP CallMusicPlay
+    FARJUMP MusicPlay
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9194,7 +9194,7 @@ EquipMenuFrame:
 
     LDA #BANK_THIS
     STA cur_bank          ; set cur_bank to this bank
-    CALL CallMusicPlay     ;   so we can call music play routine
+    FARCALL MusicPlay     ;   so we can call music play routine
 
     INC framecounter      ; inc the frame counter to count this frame
 
