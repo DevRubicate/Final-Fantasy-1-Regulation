@@ -1541,6 +1541,7 @@ StandardMapMovement:
     LDA move_speed        ; see if the player is moving
     BNE @noSetScroll       ; if not, just skip ahead and set the scroll
         CALL SetSMScroll
+        RTS
     @noSetScroll:
                           ; the rest of this is only done during movement
       CALL SM_MovePlayer     ; Move the player in the desired direction
