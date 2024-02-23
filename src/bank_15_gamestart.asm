@@ -27,7 +27,7 @@ GameStart:
     LDX #$FF                    ; reset stack pointer
     TXS
     
-    CALL DisableAPU              ; Silence/disable all audio
+    FARCALL DisableAPU              ; Silence/disable all audio
     
     ;; Load some startup info
     
@@ -74,8 +74,6 @@ GameStart:
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option
     
     ; Otherwise, they selected "Continue"...
-
-    CALL VerifyChecksum              ; Then verify checksum to ensure save game integrity
     BCS @NewGame                    ;  if it failed, do a new game
     
     ; Continue saved game

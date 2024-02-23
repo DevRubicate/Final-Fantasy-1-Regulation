@@ -5764,24 +5764,6 @@ SaveGame:
 
         ; now we need to compute the checksum!
         ;  checksum further verifies that SRAM has not been comprimised
-
-    LDA #$00
-    STA sram_checksum         ; clear the checksum byte so that it will not interfere with checksum calculations
-    LDX #$00                  ; clear X (loop counter)
-    CLC                       ; and clear carry so it isn't included in checksum
-
-  @ChecksumLoop:
-      ADC sram       , X    ; sum every byte in SRAM
-      ADC sram + $100, X    ;  note that carry is not cleared between additions
-      ADC sram + $200, X
-      ADC sram + $300, X
-      INX
-      BNE @ChecksumLoop     ; loop until X expires ($100 iterations)
-
-                      ; after loop, A is now what the checksum computes to
-    EOR #$FF          ;  to force it to compute to FF, invert the value
-    STA sram_checksum ;  and write it to the checksum byte.  Checksum calculations will now result in FF
-
     LDA #$56
     STA music_track   ; play music track $56 (the "you saved your game" jingle)
 

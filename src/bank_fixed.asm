@@ -21,7 +21,9 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
-.import ClearOAM, OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage
+.import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage
+; bank_1E_util
+.import DisableAPU, ClearOAM
 
 .export SwapPRG
 .export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
@@ -38,7 +40,7 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export CallMusicPlay_NoSwap
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-.export DisableAPU, VerifyChecksum, DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
+.export DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
 
 
 
@@ -327,7 +329,6 @@ FlyAirship:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ProcessOWInput:
     LDA tileprop     ; check properties of tile we just stepped on
     AND #OWTP_FOREST ; see if the forest bit is on
@@ -477,33 +478,6 @@ ProcessOWInput:
     CALL BoardShip       ; otherwise, see if they can board the ship
     BCC @StartMove      ; if yes, do it!
     BCS @CantMove       ; otherwise, can't move (always branches)
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Disable APU  [$C469 :: 0x3C479]
-;;
-;;    Silences all channels and prevents them from being audible until they are
-;;  re-enabled (requires another write to PAPU_EN).  Channels will become reenabled
-;;  once the music engine starts a new track.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DisableAPU:
-    LDA #$30
-    STA PAPU_CTL1   ; set Squares and Noise volume to 0
-    STA PAPU_CTL2   ;  clear triangle's linear counter (silencing it next clock)
-    STA PAPU_TCR1
-    STA PAPU_NCTL1
-    LDA #$00
-    STA PAPU_EN   ; disable all channels
-    RTS
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1090,7 +1064,6 @@ MapTileDamage:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 AssignMapTileDamage:
     LDX #$00              ; zero loop counter and char index
 
@@ -1119,41 +1092,6 @@ AssignMapTileDamage:
 
     BNE @Loop             ; loop until it wraps (4 iterations)
     RTS                   ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Verify Checksum  [$C888 :: 0x3C898]
-;;
-;;    Verifies the SRAM Checksum, to ensure that SRAM hasn't become corrupted
-;;
-;;  Y is unchanged
-;;
-;;  OUT:  C = clear if checksum passed, set if checksum failed
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-VerifyChecksum:
-    LDA #$00      ; clear A
-    LDX #$00      ; and X
-    CLC           ; and C!
-@Loop:
-      ADC sram, X   ; sum every byte between $6400-$67FF
-      ADC sram + $100, X   ;  include carry in each addition
-      ADC sram + $200, X
-      ADC sram + $300, X
-      INX
-      BNE @Loop
-
-    CMP #$FF         ; if result does not equal $FF, the checksum has failed
-    BNE @Fail
-
-    ; success!
-    CLC
-    RTS
-
-@Fail:
-    SEC
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10952,7 +10890,7 @@ OnReset:
 
     FARCALL ResetRAM
 
-    CALL DisableAPU
+    FARCALL DisableAPU
     SWITCH GameStart
     JMP GameStart           ; jump to the start of the game!
 

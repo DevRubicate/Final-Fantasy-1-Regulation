@@ -2,9 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import DisableAPU
-
-.export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage
+.export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 
 
 
@@ -112,4 +110,24 @@ ClearZeroPage:
     ORA npcdir_seed   ;  to make it a little more random
     STA npcdir_seed
 
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Disable APU  [$C469 :: 0x3C479]
+;;
+;;    Silences all channels and prevents them from being audible until they are
+;;  re-enabled (requires another write to PAPU_EN).  Channels will become reenabled
+;;  once the music engine starts a new track.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DisableAPU:
+    LDA #$30
+    STA PAPU_CTL1   ; set Squares and Noise volume to 0
+    STA PAPU_CTL2   ;  clear triangle's linear counter (silencing it next clock)
+    STA PAPU_TCR1
+    STA PAPU_NCTL1
+    LDA #$00
+    STA PAPU_EN   ; disable all channels
     RTS

@@ -599,8 +599,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             ch3_curmp,                          8
     RES             ch3_maxmp,                          8
     GAP                                                 16
-    RES             sram,                               1023 ; $6400
-    RES             sram_checksum,                      1   ; $67FF
+    RES             sram,                               1024 ; $6400
 
     RES             safecall_reg_a,                     1
     RES             safecall_reg_y,                     1
