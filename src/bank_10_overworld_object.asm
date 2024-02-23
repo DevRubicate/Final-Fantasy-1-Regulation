@@ -4,7 +4,7 @@
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
 .import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX
-.import GetSMTargetCoords, IsObjectInPath, GetSMTileProperties
+.import GetSMTargetCoords, GetSMTileProperties
 
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
@@ -2057,6 +2057,136 @@ SMMove_Door:
 
 :   CLC                  ; CLC to indicate the player can move here
     RTS                  ; and exit!
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  IsObjectInPath  [$CAA2 :: 0x3CAB2]
+;;
+;;    Checks to see if an objects in in the player's walking path.  If
+;;  there is an object in the path, this routine also "shoves" the object
+;;  out of the way so that the space the playing is trying to move to vacates
+;;  sooner.
+;;
+;;  IN:  tmp+4 = X coord player is attempting to move to
+;;       tmp+5 = Y coord
+;;
+;;  OUT:     C = set if object is occupying that space (preventing player from moving)
+;;                clear if space is clear
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsObjectInPath:
+
+     ;; First, loop through all objects to see if any are physically on this space
+     ;;  this would prevent the player from moving here
+
+    LDX #0                  ; clear our loop counter (and object index)
+  @CutLoop:
+     LDA mapobj_id, X       ; check this object's ID to make sure it exists
+     BEQ @CutNext           ;  if it's zero, the object doesn't exist.  Skip
+
+     LDA mapobj_physX, X    ; check the object's physical X coord
+     CMP tmp+4              ;  compare to given X coord
+     BNE @CutNext           ;  if they don't match, not walking into this object.  Skip
+
+     LDA mapobj_physY, X    ; Do same with Y coords
+     CMP tmp+5
+     BNE @CutNext
+                            ; if we're here... we are colliding with this object
+     LDA mapobj_movectr, X  ; get the object's move counter
+     AND #3                 ;  and "cut" its high bits.  This will help make the object
+     STA mapobj_movectr, X  ;  move faster if you walk into it because it shrinks the delay
+                            ;  until their next step
+     SEC                    ; then SEC to indicate collision with object
+     RTS                    ; and exit!
+
+  @CutNext:                 ; CutLoop reaches here if we did not collide with the tested object
+    TXA                     ; add $10 to our loop counter/index to look at next object
+    CLC
+    ADC #$10
+    TAX
+    CMP #$F0                ; and loop until all 15 objects tested
+    BCC @CutLoop
+
+    ;; code reaches here if all 15 objects have been tested, and there were no objects in
+    ;;  the path.  Next step is to see if an object is currenting in movement FROM the tile
+    ;;  we're trying to move to.  If they are, we set their "shove" flag so that they walk
+    ;;  faster.
+
+    ;; to find where the object is moving from, the game uses the graphical (not physical) coords.
+    ;;  If in a negative move (left or up), the coord their moving from is +1 from their graphical
+    ;;  coord.  For positive moves, you can use the graphical coord as-is.  The game uses the
+    ;;  X/Y speed of the object to determine positive/negative movement.
+
+    LDX #0                  ; we'll be looping through objects again -- reset loop counter to zero
+
+  @ShoveLoop:
+      LDA mapobj_id, X      ; check object ID to make sure this object exists
+      BEQ @ShoveNext        ; if zero, object doesn't exist -- skip
+
+      LDA mapobj_spdX, X    ; next check speeds to see if this is a negative move
+      BMI @CheckLeft        ;  if X speed is negative, Check 'Left' movement
+      LDA mapobj_spdY, X    ; if Y speed is negative, do 'Up' movement
+      BPL @CheckPos         ;  but if Y is positive, jump to 'Pos' movement
+
+  @CheckUp:
+    LDA mapobj_gfxX, X      ; if moving up... check X coord (we can use this as-is)
+    CMP tmp+4               ; and compare to given X coord
+    BNE @ShoveNext          ;  if not a match, skip this object (not moving from the given coords)
+
+    LDA mapobj_gfxY, X      ; next, add 1 to the object's Y coord to counter the
+    CLC                     ; negative movement
+    ADC #1
+    AND #$3F                ; mask to wrap around the edge of the map
+    CMP tmp+5               ; and compare to given Y coord
+    BNE @ShoveNext          ; if not a match, skip this object
+
+    BEQ @DoShove            ; otherwise it is a match, so do the shove (always branches)
+
+
+  @CheckLeft:               ; left movement is same idea, only we add 1 to the X
+    LDA mapobj_gfxX, X      ;   coord instead because we have negative X movement
+    CLC
+    ADC #1
+    AND #$3F
+    CMP tmp+4
+    BNE @ShoveNext
+
+    LDA mapobj_gfxY, X
+    CMP tmp+5
+    BNE @ShoveNext
+
+    BEQ @DoShove
+
+
+  @CheckPos:                ; positive movement (right/down) doesn't need that adjustment
+    LDA mapobj_gfxX, X      ; just check the X/Y coords as-is
+    CMP tmp+4
+    BNE @ShoveNext
+    LDA mapobj_gfxY, X
+    CMP tmp+5
+    BNE @ShoveNext
+
+
+  @DoShove:                 ; code reaches here if an object is moving from the given coords
+    LDA #1
+    STA mapobj_pl, X        ; set their player interaction var to indicate they're being shoved
+    CLC                     ; CLC to indicate no objects are obstructing player's path
+    RTS                     ; and exit!
+
+
+  @ShoveNext:             ; reaches here if the object didn't match.  Do next loop iteration
+    TXA                   ;  add $10 to object index to test next object
+    CLC
+    ADC #$10
+    TAX
+    CMP #$F0              ; and loop until all 15 objects checked
+    BCC @ShoveLoop
+
+    CLC                   ; CLC to indicate no objects in path
+    RTS                   ; and exit!
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
