@@ -3,11 +3,12 @@
 .include "src/global-import.inc"
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
-.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor
+.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX
+.import GetSMTargetCoords, IsObjectInPath, GetSMTileProperties
+
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-.export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement
-
+.export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1727,4 +1728,346 @@ MapPoisonDamage:       ; first thing is to check if ANY characters are poisoned.
 
     BNE @DmgLoop          ; and loop until it wraps (4 iterations)
     RTS                   ; then exit
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  CanPlayerMoveSM  [$CA76 :: 0x3CA86]
+;;
+;;    Checks to see if a player can move in the desired direction on
+;;  Standard Maps.
+;;
+;;  OUT:  C = set if player cannot move, clear if they can move
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CanPlayerMoveSM:
+    CALL GetSMTargetCoords      ; get target coords (coords which player is attempting to move to)
+    CALL IsObjectInPath         ; see if a map object is in their path
+    BCS @CantMove              ; if yes... path is blocked -- can't move
+
+    CALL GetSMTileProperties        ; otherwise, get the properties of the tile they're moving to
+    LDA tileprop
+    AND #TP_SPEC_MASK | TP_NOMOVE  ; mask out special and NOMOVE bits
+    CMP #TP_NOMOVE                 ; if all special bits clear, and NOMOVE bit is set
+    BEQ @CantMove                  ; then this is a nomove tile -- can't move here
+
+    AND #TP_SPEC_MASK            ; otherwise, toss the NOMOVE bit and keep the special bits
+    TAX                          ; throw that in X for indexing
+    LDA lut_SMMoveJmpTbl, X      ; use it as an index to get a pointer from the jump table
+    STA tmp
+    LDA lut_SMMoveJmpTbl+1, X
+    STA tmp+1
+    TXA                          ; put special bits back in A for the upcoming routines
+    JMP (tmp)                    ; jump to the routine in the jumptable
+
+  @CantMove:
+    LDA #0                     ; if they couldn't move...
+    STA tileprop               ; clear tile properties to prevent a battle or teleport
+    STA tileprop+1             ; or somesuch
+    SEC                        ;  and SEC to indicate they can't move
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  SMMove Jump Table  [$CDA1 :: 0x3CDB1]
+;;
+;;    This jump table is referenced when the player walks on a standard map.
+;;  The routines called are used to determine whether or not a move to this tile
+;;  is legal (note however, that the TP_NOMOVE bit has already been checked prior
+;;  to calling these routines).  These routines also do other things where necessary.
+;;  For instance the door routine prepares the transition to going in (or out)
+;;  of rooms.
+;;
+;;    (tileprop & TP_SPEC_MASK) is used to index this table, so the entries must
+;;  be in the same order as the TP_SPEC_*** series of bits
+;;
+;;  IN:   A = special bits of the tile properties (tileprop & TP_SPEC_MASK)
+;;
+;;  OUT:  C = set if player cannot move to this tile.  Clear if they can
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+lut_SMMoveJmpTbl:
+  .WORD SMMove_Norm,     SMMove_Door,    SMMove_Door,     SMMove_CloseRoom
+  .WORD SMMove_Treasure, SMMove_Battle,  SMMove_Dmg,      SMMove_Crown
+  .WORD SMMove_Cube,     SMMove_4Orbs,   SMMove_UseRod,   SMMove_UseLute
+  .WORD SMMove_EarthOrb, SMMove_FireOrb, SMMove_WaterOrb, SMMove_AirOrb
+
+
+
+
+ ;; SMMove_Treasure  [$CDC1 :: 0x3CDD1]
+ ;;  TP_SPEC_TREASURE
+
+SMMove_Treasure:
+    SEC               ; SEC to prevent player movement (can't move onto treasure chests)
+    RTS
+
+ ;; SMMove_Battle  [$CDC3 :: 0x3CDD3]
+ ;;  TP_SPEC_BATTLE
+
+SMMove_Battle:
+    LDA tileprop+1         ; check the secondary property byte to see which battle to do
+    BPL @Spiked            ; if high bit is clear, this is a spiked tile (forced battle)
+                           ;   otherwise... it's a random encounter
+    CALL BattleStepRNG      ; get a pseudo-random number from the battle step RNG
+    CMP battlerate         ; if that number is >= the battle rate for this map...
+    BCS @Done              ;  ... then there's no battle
+
+      LDA cur_map             ; otherwise, begin a random encounter
+      CLC                     ;  get the current map, and add 8*8 to it to get past the
+      ADC #8*8                ;  overworld domains.
+      CALL GetBattleFormation  ; Get the battle formation from this map's domain
+      LDA #TP_BATTLEMARKER    ; then set the battle marker bit in the tileprop byte, so that a
+      STA tileprop            ;   battle is triggered.
+
+  @Done:
+    CLC
+    RTS
+
+  @Spiked:
+    STA btlformation      ; for spiked tiles, the secondary byte is the battle formation
+    LDA #TP_BATTLEMARKER  ;   record it so the appropriate battle is triggered.
+    STA tileprop          ; and also replace the tileprop byte with the battle marker bit to start a battle
+
+    CLC               ; CLC because movement is A-OK, and exit
+    RTS
+
+ ;; SMMove_Dmg  [$CDE4 :: 0x3CDF4]
+ ;;  TP_SPEC_DAMAGE
+
+SMMove_Dmg:
+    CLC            ; CLC so signal move is okay, and exit
+    RTS
+
+
+
+ ;; SMMove_Crown  [$CDE6 :: 0x3CDF6]
+ ;;  TP_SPEC_CROWN
+
+SMMove_Crown:
+    LDA item_crown              ; see if the player has the crown
+    BEQ SMMove_NoSpecialItem    ; if not, can't move
+    BNE SMMove_HaveSpecialItem  ; otherwise, can move (always branches)
+
+ ;; SMMove_NoSpecialItem  [$CDED :: 0x3CDFD]
+ ;;  called when the player does NOT have the special item required to move here
+
+SMMove_NoSpecialItem:
+    SEC                ; SEC to disallow movement
+    LDA #0             ; erase first byte of tile properties to prevent teleport
+    STA tileprop
+    RTS
+
+ ;; SMMove_Cube  [$CDF3 :: 0x3CE03]
+ ;;  TP_SPEC_CUBE
+
+SMMove_Cube:
+    LDA item_cube                ; see if player has the cube
+    BEQ SMMove_NoSpecialItem     ; if not, can't move
+    BNE SMMove_HaveSpecialItem   ; otherwise, can move (always branches)
+
+ ;; SMMove_4Orbs  [$CDFA :: 0x3CE0A]
+ ;;  TP_SPEC_4ORBS
+
+SMMove_4Orbs:
+    LDA orb_fire              ; check to see if the player has all four orbs lit
+    AND orb_water
+    AND orb_air
+    AND orb_earth
+    BEQ SMMove_NoSpecialItem  ; if not, can't move
+                              ; otherwise can (flow directly into SMMove_HaveSpecialItem)
+
+ ;; SMMove_HaveSpecialItem  [$CE08 :: 0x3CE18]
+ ;;  called when the player has a special item required to move onto this tile
+
+SMMove_HaveSpecialItem:
+    LDA #$54
+    STA music_track   ; play music track $54 (fanfare)
+    CLC               ; CLC to allow movement
+    RTS
+
+ ;; SMMove_UseRod, SMMove_UseLute  [$CE0E :: 0x3CE1E]
+ ;;  this routine is duplicated a lot -- these are for TP_SPEC_USEROD and TP_SPEC_USELUTE
+
+SMMove_UseRod:
+    CLC
+    RTS
+
+SMMove_UseLute:
+    CLC
+    RTS
+
+ ;; SMMove_xOrb  [$CE12 :: 0x3CE22]
+ ;;  these routines for the four altars (TP_SPEC_EARTHORB, TP_SPEC_FIREORB, etc)
+ ;;  each of these routines are identical, except they all check different orbs
+
+SMMove_EarthOrb:
+    LDA orb_earth          ; see if orb already lit
+    BNE SMMove_OK          ; if it is, just have player move normally
+    LDA #1
+    STA orb_earth          ; otherwise, light up the orb
+    BNE SMMove_AltarEffect ; and do the altar effect (always branches)
+
+SMMove_FireOrb:
+    LDA orb_fire
+    BNE SMMove_OK
+    LDA #1
+    STA orb_fire
+    BNE SMMove_AltarEffect
+
+SMMove_WaterOrb:
+    LDA orb_water
+    BNE SMMove_OK
+    LDA #1
+    STA orb_water
+    BNE SMMove_AltarEffect
+
+SMMove_AirOrb:
+    LDA orb_air
+    BNE SMMove_OK
+    LDA #1
+    STA orb_air           ; no BNE here because it just flows directly into altar effect
+
+SMMove_AltarEffect:
+    INC altareffect       ; set the altar effect flag
+    CLC                   ; CLC to allow player to move
+    RTS
+
+ ;; SMMove_CloseRoom  [$CE44 :: 0x3CE54]
+ ;;  TP_SPEC_CLOSEROOM
+
+SMMove_CloseRoom:
+    LDA inroom        ; check the inroom flag to see if we're coming from inside a room
+    BPL SMMove_OK     ; if we're not, just move normally
+    EOR #$84          ; otherwise, clear the inroom flag, and set the 'exiting' flag
+    STA inroom        ; record that so the room will be exited
+    CALL PlayDoorSFX   ; play the door sound effect
+
+    ; no JUMP or RTS -- code continues on to SMMove_OK
+    ;  note the game doesn't set doorppuaddr here even though closing the door
+    ;  will require redrawing.  This is because it depends on the fact that doorppuaddr
+    ;  has not changed from the last time the door has opened (so the game draws to the
+    ;  same address as the last door that was opened).  This works most of the time... HOWEVER
+    ;  because scroll_y is usually changed if the screen needs to be redrawn, doorppuaddr
+    ;  will point to the spot on the NT there door was previously, even if it moved due to the
+    ;  redrawing!  As a result, if you go in a menu while standing on a door, then close the door
+    ;  a closed door graphic will appear on a seemingly random spot on the map!
+
+    ; This is BUGGED -- but is a minor graphical glitch that only happens under very specific
+    ; circumstances and does not affect gameplay at all.  The best way to fix this would probably be
+    ; to adjust doorppuaddr in ReenterStandardMap so that doorppuaddr points to the tile the player
+    ; is standing on.
+
+    ; Another possible fix is to rebuild doorppuaddr here to point to 1 row above where the player
+    ;  is moving to (since close door graphics are generally 1 tile below the door they're closing)
+
+ ;; SMMove_OK  [$CE4F :: 0x3CE5F]
+ ;;  branched/jumped to by various routines when a move is legal
+
+SMMove_OK:
+    CLC        ; CLC to indicate player can move, then exit
+    RTS
+
+ ;; SMMove_Norm  [$CE51 :: 0x3CE61]
+ ;;  for normal (nonspecial) tiles.
+
+SMMove_Norm:
+    CLC        ; CLC because player can move here
+    RTS
+
+ ;; SMMove_Door  [$CE53 :: 0x3CE63]
+ ;;  Called for TP_SPEC_DOOR and TP_SPEC_LOCKED
+
+SMMove_Door:
+    LSR A                                       ; downshift to get the door bits into the low 2 bits
+    AND #(TP_SPEC_DOOR | TP_SPEC_LOCKED) >> 1   ; mask out the door bits
+
+    CMP #TP_SPEC_LOCKED >> 1  ; see if the door is locked
+    BNE @OpenDoor             ; if not.. open the door
+
+    LDX #0                    ; otherwise (door is locked)
+    STX tileprop+1            ; erase the secondary attribute byte (prevent it from being a locked shop)
+    LDX item_mystickey        ; check to see if the player has the key
+    BNE @OpenDoor             ; if they do, open the door
+      SEC                ; otherwise (no key, locked door), SEC to indicate player can't move here
+      RTS                ; and exit
+
+  @OpenDoor:
+    ASL inroom           ; shift the inroom flag (high bit) into C
+    STA inroom           ; then write the door bits to inroom to mark that we're opening a door (or locked door)
+    BCS :+               ; if the inroom flag was previously cleared (coming from outside a room)...
+      CALL PlayDoorSFX    ;  ... play the door sound effect
+
+:   LDA scroll_y         ; get the Y scroll for drawing
+    CLC
+    ADC #7               ; add 7 to get the row to which the player is on
+    TAX                  ; throw that in X -- it will be the row to draw the door graphic to
+
+    LDA joy              ; check the joy data to see which way the player is moving
+    AND #$0F             ; mask out directional bits
+    CMP #DOWN            ; see if they pressed left/right
+    BCC @SetAddr         ;  BCC will branch if direction is less than DOWN, which is left/right
+
+    INX                  ; otherwise, we're possibly moving down, so inc our row
+    CMP #DOWN            ; compare to DOWN again (because INX messed up Z)
+    BEQ @SetAddr         ; if they're pressing down jump ahead
+
+    DEX                  ; otherwise they're moving up, so DEX twice.  Once to undo the previous
+    DEX                  ;  INX, and again to move up a row from the player.
+
+  @SetAddr:              ; Here, X is the final row on which we will be drawing the door graphic
+    TXA                  ; put the row in A
+    CMP #15              ; check to see if it's >= 15
+    BCC :+               ;  and if it is... subtract 15 (only 15 rows on the nametable)
+      SBC #15
+:   TAX                  ; put the row back in X for indexing
+
+    LDA tmp+4            ; get the X coord of the tile the player is moving to
+    AND #$1F             ; mask out the low bits (column to draw on the nametables)
+    CMP #$10             ; see if the high bit is set.  If it is, we're drawing to the NT at $2400
+    BCS @NT2400          ;  otherwise we draw to the NT at PPUCTRL
+
+  @NT2000:
+    ASL A                      ; double the column to get the PPU dest X coord (2 ppu tiles per map tile)
+    ORA lut_2xNTRowStartLo, X  ; OR that with the NT address from the LUT, which gives us the 
+    STA doorppuaddr            ;  PPU address of the desired tile to redraw
+    LDA lut_2xNTRowStartHi, X  ;  record this address to doorppuaddr
+    STA doorppuaddr+1
+    JUMP @CheckShop
+
+  @NT2400:
+    AND #$0F                   ; for the NT at $2400, do the same thing, but first clear that
+    ASL A                      ; NT bit
+    ORA lut_2xNTRowStartLo, X
+    STA doorppuaddr
+    LDA lut_2xNTRowStartHi, X
+    ORA #$04                   ; and OR the high byte of the address with $04 ($2400 -- instead of PPUCTRL)
+    STA doorppuaddr+1
+
+
+  @CheckShop:
+    LDA tileprop+1       ; check the second byte of properties for the tile.  If nonzero, this is a shop
+    BEQ :+               ; enterance
+      STA shop_id        ;   so if it's nonzero, write the byte to the shop id to enter
+      INC entering_shop  ;   and set the entering_shop flag
+
+:   CLC                  ; CLC to indicate the player can move here
+    RTS                  ; and exit!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  [$D5E2 :: 0x3D5F2]
+;;
+;;  These LUTs are used by routines to find the NT address of the start of each row of map tiles
+;;    Really, they just shortcut a multiplication by $40
+;;
+;;  "2x" because they're really 2 rows (each row is $20, these increment by $40).  This is because
+;;  map tiles are 2 ppu tiles tall
+
+lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
+lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
 
