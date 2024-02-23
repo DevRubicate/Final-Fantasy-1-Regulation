@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .export EnterMinimap
-.import CallMinimapDecompress, UpdateJoy, MusicPlay, DrawPalette, WaitForVBlank
+.import MinimapDecompress, UpdateJoy, MusicPlay, DrawPalette, WaitForVBlank
 
 .incbin "bin/bank_09_data.bin"
 
@@ -4794,7 +4794,7 @@ Minimap_DrawSFX:
 
 
 Minimap_PrepRow:
-    CALL CallMinimapDecompress    ; decompress 2 rows of map data
+    FARCALL MinimapDecompress    ; decompress 2 rows of map data
     LDY #0                       ; Y will be the x coord (column) counter
 
   @MainLoop:

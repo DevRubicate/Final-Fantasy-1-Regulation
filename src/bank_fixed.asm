@@ -35,7 +35,7 @@
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
-.export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData, CallMinimapDecompress
+.export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
@@ -9983,11 +9983,12 @@ FormatBattleString:
     BEQ @Done           ; stop at the null terminator
     CMP #$48
     BCS :+
-      CALL DrawBattleString_ControlCode    ; if <  #$48
-      JUMP :++
-:     CALL DrawBattleString_ExpandChar    ; if >= #$48
-
-:   CALL DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
+        CALL DrawBattleString_ControlCode    ; if <  #$48
+        JUMP :++
+    :     
+    CALL DrawBattleString_ExpandChar    ; if >= #$48
+    :   
+    CALL DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
     JUMP @Loop
     
   @Done:
@@ -9997,7 +9998,6 @@ FormatBattleString:
     INY
     STA (btldraw_dst), Y
     JUMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -10796,7 +10796,8 @@ DimBatSprPalettes:
     SBC #$10           ; otherwise, subtract $10 (dim it)
     BPL :+             ; if that caused it to dro below zero...
       LDA #$0F         ; ...replace it with black ($0F)
-:   STA cur_pal+$10, X       ; write the new color back to the palette
+    :   
+    STA cur_pal+$10, X       ; write the new color back to the palette
     INY                ; and increment Y to mark this color as not fully dimmed yet
 
   @Skip:
@@ -10905,7 +10906,6 @@ FadeOutBatSprPalettes:
 
     RTS                         ; exit once palette is all black
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Fade In Battle Sprite Palettes [$FFA8 :: 0x3FFB8]
@@ -10927,21 +10927,6 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Call Minimap Decompress [$FFC0 :: 0x3FFD0]
-;;
-;;    Called from the minimap to call the MinimapDecompress routine
-;;  it cannot call the routine directly because it is on a different bank.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CallMinimapDecompress:
-    LDA #BANK_OWMAP
-    CALL SwapPRG
-    JSR MinimapDecompress
-    LDA #BANK_MINIMAP
-    NOJUMP SwapPRG
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -11118,14 +11103,6 @@ Impl_FARCALL:
 
     ; Activate the trampoline
     RTS
-
-
-
-
-
-
-
-
 
 .segment "VECTORS"
 
