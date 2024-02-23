@@ -3,10 +3,10 @@
 .include "src/global-import.inc"
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
-.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay
+.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-.export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll
+.export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement
 
 
 
@@ -72,96 +72,6 @@ SetOWScroll:
     STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Map Poison Damage [$C7FB :: 0x3C80B]
-;;
-;;    Deals poison damage (-1 HP) to any poisoned party member, and plays
-;;  the harsh "you're poisoned" sound effect.
-;;
-;;    It is called only when the player is moving.  If it is called when the player
-;;  is stationary, then the sound effect would never stop, and party HP would rapidly
-;;  drain (1 HP per frame!)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MapPoisonDamage:       ; first thing is to check if ANY characters are poisoned.
-    LDA ch_ailments    ; if nobody is poisoned, do nothing.
-    CMP #$03                     ; get char 0's ailments... see if they=3 (poison)
-    BEQ @DoIt                    ; if yes... "DoIt"
-
-    LDA ch_ailments + (1<<6)     ; and do the same with chars 1,2 and 3
-    CMP #$03
-    BEQ @DoIt
-    LDA ch_ailments + (2<<6)
-    CMP #$03
-    BEQ @DoIt
-    LDA ch_ailments + (3<<6)
-    CMP #$03
-    BEQ @DoIt
-
-    RTS                          ; if nobody poisoned, just exit
-
-  @DoIt:
-                            ; play the "you're poisoned" sound effect
-    LDA #%00111010          ; 12.5% duty (harsh), volume=$A
-    STA PAPU_CTL2
-    LDA #%10000001          ; sweep downward in pitch
-    STA PAPU_RAMP2
-    LDA #$60
-    STA PAPU_FT2               ; start at F=$060
-    STA PAPU_CT2
-
-    LDA #$06                ; indicate sq2 is busy with sound effects for 6 frames
-    STA sq2_sfx
-
-    LDA move_speed          ; see if party is moving (or really, "has moved")
-    BEQ @DoDamage           ; if not... do damage
-    RTS                     ; otherwise... don't do damage... just exit.
-            ;   This might take some explaining.  This seems contradictory to what I say in the routine
-            ; description ("It is called only when the player is moving").  Due to the order in which
-            ; this routine is called... move_speed will be zero at this point if the player just completed
-            ; a move across a tile (ie:  they moved a full 16 pixels).  move_speed will be nonzero if they
-            ; moved less than that.
-            ;   Without doing this check, poisoned characters would be damaged every FRAME rather than every step
-            ; (which would end up being -16 HP per step, since the player moves 1 pixel per frame).  With this check,
-            ; damage is only dealt once the move is completed (so only once per step)
-
-  @DoDamage:
-    LDX #0         ; X will be our loop counter and char index
-
-  @DmgLoop:
-    LDA ch_ailments, X    ; get this character's ailments
-    CMP #$03              ; see if it = 3 (poison)
-    BNE @DmgSkip          ; if not... skip this character
-
-    LDA ch_curhp+1, X     ; check high byte of HP
-    BNE @DmgSubtract      ; if nonzero (> 255 HP), deal this character damage
-
-    LDA ch_curhp, X       ; otherwise, check low byte of HP
-    CMP #2                ; see if >= 2 (don't take away their last HP)
-    BCC @DmgSkip          ; if < 2, skip this character
-                          ; otherwise... deal him damage
-
-  @DmgSubtract:
-    LDA ch_curhp, X       ; subtract 1 from HP
-    SEC
-    SBC #1
-    STA ch_curhp, X
-    LDA ch_curhp+1, X
-    SBC #0
-    STA ch_curhp+1, X
-
-  @DmgSkip:
-    TXA                   ; add $40 char index
-    CLC
-    ADC #$40
-    TAX
-
-    BNE @DmgLoop          ; and loop until it wraps (4 iterations)
-    RTS                   ; then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1607,6 +1517,213 @@ AirshipTransitionFrame:
 
     RTS                  ; frame is complete!  Exit
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Standard Map Movement  [$CC80 :: 0x3CC90]
+;;
+;;    This moves the party on the standard maps, deals movement damage where appropriate,
+;;  and does various other things related to movement.  It also sets the scroll appropriate
+;;  for the screen.
+;;
+;;    Note however it does not do collision detection or the like -- it simply carries out moves
+;;  that have already begun -- just like OverworldMovement.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StandardMapMovement:
+    LDA #$1E
+    STA PPUMASK             ; turn the PPU on
+
+    CALL RedrawDoor        ; redraw an opening/closing door if necessary
+
+    LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
+
+    LDA move_speed        ; see if the player is moving
+    BNE @noSetScroll       ; if not, just skip ahead and set the scroll
+        CALL SetSMScroll
+    @noSetScroll:
+                          ; the rest of this is only done during movement
+      CALL SM_MovePlayer     ; Move the player in the desired direction
+      CALL MapPoisonDamage   ; do poison damage
+
+      LDA tileprop          ; get the properties for this tile
+      AND #TP_SPEC_MASK     ; mask out the special bits
+      CMP #TP_SPEC_DAMAGE   ; see if it's a damage tile (frost/lava)
+      BNE :+                ; if it is...
+        JUMP MapTileDamage   ;  ... do map tile damage
+  :   RTS
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Map Tile Damage  [$C7DE :: 0x3C7EE]
+;;
+;;    Flashes the screen, plays the "ksssshhh" sound effect, and assigns
+;;  map tile damage for when the player is walking over damage tiles like
+;;  lava/frost.
+;;
+;;    Note it does not check to see if the player is on such a damage tile -- it assumes
+;;  that check has been done already.  Therefore this routine must only be called when the
+;;  player is on such a tile.  Also, this routine must only be called when the player is moving,
+;;  otherwise HP would rapidly drain (1 HP per frame) from just the player standing stationary on
+;;  the tile.
+;;
+;;    This routine branches (not JUMP!) to AssignMapTileDamage, so it must be somewhere near that routine.
+;;  Seems odd that it does that -- it's like it just lets this routine be interrupted by MapPoisonDamage
+;;  for whatever reason.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+MapTileDamage:
+    LDA framecounter      ; get the frame counter
+    AND #$01              ; isolate low bit and use as a quick monochrome toggle
+    ORA #$1E              ; OR with typical PPU flags
+    STA PPUMASK             ; and write to PPU reg.  This results in a rapid toggle between
+                          ;  normal/monochrome mode (toggles every frame).  This produces the flashy effect
+
+    LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
+    STA PAPU_NCTL1
+    LDA #$0D
+    STA PAPU_NFREQ1             ; set noise freq to $0D (low)
+    LDA #$00
+    STA PAPU_NFREQ2             ; set length counter to $0A (silence sound after 5 frames)
+                          ; this gets the noise channel playing the "kssssh" sound effect
+
+    LDA move_speed            ; check move_speed (will be zero when the move is complete)
+    BEQ AssignMapTileDamage   ; if the move is complete, assign damage (a branch instead of a jump?  -_-)
+    RTS                       ; otherwise, just exit
+
+                  ; damage is only assigned at end of move because we only want to assign damage once per
+                  ; step, whereas this routine is called once per frame.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Assign Map Tile Damage [$C861 :: 0x3C871]
+;;
+;;    Deals 1 damage to all party members (for standard map damaging tiles
+;;  -- Frost/Lava).
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AssignMapTileDamage:
+    LDX #$00              ; zero loop counter and char index
+
+  @Loop:
+    LDA ch_curhp+1, X     ; check high byte of HP
+    BNE @DmgSubtract      ; if nonzero (> 255 HP), deal this guy damage
+
+    LDA ch_curhp, X       ; otherwise, check low byte
+    CMP #2                ; if < 2, skip damage (don't take away their last HP)
+    BCC @DmgSkip
+
+  @DmgSubtract:
+    LDA ch_curhp, X       ; subtract 1 HP
+    SEC
+    SBC #1
+    STA ch_curhp, X
+    LDA ch_curhp+1, X
+    SBC #0
+    STA ch_curhp+1, X
+
+  @DmgSkip:
+    TXA                   ; add $40 to char index (next character in party)
+    CLC
+    ADC #$40
+    TAX
+
+    BNE @Loop             ; loop until it wraps (4 iterations)
+    RTS                   ; then exit
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Map Poison Damage [$C7FB :: 0x3C80B]
+;;
+;;    Deals poison damage (-1 HP) to any poisoned party member, and plays
+;;  the harsh "you're poisoned" sound effect.
+;;
+;;    It is called only when the player is moving.  If it is called when the player
+;;  is stationary, then the sound effect would never stop, and party HP would rapidly
+;;  drain (1 HP per frame!)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapPoisonDamage:       ; first thing is to check if ANY characters are poisoned.
+    LDA ch_ailments    ; if nobody is poisoned, do nothing.
+    CMP #$03                     ; get char 0's ailments... see if they=3 (poison)
+    BEQ @DoIt                    ; if yes... "DoIt"
+
+    LDA ch_ailments + (1<<6)     ; and do the same with chars 1,2 and 3
+    CMP #$03
+    BEQ @DoIt
+    LDA ch_ailments + (2<<6)
+    CMP #$03
+    BEQ @DoIt
+    LDA ch_ailments + (3<<6)
+    CMP #$03
+    BEQ @DoIt
+
+    RTS                          ; if nobody poisoned, just exit
+
+  @DoIt:
+                            ; play the "you're poisoned" sound effect
+    LDA #%00111010          ; 12.5% duty (harsh), volume=$A
+    STA PAPU_CTL2
+    LDA #%10000001          ; sweep downward in pitch
+    STA PAPU_RAMP2
+    LDA #$60
+    STA PAPU_FT2               ; start at F=$060
+    STA PAPU_CT2
+
+    LDA #$06                ; indicate sq2 is busy with sound effects for 6 frames
+    STA sq2_sfx
+
+    LDA move_speed          ; see if party is moving (or really, "has moved")
+    BEQ @DoDamage           ; if not... do damage
+    RTS                     ; otherwise... don't do damage... just exit.
+            ;   This might take some explaining.  This seems contradictory to what I say in the routine
+            ; description ("It is called only when the player is moving").  Due to the order in which
+            ; this routine is called... move_speed will be zero at this point if the player just completed
+            ; a move across a tile (ie:  they moved a full 16 pixels).  move_speed will be nonzero if they
+            ; moved less than that.
+            ;   Without doing this check, poisoned characters would be damaged every FRAME rather than every step
+            ; (which would end up being -16 HP per step, since the player moves 1 pixel per frame).  With this check,
+            ; damage is only dealt once the move is completed (so only once per step)
+
+  @DoDamage:
+    LDX #0         ; X will be our loop counter and char index
+
+  @DmgLoop:
+    LDA ch_ailments, X    ; get this character's ailments
+    CMP #$03              ; see if it = 3 (poison)
+    BNE @DmgSkip          ; if not... skip this character
+
+    LDA ch_curhp+1, X     ; check high byte of HP
+    BNE @DmgSubtract      ; if nonzero (> 255 HP), deal this character damage
+
+    LDA ch_curhp, X       ; otherwise, check low byte of HP
+    CMP #2                ; see if >= 2 (don't take away their last HP)
+    BCC @DmgSkip          ; if < 2, skip this character
+                          ; otherwise... deal him damage
+
+  @DmgSubtract:
+    LDA ch_curhp, X       ; subtract 1 from HP
+    SEC
+    SBC #1
+    STA ch_curhp, X
+    LDA ch_curhp+1, X
+    SBC #0
+    STA ch_curhp+1, X
+
+  @DmgSkip:
+    TXA                   ; add $40 char index
+    CLC
+    ADC #$40
+    TAX
+
+    BNE @DmgLoop          ; and loop until it wraps (4 iterations)
+    RTS                   ; then exit
 

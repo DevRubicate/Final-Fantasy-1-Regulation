@@ -21,7 +21,7 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
-.import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage
+.import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
@@ -42,7 +42,7 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 .export DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
-.export WaitScanline, SetSMScroll, DrawMapPalette
+.export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1003,88 +1003,9 @@ EnterOW_PalCyc:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Map Tile Damage  [$C7DE :: 0x3C7EE]
-;;
-;;    Flashes the screen, plays the "ksssshhh" sound effect, and assigns
-;;  map tile damage for when the player is walking over damage tiles like
-;;  lava/frost.
-;;
-;;    Note it does not check to see if the player is on such a damage tile -- it assumes
-;;  that check has been done already.  Therefore this routine must only be called when the
-;;  player is on such a tile.  Also, this routine must only be called when the player is moving,
-;;  otherwise HP would rapidly drain (1 HP per frame) from just the player standing stationary on
-;;  the tile.
-;;
-;;    This routine branches (not JUMP!) to AssignMapTileDamage, so it must be somewhere near that routine.
-;;  Seems odd that it does that -- it's like it just lets this routine be interrupted by MapPoisonDamage
-;;  for whatever reason.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-MapTileDamage:
-    LDA framecounter      ; get the frame counter
-    AND #$01              ; isolate low bit and use as a quick monochrome toggle
-    ORA #$1E              ; OR with typical PPU flags
-    STA PPUMASK             ; and write to PPU reg.  This results in a rapid toggle between
-                          ;  normal/monochrome mode (toggles every frame).  This produces the flashy effect
-
-    LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
-    STA PAPU_NCTL1
-    LDA #$0D
-    STA PAPU_NFREQ1             ; set noise freq to $0D (low)
-    LDA #$00
-    STA PAPU_NFREQ2             ; set length counter to $0A (silence sound after 5 frames)
-                          ; this gets the noise channel playing the "kssssh" sound effect
-
-    LDA move_speed            ; check move_speed (will be zero when the move is complete)
-    BEQ AssignMapTileDamage   ; if the move is complete, assign damage (a branch instead of a jump?  -_-)
-    RTS                       ; otherwise, just exit
-
-                  ; damage is only assigned at end of move because we only want to assign damage once per
-                  ; step, whereas this routine is called once per frame.
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Assign Map Tile Damage [$C861 :: 0x3C871]
-;;
-;;    Deals 1 damage to all party members (for standard map damaging tiles
-;;  -- Frost/Lava).
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AssignMapTileDamage:
-    LDX #$00              ; zero loop counter and char index
-
-  @Loop:
-    LDA ch_curhp+1, X     ; check high byte of HP
-    BNE @DmgSubtract      ; if nonzero (> 255 HP), deal this guy damage
-
-    LDA ch_curhp, X       ; otherwise, check low byte
-    CMP #2                ; if < 2, skip damage (don't take away their last HP)
-    BCC @DmgSkip
-
-  @DmgSubtract:
-    LDA ch_curhp, X       ; subtract 1 HP
-    SEC
-    SBC #1
-    STA ch_curhp, X
-    LDA ch_curhp+1, X
-    SBC #0
-    STA ch_curhp+1, X
-
-  @DmgSkip:
-    TXA                   ; add $40 to char index (next character in party)
-    CLC
-    ADC #$40
-    TAX
-
-    BNE @Loop             ; loop until it wraps (4 iterations)
-    RTS                   ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1130,7 +1051,7 @@ StandardMapLoop:
     CALL WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do Sprite DMA
     STA OAMDMA
-    CALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
+    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
                                ;   this also sets the scroll
     LDA framecounter
     CLC                        ; increment the two byte frame counter
@@ -1960,39 +1881,6 @@ Copy256:
     INC tmp+3          ; inc dest pointer
     RTS                ; and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Movement  [$CC80 :: 0x3CC90]
-;;
-;;    This moves the party on the standard maps, deals movement damage where appropriate,
-;;  and does various other things related to movement.  It also sets the scroll appropriate
-;;  for the screen.
-;;
-;;    Note however it does not do collision detection or the like -- it simply carries out moves
-;;  that have already begun -- just like OverworldMovement.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StandardMapMovement:
-    LDA #$1E
-    STA PPUMASK             ; turn the PPU on
-
-    CALL RedrawDoor        ; redraw an opening/closing door if necessary
-
-    LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
-
-    LDA move_speed        ; see if the player is moving
-    BEQ SetSMScroll       ; if not, just skip ahead and set the scroll
-                          ; the rest of this is only done during movement
-      CALL SM_MovePlayer     ; Move the player in the desired direction
-      FARCALL MapPoisonDamage   ; do poison damage
-
-      LDA tileprop          ; get the properties for this tile
-      AND #TP_SPEC_MASK     ; mask out the special bits
-      CMP #TP_SPEC_DAMAGE   ; see if it's a damage tile (frost/lava)
-      BNE :+                ; if it is...
-        JUMP MapTileDamage   ;  ... do map tile damage
-  :   RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
