@@ -4267,7 +4267,7 @@ EnterShop_Inn:
     LDA #>oam                   ;   performing sprite DMA
     STA OAMDMA                   ; all of this is to remove the cursor graphic without doing a real frame
 
-    CALL FadeOutBatSprPalettes   ; and fade the party out
+    FARCALL FadeOutBatSprPalettes   ; and fade the party out
 
   @LoopOne:
     CALL ShopFrameNoCursor       ; do a shop frame (with no visible cursor)
@@ -4282,7 +4282,7 @@ EnterShop_Inn:
     ORA joy_b
     BEQ @LoopOne                ; and keep looping until one of them has
 
-    CALL FadeInBatSprPalettes    ; then fade the party back in
+    FARCALL FadeInBatSprPalettes    ; then fade the party back in
 
   @Exit:
     LDA #$03
