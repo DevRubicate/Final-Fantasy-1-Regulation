@@ -6620,6 +6620,7 @@ UseMagic_SOFT:
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 
+; TODO: This problaby no longer works, so rewrite it using no-TXS logic
 UseMagic_WARP:
     LDA #$2F
     CALL DrawItemDescBox       ; draw description text

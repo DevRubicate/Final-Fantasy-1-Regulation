@@ -23,10 +23,7 @@ GameStart:
     LDA #$08                    ; Sprites use pattern table at $1xxx
     STA soft2000
     STA NTsoft2000
-    
-    LDX #$FF                    ; reset stack pointer
-    TXS
-    
+        
     FARCALL DisableAPU              ; Silence/disable all audio
     
     ;; Load some startup info

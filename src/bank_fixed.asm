@@ -68,8 +68,6 @@ DoOverworld:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterOverworldLoop:
-    LDX #$FF            ; purge stack and wipe the stack pointer so it points to top of stack
-    TXS                 ;   overworld loop is the de-facto "top" of all gameflow.
 
     CALL GetOWTile       ; get the current overworld tile information
 
@@ -10601,7 +10599,6 @@ OnReset:
     
     ; MMC5
     LDX #0
-    TXS                     ; transfer it to the Stack Pointer (resetting the SP)
     STX MMC5_PCM_MODE_IRQ   ; Disable MMC5 PCM and IRQs
     STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
     STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
