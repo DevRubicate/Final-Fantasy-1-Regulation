@@ -10677,18 +10677,6 @@ OnNMI:
 
 WaitForVBlank:
     LDA PPUSTATUS      ; check VBlank flag
-    BPL @Wait      ; if off, VBlank hasn't occured yet, so jump to the wait
-                   ;  otherwise... whatever code occured since the last frame took longer than
-                   ;  1 frame... so...
-
-    LDA #0         ; waste time in this loop for a while...
-  @Loop:
-      SEC          ; the reason for this is because the game doesn't want NMI to fire during VBlank
-      SBC #$01     ;  because then you'd have less than a full VBlank for drawing next frame
-      BNE @Loop    ;  Of course... just reading PPUSTATUS above will prevent this from happening, so this isn't
-                   ;  really necessary, but it doesn't hurt.
-
-  @Wait:
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
     STA PPUCTRL      ; and write it to PPU status reg
