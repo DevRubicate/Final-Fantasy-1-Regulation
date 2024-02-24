@@ -2907,26 +2907,28 @@ DrawMapRowCol:
     CMP #$10
     BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at PPUCTRL
 
-                  ; if column < $10 (use NT PPUCTRL)
-      TAX                 ; back up column to X
-      ASL A               ; double column number
-      ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
-      STA tmp
-      JUMP @DetermineRowOrCol
+              ; if column < $10 (use NT PPUCTRL)
+    TAX                 ; back up column to X
+    ASL A               ; double column number
+    ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
+    STA tmp
+    JUMP @DetermineRowOrCol
 
-  @UseNT2400:     ; if column >= $10 (use NT $2400)
-      AND #$0F            ; mask low bits
-      TAX                 ; put column in X
-      ASL A               ; double column number
-      ORA tmp             ; OR with low byte of dest pointer.
-      STA tmp
-      LDA tmp+1           ; add 4 to high byte (changing NT from PPUCTRL to $2400)
-      CLC
-      ADC #$04            ; Dest pointer is now prepped
-      STA tmp+1
+    @UseNT2400:     ; if column >= $10 (use NT $2400)
+
+    AND #$0F            ; mask low bits
+    TAX                 ; put column in X
+    ASL A               ; double column number
+    ORA tmp             ; OR with low byte of dest pointer.
+    STA tmp
+    LDA tmp+1           ; add 4 to high byte (changing NT from PPUCTRL to $2400)
+    CLC
+    ADC #$04            ; Dest pointer is now prepped
+    STA tmp+1
 
        ; no matter which NT (PPUCTRL/$2400) is being drawn to, both forks reconnect here
-  @DetermineRowOrCol:
+    @DetermineRowOrCol:
+
     LDA mapflags          ; find out if we're moving drawing a row or column
     AND #$02
     BEQ @DoRow
@@ -2937,7 +2939,8 @@ DrawMapRowCol:
    ;;  Draw a row of tiles
    ;;
 
-@DoRow:
+    @DoRow:
+
     TXA              ; put column number in A
     EOR #$0F         ; invert it
     TAX              ; put it back in X, increment it, then create a back-up of it in tmp+2
@@ -2950,7 +2953,8 @@ DrawMapRowCol:
     LDA tmp
     STA PPUADDR
 
-  @RowLoop_U:
+    @RowLoop_U:
+
     LDA draw_buf_ul, Y ; load 2 tiles from drawing buffer and draw them
     STA PPUDATA          ;   first UL
     LDA draw_buf_ur, Y ;   then UR
@@ -2981,7 +2985,8 @@ DrawMapRowCol:
     LDY #$00         ; zero our source index again
     LDX tmp+2        ; restore X to our down counter
 
-@RowLoop_D:
+    @RowLoop_D:
+
     LDA draw_buf_dl, Y ; repeat same tile copying work done above,
     STA PPUDATA          ;   but this time we're drawing the bottom half of the tiles
     LDA draw_buf_dr, Y ;   first DL
@@ -3007,7 +3012,8 @@ DrawMapRowCol:
    ;;  Draw a row of tiles
    ;;
 
-@DoColumn:
+    @DoColumn:
+
     LDA #$0F         ; prep down counter so that it
     SEC              ;  is 15 - target_row
     SBC mapdraw_nty  ;  This is the number of rows to draw until we reach NT boundary (to be used as down counter)
@@ -3022,7 +3028,8 @@ DrawMapRowCol:
     LDA #$04
     STA PPUCTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
 
-@ColLoop_L:
+    @ColLoop_L:
+
     LDA draw_buf_ul, Y ; draw the left two tiles that form this map tile
     STA PPUDATA          ;   first UL
     LDA draw_buf_dl, Y ;   then DL
@@ -3053,7 +3060,8 @@ DrawMapRowCol:
     STA PPUADDR
     LDX tmp+2        ; restore down counter into X
 
-@ColLoop_R:
+    @ColLoop_R:
+
     LDA draw_buf_ur, Y ; load right-hand tiles and draw...
     STA PPUDATA          ;   first UR
     LDA draw_buf_dr, Y ;   then DR
