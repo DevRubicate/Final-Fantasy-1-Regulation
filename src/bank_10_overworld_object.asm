@@ -6,10 +6,9 @@
 .import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX
 .import GetSMTargetCoords, GetSMTileProperties
 
-
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
-
+.export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -525,6 +524,156 @@ OWMove_Up:
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Boat boarding / unboarding routines   [$C5CC :: 0x3C5DC]
+;;
+;;     These are a series of routines that have the player attempt to
+;;  change vehicles during a move.  They handle movements between any
+;;  combination of foot/canoe/ship.
+;;
+;;  IN:  tileprop = properties of tile we're moving onto
+;;          tmp+2 = X coord we're moving onto
+;;          tmp+3 = Y coord
+;;
+;;  OUT:   C = clear if successful (able to board/unboard/move)
+;;             set if unsuccessful.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;
+;;  UnboardBoat  [$C5CC :: 0x3C5DC]
+;;    Exits the canoe/ship and proceeds on foot
+;;
+
+UnboardBoat:
+    LDA tileprop         ; get tile properties
+    AND #$01             ; see if walking onto this tile is legal
+    BNE Board_Fail       ; if not... fail
+                 ;  otherwise, proceed to UnboardBoat_Abs
+
+;;
+;;  UnboardBoat_Abs  [$C5D2 :: 0x3C5E2]
+;;    Same as UnboardBoat, only it does not check to make sure
+;;  you can legally walk on target tile (it assumes that check was already
+;;  performed).  Therefore it's always successful.
+;;
+
+UnboardBoat_Abs:
+    LDA vehicle          ; put old vehicle in A (used later)
+
+    LDX #$01
+    STX vehicle_next     ; set next vehicle to foot
+    STX vehicle          ; and current vehicle (so we don't sail onto the land before going on foot)
+
+    LDX #0
+    STX tileprop+1       ; kill tileprop+1 to prevent a battle from occuring
+
+    CMP #$04             ; check old vehicle (previously put in A)
+    BEQ DockShip         ; if we were previously in the ship... dock the ship here
+
+    CLC                  ; CLC to indicate success, and exit
+    RTS
+
+;;
+;;  Board_Fail  [$C5E4 :: 0x3C5F4]
+;;    Reached when boarding/unboarding has failed.
+;;
+
+Board_Fail:
+    SEC        ; SEC to indicate failure
+    RTS        ; and exit
+
+;;
+;;  BoardCanoe  [$C5E6 :: 0x3C5F6]
+;;    Attempts to board the canoe.  Can be done from on foot or from ship
+;;
+
+BoardCanoe:
+    LDA tileprop        ; get tile properties
+    AND #$02            ; check to see if a canoe move is legal here
+    BNE Board_Fail      ; if it isn't, fail
+
+    LDA has_canoe       ; make sure the player has the canoe
+    BEQ Board_Fail      ; if they don't.. fail
+
+    LDA #$04
+    STA vehchgpause     ; set a little pause for boarding canoe
+
+    LDA vehicle         ; put old vehicle in A
+
+    LDX #$01            ; set current vehicle to on foot
+    STX vehicle         ;   and next vehicle to canoe
+    LDX #$02            ; This will make it so you appear to be on foot between tiles
+    STX vehicle_next
+
+    LDX #0
+    STX tileprop+1      ; prevent battle from occuring
+
+    CMP #$04            ; check old vehicle (in A)
+    BEQ DockShip        ; if we were in the ship, dock the ship here
+
+    CLC                 ; CLC for success, and exit
+    RTS
+
+;;
+;;  BoardShip  [$C609 :: 0x3C619]
+;;    Attempts to board the ship.
+;;
+
+BoardShip:
+    LDA ship_vis        ; is ship visible / available?
+    BEQ Board_Fail      ; if not, fail
+
+    LDA ship_x          ; is ship docked at current X/Y
+    CMP tmp+2           ; coords?
+    BNE Board_Fail
+    LDA ship_y
+    CMP tmp+3
+    BNE Board_Fail      ; if not... fail
+
+    LDA #$01
+    STA vehicle         ; otherwise... set current vehicle to on foot
+    LDA #$04
+    STA vehicle_next    ; and next vehicle to ship
+    LDA #$04
+    STA vehchgpause     ; pause a little bit to board the ship
+
+    LDA #0
+    STA tileprop+1      ; kill tileprop+1 to prevent unwanted battles
+
+    LDA #$45
+    STA music_track     ; switch to music track $45 (the ship music)
+
+    CLC                 ; CLC for succes!
+    RTS
+
+;;
+;;  DockShip  [$C632 :: 0x3C642]
+;;    Docks the ship at current player coords.  CLCs to return success always
+;;
+
+DockShip:
+    LDA ow_scroll_x     ; get X scroll
+    CLC
+    ADC #$07            ; add 7 to get player coord
+    STA ship_x          ; put ship there
+
+    LDA ow_scroll_y     ; same with Y coord
+    CLC
+    ADC #$07
+    STA ship_y
+
+    CLC                 ; CLC to indicate success
+
+    LDA #$30
+    STA PAPU_NCTL1           ; silence noise (kills the "waves" sound)
+
+    LDA #$44
+    STA music_track     ; switch to music track $44 (overworld theme)
+
+    RTS                 ; exit
 
 
 
