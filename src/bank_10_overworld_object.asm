@@ -3,13 +3,13 @@
 .include "src/global-import.inc"
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
-.import DoMapDrawJob, BattleStepRNG, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom
-.import GetSMTileProperties, StartMapMove, EnterOW_PalCyc, MinigameReward, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy
+.import DoMapDrawJob, BattleStepRNG, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
+.import GetSMTileProperties, StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
-.export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject
+.export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2979,3 +2979,21 @@ GetSMTargetCoords:
     STA tmp+5
 
     RTS               ; done
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Minigame Reward [$C8A4 :: 0x3C8B4]
+;;
+;;    Called when you complete the mini game successfully
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MinigameReward:
+    LDA #100          ; just give the party 100 GP
+    STA tmp
+    LDA #0
+    STA tmp+1
+    LDA #0
+    STA tmp+2
+
+    FARJUMP AddGPToParty

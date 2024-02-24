@@ -46,7 +46,7 @@
 .export DoOverworld, DoMapDrawJob, BattleStepRNG
 .export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
 .export GetSMTileProperties, PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
-.export MinigameReward, StartMapMove
+.export StartMapMove
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -434,23 +434,6 @@ EnterOW_PalCyc:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Minigame Reward [$C8A4 :: 0x3C8B4]
-;;
-;;    Called when you complete the mini game successfully
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MinigameReward:
-    LDA #100          ; just give the party 100 GP
-    STA tmp
-    LDA #0
-    STA tmp+1
-    LDA #0
-    STA tmp+2
-
-    FARJUMP AddGPToParty
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
