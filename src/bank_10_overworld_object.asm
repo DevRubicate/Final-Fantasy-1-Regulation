@@ -9,6 +9,7 @@
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
+.export GetOWTile, LandAirship
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2538,3 +2539,96 @@ AnimateAirshipLanding:
 
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Get Overworld Tile  [$C696 :: 0x3C6A6]
+;;
+;;     Get's the overworld tile and special properties of the tile the
+;;  party is currently standing on
+;;
+;;  OUT:  ow_tile
+;;        tileprop_now
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetOWTile:
+    LDA ow_scroll_x  ; get X scroll
+    CLC
+    ADC #$07         ; add 7 to get party's X coord
+    STA tmp          ; put in tmp (low byte of pointer -- also the desired column)
+
+    LDA ow_scroll_y  ; get Y scroll
+    CLC
+    ADC #$07         ; add 7 for party's Y coord
+    AND #$0F         ; mask to keep in-bounds of the portion of the map that's loaded
+    ORA #>mapdata    ; OR with high byte of mapdata to get the high byte of the pointer
+    STA tmp+1        ; write it to high byte
+
+    LDY #0           ; zero Y for indexing
+    LDA (tmp), Y     ; get the tile ID that the party is on
+    STA ow_tile      ; and record it
+
+    ASL A                ; double it (2 bytes of properties per tile)
+    TAX                  ; and put in X
+    LDA tileset_prop, X  ; get the first property byte from the tileset
+    AND #OWTP_SPEC_MASK  ; mask out the special bits
+    STA tileprop_now     ; and record it
+
+    RTS              ; then exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Land Airship  [$C6B8 :: 0x3C6C8]
+;;
+;;    Attempts to land the airship at current player coords
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LandAirship:
+    LDA #0
+    STA joy_a           ; erase A button catcher
+
+    CALL AnimateAirshipLanding  ; do the animation of the airship landing
+
+    LDA ow_scroll_x     ; get X scroll
+    CLC
+    ADC #$07            ; add 7 to get player's position
+    STA tmp             ; and write to low byte of pointer
+
+    LDA ow_scroll_y     ; get Y scroll
+    CLC
+    ADC #$07            ; add 7 for player position
+    AND #$0F            ; mask low bits to keep within portion of map we have loaded in RAM
+    ORA #>mapdata       ; or with high byte of mapdata pointer
+    STA tmp+1           ; and store as high byte of our pointer
+
+    LDY #0
+    LDA (tmp), Y        ; get the current tile we're landing on
+
+    ASL A                 ; *2, and throw in X
+    TAX
+    LDA tileset_prop, X          ; get that tile's properties
+    AND #$08                     ; see if landing the airship on this tile is legal
+    BEQ :+                       ; if not....
+      CALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
+      RTS                        ;      and exit
+
+    :   
+    LDA ow_scroll_x     ; otherwise (legal land)
+    CLC
+    ADC #$07            ; get X coord again
+    STA airship_x       ; park the airship there
+
+    LDA ow_scroll_y
+    CLC
+    ADC #$07
+    STA airship_y       ; same with Y coord
+
+    LDA #$01
+    STA vehicle_next    ; change vehicle to make the player on foot
+    STA vehicle
+
+    LDA #$44
+    STA music_track     ; start music track $44 (overworld theme)
+
+    RTS                 ; and exit

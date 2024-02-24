@@ -22,7 +22,7 @@
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
-.import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
+.import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
@@ -70,7 +70,7 @@ DoOverworld:
 
 EnterOverworldLoop:
 
-    CALL GetOWTile       ; get the current overworld tile information
+    FARCALL GetOWTile       ; get the current overworld tile information
 
    ;;
    ;; THE overworld loop
@@ -174,7 +174,7 @@ DoOWTransitions:
     LDA entering_shop     ; see if we're entering a shop (caravan)
     BEQ @SkipShop         ; if not... skip it
 
-      CALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
+      FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
       LDA #$00
       CALL CyclePalettes   ; cycle out the palette
       FARCALL EnterShop       ; and enter the shop!
@@ -195,7 +195,7 @@ DoOWTransitions:
       STA joy_start       ; clear start button catcher
       STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
 
-      CALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
+      FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
       LDA #$00
       CALL CyclePalettes   ; cycle out the palette
       FARCALL EnterMainMenu   ; and enter the main menu
@@ -225,7 +225,7 @@ DoOWTransitions:
    RTS
 
   @Battle:
-    CALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
+    FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
     CALL BattleTransition   ; Do the flashy transition effect
 
     LDA #$00
@@ -240,7 +240,7 @@ DoOWTransitions:
 
 
   @Teleport:
-    CALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
+    FARCALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
     FARCALL ScreenWipe_Close    ; wipe the screen closed
 
     LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport data
@@ -323,7 +323,7 @@ ProcessOWInput:
         LDA vehicle      ; check the current vehicle
         CMP #$08
         BNE @noLandAirship ; if in the airship, try to land it
-            JUMP LandAirship
+            FARJUMP LandAirship
         @noLandAirship:
         CMP #$01
         BNE @noAirship   ; if on foot, try to take off in the airship
@@ -546,101 +546,6 @@ lut_FormationWeight:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Get Overworld Tile  [$C696 :: 0x3C6A6]
-;;
-;;     Get's the overworld tile and special properties of the tile the
-;;  party is currently standing on
-;;
-;;  OUT:  ow_tile
-;;        tileprop_now
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-GetOWTile:
-    LDA ow_scroll_x  ; get X scroll
-    CLC
-    ADC #$07         ; add 7 to get party's X coord
-    STA tmp          ; put in tmp (low byte of pointer -- also the desired column)
-
-    LDA ow_scroll_y  ; get Y scroll
-    CLC
-    ADC #$07         ; add 7 for party's Y coord
-    AND #$0F         ; mask to keep in-bounds of the portion of the map that's loaded
-    ORA #>mapdata    ; OR with high byte of mapdata to get the high byte of the pointer
-    STA tmp+1        ; write it to high byte
-
-    LDY #0           ; zero Y for indexing
-    LDA (tmp), Y     ; get the tile ID that the party is on
-    STA ow_tile      ; and record it
-
-    ASL A                ; double it (2 bytes of properties per tile)
-    TAX                  ; and put in X
-    LDA tileset_prop, X  ; get the first property byte from the tileset
-    AND #OWTP_SPEC_MASK  ; mask out the special bits
-    STA tileprop_now     ; and record it
-
-    RTS              ; then exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Land Airship  [$C6B8 :: 0x3C6C8]
-;;
-;;    Attempts to land the airship at current player coords
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-LandAirship:
-    LDA #0
-    STA joy_a           ; erase A button catcher
-
-    FARCALL AnimateAirshipLanding  ; do the animation of the airship landing
-
-    LDA ow_scroll_x     ; get X scroll
-    CLC
-    ADC #$07            ; add 7 to get player's position
-    STA tmp             ; and write to low byte of pointer
-
-    LDA ow_scroll_y     ; get Y scroll
-    CLC
-    ADC #$07            ; add 7 for player position
-    AND #$0F            ; mask low bits to keep within portion of map we have loaded in RAM
-    ORA #>mapdata       ; or with high byte of mapdata pointer
-    STA tmp+1           ; and store as high byte of our pointer
-
-    LDY #0
-    LDA (tmp), Y        ; get the current tile we're landing on
-
-    ASL A                 ; *2, and throw in X
-    TAX
-    LDA tileset_prop, X          ; get that tile's properties
-    AND #$08                     ; see if landing the airship on this tile is legal
-    BEQ :+                       ; if not....
-      FARCALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
-      RTS                        ;      and exit
-
-:   LDA ow_scroll_x     ; otherwise (legal land)
-    CLC
-    ADC #$07            ; get X coord again
-    STA airship_x       ; park the airship there
-
-    LDA ow_scroll_y
-    CLC
-    ADC #$07
-    STA airship_y       ; same with Y coord
-
-    LDA #$01
-    STA vehicle_next    ; change vehicle to make the player on foot
-    STA vehicle
-
-    LDA #$44
-    STA music_track     ; start music track $44 (overworld theme)
-
-    RTS                 ; and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
