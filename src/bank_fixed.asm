@@ -22,7 +22,7 @@
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
-.import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip
+.import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
@@ -276,42 +276,6 @@ DoOWTransitions:
                             ;  if/when the player warps out of the map.  At which point...
     JUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Fly Airship  [$C215 :: 0x3C225]
-;;
-;;    Checks to make sure airship is visible and at current coords
-;;  and takes flight if it is.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FlyAirship:
-    LDA airship_vis      ; see if airship is visible
-    BEQ @Exit            ; if not... exit
-
-    LDA ow_scroll_x      ; get map X scroll
-    CLC
-    ADC #7               ; +7 to get player's coord
-    CMP airship_x        ; see if it matches the airship's X coord
-    BNE @Exit            ; if not.. exit
-
-    LDA ow_scroll_y      ; do same check with Y coord
-    CLC
-    ADC #7
-    CMP airship_y
-    BNE @Exit            ; if no match, exit
-
-    LDA #$08
-    STA vehicle_next     ; set current and next vehicle to airship
-    STA vehicle
-
-    LDA #$46
-    STA music_track      ; change music track to $46 (airship music)
-
-    JUMP AnimateAirshipTakeoff    ; do the takeoff animation, then exit
-
-  @Exit:
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -353,14 +317,18 @@ ProcessOWInput:
     LDA joy_a        ; otherwise... check to see if A was pressed
     BEQ @ANotPressed ; jump ahead if it wasn't
 
-      LDA #0         ; if A pressed...
-      STA joy_a      ; clear A button catcher
+        LDA #0         ; if A pressed...
+        STA joy_a      ; clear A button catcher
 
-      LDA vehicle      ; check the current vehicle
-      CMP #$08
-      BEQ @LandAirship ; if in the airship, try to land it
-      CMP #$01
-      BEQ FlyAirship   ; if on foot, try to take off in the airship
+        LDA vehicle      ; check the current vehicle
+        CMP #$08
+        BNE @noLandAirship ; if in the airship, try to land it
+            JUMP LandAirship
+        @noLandAirship:
+        CMP #$01
+        BNE @noAirship   ; if on foot, try to take off in the airship
+            FARCALL FlyAirship
+        @noAirship:
                        ; otherwise, proceed as if A wasn't pressed
 
   @ANotPressed:
@@ -414,7 +382,7 @@ ProcessOWInput:
     LDA #0
     STA tileprop+1     ; otherwise, zero tileprop+1 so no battle occurs
 
-    CALL IsOnBridge     ; see if they're stepping on the bridge/canal
+    FARCALL IsOnBridge     ; see if they're stepping on the bridge/canal
     BCS @Foot_NoBridge ; if they aren't on the bridge, skip ahead
 
      LDA bridgescene   ; if they are on a bridge... see if the bridge scene has already happened
@@ -436,29 +404,25 @@ ProcessOWInput:
     STA facing            ; set that as our facing
     JUMP StartMapMove      ; then start the map move!  and exit
 
-  @LandAirship:        ; Here when attempting to land the airship
-    JUMP LandAirship
-
-
   @MoveShip:           ; Here if trying to move when in the ship
     FARCALL OWCanMove      ; see if they can move in desired direction
     BCS @Ship_NoMove   ; if they can't... jump ahead
 
-     CALL IsOnCanal       ; if they can... check to see if the canal is blocking them
-     BCS @StartMove      ; if it isn't, start moving
-     JUMP @CantMove       ; otherwise, prevent them from moving
+        FARCALL IsOnCanal       ; if they can... check to see if the canal is blocking them
+        BCS @StartMove      ; if it isn't, start moving
+        JUMP @CantMove       ; otherwise, prevent them from moving
 
     @Ship_NoMove:        ; if they couldn't normally move on the ship...
-      FARCALL BoardCanoe     ; see if they can board the canoe to move
-      BCC @StartMove     ; if yes... start moving
+        FARCALL BoardCanoe     ; see if they can board the canoe to move
+        BCC @StartMove     ; if yes... start moving
 
-      LDA tileprop            ; otherwise, get tile properties
-      AND #OWTP_DOCKSHIP | 1  ; see if you can walk on foot to this tile... 
-      CMP #OWTP_DOCKSHIP      ;   AND that you can dock the ship here
-      BNE @CantMove           ; if can't dock ship or can't walk on foot -- then can't move
+        LDA tileprop            ; otherwise, get tile properties
+        AND #OWTP_DOCKSHIP | 1  ; see if you can walk on foot to this tile... 
+        CMP #OWTP_DOCKSHIP      ;   AND that you can dock the ship here
+        BNE @CantMove           ; if can't dock ship or can't walk on foot -- then can't move
 
-      FARCALL UnboardBoat_Abs     ; otherwise, unboard the ship
-      JUMP @StartMove          ; and start moving
+        FARCALL UnboardBoat_Abs     ; otherwise, unboard the ship
+        JUMP @StartMove          ; and start moving
 
 
   @CantMove:
@@ -581,93 +545,6 @@ lut_FormationWeight:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Is On Bridge   [$C64D :: 0x3C65D]
-;;
-;;     Checks to see if the player is on a bridge (or the canal, since
-;;  that functions exactly the same as a bridge when you're on foot).
-;;
-;;  IN:  tmp+2 = X coord to check
-;;       tmp+3 = Y coord to check
-;;
-;;  OUT:          C = set if not on a bridge, clear if we are
-;;       tileprop+1 = zerod if we are on a bridge
-;;
-;;     tileprop+1 is zerod if we go on a bridge to prevent a battle from
-;;  occuring on a bridge (since you're technically on an ocean tile, it'd be a sea battle
-;;  even though you're on foot!).  Since that would be silly, and because we wouldn't want
-;;  a battle to happen at the same time as the bridge scene, that var is zerod.
-;;
-;;     HOWEVER -- tileprop+1 is zerod right before this routine is called!  So zeroing it
-;;  here is redundant and pointless.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsOnBridge:
-    LDA bridge_vis
-    BEQ IsOnCanal      ; if bridge isn't visible... fail -- skip to canal
-
-    LDA tmp+2
-    CMP bridge_x
-    BNE IsOnCanal      ; if given X coord does not equal bridge X coord, fail
-
-    LDA tmp+3
-    CMP bridge_y
-    BNE IsOnCanal      ; same with Y coord
-
-    LDA #0             ; otherwise... success!  we're on the bridge!
-    STA tileprop+1     ;  zero the tileprop+1
-    CLC                ; CLC to indicate success
-    RTS                ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Is On Canal   [$C666 :: 0x3C676]
-;;
-;;     Exactly the same as IsOnBridge -- only it just checks the canal
-;;  and not the bridge (for use with the ship)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IsOnCanal:
-    LDA canal_vis      ; do all the same checks as with IsOnBridge, but with the canal
-    BEQ @Fail          ;  visibility
-
-    LDA tmp+2
-    CMP canal_x
-    BNE @Fail          ; X coord
-
-    LDA tmp+3
-    CMP canal_y
-    BNE @Fail          ; Y coord
-
-    LDA #0             ; do all same stuff on success
-    STA tileprop+1
-    CLC
-    RTS
-
-  @Fail:
-    SEC                ; SEC to indicate failure
-    RTS                ; and exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  MusicPlay   [$C681 :: 0x3C691]
-;;
-;;    Calls the music play routine.  Comes in two flavors.  Both are the same, only
-;;  MusicPlay_NoSwap does not swap the original bank back in.  Therefore MusicPlay_NoSwap
-;;  should only be called from this bank (bank F) and only if the bank that's swapped in
-;;  is unimportant.
-;;
-;;    The Music Play routine should be called once per frame unless all sound is stopped.  If sound is active,
-;;  failure to call the music Play routine will result in unsteady tempo and other ugly audio effects.
-;;
-;;  IN:  cur_bank = bank to swap back to on exit (MusicPlay only)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -721,7 +598,7 @@ LandAirship:
     LDA #0
     STA joy_a           ; erase A button catcher
 
-    CALL AnimateAirshipLanding  ; do the animation of the airship landing
+    FARCALL AnimateAirshipLanding  ; do the animation of the airship landing
 
     LDA ow_scroll_x     ; get X scroll
     CLC
@@ -743,7 +620,7 @@ LandAirship:
     LDA tileset_prop, X          ; get that tile's properties
     AND #$08                     ; see if landing the airship on this tile is legal
     BEQ :+                       ; if not....
-      CALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
+      FARCALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
       RTS                        ;      and exit
 
 :   LDA ow_scroll_x     ; otherwise (legal land)
@@ -3555,6 +3432,7 @@ ShowDialogueBox:
 ;;       tmp+11 = number of scanlines (-8) the dialogue box is to be visible.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+.align $100
 
 DialogueBox_Frame:
     FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
@@ -5792,79 +5670,6 @@ EraseBox:
     STA PPUSCROLL
     STA PPUSCROLL
     RTS             ; and exit!
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Airship Transition Animations  [$E1A8 :: 0x3E1B8]
-;;
-;;    AnimateAirshipLanding and AnimateAirshipTakeoff do just as the name
-;;  suggests.  They draw the airship as it slowly takes off and lands.
-;;
-;;    These routines handle all the animation and sound effects that occur during the
-;;  animation, but do not switch music tracks.
-;;
-;;    These routines will not exit until the animation is complete (they won't
-;;  return for several frames)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;
-;;  AnimateAirshipTakeoff  [$E1A8 :: 0x3E1B8]
-;;
-
-AnimateAirshipTakeoff:
-    LDA #$6F
-    STA tmp+10           ; start Y coord for airship at $6F
-
-    @Loop:
-      FARCALL AirshipTransitionFrame   ; do a frame
-
-      LDA framecounter
-      AND #$01
-      BNE @Loop          ; loop if low bit of framecounter is nonzero (move airship every other frame)
-
-      DEC tmp+10         ; dec Y coord
-
-      LDA tmp+10
-      CMP #$4F
-      BCS @Loop          ; loop until Y coord < $4F
-
-    LDA #RIGHT           ; reset facing to face the player rightward
-    STA facing
-
-    RTS                  ; and exit
-
-;;
-;;  AnimateAirshipLanding  [$E1C2 :: 0x3E1D2]
-;;
-
-AnimateAirshipLanding:
-    LDA #$4F
-    STA tmp+10           ; start the Y coord for the airship at $4F
-
-    @Loop:
-      FARCALL AirshipTransitionFrame    ; do a frame
-
-      LDA framecounter   ; check low bit of frame counter
-      AND #$01
-      BNE @Loop          ; and loop if nonzero (move airship once every 2 frames)
-
-      INC tmp+10         ; increment Y coord (move airship closer to ground)
-
-      LDA tmp+10
-      CMP #$70
-      BCC @Loop          ; loop until Y coord >= $70
-
-    LDA #RIGHT
-    STA facing         ; reset facing to face the player rightward
-
-    LDA #0
-    STA PAPU_NCTL1          ; silence airship noise sound effect by setting volume to zero
-
-    RTS                ; then exit
 
 
 

@@ -8,7 +8,7 @@
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
-.export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip
+.export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1243,6 +1243,10 @@ DrawOWObj_Airship:
  ;;  a common exit shared by these routines
  ;;
 
+
+
+
+
 DrawOWObj_Exit:
     RTS
 
@@ -2349,4 +2353,188 @@ IsObjectInPath:
 
 lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
 lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Is On Bridge   [$C64D :: 0x3C65D]
+;;
+;;     Checks to see if the player is on a bridge (or the canal, since
+;;  that functions exactly the same as a bridge when you're on foot).
+;;
+;;  IN:  tmp+2 = X coord to check
+;;       tmp+3 = Y coord to check
+;;
+;;  OUT:          C = set if not on a bridge, clear if we are
+;;       tileprop+1 = zerod if we are on a bridge
+;;
+;;     tileprop+1 is zerod if we go on a bridge to prevent a battle from
+;;  occuring on a bridge (since you're technically on an ocean tile, it'd be a sea battle
+;;  even though you're on foot!).  Since that would be silly, and because we wouldn't want
+;;  a battle to happen at the same time as the bridge scene, that var is zerod.
+;;
+;;     HOWEVER -- tileprop+1 is zerod right before this routine is called!  So zeroing it
+;;  here is redundant and pointless.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsOnBridge:
+    LDA bridge_vis
+    BEQ IsOnCanal      ; if bridge isn't visible... fail -- skip to canal
+
+    LDA tmp+2
+    CMP bridge_x
+    BNE IsOnCanal      ; if given X coord does not equal bridge X coord, fail
+
+    LDA tmp+3
+    CMP bridge_y
+    BNE IsOnCanal      ; same with Y coord
+
+    LDA #0             ; otherwise... success!  we're on the bridge!
+    STA tileprop+1     ;  zero the tileprop+1
+    CLC                ; CLC to indicate success
+    RTS                ; and exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Is On Canal   [$C666 :: 0x3C676]
+;;
+;;     Exactly the same as IsOnBridge -- only it just checks the canal
+;;  and not the bridge (for use with the ship)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsOnCanal:
+    LDA canal_vis      ; do all the same checks as with IsOnBridge, but with the canal
+    BEQ @Fail          ;  visibility
+
+    LDA tmp+2
+    CMP canal_x
+    BNE @Fail          ; X coord
+
+    LDA tmp+3
+    CMP canal_y
+    BNE @Fail          ; Y coord
+
+    LDA #0             ; do all same stuff on success
+    STA tileprop+1
+    CLC
+    RTS
+
+  @Fail:
+    SEC                ; SEC to indicate failure
+    RTS                ; and exit
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Fly Airship  [$C215 :: 0x3C225]
+;;
+;;    Checks to make sure airship is visible and at current coords
+;;  and takes flight if it is.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FlyAirship:
+    LDA airship_vis      ; see if airship is visible
+    BEQ @Exit            ; if not... exit
+
+    LDA ow_scroll_x      ; get map X scroll
+    CLC
+    ADC #7               ; +7 to get player's coord
+    CMP airship_x        ; see if it matches the airship's X coord
+    BNE @Exit            ; if not.. exit
+
+    LDA ow_scroll_y      ; do same check with Y coord
+    CLC
+    ADC #7
+    CMP airship_y
+    BNE @Exit            ; if no match, exit
+
+    LDA #$08
+    STA vehicle_next     ; set current and next vehicle to airship
+    STA vehicle
+
+    LDA #$46
+    STA music_track      ; change music track to $46 (airship music)
+
+    JUMP AnimateAirshipTakeoff    ; do the takeoff animation, then exit
+
+  @Exit:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Airship Transition Animations  [$E1A8 :: 0x3E1B8]
+;;
+;;    AnimateAirshipLanding and AnimateAirshipTakeoff do just as the name
+;;  suggests.  They draw the airship as it slowly takes off and lands.
+;;
+;;    These routines handle all the animation and sound effects that occur during the
+;;  animation, but do not switch music tracks.
+;;
+;;    These routines will not exit until the animation is complete (they won't
+;;  return for several frames)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;
+;;  AnimateAirshipTakeoff  [$E1A8 :: 0x3E1B8]
+;;
+
+AnimateAirshipTakeoff:
+    LDA #$6F
+    STA tmp+10           ; start Y coord for airship at $6F
+
+    @Loop:
+      CALL AirshipTransitionFrame   ; do a frame
+
+      LDA framecounter
+      AND #$01
+      BNE @Loop          ; loop if low bit of framecounter is nonzero (move airship every other frame)
+
+      DEC tmp+10         ; dec Y coord
+
+      LDA tmp+10
+      CMP #$4F
+      BCS @Loop          ; loop until Y coord < $4F
+
+    LDA #RIGHT           ; reset facing to face the player rightward
+    STA facing
+
+    RTS                  ; and exit
+
+;;
+;;  AnimateAirshipLanding  [$E1C2 :: 0x3E1D2]
+;;
+
+AnimateAirshipLanding:
+    LDA #$4F
+    STA tmp+10           ; start the Y coord for the airship at $4F
+
+    @Loop:
+      CALL AirshipTransitionFrame    ; do a frame
+
+      LDA framecounter   ; check low bit of frame counter
+      AND #$01
+      BNE @Loop          ; and loop if nonzero (move airship once every 2 frames)
+
+      INC tmp+10         ; increment Y coord (move airship closer to ground)
+
+      LDA tmp+10
+      CMP #$70
+      BCC @Loop          ; loop until Y coord >= $70
+
+    LDA #RIGHT
+    STA facing         ; reset facing to face the player rightward
+
+    LDA #0
+    STA PAPU_NCTL1          ; silence airship noise sound effect by setting volume to zero
+
+    RTS                ; then exit
+
+
 
