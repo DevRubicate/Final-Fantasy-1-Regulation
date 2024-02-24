@@ -23,6 +23,7 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
+.import ProcessOWInput
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
@@ -44,7 +45,8 @@
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 .export DoOverworld, DoMapDrawJob, BattleStepRNG
 .export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
-.export GetSMTargetCoords, GetSMTileProperties, PlayDoorSFX
+.export GetSMTargetCoords, GetSMTileProperties, PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
+.export MinigameReward, StartMapMove
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -105,7 +107,7 @@ EnterOverworldLoop:
       LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
       STA vehicle
       CALL DoOWTransitions      ; check for any transitions that need to be done
-      CALL ProcessOWInput       ; process overworld input
+      FARCALL ProcessOWInput       ; process overworld input
     :
     FARCALL ClearOAM           ; clear OAM
     FARCALL DrawOWSprites      ; and draw all overworld sprites
@@ -277,171 +279,6 @@ DoOWTransitions:
     JUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Process OW input   [$C23C :: 0x3C24C]
-;;
-;;    Updates joy data and does input processing for the overworld.  Shouldn't
-;;  be called when player is in motion.  Does not process start/select buttons.
-;;
-;;  OUT:     tileprop+1 = bit 7 set if stepping onto a teleport
-;;           tileprop+1 = bit 6 set if we should start a random encounter.  btlformation contains
-;;                          the formation ID number in that case
-;;        entering_shop = nonzero if we're entering a shop (caravan).  shop_id is set appropriatly 
-;;                          in that case.
-;;          bridgescene = 01 if we triggered the bridge scene
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessOWInput:
-    LDA tileprop     ; check properties of tile we just stepped on
-    AND #OWTP_FOREST ; see if the forest bit is on
-    STA inforest     ; and store result in 'inforest'
-                 ; seems like an odd place to do that... since it has nothing to do with input
-
-    LDA vehchgpause  ; see if we're in the middle of a vehicle change pause
-    BEQ @NoVehPause  ; if we are...
-
-      SEC
-      SBC #$01
-      STA vehchgpause ; decrement the vehchgpause counter (why doesn't it DEC?)
-      RTS             ; and exit (ignore all input until vehchgpause is zero)
-
-  @NoVehPause:
-    CALL UpdateJoy    ; update joypad data
-
-    LDA joy
-    AND #$0F         ; check directional buttons
-    BNE @Movement    ; if any of them are pressed... do movement.
-
-    LDA joy_a        ; otherwise... check to see if A was pressed
-    BEQ @ANotPressed ; jump ahead if it wasn't
-
-        LDA #0         ; if A pressed...
-        STA joy_a      ; clear A button catcher
-
-        LDA vehicle      ; check the current vehicle
-        CMP #$08
-        BNE @noLandAirship ; if in the airship, try to land it
-            FARJUMP LandAirship
-        @noLandAirship:
-        CMP #$01
-        BNE @noAirship   ; if on foot, try to take off in the airship
-            FARCALL FlyAirship
-        @noAirship:
-                       ; otherwise, proceed as if A wasn't pressed
-
-  @ANotPressed:
-    LDA joy_b
-    CMP #55            ; check to see if they pressed B 55 times
-    BNE @Exit          ; if not... exit.  Otherwise....
-
-    INC joy_b          ; inc joy_b so that this branch doesn't get taken every frame
-    LDA vehicle        ; get the current vehicle
-    CMP #$04           ; see if it's the ship
-    BNE @Exit          ; if not... exit
-
-    LDA joy            ; get current joy data
-    AND #$C0           ; check to make sure both A and B are currently down
-    CMP #$C0
-    BNE @Exit          ; if not... exit
-
-    LDA #0                  ; otherwise... they activated the minigame!
-    CALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
-    CALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
-    FARCALL EnterMiniGame    ; and do it!
-    BCC :+               ; if they compelted the minigame successfully...
-      CALL MinigameReward ;  ... give them their reward
-
-    :   
-    LDA #$04             ; cycle palettes out from the minigame screen
-    CALL CyclePalettes    ; code=4 (zero scroll, cycle out)
-    JUMP EnterOW_PalCyc   ; then re-enter overworld
-  @Exit:
-    RTS
-
-  ;;  Code reaches here if they pressed a directional button
-  ;;    indicating they want to move in a direction!
-  ;;  A contains the button(s) pressed (facing)
-
-  @Movement:
-    LDX vehicle        ; check the current vehicle
-
-    CPX #$08
-    BEQ @StartMove     ; if airship, no collision detection, can move freely anywhere
-
-    CPX #$04
-    BEQ @MoveShip      ; if ship or canoe, do appropriate checks
-    CPX #$02
-    BEQ @MoveCanoe
-
-  @MoveOnFoot:         ; otherwise we're on foot
-    FARCALL OWCanMove      ; see if they can move in given direction
-    BCC @StartMove     ;  if yes, start the move
-
-    LDA #0
-    STA tileprop+1     ; otherwise, zero tileprop+1 so no battle occurs
-
-    FARCALL IsOnBridge     ; see if they're stepping on the bridge/canal
-    BCS @Foot_NoBridge ; if they aren't on the bridge, skip ahead
-
-     LDA bridgescene   ; if they are on a bridge... see if the bridge scene has already happened
-     BNE @StartMove    ;   if it has, just start moving
-     INC bridgescene   ; otherwise, INC the bridgescene counter to make it happen
-     BNE @StartMove    ; then start moving (always branches)
-
-    @Foot_NoBridge:    ; if they weren't on the bridge
-      FARCALL BoardCanoe   ; see if they can board the canoe to get to the next tile
-      BCC @StartMove   ;   if they can, start the move
-      FARCALL BoardShip    ; otherwise see if they can board the ship
-      BCS @CantMove    ;   if not, they can't move
-                       ; otherwise (can board ship), flow into @StartMove
-
-
-  @StartMove:             ; Here if move was legal
-    LDA joy               ; get joy
-    AND #$0F              ; isolate the direction(s) they're pressing (ie, where they're trying to move)
-    STA facing            ; set that as our facing
-    JUMP StartMapMove      ; then start the map move!  and exit
-
-  @MoveShip:           ; Here if trying to move when in the ship
-    FARCALL OWCanMove      ; see if they can move in desired direction
-    BCS @Ship_NoMove   ; if they can't... jump ahead
-
-        FARCALL IsOnCanal       ; if they can... check to see if the canal is blocking them
-        BCS @StartMove      ; if it isn't, start moving
-        JUMP @CantMove       ; otherwise, prevent them from moving
-
-    @Ship_NoMove:        ; if they couldn't normally move on the ship...
-        FARCALL BoardCanoe     ; see if they can board the canoe to move
-        BCC @StartMove     ; if yes... start moving
-
-        LDA tileprop            ; otherwise, get tile properties
-        AND #OWTP_DOCKSHIP | 1  ; see if you can walk on foot to this tile... 
-        CMP #OWTP_DOCKSHIP      ;   AND that you can dock the ship here
-        BNE @CantMove           ; if can't dock ship or can't walk on foot -- then can't move
-
-        FARCALL UnboardBoat_Abs     ; otherwise, unboard the ship
-        JUMP @StartMove          ; and start moving
-
-
-  @CantMove:
-    LDA #0
-    STA tileprop         ; if you can't move... kill tile properties
-    STA tileprop+1       ; to prevent undesired teleports/battles
-    RTS                  ; and exit
-
-
-  @MoveCanoe:           ; if in canoe
-    FARCALL OWCanMove       ; see if they can move
-    BCC @StartMove      ; if yes... move
-
-    FARCALL UnboardBoat     ; otherwise, see if they can unboard the canoe and proceed on foot
-    BCC @StartMove      ; if yes, move!
-
-    FARCALL BoardShip       ; otherwise, see if they can board the ship
-    BCC @StartMove      ; if yes, do it!
-    BCS @CantMove       ; otherwise, can't move (always branches)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
