@@ -17,7 +17,7 @@
 .import EnvironmentStartupRoutine
 .import BattleRNG, GetSMTargetCoords, CanTalkToMapObject
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-.import ResetRAM, SetRandomSeed, GetRandom
+.import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData, GetBattleFormation
@@ -36,7 +36,7 @@
 .export DrawPalette, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, EraseBox
-.export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
+.export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
@@ -48,7 +48,7 @@
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
-.export StartMapMove, Copy256
+.export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5214,11 +5214,6 @@ LoadBridgeSceneGFX:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-LoadNewGameCHRPal:
-    FARCALL LoadMenuBGCHRAndPalettes
-    JUMP LoadBatSprCHRPalettes_NewGame
-
 LoadBattleCHRPal:              ; does not load palettes for enemies
     CALL LoadBattleBGCHRAndPalettes
     JUMP LoadBatSprCHRPalettes
@@ -5564,28 +5559,32 @@ LoadBattleBGCHRPointers:
 ;;    Both load all palettes used by battle sprites to $03Dx
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBatSprCHRPalettes_NewGame:
-    LDA #BANK_BTLCHR
-    CALL SwapPRG  ; Swap to bank 9
-    LDA PPUSTATUS      ; Reset PPU Addr Toggle
-    LDA #$10
-    STA PPUADDR      ;  set dest PPU Addr to $1000
-    LDA #$00
-    STA PPUADDR
-
-    LDA #>lut_BatSprCHR    ;  set source pointer
-    STA tmp+1
-    LDA #<lut_BatSprCHR
-    STA tmp
-
-    LDX #2*6       ;  12 rows (2 rows per class * 6 classes)
-    CALL CHRLoad    ; Load up the CHR
-    
-    LDA #>(lut_BatObjCHR + $400)  ; change source pointer to bottom half of cursor and related CHR
-    STA tmp+1
-    LDX #$04                      ; load 4 rows (bottom half)
-    JUMP :+                        ; skip ahead to the part of the next routine that loads cursor CHR
+;
+;LoadBatSprCHRPalettes_NewGame:
+;    LDA #BANK_BTLCHR
+;    CALL SwapPRG  ; Swap to bank 9
+;    LDA PPUSTATUS      ; Reset PPU Addr Toggle
+;    LDA #$10
+;    STA PPUADDR      ;  set dest PPU Addr to $1000
+;    LDA #$00
+;    STA PPUADDR
+;
+;    LDA #>lut_BatSprCHR    ;  set source pointer
+;    STA tmp+1
+;    LDA #<lut_BatSprCHR
+;    STA tmp
+;
+;    LDX #2*6       ;  12 rows (2 rows per class * 6 classes)
+;    CALL CHRLoad    ; Load up the CHR
+;    
+;    LDA #>(lut_BatObjCHR + $400)  ; change source pointer to bottom half of cursor and related CHR
+;    STA tmp+1
+;    LDX #$04                      ; load 4 rows (bottom half)
+;    CALL CHRLoad_Cont   ; load cursor and other battle related CHR
+;    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
+;    LDA #BANK_MENUS
+;    JUMP SwapPRG      ; and swap to bank E on exit
+;
 
 LoadBatSprCHRPalettes:
     LDA #BANK_BTLCHR
@@ -5608,14 +5607,13 @@ LoadBatSprCHRPalettes:
     STA tmp+1            ;   change source pointer to $A800  (start of cursor and related battle CHR)
     LDX #$08             ; signal to load 8 rows
 
-       ; above two routines both merge here
+    CALL CHRLoad_Cont   ; load cursor and other battle related CHR
+    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
+    LDA #BANK_MENUS
+    JUMP SwapPRG      ; and swap to bank E on exit
 
-:     CALL CHRLoad_Cont   ; load cursor and other battle related CHR
-      CALL LoadBattleSpritePalettes  ; load palettes for these sprites
-      LDA #BANK_MENUS
-      JUMP SwapPRG      ; and swap to bank E on exit
+    @LoadClass:
 
-@LoadClass:
     ASL A               ; double class index (each class has 2 rows of tiles)
     CLC
     ADC #>lut_BatSprCHR ; add high byte of the source pointer
@@ -8779,19 +8777,33 @@ OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwapPRG:  
-  STA actual_bank ; JIGS - see LongCall 
-  ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
-  ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
-  STA current_bank1
-  STA MMC5_PRG_BANK1   ; Swap to the desired page
-  LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
-  RTS
+    STA actual_bank ; JIGS - see LongCall 
+    ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
+    ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
+    STA current_bank1
+    STA MMC5_PRG_BANK1   ; Swap to the desired page
+    LDA far_depth
+    BEQ @noDebugger
+    DEBUG
+    @noDebugger:
+    LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
+    RTS
 
 Impl_FARJUMP:
+
     ; Save A
     STA safecall_reg_a
+
+    ; Save flags
+    PHP
+    PLA
+    STA safecall_reg_flags
+
     ; Save Y
     STY safecall_reg_y
+
+    ; Increment our depth counter
+    INC far_depth
 
     ; Pull then push the stack to find the low address of our caller
     PLA
@@ -8819,6 +8831,11 @@ Impl_FARJUMP:
     PLA
     STA current_bank1
     STA MMC5_PRG_BANK1
+
+    PHP
+    ; Decrement our depth counter
+    DEC far_depth
+    PLP
 
     ; Load A
     LDA safecall_reg_a
@@ -8852,6 +8869,10 @@ Impl_FARJUMP:
 
     ; Load A
     LDA safecall_reg_a
+    ; Load flags
+    LDA safecall_reg_flags
+    PHA
+    PLP
     ; Load Y
     LDY safecall_reg_y
         
@@ -8864,8 +8885,16 @@ Impl_FARCALL:
     ; Save A
     STA safecall_reg_a
 
+    ; Save flags
+    PHP
+    PLA
+    STA safecall_reg_flags
+
     ; Save Y
     STY safecall_reg_y
+
+    ; Increment our depth counter
+    INC far_depth
 
     ; Pull then push the stack to find the low address of our caller
     PLA
@@ -8902,6 +8931,11 @@ Impl_FARCALL:
     STA current_bank1
     STA MMC5_PRG_BANK1
 
+    PHP
+    ; Decrement our depth counter
+    DEC far_depth
+    PLP
+
     ; Load A
     LDA safecall_reg_a
 
@@ -8926,21 +8960,28 @@ Impl_FARCALL:
     STA current_bank1
     STA MMC5_PRG_BANK1
 
-
+        ; temp removal of trampoline trick
         PLA
         STA trampoline_low
         PLA
         STA trampoline_high
 
+    ; Load flags
+    LDA safecall_reg_flags
+    PHA
+    PLP
+
     ; Load A
     LDA safecall_reg_a
+
     ; Load Y
     LDY safecall_reg_y
 
+        ; temp non-trampoline JUMP
         JMP (trampoline_low)
 
     ; Activate the trampoline
-    RTS
+    ;RTS
 
 .segment "VECTORS"
 

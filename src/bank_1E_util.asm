@@ -22,8 +22,15 @@ ResetRAM:
     STA $0500, X
     STA $0600, X
     STA $0700, X
+    STA $5C00, X
+    STA $5D00, X
+    STA $5E00, X
+    STA $5F00, X
     INX
     BNE @loop
+
+
+
     RTS
 
 

@@ -2528,7 +2528,7 @@ NewGamePartyGeneration:
     LDA #$0F                ; turn ON the audio (it should already be on, though
     STA PAPU_EN               ;  so this is kind of pointless)
     
-    CALL LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
+    FARCALL LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
     
     LDA cur_pal+$D          ; Do some palette finagling
     STA cur_pal+$1          ;  Though... these palettes are never drawn, so this seems entirely pointless

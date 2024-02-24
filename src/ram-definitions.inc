@@ -600,11 +600,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             ch3_maxmp,                          8
     GAP                                                 16
     RES             sram,                               1024 ; $6400
-
-    RES             safecall_reg_a,                     1
-    RES             safecall_reg_y,                     1
-
-    GAP                                                 1022
+    GAP                                                 1024
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     256 ; $6C00 ; temporary space used by the lineup menu
     RES             lutmp_ch_magic,                     1 ; $6D00
@@ -954,4 +950,9 @@ SECTION "THEEND" ; $6800 - $6F00
 
 
 SECTION "EXTRA" ; $5C00 - $5FFF
+    RES             far_depth,              1
+    RES             safecall_reg_a,         1
+    RES             safecall_reg_y,         1
+    RES             safecall_reg_flags,     1
     RES             rng_seed,               2
+
