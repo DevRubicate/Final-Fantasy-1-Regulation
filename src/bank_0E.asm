@@ -8,7 +8,7 @@
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
-.import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice
+.import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -6164,7 +6164,7 @@ MainMenuLoop:
       BNE @CanUseMagic          ; otherwise.. if they're not stone, you can
 
     @CantUseMagic:              ;if dead or stone...
-      CALL PlaySFX_Error         ;  play error sound effect
+      FARCALL PlaySFX_Error         ;  play error sound effect
       JUMP @MagicLoop            ;  and continue magic loop until valid option selected
 
     @CanUseMagic:
@@ -6438,7 +6438,7 @@ UseMagic_CureFamily:
     JUMP EnterMagicMenu      ; to exit, re-enter (redraw) magic menu
 
   CureFamily_CantUse:
-    CALL PlaySFX_Error       ; if can't use, play the error sound effect
+    FARCALL PlaySFX_Error       ; if can't use, play the error sound effect
     JUMP CureFamily_Loop     ; and loop until you get a proper target
 
 ;;;;;;;;;;;;;;
@@ -6539,7 +6539,7 @@ UseMagic_LIFE:
     JUMP EnterMagicMenu      ; and exit by re-entering magic menu
 
   @CantUse:
-    CALL PlaySFX_Error       ; if you can't use it, play the error sound
+    FARCALL PlaySFX_Error       ; if you can't use it, play the error sound
     JUMP @Loop               ;  and loop!
 
 
@@ -6569,7 +6569,7 @@ UseMagic_LIF2:
     JUMP EnterMagicMenu
 
   @CantUse:
-    CALL PlaySFX_Error
+    FARCALL PlaySFX_Error
     JUMP @Loop
 
 UseMagic_PURE:
@@ -6594,7 +6594,7 @@ UseMagic_PURE:
     JUMP EnterMagicMenu
 
  UseMagic_PURE_CantUse:
-    CALL PlaySFX_Error
+    FARCALL PlaySFX_Error
     JUMP UseMagic_PURE_Loop
 
 UseMagic_SOFT:
@@ -6614,7 +6614,7 @@ UseMagic_SOFT:
     CALL MenuWaitForBtn_SFX
     JUMP EnterMagicMenu
   @CantUse:
-    CALL PlaySFX_Error
+    FARCALL PlaySFX_Error
     JUMP @Loop
 
 
@@ -7134,7 +7134,7 @@ UseItem_Exit:
     JUMP EnterItemMenu          ; re-enter item menu (item menu needs to be redrawn)
 
   _UseItem_Heal_CantUse:       ; can't make this local because of stupid UseItem_Pure hijacking the above label
-    CALL PlaySFX_Error          ; play the error sound effect
+    FARCALL PlaySFX_Error          ; play the error sound effect
     JUMP _UseItem_Heal_Loop     ; and keep looping until they select a legal target or escape with B
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7162,7 +7162,7 @@ UseItem_Pure:
     JUMP EnterItemMenu          ; before re-entering the item menu (redrawing item menu)
 
   @CantUse:
-    CALL PlaySFX_Error          ; if can't use... give the error sound effect
+    FARCALL PlaySFX_Error          ; if can't use... give the error sound effect
     JUMP @Loop                  ;  and keep looping
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -7190,7 +7190,7 @@ UseItem_Soft:
     JUMP EnterItemMenu
 
   @CantUse:
-    CALL PlaySFX_Error
+    FARCALL PlaySFX_Error
     JUMP @Loop
 
 
@@ -8840,7 +8840,7 @@ EnterEquipMenu:
 
 EquipMenu_TRADE:              ; "TRADE" option selected
     FARCALL ClearOAM              ; clear OAM
-    CALL DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
+    FARCALL DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
     CALL EquipMenuFrame        ; do a frame
 
     LDA joy_a                 ; check or A and B button presses
@@ -8860,7 +8860,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
                               ; then proceed to the Trade subloop
     @SubLoop:
       FARCALL ClearOAM                      ; clear OAM
-      CALL DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
+      FARCALL DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
       CALL EquipMenuFrame                ; do a frame
 
       LDA joy_a
@@ -8893,7 +8893,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
 
 EquipMenu_EQUIP:
     FARCALL ClearOAM             ; clear OAM
-    CALL DrawEquipMenuCurs    ; draw the primary cursor
+    FARCALL DrawEquipMenuCurs    ; draw the primary cursor
     CALL EquipMenuFrame       ; do a frame
 
     LDA joy_a
@@ -8913,7 +8913,7 @@ EquipMenu_EQUIP:
     BNE @ConfirmEquip        ; if this item is nonzero, jump ahead to confirm that it's equippable
                              ;  otherwise.. can't equip (can't equip a blank slot)
     @CantEquip:
-      CALL PlaySFX_Error      ; if can't equip, play the error sound effect
+      FARCALL PlaySFX_Error      ; if can't equip, play the error sound effect
       JUMP EquipMenu_EQUIP    ; and keep looping
 
   @ConfirmEquip:
@@ -8937,7 +8937,7 @@ EquipMenu_EQUIP:
 
 EquipMenu_DROP:
     FARCALL ClearOAM              ; clear OAM
-    CALL DrawEquipMenuCurs     ; draw the primary cursor
+    FARCALL DrawEquipMenuCurs     ; draw the primary cursor
     CALL EquipMenuFrame        ; do a frame
 
     LDA joy_a
@@ -8955,7 +8955,7 @@ EquipMenu_DROP:
     LDX cursor                ; put the cursor in X
     LDA item_box, X           ; get the item to drop from the item box
     BNE @ConfirmLoop          ; if it's zero....
-      CALL PlaySFX_Error       ;  ... play the error sound effect (can't drop an empty slot)
+      FARCALL PlaySFX_Error       ;  ... play the error sound effect (can't drop an empty slot)
       JUMP EquipMenu_DROP      ;      and continue looping
 
   @ConfirmLoop:
@@ -8965,8 +8965,9 @@ EquipMenu_DROP:
     LSR A                     ;   and put bit 1 in C  (but remember that framecounter is INC'd by 2
     LSR A                     ;   every EquipMenuFrame
     BCS :+                    ; skip over drawing the cursor if C set (odd frame) --
-      CALL DrawEquipMenuCurs   ;   -- so only draw the cursor every other frame
-:   CALL EquipMenuFrame        ; Do a frame
+        FARCALL DrawEquipMenuCurs   ;   -- so only draw the cursor every other frame
+    :   
+    CALL EquipMenuFrame        ; Do a frame
 
     LDA joy_a
     BNE @DoDrop               ; if they pressed A, do the drop
@@ -9505,53 +9506,7 @@ DrawEquipMenu:
   .byte $08,$17,$17,$06
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Equip Menu Cursor  Primary/Secondary  [$BEA4 :: 0x3BEB4]
-;;
-;;    Draws the primary cursor for the equip menu, or both the primary and secondary cursors.
-;;  If both are drawn... they "flicker" so that only a paticular one is drawn in any given frame.
-;;  An example of when both are drawn would be when you are trading two items.
-;;
-;;  DrawEquipMenuCurs          =  draws just the primary
-;;  DrawEquipMenuCursSecondary =  draws both in flicker fashion
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawEquipMenuCursSecondary:
-    LDA framecounter           ; get the frame counter
-    LSR A                      ;  shift to put bit 1 in C (alternate which cursor to draw every other frame...
-    LSR A                      ;  however... since the framecounter is incremented TWICE by EquipMenuFrame,
-    BCS DrawEquipMenuCurs      ;  this really alternates *every* frame).  If odd frame.. just draw the primary cursor
-
-    LDA cursor2                ; get secondary cursor
-    ASL A                      ;  double it and put it in X for LUT indexing
-    TAX
-    LDA lut_EquipMenuCurs, X   ; get cursor X coord
-    ORA #$04                   ; add (or really, OR) 4 to draw it a little to the right of the primary cursor
-    BNE EquipMenuCurs_DoDraw   ; then draw it (always branches)
-
-DrawEquipMenuCurs:
-    LDA cursor                 ; get primary cursor
-    ASL A                      ;  double it and put in X for LUT indexing
-    TAX
-    LDA lut_EquipMenuCurs, X   ; get cursor X coord... then draw
-
-  EquipMenuCurs_DoDraw:
-    STA spr_x                    ; record X coord
-    LDA lut_EquipMenuCurs+1, X   ; then fetch
-    STA spr_y                    ;    and record Y coord
-    JUMP DrawCursor               ; draw the cursor, and exit
-
-  lut_EquipMenuCurs:
-  .byte $40,$38,   $90,$38
-  .byte $40,$48,   $90,$48
-  .byte $40,$68,   $90,$68
-  .byte $40,$78,   $90,$78
-  .byte $40,$98,   $90,$98
-  .byte $40,$A8,   $90,$A8
-  .byte $40,$C8,   $90,$C8
-  .byte $40,$D8,   $90,$D8
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

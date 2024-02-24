@@ -6,7 +6,7 @@
 
 .export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
-
+.export PlaySFX_Error
 
 
 
@@ -331,3 +331,57 @@ FadeInBatSprPalettes:           ; Exactly the same as FadeOutBatSprPalettes... e
 
     RTS
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  PlaySFX_Error   [$DB26 :: 0x3DB36]
+;;
+;;    Plays the error sound effect.  This sound effect isn't a simple sweep like
+;;  most of the other menu sound effects... so it requires a few frames of attention.
+;;  it's also hardcoded in this routine.  Because of the combination of these, this routine
+;;  doesn't exit until the sound effect is complete... which is why the game will actually
+;;  pause for a few frames while this sound effect is playing!
+;;
+;;    This sound effect is accomplished by rapidly playing the same tone 16 times (one each
+;;  frame for 16 frames).  The tone is set to sweep upwards rapidly, so the sweep unit will ultimately
+;;  silence the tone before the next is played.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PlaySFX_Error:
+    LDA #1           ; mark that square 2 will be used as a sound effect for 1 frame
+    STA sq2_sfx      ;  though the MusicPlay routine is not called here, so it's actually longer.
+                     ; this will not take effect until after this routine exits... so it's really
+                     ; 1 frame after this routine exits
+
+    LDA #$30
+    STA PAPU_CTL1        ; silence square 1 (set volume to 0)
+    STA PAPU_TCR1        ; attempt (and fail) to silence triangle (this just sets the linear reload.. but without
+                     ;   a write to $400B, it will not take effect)
+    STA PAPU_NCTL1        ; silence noise (set vol to 0)
+
+    LDY #$0F         ; loop 16 times
+  @Loop:
+      CALL @Frame     ; do a frame
+      DEY            ; dec Y
+      BPL @Loop      ; and repeat until Y wraps
+
+    LDA #$30         ; then silence sq2 (vol to zero)
+    STA PAPU_CTL2
+    LDA #$00
+    STA PAPU_FT2        ; and reset sq2's freq to 0
+    RTS              ; then exit
+
+  @Frame:
+    CALL WaitForVBlank    ; wait a frame
+
+    LDA #%10001100    ;  50% duty, decay speed=%1100, no fixed volume, length enabled
+    STA PAPU_CTL2
+    LDA #%10001001    ;  sweep upwards in pitch, speed=0 (fast!), shift=1 (large steps!)
+    STA PAPU_RAMP2
+
+    LDA #$80
+    STA PAPU_FT2         ; set initial freq to $080 (but it will sweep upwards in pitch quickly)
+    LDA #$00          ; and length to $0A  (longer than 1 frame... so length might as well be disabled
+    STA PAPU_CT2         ;   because this is written every frame)
+    RTS

@@ -23,14 +23,14 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile
+.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
 
 .export SwapPRG
-.export DoOverworld, PlaySFX_Error, DrawImageRect, DrawComplexString
+.export DoOverworld, DrawImageRect, DrawComplexString
 .export DrawPalette, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, EraseBox
@@ -60,7 +60,6 @@ DoOverworld:
     CALL PrepOverworld          ; do all overworld preparation
     FARCALL ScreenWipe_Open        ; then do the screen wipe effect
     NOJUMP EnterOverworldLoop   ; then enter the overworld loop
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -144,7 +143,6 @@ EnterOverworldLoop:
     LDA #0
     STA PAPU_NFREQ2         ; write to last noise reg to reload length counter and get channel started
     JUMP @Loop         ; then jump back to loop
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -278,8 +276,6 @@ DoOWTransitions:
                             ;  if/when the player warps out of the map.  At which point...
     JUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Prep Overworld  [$C6FD :: 0x3C70D]
@@ -347,8 +343,6 @@ PrepOverworld:
   .byte $45,$45,$45,$45   ; ship (last 3 bytes unused)
   .byte $46               ; airship
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Enter Overworld -- PalCyc   [$C762 :: 0x3C772]
@@ -363,16 +357,6 @@ EnterOW_PalCyc:
     LDA #$01
     CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
     JUMP EnterOverworldLoop  ; then enter the overworld loop
-
-
-
-
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -416,7 +400,8 @@ StandardMapLoop:
     BNE :+                     ;  then we need to prep them here so they're ready for
       CALL PrepAttributePos     ;  drawing next frame
 
-:   LDA move_speed             ; check the player's movement speed to see if they're in motion
+    :   
+    LDA move_speed             ; check the player's movement speed to see if they're in motion
     BNE @Continue              ;  if they are, skip over input and some other checks, and just continue to next
                                ;  loop iteration
             ;  This next bit is done only if the player isn't moving, or if they just completed
@@ -425,7 +410,8 @@ StandardMapLoop:
       BEQ :+
         CALL DoAltarEffect
 
-:     LDA entering_shop     ; jump ahead to shop code if entering a shop
+    :     
+    LDA entering_shop     ; jump ahead to shop code if entering a shop
       BNE @Shop
 
       LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
@@ -433,7 +419,8 @@ StandardMapLoop:
       BEQ :+
         JUMP @TeleOrBattle
 
-:     CALL ProcessSMInput    ; if none of those things -- process input, and continue
+    :     
+    CALL ProcessSMInput    ; if none of those things -- process input, and continue
   @Continue:
     FARCALL ClearOAM            ; clear OAM
     FARCALL DrawSMSprites       ; and draw all sprites
@@ -476,7 +463,8 @@ StandardMapLoop:
       FARCALL EnterEndingScene
       JUMP @VictoryLoop
 
-:   CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
+    :   
+    CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
     JUMP StandardMapLoop     ; and resume the loop
 
 
@@ -542,7 +530,8 @@ StandardMapLoop:
     JUMP DoStandardMap       ; then JUMP to DoStandardMap to reload everything that needs reloading
                             ;   and do the map loop
 
-@ExitTeleport:
+    @ExitTeleport:
+
     CMP #TP_TELE_EXIT       ; lastly... check to ensure this is an exit teleport.  It always will be
     BNE ProcessSMInput      ;   unless the battle marker bit was set, too -- in which case just jump
                             ;   over to input processing (should never happen)
@@ -564,7 +553,6 @@ StandardMapLoop:
 
     JUMP DoOverworld         ; then jump to the overworld
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Process SM input   [$C23C :: 0x3C24C]
@@ -573,7 +561,6 @@ StandardMapLoop:
 ;;  be called when player is in motion.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 ProcessSMInput:  
     LDA joy_a              ; see if user pressed the A button
@@ -699,7 +686,6 @@ ProcessSMInput:
       BCS @Exit            ; if not... exit
       JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Load Standard Map Tileset Data  [$CC08 :: 0x3CC18]
@@ -799,7 +785,6 @@ LoadSMTilesetData:
 
     RTS                     ; then exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Set SM Scroll  [$CCA1 :: 0x3CCB1]
@@ -834,7 +819,6 @@ SetSMScroll:
 
     RTS                 ; then exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Standard Map Move Right  [$CCBF :: 0x3CCCF]
@@ -842,7 +826,6 @@ SetSMScroll:
 ;;    See SM_MovePlayer for details
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 SMMove_Right:
     LDA mapdraw_job        ; is there a draw job to do?
@@ -999,7 +982,6 @@ SMMove_Down:
     STA scroll_y           ; write it back
     RTS                    ; and exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Standard Map Move Up  [$CD64 :: 0x3CD74]
@@ -1057,9 +1039,6 @@ SMMove_Up:
     STA move_speed         ; if we moved a full tile, zero the move speed (stop player from moving)
     STA move_ctr_y         ; and zero the move counter
     RTS                    ; then exit
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1136,8 +1115,6 @@ RedrawDoor:
     JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Play Door SFX  [$CF1E :: 0x3CF2E]
@@ -1153,7 +1130,6 @@ PlayDoorSFX:
     STA PAPU_NFREQ2       ; start noise playback -- set length counter to stop after $25 frames
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Enter Standard Map  [$CF2E :: 0x3CF3E]
@@ -1168,7 +1144,6 @@ EnterStandardMap:
     CALL LoadStandardMapAndObjects   ; decompress the map, load objects
     CALL PrepStandardMap             ; draw it, do other prepwork
     FARJUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1348,7 +1323,6 @@ DrawFullMap:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 StartMapMove:
     LDA scroll_y         ; copy Y scroll to 
     STA mapdraw_nty      ;   nt draw Y
@@ -1366,8 +1340,9 @@ StartMapMove:
       LDY sm_scroll_y    ; scrollx in X, scrolly in Y
       LDA #$3F           ; and sm mask ($3F -- 64x64) in tmp+8
       STA tmp+8
+    : 
 
-:   STX mapdraw_x        ; store desired scrollx in mapdraw_x
+    STX mapdraw_x        ; store desired scrollx in mapdraw_x
     STY mapdraw_y        ; and Y scroll
 
     TXA                  ; then put X scroll in A
@@ -1541,8 +1516,6 @@ DoMapDrawJob:
     CALL DrawMapAttributes   ; draw attributes
     RTS                     ;  and exit
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  ScrollUpOneRow  [$D102 :: 0x3D112]
@@ -1578,7 +1551,8 @@ ScrollUpOneRow:
     SBC #$01
     BCS :+
       ADC #$0F          ; and wrap 0->E
-:   STA scroll_y
+    :   
+    STA scroll_y
     RTS                 ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1618,7 +1592,6 @@ LoadStandardMap:
     LDA #>mapdata     ; set destination pointer to point to mapdata (start of decompressed map data in RAM).
     STA tmp+3         ; (tmp+2) is now the dest pointer, (tmp) is now the source pointer
     JUMP DecompressMap ; start decompressing the map
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1666,7 +1639,8 @@ LoadOWMapRow:
     ASL A            ;  double it (2 bytes per pointer)
     BCC :+           ;  if there was carry...
       INC tmp+7      ;     inc the high byte of our temp pointer
-:   TAY              ;  put low byte in Y for indexing
+    :   
+    TAY              ;  put low byte in Y for indexing
     LDA (tmp+6), Y   ;  load low byte of row pointer
     STA tmp          ;  put it in tmp
     INY              ;  inc our index
@@ -1682,7 +1656,6 @@ LoadOWMapRow:
                      ;  (tmp+2) is now our dest pointer for the row
 
            ; no RTS or JUMP -- code seamlessly runs into DecompressMap
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1752,9 +1725,9 @@ DecompressMap:
     CALL @NextBank        ;  otherwise swap in the next bank
     JUMP DecompressMap    ;  and continue decompression
 
-;; NextBank local subroutine
-;;  called via CALL when a map crosses a bank boundary (so a new bank needs to be swapped in)
-@NextBank:
+    ;; NextBank local subroutine
+    ;;  called via CALL when a map crosses a bank boundary (so a new bank needs to be swapped in)
+    @NextBank:
     LDA #>$8000   ; reset high byte of source pointer to start of the bank:  $8000
     STA tmp+1
     LDA tmp+5     ; get original bank number
@@ -1762,7 +1735,6 @@ DecompressMap:
     ADC #$01      ; increment it by 1
     JUMP SwapPRG ; swap that new bank in and exit
     RTS           ; useless RTS (impossible to reach)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1783,7 +1755,6 @@ DecompressMap:
 ;;                 basically is (tmp) minus column information
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 PrepSMRowCol:
     LDA mapflags      ; see if we're drawing a row/column
@@ -1861,7 +1832,6 @@ PrepSMRowCol:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 PrepRowCol:
     LDX #$00          ; zero X (our dest index)
     LDA mapflags      ; see if we're on the overworld, or in a standard map
@@ -1885,7 +1855,8 @@ PrepRowCol:
        STA tmp           ; write low byte with column to
        JUMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
 
-@DoOverworld:
+    @DoOverworld:
+
    LDA mapdraw_y ; get the row number
    AND #$0F      ; mask out the low 4 bits (only 16 rows of the OW map are loaded at a time)
    ORA #>mapdata
@@ -2164,10 +2135,6 @@ DrawMapRowCol:
     CPY #$0F         ; loop until we've drawn 15 tiles
     BCC @ColLoop_R   ;  once we have... 
     RTS              ;  RTS out!  (full column drawn)
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3823,59 +3790,7 @@ DoAltarScanline:
   @Burn12:          ; the routine JSRs here to burn 12 cycles (CALL+RTS = 12 cycs)
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PlaySFX_Error   [$DB26 :: 0x3DB36]
-;;
-;;    Plays the error sound effect.  This sound effect isn't a simple sweep like
-;;  most of the other menu sound effects... so it requires a few frames of attention.
-;;  it's also hardcoded in this routine.  Because of the combination of these, this routine
-;;  doesn't exit until the sound effect is complete... which is why the game will actually
-;;  pause for a few frames while this sound effect is playing!
-;;
-;;    This sound effect is accomplished by rapidly playing the same tone 16 times (one each
-;;  frame for 16 frames).  The tone is set to sweep upwards rapidly, so the sweep unit will ultimately
-;;  silence the tone before the next is played.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PlaySFX_Error:
-    LDA #1           ; mark that square 2 will be used as a sound effect for 1 frame
-    STA sq2_sfx      ;  though the MusicPlay routine is not called here, so it's actually longer.
-                     ; this will not take effect until after this routine exits... so it's really
-                     ; 1 frame after this routine exits
-
-    LDA #$30
-    STA PAPU_CTL1        ; silence square 1 (set volume to 0)
-    STA PAPU_TCR1        ; attempt (and fail) to silence triangle (this just sets the linear reload.. but without
-                     ;   a write to $400B, it will not take effect)
-    STA PAPU_NCTL1        ; silence noise (set vol to 0)
-
-    LDY #$0F         ; loop 16 times
-  @Loop:
-      CALL @Frame     ; do a frame
-      DEY            ; dec Y
-      BPL @Loop      ; and repeat until Y wraps
-
-    LDA #$30         ; then silence sq2 (vol to zero)
-    STA PAPU_CTL2
-    LDA #$00
-    STA PAPU_FT2        ; and reset sq2's freq to 0
-    RTS              ; then exit
-
-  @Frame:
-    CALL WaitForVBlank    ; wait a frame
-
-    LDA #%10001100    ;  50% duty, decay speed=%1100, no fixed volume, length enabled
-    STA PAPU_CTL2
-    LDA #%10001001    ;  sweep upwards in pitch, speed=0 (fast!), shift=1 (large steps!)
-    STA PAPU_RAMP2
-
-    LDA #$80
-    STA PAPU_FT2         ; set initial freq to $080 (but it will sweep upwards in pitch quickly)
-    LDA #$00          ; and length to $0A  (longer than 1 frame... so length might as well be disabled
-    STA PAPU_CT2         ;   because this is written every frame)
-    RTS
 
 
 
