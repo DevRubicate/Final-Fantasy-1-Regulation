@@ -23,7 +23,7 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput
+.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
@@ -45,7 +45,7 @@
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
-.export GetSMTileProperties, PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
+.export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
 .export StartMapMove
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -442,7 +442,7 @@ StandardMapLoop:
 
 
   @Shop:
-    CALL GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
+    FARCALL GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
     LDA #0                  ;   this seems totally useless to do here
     STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
     LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
@@ -457,7 +457,7 @@ StandardMapLoop:
     BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
 
    ;;  Otherwise, here, this is a BATTLE
-    CALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
+    FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
     LDA #0
     STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
     CALL BattleTransition    ; do the battle transition effect
@@ -613,7 +613,7 @@ ProcessSMInput:
 
 
       @TalkToTile:          ; if there was no object to talk to....
-        CALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
+        FARCALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
         LDX #0              ; clear tile properties (prevent unwanted teleport/battle)
         STX tileprop
 
@@ -658,7 +658,7 @@ ProcessSMInput:
       LDA #0
       STA joy_start            ; clear start button catcher
 
-      CALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
+      FARCALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
       LDA #$02
       CALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
       FARCALL EnterMainMenu        ; enter the main menu
@@ -675,7 +675,7 @@ ProcessSMInput:
  ;; Select button pressed
  ;;
 
-      CALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
+      FARCALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
       LDA #0                   ;   though I don't know why you'd need to get the now tile properties...
       STA joy_select
       LDA #$02
@@ -699,139 +699,6 @@ ProcessSMInput:
       BCS @Exit            ; if not... exit
       JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Get SM Tile PropNow [$CB94 :: 0x3CBA4]
-;;
-;;     Get's the special properties of the tile the party is currently standing on
-;;  for standard maps.
-;;
-;;  OUT:  tileprop_now
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetSMTilePropNow:
-    LDA sm_scroll_y       ; get Y scroll
-    CLC
-    ADC #$07              ; add 7 to get player's Y position
-    AND #$3F              ; wrap around edges of map
-    TAX                   ; put the y coord in X
-
-    LSR A                 ; right shift y coord by 2 (the high byte of *64)
-    LSR A
-    ORA #>mapdata         ; OR to get the high byte of the tile entry in the map
-    STA tmp+1             ; store to source pointer
-
-    TXA                   ; restore y coord
-    ROR A                 ; rotate right by 3 and mask out the high 2 bits.
-    ROR A                 ;  same as a left-shift-by-6 (*64)
-    ROR A
-    AND #$C0
-    STA tmp               ; store as low byte of source pointer (points to start of row)
-
-    LDA sm_scroll_x       ; get X scroll
-    CLC
-    ADC #$07              ; add 7 for player's X position
-    AND #$3F              ; wrap around map boundaries
-    TAY                   ; put in Y for indexing this row of map data
-
-    LDA (tmp), Y          ; get the tile from the map
-    ASL A                 ; *2  (2 bytes of properties per tile)
-    TAX                   ; put index in X
-    LDA tileset_prop, X   ; get the first property byte
-    AND #TP_SPEC_MASK     ; isolate the 'special' bits
-    STA tileprop_now      ; and record them!
-
-    RTS                   ; exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  GetSMTileProperties  [$CBBE :: 0x3CBCE]
-;;
-;;    Loads 'tileprop' with the unaltered properties of the tile at
-;;  given coords.  For Standard Maps only
-;;
-;;  IN:  tmp+4 = X coord
-;;       tmp+5 = Y coord
-;;
-;;  OUT: tileprop = 2 bytes of tile properties
-;;
-;;    X remains unchanged by this routine.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetSMTileProperties:
-    LDA tmp+5          ; take the Y coord
-    LSR A              ; right shift by 2 to get the high byte of *64
-    LSR A
-    ORA #>mapdata      ; OR with high byte of map data pointer
-    STA tmp+1          ; this is high byte of pointer to tile in the map
-
-    LDA tmp+5          ; get Y coord again
-    ROR A
-    ROR A
-    ROR A
-    AND #$C0           ; *64 (low byte this time)
-    ORA tmp+4          ; OR with X coord
-    STA tmp            ; this is low byte of pointer
-
-    LDY #0                ; zero Y for indexing
-    LDA (tmp), Y          ; get the tile from the map
-    ASL A                 ;  *2 (2 bytes per tile)
-    TAY                   ; throw in Y for indexing
-
-    LDA tileset_data, Y   ; copy the two bytes of tile properties
-    STA tileprop
-    LDA tileset_data+1, Y
-    STA tileprop+1
-
-    RTS                   ;then exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  TalkToSMTile [$CBE2 :: 0x3CBF2]
-;;
-;;    This routine "talks" to a given SM tile.  It is called when the user presses
-;;  the A button in a standard map and there are no map objects for them to talk to.
-;;  It either opens a chest, returns some special text associated with the tile, or
-;;  shows the notorious "Nothing Here" text.
-;;
-;;  IN:  tmp+4 = X coord of tile to talk to
-;;       tmp+5 = Y coord
-;;
-;;  OUT:     A = ID of dialogue to print to the screen
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TalkToSMTile:
-    CALL GetSMTileProperties   ; get the properties of the tile at the given coords
-
-    LDA tileprop              ; get 1st property byte
-    AND #TP_SPEC_MASK         ;  see if its special bits indicate it's a treasure chest
-    CMP #TP_SPEC_TREASURE
-    BEQ @TreasureChest        ; if it is, jump ahead to TC routine
-
-    LDA tileprop              ; otherwise, reload property byte
-    AND #TP_NOTEXT_MASK       ; see if any of the NOTEXT bits are set
-    BNE @Nothing              ; if any are... force "Nothing Here" text
-
-    LDA tileprop+1            ; otherwise, simply use the 2nd property byte as the dialogue
-    RTS                       ;  tied to this tile, and exit
-
-  @Nothing:                   ; if forced "Nothing Here" text...
-    LDA #DLGID_NOTHING
-    RTS
-
-  @TreasureChest:             ; if the tile is a treasure chest
-    LDX tileprop+1            ; put the chest ID in X
-    LDA game_flags, X         ; get the game flag associated with that chest
-    AND #GMFLG_TCOPEN         ;   to see if the chest has already been opened
-    BEQ :+                    ; if it has....
-      LDA #DLGID_EMPTYTC      ; select "The Chest is empty" text, and exit
-      RTS
-
-:   FARJUMP OpenTreasureChest     ; otherwise, open the chest
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -931,26 +798,6 @@ LoadSMTilesetData:
       BCC @PalLoop
 
     RTS                     ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Copy 256  [$CC74 :: 0x3CC84]
-;;
-;;    Copies 256 bytes from (tmp) to (tmp+2).  High byte of dest pointer (tmp+3)
-;;  is incremented.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Copy256:
-    LDY #0             ; start Y at zero
-  @Loop:
-      LDA (tmp), Y     ; copy a byte
-      STA (tmp+2), Y
-      INY
-      BNE @Loop        ; loop until Y wraps (256 iterations)
-
-    INC tmp+3          ; inc dest pointer
-    RTS                ; and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1424,7 +1271,7 @@ PrepStandardMap:
     LDA lut_BattleRates+1, X    ; get this map's rate (+1 because first entry is for overworld [unused])
     STA battlerate              ; and record it
 
-    JUMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
+    FARJUMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
 
  ;; the LUT containing the music tracks for each tileset
 
@@ -9196,6 +9043,26 @@ SwapBtlTmpBytes:
     PLA
     RTS
     
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Copy 256  [$CC74 :: 0x3CC84]
+;;
+;;    Copies 256 bytes from (tmp) to (tmp+2).  High byte of dest pointer (tmp+3)
+;;  is incremented.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Copy256:
+    LDY #0             ; start Y at zero
+  @Loop:
+      LDA (tmp), Y     ; copy a byte
+      STA (tmp+2), Y
+      INY
+      BNE @Loop        ; loop until Y wraps (256 iterations)
+
+    INC tmp+3          ; inc dest pointer
+    RTS                ; and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
