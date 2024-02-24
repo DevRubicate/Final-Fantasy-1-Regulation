@@ -217,7 +217,7 @@ OWCanMove:
        LDA #3            ;   ... 3 / 256 chance instead  (more infrequent battles at sea)
     :
     STA tmp              ; store chance of battle in tmp
-    CALL BattleStepRNG    ; get a random number for battle steps
+    FARCALL GetRandom    ; get a random number for battle steps
     CMP tmp              ; compare it to our chance
     BCC @DoEncounter     ; if the random number < our odds -- do a random encounter
 
@@ -1968,7 +1968,7 @@ SMMove_Battle:
     LDA tileprop+1         ; check the secondary property byte to see which battle to do
     BPL @Spiked            ; if high bit is clear, this is a spiked tile (forced battle)
                            ;   otherwise... it's a random encounter
-    CALL BattleStepRNG      ; get a pseudo-random number from the battle step RNG
+    FARCALL GetRandom      ; get a pseudo-random number from the battle step RNG
     CMP battlerate         ; if that number is >= the battle rate for this map...
     BCS @Done              ;  ... then there's no battle
 
