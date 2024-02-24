@@ -4,12 +4,12 @@
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
 .import DoMapDrawJob, BattleStepRNG, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom
-.import GetSMTargetCoords, GetSMTileProperties, StartMapMove, EnterOW_PalCyc, MinigameReward, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy
+.import GetSMTileProperties, StartMapMove, EnterOW_PalCyc, MinigameReward, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
-.export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput
+.export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2864,3 +2864,118 @@ ProcessOWInput:
     CALL BoardShip       ; otherwise, see if they can board the ship
     BCC @StartMove      ; if yes, do it!
     BCS @CantMove       ; otherwise, can't move (always branches)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  CanTalkToMapObject  [$CB25 :: 0x3CB35]
+;;
+;;    Checks to see if there is a map object at the given coords that the player
+;;  can talk to.
+;;
+;;  IN:  tmp+4 = X coord to check
+;;       tmp+5 = Y coord to check
+;;
+;;  OUT:     C = set if there was an object to talk to, clear if no object
+;;           X = map object index of the object you can talk to (if any)
+;;
+;;    This routine does not check the physical X position of the object, rather it does it
+;;  based on its graphic position.  Which makes for a much cleaner result -- if it was done by physical
+;;  position, you wouldn't be able to talk to people if they just started to take a step because they
+;;  physical position updates immediately, whereas the graphical position is a better representation
+;;  of where they are.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CanTalkToMapObject:
+    LDX #0                 ; X is loop counter and object index
+
+  @Loop:
+    LDA mapobj_id, X       ; get this object's ID
+    BEQ @NoMatch           ; if zero, this object doesn't exist, so it's not a match (can't talk to nothing)
+
+    LDA mapobj_ctrX, X     ; get the X counter (fine X scroll of the object -- see how far between tiles it is)
+    CMP #8                 ; if >= 8 (greater than halfway between two tiles)
+    LDA mapobj_gfxX, X     ;  add an additional 1 to the graphic position.  This is accomplished because the
+    ADC #0                 ;  above CMP sets C, which gets added with the following ADC
+    AND #$3F               ; That is the X position of the object to use.  Mask to wrap around edge of map.
+    CMP tmp+4              ; see if that matches the given X coord
+    BNE @NoMatch           ;  if not... no match -- we're not talking to this object
+
+    LDA mapobj_ctrY, X     ; do all the same stuff with the Y coord
+    CMP #8
+    LDA mapobj_gfxY, X
+    ADC #0
+    AND #$3F
+    CMP tmp+5
+    BNE @NoMatch
+
+    LDA mapobj_pl, X       ; if X and Y coords check out, we're talking to this object!
+    ORA #$80               ; set the 'talking to player' bit for the object so that they face the player.
+    STA mapobj_pl, X
+
+    SEC                    ; SEC to indicate an object was found
+    RTS                    ;  and exit
+
+  @NoMatch:           ; if object didn't match...
+    TXA               ;  add $10 to loop index to examine next object
+    CLC
+    ADC #$10
+    TAX
+    CMP #$F0          ; and loop until all 15 objects checked
+    BCC @Loop
+
+    CLC               ; if none of the 15 matched, CLC to indicate failure
+    RTS               ; and exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  GetSMTargetCoords  [$CB61 :: 0x3CB71]
+;;
+;;    Get's the X,Y coords that the player is targetting (facing)
+;;  For standard maps only.
+;;
+;;  IN:      A = facing  ('facing' var is not used directly)
+;;
+;;  OUT: tmp+4 = target X coord
+;;       tmp+5 = target Y coord
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSMTargetCoords:
+    LSR A          ; check facing and fork appropriately
+    BCS @Right
+    LSR A
+    BCS @Left
+    LSR A
+    BCS @Down
+
+  @Up:
+    LDX #7         ; load x additive into X, and y additive into Y
+    LDY #7-1       ; scroll + 7 is where the player is, so scroll + 7-1 would
+    JUMP @Done      ; be up one tile from the player, etc.
+  @Down:
+    LDX #7
+    LDY #7+1
+    JUMP @Done
+  @Right:
+    LDX #7+1
+    LDY #7
+    JUMP @Done
+  @Left:
+    LDX #7-1
+    LDY #7
+
+  @Done:
+    TXA               ; get X additive into A
+    CLC
+    ADC sm_scroll_x   ; add scroll to it
+    AND #$3F          ; wrap around edge of map
+    STA tmp+4         ; and record it
+
+    TYA               ; do same with Y coord
+    CLC
+    ADC sm_scroll_y
+    AND #$3F
+    STA tmp+5
+
+    RTS               ; done
