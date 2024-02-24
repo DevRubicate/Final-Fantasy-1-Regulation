@@ -457,11 +457,6 @@ lut_BatObjCHR      = $A800   ; BANK_BTLCHR -- page
 
 lut_DialoguePtrTbl = $8000   ; BANK_DIALOGUE
 
-lut_SMTilesetAttr  = $8400   ; BANK_SMINFO - must be on $400 byte bound
-lut_SMTilesetProp  = $8800   ; BANK_SMINFO - page
-lut_SMTilesetTSA   = $9000   ; BANK_SMINFO - page
-lut_SMPalettes     = $A000   ; BANK_SMINFO - $1000 byte bound
-
 lut_Tilesets       = $ACC0   ; BANK_TELEPORTINFO
 lut_NormTele_X     = $AD00   ; BANK_TELEPORTINFO
 lut_NormTele_Y     = $AD40   ; BANK_TELEPORTINFO

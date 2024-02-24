@@ -28,6 +28,8 @@
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl
 ; bank_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
+; bank_16_overworld_tileset
+.import LoadSMTilesetData
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect, DrawComplexString
@@ -46,7 +48,7 @@
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
-.export StartMapMove
+.export StartMapMove, Copy256
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -686,104 +688,7 @@ ProcessSMInput:
       BCS @Exit            ; if not... exit
       JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Standard Map Tileset Data  [$CC08 :: 0x3CC18]
-;;
-;;    Loads the tile property table, TSA tables, and map palette for the current
-;;  standard map.  Fills the following buffers:
-;;
-;;    tileset_prop
-;;    tsa_ul, tsa_ur, tsa_dl, tsa_dr
-;;    tsa_attr
-;;    load_map_pal
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadSMTilesetData:
-    LDA #BANK_SMINFO          ; swap to bank containing desired info
-    CALL SwapPRG
-
-    LDA #0
-    STA tmp                   ; zero low bytes of source pointer
-    STA tmp+2                 ; and dest pointer
-
- ; load tileset properties
-
-    LDA cur_tileset           ; set src pointer to point to lut_SMTilesetProp+(tileset*256)
-    CLC                       ; 256 bytes of tile properties per tileset 
-    ADC #>lut_SMTilesetProp
-    STA tmp+1
-
-    LDA #>tileset_data        ; set high byte of dest pointer to point to tileset_data
-    STA tmp+3
-
-    CALL Copy256               ; load 256 byte of tile properties (incs dest pointer)
-
- ; load tileset TSA
-
-    LDA cur_tileset           ; get tileset
-    ASL A                     ; *2 (it's assumed this clears C as well -- tileset is less than $80)
-    ADC #>lut_SMTilesetTSA    ; set high byte of src pointer to lut_SMTilesetTSA+(tileset*512)
-    STA tmp+1                 ;  512 bytes of TSA data per tileset
-
-    CALL Copy256               ; copy the first 256 bytes of tsa data
-    INC tmp+1                 ; inc src pointer
-    CALL Copy256               ; and copy the second 256 bytes of tsa data
-
- ; load tileset attributes
-
-    LDA cur_tileset           ; get tileset one more time
-    LSR A                     ; halve it (this sets C for an upcoming check)
-    ORA #>lut_SMTilesetAttr   ; set src ptr to point to lut_SMTilesetAttr+(tileset*128)
-    STA tmp+1
-
-    BCC @AttrLoop             ; if above LSR had carry, we need to adjust the low byte of the pointer
-      LDA #$80                ; to point to halfway in the page
-      STA tmp
-
-    @AttrLoop:
-      LDA (tmp), Y            ; copy $80 bytes
-      STA tsa_attr, Y
-      INY
-      BPL @AttrLoop           ; loop until Y=$80
-
- ; load map palettes
-
-    LDA #0
-    STA tmp+1
-
-    LDA cur_map             ; get current map and multiply it by $30, rotating carry into tmp+1
-    ASL A                   ; first, shift left by 4 to multiply by $10
-    ASL A
-    ASL A
-    ROL tmp+1
-    ASL A
-    ROL tmp+1
-    STA tmp
-
-    LDX tmp+1               ; load high byte into X.  Here X and A are *$10
-
-    ASL tmp                 ; shift RAM by 1 more to multiply by $20
-    ROL tmp+1
-
-    CLC                     ; add *$10 (in A,X) to the *$20 (in tmp,tmp+1) to get *$30
-    ADC tmp
-    STA tmp
-    TXA
-    ADC tmp+1
-    ORA #>lut_SMPalettes    ; OR high byte with high byte of palette LUT
-    STA tmp+1
-
-    LDY #0
-    @PalLoop:
-      LDA (tmp), Y          ; copy $30 bytes from source pointer
-      STA load_map_pal, Y   ; to load_map_pal
-      INY
-      CPY #$30
-      BCC @PalLoop
-
-    RTS                     ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1203,7 +1108,7 @@ PrepStandardMap:
     STA entering_shop
 
     CALL LoadSMCHR           ; load all the necessary CHR
-    CALL LoadSMTilesetData   ; load tileset and TSA data
+    FARCALL LoadSMTilesetData   ; load tileset and TSA data
     CALL LoadMapPalettes     ; load palettes
     CALL DrawFullMap         ; draw the map onto the screen
 
@@ -8970,11 +8875,12 @@ SwapBtlTmpBytes:
 
 Copy256:
     LDY #0             ; start Y at zero
-  @Loop:
-      LDA (tmp), Y     ; copy a byte
-      STA (tmp+2), Y
-      INY
-      BNE @Loop        ; loop until Y wraps (256 iterations)
+  
+    @Loop:
+        LDA (tmp), Y     ; copy a byte
+        STA (tmp+2), Y
+        INY
+        BNE @Loop        ; loop until Y wraps (256 iterations)
 
     INC tmp+3          ; inc dest pointer
     RTS                ; and exit
