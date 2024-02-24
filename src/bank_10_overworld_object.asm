@@ -3,13 +3,13 @@
 .include "src/global-import.inc"
 
 .import lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove, WaitForVBlank, ClearOAM, MusicPlay_NoSwap
-.import DoMapDrawJob, BattleStepRNG, GetBattleFormation, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX
-.import GetSMTargetCoords, GetSMTileProperties
+.import DoMapDrawJob, BattleStepRNG, MusicPlay, SM_MovePlayer, SetSMScroll, RedrawDoor, PlayDoorSFX
+.import GetSMTargetCoords, GetSMTileProperties, GetRandom
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
-.export GetOWTile, LandAirship
+.export GetOWTile, LandAirship, GetBattleFormation
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2632,3 +2632,68 @@ LandAirship:
     STA music_track     ; start music track $44 (overworld theme)
 
     RTS                 ; and exit
+
+GetBattleFormation:
+
+    LDX #0
+    STX tmp
+    STX tmp+1
+
+
+    ASL A                ; multiply domain by 8 (8 formations per domain)
+    ROL tmp+1            ;   rotating carry into the high byte of our pointer
+    ASL A
+    ROL tmp+1
+    ASL A
+    ROL tmp+1
+    STA tmp
+
+
+    LDA #<LUT_Domains
+    CLC
+    ADC tmp
+    STA tmp
+
+    LDA #>LUT_Domains
+    ADC tmp+1
+    STA tmp+1
+
+
+    INC battlecounter    ; increment the battle counter
+    FARCALL GetRandom
+
+    AND #$3F                    ; drop the 2 high bits of the random number
+    TAX                         ; and put in X
+    LDY lut_FormationWeight, X  ; use that to index the formation weight LUT to know which formation to use
+
+    LDA (tmp), Y         ; get the desired formation from the given domain
+    STA btlformation     ; record as our battle formation
+
+    CLC                  ; CLC (to indicate success for OWCanMove -- since it JMPs here)
+    RTS                  ; and exit
+
+
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Formation weight LUT  [$C58C :: 0x3C59C]
+;;
+;;    64-byte LUT that assigns weight to each of the 8 formations
+;;  in battle domains.  The more a number is included in this table,
+;;  the more that formation is chosen from the domain.
+
+
+lut_FormationWeight:
+    .byte 0,0,0,0,0,0, 0,0,0,0,0,0    ; 12/64 chance of formation 0
+    .byte 1,1,1,1,1,1, 1,1,1,1,1,1    ; 12/64
+    .byte 2,2,2,2,2,2, 2,2,2,2,2,2    ; 12/64
+    .byte 3,3,3,3,3,3, 3,3,3,3,3,3    ; 12/64
+    .byte 4,4,4,4,4,4                 ;  6/64
+    .byte 5,5,5,5,5,5                 ;  6/64
+    .byte 6,6,6                       ;  3/64
+    .byte 7                           ;  1/64
+
+
+;; Battle Domains  [$8000 :: 0x2C010]
+LUT_Domains:
+    .incbin "bin/0B_8000_battledomains.bin"

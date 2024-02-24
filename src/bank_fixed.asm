@@ -20,7 +20,7 @@
 .import ResetRAM, SetRandomSeed, GetRandom
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart, LoadOWTilesetData
+.import GameStart, LoadOWTilesetData, GetBattleFormation
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 ; bank_1E_util
@@ -42,7 +42,7 @@
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
-.export DoOverworld, DoMapDrawJob, BattleStepRNG, GetBattleFormation
+.export DoOverworld, DoMapDrawJob, BattleStepRNG
 .export WaitScanline, SetSMScroll, DrawMapPalette, SM_MovePlayer, RedrawDoor
 .export GetSMTargetCoords, GetSMTileProperties, PlayDoorSFX
 
@@ -442,49 +442,6 @@ ProcessOWInput:
     FARCALL BoardShip       ; otherwise, see if they can board the ship
     BCC @StartMove      ; if yes, do it!
     BCS @CantMove       ; otherwise, can't move (always branches)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Get Battle Formation  [$C54A :: 0x3C55A]
-;;
-;;    Gets a (weighted) random battle formation from the given domain.
-;;
-;;  IN:   A = domain ID
-;;
-;;  OUT:  C = cleared (this is so OWCanMove can JUMP to this rather than having to CALL to it)
-;;        btlformation = formation ID to engage in
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-GetBattleFormation:
-    LDY #(>lut_Domains) >> 3 ; set high byte of pointer (right shifted by 3)
-    STY tmp+1                ;   because we'll be rotating in 3 bits
-
-    ASL A                ; multiply domain by 8 (8 formations per domain)
-    ROL tmp+1            ;   rotating carry into the high byte of our pointer
-    ASL A
-    ROL tmp+1
-    ASL A
-    ROL tmp+1
-    STA tmp              ; write low byte of pointer
-                         ; (tmp) now points to lut_Domains+(domain*8)
-
-    LDA #BANK_DOMAINS
-    CALL SwapPRG        ; swap to bank containing domain information
-
-    INC battlecounter    ; increment the battle counter
-    FARCALL GetRandom
-
-    AND #$3F                    ; drop the 2 high bits of the random number
-    TAX                         ; and put in X
-    LDY lut_FormationWeight, X  ; use that to index the formation weight LUT to know which formation to use
-
-    LDA (tmp), Y         ; get the desired formation from the given domain
-    STA btlformation     ; record as our battle formation
-
-    CLC                  ; CLC (to indicate success for OWCanMove -- since it JMPs here)
-    RTS                  ; and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
