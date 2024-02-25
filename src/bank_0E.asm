@@ -6730,7 +6730,7 @@ EnterItemMenu:
 
 ;; ResumeItemMenu is jumped to to refresh the item box (like after you use a key item and it disappears)
 ResumeItemMenu:
-    CALL DrawItemBox        ; Draw the item box
+    FARCALL DrawItemBox        ; Draw the item box
     PHP                    ; C will be set if there was no inventory -- push it to stack for use later
 
     LDA #$03

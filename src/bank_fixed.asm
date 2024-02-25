@@ -30,12 +30,14 @@
 .import ScreenWipe_Open, ScreenWipe_Close
 ; bank_16_overworld_tileset
 .import LoadSMTilesetData
+; bank_1A_string
+.import DrawComplexString_New, DrawItemBox
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect, DrawComplexString
 .export DrawPalette, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
-.export DrawEquipMenuStrings, DrawItemBox, EraseBox
+.export DrawEquipMenuStrings, EraseBox
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
@@ -49,6 +51,7 @@
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
+.export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3952,12 +3955,14 @@ DrawComplexString:
     CALL SwapPRG
     CALL CoordToNTAddr
 
-  @StallAndDraw:
+    @StallAndDraw:
+
     LDA menustall     ; check to see if we need to stall
     BEQ @Draw_NoStall ; if not, skip over stall call
     CALL MenuCondStall ;   this isn't really necessary, since MenuCondStall checks menustall already
 
-  @Draw_NoStall:
+    @Draw_NoStall:
+
     LDY #0            ; zero Y -- we don't want to use it as an index.  Rather, the pointer is updated
     LDA (text_ptr), Y ;   after each fetch
     BEQ DrawComplexString_Exit   ; if the character is 0  (null terminator), exit the routine
@@ -3965,8 +3970,9 @@ DrawComplexString:
     INC text_ptr      ; otherwise, inc source pointer
     BNE :+
       INC text_ptr+1  ;   inc high byte if low byte wrapped
+    :
 
-:   CMP #$1A          ; values below $1A are control codes.  See if this is a control code
+    CMP #$1A          ; values below $1A are control codes.  See if this is a control code
     BCC @ControlCode  ;   if it is, jump ahead
 
     LDX PPUSTATUS         ; reset PPU toggle
@@ -3978,29 +3984,31 @@ DrawComplexString:
     CMP #$7A          ; see if this is a DTE character
     BCS @noDTE        ;  if < #$7A, it is DTE  (even though it probably should be #$6A)
 
-      SEC             ;  characters 1A-69 are valid DTE characters.  6A-79 are treated as DTE, but will draw crap
-      SBC #$1A        ; subtract #$1A to get a zero-based index
-      TAX             ; put the index in X
-      LDA lut_DTE1, X ;  load and draw the first character in DTE
-      STA PPUDATA
-      LDA lut_DTE2, X ;  load the second DTE character to be drawn in a bit
-      INC ppu_dest    ;  increment the destination PPU address
+    SEC             ;  characters 1A-69 are valid DTE characters.  6A-79 are treated as DTE, but will draw crap
+    SBC #$1A        ; subtract #$1A to get a zero-based index
+    TAX             ; put the index in X
+    LDA lut_DTE1, X ;  load and draw the first character in DTE
+    STA PPUDATA
+    LDA lut_DTE2, X ;  load the second DTE character to be drawn in a bit
+    INC ppu_dest    ;  increment the destination PPU address
 
-  @noDTE:
+    @noDTE:
+
     STA PPUDATA         ; draw the character as-is
     INC ppu_dest      ; increment dest PPU address
     JUMP @Draw_NoStall ; and repeat the process until terminated
 
-
    ; Jumps here for control codes.  Start comparing to see which control code this actually is
-@ControlCode:
+    @ControlCode:
+
     CMP #$01           ; is it $01?
     BNE @Code_02to19   ; if not, jump ahead
 
     ;;; Control code $01 -- double line break
     LDX #$40
 
-  @LineBreak:      ; Line break -- X=40 for a double line break (control code $01),
+    @LineBreak:      ; Line break -- X=40 for a double line break (control code $01),
+
     STX tmp        ;  X=20 for a single line break (control code $05)
     LDA ppu_dest   ; store X in tmp for future use.
     AND #$E0       ; Load dest PPU Addr, mask off the low bits (move to start of the row)
@@ -4013,17 +4021,19 @@ DrawComplexString:
     STA ppu_dest+1
     JUMP @StallAndDraw   ; continue processing text
 
+    @Code_02to19:
 
-@Code_02to19:
     CMP #$02        ; is control code $02?
     BNE :+
       JUMP @Code_02  ; if it is, jump to its handler
+    :
 
-:   CMP #$03        ; otherwise... is it $03?
+    CMP #$03        ; otherwise... is it $03?
     BNE :+
       JUMP @Code_03  ; if it is, jump to 03's handler
+    :
 
-:   CMP #$04        ; otherwise... 04?
+    CMP #$04        ; otherwise... 04?
     BNE @Code05to19
 
     ;;; Control code $04 -- draws current gold
@@ -4032,18 +4042,18 @@ DrawComplexString:
     CALL @StallAndDraw       ;  recursively call this routine to draw temp buffer
     JUMP @Restore            ; then restore original string state and continue
 
+    @Code05to19:
 
-@Code05to19:
     CMP #$14         ; is control code < $14?
     BCC @Code05to13
-
                      ; codes $14 and up default to single line break
-@SingleLineBreak:    ; reached by control codes $05-0F and $14-19
+    @SingleLineBreak:    ; reached by control codes $05-0F and $14-19
+    
     LDX #$20         ; these control codes all just do a single line break
     JUMP @LineBreak   ;  afaik, $05 is the only single line break used by the game.. the other
                      ;  control codes are probably invalid and just line break by default
+    @Code05to13:
 
-@Code05to13:
     CMP #$10              ; is control code < $10?
     BCC @SingleLineBreak  ; if yes... line break
 
@@ -4061,61 +4071,65 @@ DrawComplexString:
     LDA (text_ptr), Y   ; get the next byte in the string (the stat to draw)
     INC text_ptr        ; inc our string pointer
     BNE :+
-      INC text_ptr+1    ; inc high byte if low byte wrapped
+        INC text_ptr+1    ; inc high byte if low byte wrapped
+    :
 
-:   CMP #0
+    CMP #0
     BNE @StatCode_Over00
 
-      ;; Stat Code $00 -- the character's name
-      LDX char_index      ; load character index
-      LDA ch_name, X      ; copy name to format buffer
-      STA format_buf+3
-      LDA ch_name+1, X
-      STA format_buf+4
-      LDA ch_name+2, X
-      STA format_buf+5
-      LDA ch_name+3, X
-      STA format_buf+6
+    ;; Stat Code $00 -- the character's name
+    LDX char_index      ; load character index
+    LDA ch_name, X      ; copy name to format buffer
+    STA format_buf+3
+    LDA ch_name+1, X
+    STA format_buf+4
+    LDA ch_name+2, X
+    STA format_buf+5
+    LDA ch_name+3, X
+    STA format_buf+6
 
-      CALL @Save              ; need to draw a substring, so save current string
-      LDA #<(format_buf+3)   ; set string source pointer to temp buffer
-      STA text_ptr
-      LDA #>(format_buf+3)
-      STA text_ptr+1
-      CALL @Draw_NoStall      ; recursively draw it
-      JUMP @Restore           ; then restore original string and continue
+    CALL @Save              ; need to draw a substring, so save current string
+    LDA #<(format_buf+3)   ; set string source pointer to temp buffer
+    STA text_ptr
+    LDA #>(format_buf+3)
+    STA text_ptr+1
+    CALL @Draw_NoStall      ; recursively draw it
+    JUMP @Restore           ; then restore original string and continue
 
+    @StatCode_Over00:
 
-@StatCode_Over00:
     CMP #$01
     BNE @StatCode_Over01
 
-      ;; Stat Code $01 -- the character's class name
-      LDX char_index   ; get character index
-      LDA ch_class, X  ; get character's class
-      CLC              ; add #$F0 (start of class names)
-      ADC #$F0         ; draw it (yes I know, class names are not items, but they're stored with items)
-      JUMP @DrawItem
+    ;; Stat Code $01 -- the character's class name
+    LDX char_index   ; get character index
+    LDA ch_class, X  ; get character's class
+    CLC              ; add #$F0 (start of class names)
+    ADC #$F0         ; draw it (yes I know, class names are not items, but they're stored with items)
+    JUMP @DrawItem
 
-@StatCode_Over01:
+    @StatCode_Over01:
+
     CMP #$02
     BNE @StatCode_Over02
 
-      ;; Stat Code $02 -- draw ailment blurb ("HP" if character is fine, nothing if dead, "ST" if stone, or "PO" if poisoned)
-      LDX char_index        ; character index
-      LDA ch_ailments, X    ; out-of-battle ailment ID
-      CLC                   ; add #$FC (start of ailment names)
-      ADC #$FC              ; draw it (not an item, but with item names)
-      JUMP @DrawItem
+    ;; Stat Code $02 -- draw ailment blurb ("HP" if character is fine, nothing if dead, "ST" if stone, or "PO" if poisoned)
+    LDX char_index        ; character index
+    LDA ch_ailments, X    ; out-of-battle ailment ID
+    CLC                   ; add #$FC (start of ailment names)
+    ADC #$FC              ; draw it (not an item, but with item names)
+    JUMP @DrawItem
 
-@StatCode_Over02:
+    @StatCode_Over02:
+
     CMP #$0C
     BCC @DrawCharStat      ; if stat code is between $02-0B, relay this stat code to PrintCharStat
 
     CMP #$2C
     BCC @StatCode_0Cto2B   ; see if stat code is below #$2C.  If it isn't, we relay to PrintCharStat
 
-  @DrawCharStat:           ; this paticular stat code is going to be handled in a routine in another bank
+    @DrawCharStat:           ; this paticular stat code is going to be handled in a routine in another bank
+
     TAX                    ;  temporarily put the code in X
     CALL @Save              ;  save string data (we'll be drawing a substring)
     TXA                    ;  put the stat code back in A
@@ -4123,30 +4137,30 @@ DrawComplexString:
     CALL @StallAndDraw      ; draw it to the screen
     JUMP @Restore           ; restore original string data and continue
 
+    @StatCode_0Cto2B:
 
-@StatCode_0Cto2B:
     CMP #$14
     BCS @StatCode_14to2B   ; see if code >= #$14
 
     CMP #$10
     BCS @StatCode_10to13   ; see if >= #$10
 
-      ;;; Stat Codes $0C-0F -- weapons (BUGGED)
-      AND #$03        ; isolate the weapons slot (each character has 4 weapons)
-      CLC
-      ADC char_index  ; add character index
-      TAX
-      LDA ch_weapons, X  ; get the weapon ID
-      STA tmp            ; put unedited weapon ID in $10 (temporary)
-      AND #$7F           ; mask out high bit (high bit indicates whether or not weapon is equipped)
-      BEQ @WeaponArmor   ; if weapon ID == 0 (slot is empty), skip ahead and draw string 0 (blank string)
+    ;;; Stat Codes $0C-0F -- weapons (BUGGED)
+    AND #$03        ; isolate the weapons slot (each character has 4 weapons)
+    CLC
+    ADC char_index  ; add character index
+    TAX
+    LDA ch_weapons, X  ; get the weapon ID
+    STA tmp            ; put unedited weapon ID in $10 (temporary)
+    AND #$7F           ; mask out high bit (high bit indicates whether or not weapon is equipped)
+    BEQ @WeaponArmor   ; if weapon ID == 0 (slot is empty), skip ahead and draw string 0 (blank string)
 
-        CLC           ; if weapon ID is nonzero (slot has an actual weapon), add #$1B to ID
-        ADC #$1B      ; $1C is the start of the weapon names in the item list (-1 because 0 is nothing)
-        BNE @WeaponArmor ; jump ahead to draw it (always branches)
+    CLC           ; if weapon ID is nonzero (slot has an actual weapon), add #$1B to ID
+    ADC #$1B      ; $1C is the start of the weapon names in the item list (-1 because 0 is nothing)
+    BNE @WeaponArmor ; jump ahead to draw it (always branches)
 
+    @StatCode_10to13:   ;; Stat Codes $10-13 -- armor (BUGGED)
 
-  @StatCode_10to13:   ;; Stat Codes $10-13 -- armor (BUGGED)
     AND #$03          ; isolate the armor slot (each character has 4 armor)
     CLC
     ADC char_index    ; add character index
@@ -4156,14 +4170,16 @@ DrawComplexString:
     AND #$7F          ; mask off the equip bit
     BEQ @WeaponArmor      ; if zero (empty slot), skip ahead and draw string 0 (blank string)
 
-        CLC           ; if nonzero, add #$43 to armor ID
-        ADC #$43      ; $44 is the start of armor names in the item list (-1 because 0 is nothing)
+    CLC           ; if nonzero, add #$43 to armor ID
+    ADC #$43      ; $44 is the start of armor names in the item list (-1 because 0 is nothing)
 
-  @WeaponArmor:          ; above weapon and armor codes reach here with A containing
-      STA tmp+1          ;  the string index to draw.  Write that index to tmp+1
-      JUMP @DrawEquipment_BUGGED ;  and jump to equipment drawing (BUGGED)
+    @WeaponArmor:          ; above weapon and armor codes reach here with A containing
 
-@StatCode_14to2B:     ;; Stat Codes $14-2B -- magic
+    STA tmp+1          ;  the string index to draw.  Write that index to tmp+1
+    JUMP @DrawEquipment_BUGGED ;  and jump to equipment drawing (BUGGED)
+
+    @StatCode_14to2B:     ;; Stat Codes $14-2B -- magic
+
     SEC
     SBC #$14          ; subtract #$14 to get it zero based
     TAX               ; use that as an index
@@ -4183,12 +4199,12 @@ DrawComplexString:
 
     LDA ch0_spells, X  ; use X as index to get the spell
     BEQ :+            ; if 0, skip ahead and draw nothing (no spell)
+        CLC             ; add our level+text index to the current spell
+        ADC tmp         ;  previously stored in tmp
+        JUMP @DrawItem   ; and jump to @DrawItem
+    :
 
-      CLC             ; add our level+text index to the current spell
-      ADC tmp         ;  previously stored in tmp
-      JUMP @DrawItem   ; and jump to @DrawItem
-
-:   JUMP @StallAndDraw ; jumps here when spell=0.  Simply do nothing and continue with string processing
+    JUMP @StallAndDraw ; jumps here when spell=0.  Simply do nothing and continue with string processing
 
     ;; Magic conversion LUT [$DF90 :: 0x3DFA0]
     ;;  each character has 24 spells (8 levels * 3 spells per level).  However these 24 spells
@@ -4196,7 +4212,8 @@ DrawComplexString:
     ;; therefore the 3rd byte in every set of 4 goes unused (padding).  This table converts
     ;; a 24-index to the desired 32-index by simply skipping the 3rd byte in every set of 4
 
-@lutMagic:
+    @lutMagic:
+
     .byte $00,$01,$02,    $04,$05,$06,    $08,$09,$0A,    $0C,$0D,$0E
     .byte $10,$11,$12,    $14,$15,$16,    $18,$19,$1A,    $1C,$1D,$1E
 
@@ -4211,12 +4228,14 @@ DrawComplexString:
     ;   tmp   = raw weap/armor ID.  High bit set if piece is equipped (draw the "E-") or clear if unequipped (draw spaces instead)
     ;   tmp+1 = ID of item text string to draw (name of weapon/armor) -- supposedly... but it isn't used!
 
-@DrawEquipment_BUGGED:
+    @DrawEquipment_BUGGED:
+
     LDA tmp              ; get weapon/armor ID
     BNE :+               ; if it's zero...
       JUMP @Draw_NoStall  ; draw nothing -- continue with normal text processing
+    :
 
-:   BMI @isEquipped    ; if high bit set, we need to draw the "E-"
+    BMI @isEquipped    ; if high bit set, we need to draw the "E-"
       LDX #$FF         ; otherwise... (not equipped), just draw spaces
       LDY #$FF         ;  set X and Y to $FF (blank space tile)
       BNE :+           ;  and jump ahead (always branches)
@@ -4225,7 +4244,8 @@ DrawComplexString:
       LDX #$C7         ; set X to the "E" tile
       LDY #$C2         ; and Y to the "-" tile
 
-:   LDA PPUSTATUS       ; both equipped and nonequipped code meet up here
+    :   
+    LDA PPUSTATUS       ; both equipped and nonequipped code meet up here
     LDA ppu_dest+1  ; reset PPU toggle
     STA PPUADDR       ; and set desired PPU address
     LDA ppu_dest
@@ -4294,30 +4314,31 @@ DrawComplexString:
     INC text_ptr         ; inc string pointer
     BNE :+
       INC text_ptr+1     ; inc high byte if low byte wrapped
-
-:   CALL @Save            ; Save string info (item price is a substring)
+    :   
+    CALL @Save            ; Save string info (item price is a substring)
     TAX                  ; put item ID in X temporarily
     TXA                  ; get back the item ID
     FARCALL PrintPrice       ; print the price to temp string buffer
     CALL @StallAndDraw    ; recursivly draw it
     JUMP @Restore         ; then restore original string state and continue
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Complex String save/restore [$E03E :: 0x3E04E]
-;;
-;;    Some format characters require a complex string to swap banks
-;;  and start drawing a seperate string mid-job.  It calls this 'Save' routine
-;;  before doing that, and then calls the 'restore' routine after it's done
-;;
-;;    Note that Restore does not RTS, but rather JMPs back to the text
-;;  loop explicitly -- therefore you should JUMP to it.. not CALL to it.
-;;
-;;    Note I'm still using local labels here ... this is still part of DrawComplexString  x_x
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;
+    ;;  Complex String save/restore [$E03E :: 0x3E04E]
+    ;;
+    ;;    Some format characters require a complex string to swap banks
+    ;;  and start drawing a seperate string mid-job.  It calls this 'Save' routine
+    ;;  before doing that, and then calls the 'restore' routine after it's done
+    ;;
+    ;;    Note that Restore does not RTS, but rather JMPs back to the text
+    ;;  loop explicitly -- therefore you should JUMP to it.. not CALL to it.
+    ;;
+    ;;    Note I'm still using local labels here ... this is still part of DrawComplexString  x_x
+    ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-@Save:
+    @Save:
+
     LDY text_ptr    ; back up the text pointer
     STY tmp_hi      ;  and the data bank
     LDY text_ptr+1  ;  to temporary RAM space
@@ -4326,7 +4347,8 @@ DrawComplexString:
     STY tmp_hi+2
     RTS
 
-@Restore:
+    @Restore:
+
     LDA tmp_hi     ; restore text pointer and data bank
     STA text_ptr
     LDA tmp_hi+1
@@ -5923,161 +5945,7 @@ lut_EquipStringPositions:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawItemBox  [$EF18 :: 0x3EF28]
-;;
-;;    Fills the item box buffer in RAM with items that the player currently
-;;  has in their possesion.
-;;
-;;    Also draws the item box (and its contents) to the screen
-;;
-;;  OUT:  C is cleared if the player has at least 1 item, and is set if the player
-;;         has no items.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawItemBox:
-    LDA #$01         ; draw the box at coords $01,$03
-    STA box_x        ; and with dims  $1E,$13
-    LDA #$03
-    STA box_y        ;  seems odd that the box is hardcoded here,
-    LDA #$1E         ;  when these exact same positions/dims could be drawn
-    STA box_wd       ;  with DrawMainItemBox
-    LDA #$13
-    STA box_ht
-    LDA #BANK_MENUS
-    STA cur_bank
-    CALL DrawBox
-
-    INC dest_y       ; inc the dest row by 1 and the dest col by 2
-    INC dest_x       ;  but this is utterly pointless because dest_x and dest_y
-    INC dest_x       ;  are overwritten below
-
-    LDX #0           ; X is our dest index -- start it at zero
-    LDY #1           ; Y is our source index -- start it at 1 (first byte in the 'items' buffer is unused)
-
-  @ItemFillLoop:
-      LDA items, Y       ; check our item qty
-      BEQ @IncSrc        ; if it's nonzero...
-        TYA              ;  put this item ID in A
-        STA item_box, X  ;  and write it to the item box buffer
-        INX              ;  inc our dest index
-
-    @IncSrc:
-      INY                         ; inc our source index
-
-      CPY #item_orb_start-items   ; since orb names aren't included in the item box...
-      BCC @ItemFillLoop           ;   this checks to see if the source index is currently on an orb name
-      CPY #item_qty_start-items   ;   if it is, it jumps back to @IncSrc.  If it isn't, it jumps back
-      BCC @IncSrc                 ;   to @ItemFillLoop
-                                  ; this effectively skips over the orbs
-
-      CPY #item_stop-items        ; keep looping until we go through the entire item list
-      BCC @ItemFillLoop
-
-    CPX #0                 ; if the dest index is still zero, the player has no items
-    BNE @StartDrawingItems ;   otherwise (nonzero), start drawing the items they have
-
-    ; no items, so no further work to be done... just exit with C set
-      SEC
-      RTS
-
-
-  @Exit:
-    CLC    ; C clear on exit indicates there was at least 1 item in inventory
-    RTS
-
-
-  @StartDrawingItems:
-    STX cursor_max     ; the number of items they have becomes the cursor maximum
-    LDA #0
-    STA item_box, X    ; put a null terminator at the end of the item box (needed for following loop)
-    LDA #0
-    STA cursor         ; also reset the cursor to 0 (which will be used as a loop counter below)
-
-  @DrawItemLoop:
-    LDX cursor         ; get current loop counter and put it in X
-    LDA item_box, X    ; index the item box to see what item name we're to draw
-    BEQ @Exit          ; if the item ID is zero, it's a null terminator, which means we're done
-
-    ASL A              ; otherwise double the item ID
-    TAX                ;  and put it in X to index (will be used to index the string pointer table)
-
-    LDA #BANK_MENUS    ; set the return bank to BANK_MENUS.
-    STA ret_bank       ;   this is required for DrawComplexString (called below)
-    LDA #BANK_ITEMS    ; swap to BANK_ITEMS (bank containing item names)
-    CALL SwapPRG
-
-    LDA lut_ItemNamePtrTbl, X   ; get the pointer to this item name
-    STA tmp                     ;  and put it in (tmp)
-    LDA lut_ItemNamePtrTbl+1, X
-    STA tmp+1
-
-                       ; copy 7 characters verbatim (do not look for null terminators!)
-    LDY #$06           ;   this means that shorter item names must be padded with spaces to 7 characters.  DUMB
-   @CopyLoop:
-      LDA (tmp), Y         ; copy each character
-      STA str_buf+$20, Y   ; and put in str_buf+$20.  Cannot use str_buf as it is,
-      DEY                  ;   because it shares RAM with item_box, which we can't overwrite
-      BPL @CopyLoop        ; loop until Y wraps (copies 7 characters)
-
-    LDA #0
-    STA str_buf+$27    ; end the string buffer with a null terminator
-
-    TXA                ; put X back in A and right-shift it
-    LSR A              ;  this restores the unedited item ID number
-
-    CMP #item_qty_start-items   ; see if this item ID falls within the range of IDs that you can have
-    BCC @SkipQty                ;  multiple of (qty number needs to be drawn).  If not, Skip ahead
-
-       TAX                     ; put item ID in X
-       LDA items, X            ; use it to index inventory to see how many of this item we have
-       STA tmp                 ;  put the qty in tmp
-       FARCALL PrintNumber_2Digit  ; print the 2 digit number
-       LDA format_buf+5        ; copy the printed 2 digit number from the format buffer
-       STA str_buf+$25         ;  to the end of our string buffer (just before the null terminator)
-       LDA format_buf+6
-       STA str_buf+$26
-
-
-  @SkipQty:
-    LDA #<(str_buf+$20)    ; fill text_ptr with the pointer to our item name in the string buffer
-    STA text_ptr
-    LDA #>(str_buf+$20)
-    STA text_ptr+1
-
-    LDA cursor             ; get current loop counter again
-    ASL A                  ; double it, and stuff it in X
-    TAX
-
-    LDA lutItemBoxStrPos, X     ; load up the dest X,Y coords
-    STA dest_x                  ;  and record them
-    LDA lutItemBoxStrPos+1, X   ; these are the coords at which to draw this item name
-    STA dest_y
-
-    CALL DrawComplexString  ; finally actually call DrawComplexString to draw the item name
-    INC cursor             ; increment our loop counter to draw the next item
-    JUMP @DrawItemLoop      ; and continue looping
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Item Box String Positions [$EFCC :: 0x3EFDC]
-;;
-;;   LUT containing X,Y coords of where to draw the strings inside of
-;;  the item box.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lutItemBoxStrPos:
-  .byte $04,$06,   $0D,$06,   $16,$06
-  .byte $04,$08,   $0D,$08,   $16,$08
-  .byte $04,$0A,   $0D,$0A,   $16,$0A
-  .byte $04,$0C,   $0D,$0C,   $16,$0C
-  .byte $04,$0E,   $0D,$0E,   $16,$0E
-  .byte $04,$10,   $0D,$10,   $16,$10
-  .byte $04,$12,   $0D,$12,   $16,$12
-  .byte $04,$14,   $0D,$14,   $16,$14
 
 
 
@@ -8676,6 +8544,27 @@ SwapPRG:
     ;DEBUG
     @noDebugger:
     LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
+    RTS
+
+Impl_FARBYTE:
+    LDA cur_bank
+    ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
+    ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
+    STA MMC5_PRG_BANK1
+    LDA (text_ptr), Y
+    PHA
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
+    PLA
+    RTS
+
+Impl_FARBYTE2:
+    STA MMC5_PRG_BANK1
+    LDA (tmp), Y
+    PHA
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
+    PLA
     RTS
 
 Impl_FARJUMP:
