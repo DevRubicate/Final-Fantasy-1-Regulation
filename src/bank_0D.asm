@@ -5,7 +5,7 @@
 .export EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .export lut_IntroStoryText
 
-.import DrawComplexString, DrawBox, UpdateJoy, DrawPalette
+.import DrawComplexString, DrawComplexString_New, DrawBox, UpdateJoy, DrawPalette
 .import WaitForVBlank
 .import GetRandom
 .import ClearOAM
@@ -2762,7 +2762,7 @@ Story_DrawText:
     LDA lut_StoryText+1, X
     STA text_ptr+1
 
-    JUMP DrawComplexString ; and draw it at a complex string.  Then exit
+    FARJUMP DrawComplexString_New ; and draw it at a complex string.  Then exit
 
 
 __Nasir_CRC_High_Byte = @NasirCRCHighByte+2   ; unimportant to this routine -- has to do with CRC check

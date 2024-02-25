@@ -34,7 +34,7 @@
 .import DrawComplexString_New, DrawItemBox
 
 .export SwapPRG
-.export DoOverworld, DrawImageRect, DrawComplexString
+.export DoOverworld, DrawImageRect
 .export DrawPalette, UpdateJoy
 .export DrawBox, UpdateJoy, DrawPalette
 .export DrawEquipMenuStrings, EraseBox

@@ -4,7 +4,7 @@
 
 .import GameStart
 .import lut_IntroStoryText
-.import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString, DrawComplexString_New
+.import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString_New
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
@@ -3210,8 +3210,8 @@ NameInput_DrawName:
     
     LDA #$01                ; drawing while PPU is on, so set menustall
     STA menustall
-    
-    JUMP DrawComplexString   ; Then draw the name and exit!
+Invoke_DrawComplexString:
+    FARJUMP DrawComplexString_New   ; Then draw the name and exit!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3271,7 +3271,7 @@ DrawNameInputScreen:
     LDA #BANK_THIS
     STA cur_bank
     STA ret_bank
-    JUMP DrawComplexString
+    JUMP Invoke_DrawComplexString
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3383,7 +3383,7 @@ EnterIntroStory:
     LDA #1
     STA dest_x
 
-    CALL DrawComplexString   ; draw intro story as a complex string!
+    CALL Invoke_DrawComplexString
 
     CALL TurnMenuScreenOn_ClearOAM  ; turn on the PPU
     CALL IntroStory_MainLoop        ; and run the main loop of the intro story
@@ -5421,7 +5421,7 @@ DrawShopComplexString:
     LDX #BANK_THIS
     STX cur_bank
     STX ret_bank
-    JUMP DrawComplexString
+    JUMP Invoke_DrawComplexString
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8464,7 +8464,7 @@ DrawMenuComplexString:
     LDA #BANK_THIS
     STA cur_bank          ; set data bank (string to draw is on this bank -- or is in RAM)
     STA ret_bank          ; set return bank (we want it to RTS to this bank when complete)
-    JUMP DrawComplexString ;  Draw Complex String, then exit!
+    JUMP Invoke_DrawComplexString ;  Draw Complex String, then exit!
 
 
 
@@ -8614,7 +8614,7 @@ DrawMainMenuCharBoxBody:
     LDA #<str_buf
     STA text_ptr      ; draw "MAGIC" string as loaded above
     DEC dest_y        ; dec row to print 1 above last
-    CALL DrawComplexString    ; draw it!
+    CALL Invoke_DrawComplexString    ; draw it!
 
     LDA dest_y        ; subtract 8 from the Y coord to put it back to where it started
     SEC               ;  (we added 10 at first, and then DEC'd twice)
@@ -8674,7 +8674,7 @@ DrawMainMenuCharBoxBody:
     STA str_buf+9
     LDA #<str_buf  ; start drawing from start of string
     STA text_ptr
-    JUMP DrawComplexString    ; Draw it, then exit!
+    JUMP Invoke_DrawComplexString    ; Draw it, then exit!
 
 
 
