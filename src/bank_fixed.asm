@@ -18,7 +18,7 @@
 .import BattleRNG, GetSMTargetCoords, CanTalkToMapObject
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
-.import OpenTreasureChest, AddGPToParty, LoadPrice
+.import OpenTreasureChest, AddGPToParty, LoadPrice, LoadBattleBackdropPalette
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
@@ -5567,24 +5567,7 @@ LoadBorderPalette_Black:
        STA cur_pal+$F   ; White always to color 3
        RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Backdrop Palette  [$EB7C :: 0x3EB8C]
-;;
-;;   Loads required battle backdrop palette.  Note the difference between this and
-;;    LoadBackdropPalette.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadBattleBackdropPalette:
-    LDA #BANK_OWINFO         ; Swap to required bank
-    CALL SwapPRG
-    LDX ow_tile              ; Get last OW tile stepped on
-    LDA lut_BtlBackdrops, X  ; use it to index and get battle backdrop ID
-    AND #$0F                 ; multiply ID by 4
-    ASL A
-    ASL A                    ; and load up the palette
-    FARJUMP LoadBackdropPalette
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5597,14 +5580,14 @@ LoadBattleBackdropPalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleBGPalettes:
-    CALL LoadBattleBackdropPalette
+    FARCALL LoadBattleBackdropPalette
     JUMP LoadBorderPalette_Black
 
     ;; Faux routine -- same as above but gives the menus a blue background instead of black
     ;;   I do not believe this code is ever used by the game
 
 Faux_LoadBattleBGPalettes:
-    CALL LoadBattleBackdropPalette
+    FARCALL LoadBattleBackdropPalette
     JUMP LoadBorderPalette_Blue
 
 
@@ -8690,7 +8673,7 @@ SwapPRG:
     STA MMC5_PRG_BANK1   ; Swap to the desired page
     LDA far_depth
     BEQ @noDebugger
-    DEBUG
+    ;DEBUG
     @noDebugger:
     LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
     RTS
