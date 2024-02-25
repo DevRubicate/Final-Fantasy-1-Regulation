@@ -4,7 +4,7 @@
 
 .import GameStart
 .import lut_IntroStoryText
-.import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString
+.import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString, DrawComplexString_New
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
@@ -2511,7 +2511,7 @@ DrawCharacterName:
     STA cur_bank
     STA ret_bank
 
-    JUMP DrawComplexString  ; Draw it!  Then return
+    FARJUMP DrawComplexString_New  ; Draw it!  Then return
 
 
 
@@ -3055,7 +3055,7 @@ PtyGen_DrawOneText:
 
     TXA                     ; back up our index (DrawComplexString will corrupt it)
     PHA
-    CALL DrawComplexString   ; draw the string
+    FARCALL DrawComplexString_New   ; draw the string
     PLA
     TAX                     ; and restore our index
 
@@ -3082,7 +3082,7 @@ PtyGen_DrawOneText:
     STA cur_bank            ;   but oh well)
     STA ret_bank
 
-    JUMP DrawComplexString   ; then draw another complex string -- and exit!
+    FARJUMP DrawComplexString_New   ; then draw another complex string -- and exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

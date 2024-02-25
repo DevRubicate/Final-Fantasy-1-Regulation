@@ -335,7 +335,6 @@ DrawComplexString_New:
 
     ;;; Control Code $02 -- draws an item name
     @Code_02:
-    ;LDA (text_ptr), Y     ; get another byte from the string (this byte is the ID of the item string to draw)
     JSR Impl_FARBYTE
     INC text_ptr          ; inc source pointer
     BNE @DrawItem
@@ -359,12 +358,15 @@ DrawComplexString_New:
 
   @itemGo:
     STA text_ptr+1        ; finally write high byte of pointer
+
+    LDA #BANK_ITEMS
+    STA cur_bank
+
     CALL @Draw_NoStall     ; recursively draw the substring
     JUMP @Restore          ; then restore original string and continue
 
     ;;;; Control Code $03 -- prints an item price
   @Code_03:
-    ;LDA (text_ptr), Y    ; get another byte of string (the ID of item whose price we want)
     JSR Impl_FARBYTE
     INC text_ptr         ; inc string pointer
     BNE :+
