@@ -2,6 +2,10 @@
 
 .include "src/global-import.inc"
 
+.import CHRLoadToA
+
+.export LoadOWBGCHR
+
 LUT_Overworld_CHR:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $00, $00, $00, $00, $00, $00, $00, $00
@@ -260,3 +264,20 @@ LUT_Overworld_CHR:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load OW BG CHR  [$E94B :: 0x3E95B]
+;;
+;;   Loads all CHR for Overworld BG tiles (full left-hand pattern table)
+;;   It is assumed the proper CHR bank is swapped in
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadOWBGCHR:
+    LDA #<LUT_Overworld_CHR
+    STA tmp
+    LDA #>LUT_Overworld_CHR
+    STA tmp+1        ; source address is $8000
+    LDX #$10         ; 16 rows to load (full pattern table)
+    LDA #0           ; dest address is $0000
+    JUMP CHRLoadToA

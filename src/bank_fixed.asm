@@ -32,6 +32,12 @@
 .import LoadSMTilesetData
 ; bank_1A_string
 .import DrawComplexString_New, DrawItemBox
+; bank_1B_map_chr
+.import LoadOWBGCHR
+; bank_1C_mapman_chr
+.import LoadPlayerMapmanCHR
+; bank_1D_mapobj_chr
+.import LoadOWObjectCHR
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -1473,8 +1479,7 @@ LoadOWMapRow:
     LDA #<mapdata    ;   the row will be decompressed to $7x00-$7xFF
     STA tmp+2        ;   where 'x' is the low 4 bits of the row number
                      ;  (tmp+2) is now our dest pointer for the row
-
-           ; no RTS or JUMP -- code seamlessly runs into DecompressMap
+    NOJUMP DecompressMap
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4761,76 +4766,18 @@ LoadShopCHRPal:
 LoadSMCHR:                     ; standard map -- does not any palettes
     LDA #BANK_MAPCHR
     CALL SwapPRG
-    CALL LoadPlayerMapmanCHR
+    FARCALL LoadPlayerMapmanCHR
     FARCALL LoadTilesetAndMenuCHR
     JUMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     LDA #BANK_MAPCHR
     CALL SwapPRG
-    CALL LoadOWBGCHR
-    CALL LoadPlayerMapmanCHR
-    JUMP LoadOWObjectCHR
+    FARCALL LoadOWBGCHR
+    FARCALL LoadPlayerMapmanCHR
+    FARJUMP LoadOWObjectCHR
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Player Mapman CHR  [$E92E :: 0x3E93E]
-;;
-;;   Loads CHR for the player mapman graphic based on the lead party member's class
-;;
-;;  TMP:  tmp and tmp+1 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadPlayerMapmanCHR:
-    LDA #0          ; #0 -> tmp
-    STA tmp
-    LDA ch_class    ; Get lead party member's class
-    ORA #$90        ; ORA with #$90, and put in tmp+1
-    STA tmp+1       ; (tmp) is now $9x00 (where x=lead party member's class).
-                    ;    This points to mapman graphics for that class
-    LDX #1          ; X=1  (load 1 row of tiles)
-    LDA #$10        ; A=$10 (high byte of dest address:  $1000)
-    JUMP CHRLoadToA  ; jump to CHR loader
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load OW Object CHR  [$E940 :: 0x3E950]
-;;
-;;   Loads CHR for all overworld objects and mapmans
-;;   This includes:  ship, canoe, airship, bridge, canal, etc
-;;   It is assumed the proper CHR bank is swapped in.
-;;
-;;  IN:   tmp  = assumed to contain 0  (this routine does not explicitly clear it)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadOWObjectCHR:
-    LDA #$9C         ; source address is $9C00 (note:  low byte not explicitly cleared)
-    STA tmp+1
-    LDX #$06         ; 6 rows to load
-    LDA #$11         ; dest address is $1100
-    JUMP CHRLoadToA
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load OW BG CHR  [$E94B :: 0x3E95B]
-;;
-;;   Loads all CHR for Overworld BG tiles (full left-hand pattern table)
-;;   It is assumed the proper CHR bank is swapped in
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadOWBGCHR:
-    LDA #0
-    STA tmp
-    LDA #$80
-    STA tmp+1        ; source address is $8000
-    LDX #$10         ; 16 rows to load (full pattern table)
-    LDA #0           ; dest address is $0000
-    NOJUMP CHRLoadToA
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4855,8 +4802,7 @@ CHRLoadToA:
     STA PPUADDR   ; write high byte of dest address
     LDA #0
     STA PPUADDR   ; write low byte:  0
-
-          ; no JUMP or RTS -- seamlessly runs into CHRLoad
+    NOJUMP CHRLoad
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5197,8 +5143,7 @@ DrawOBSprite:
     CLC                   ; add tile offset to tmp
     ADC tmp               ;  tmp is now the start of the tiles which make up this sprite
     STA tmp               ;  and tmp+1 is the palette to use
-
-    ;; no JUMP or RTS -- code seamlessly runs into DrawSimple2x3Sprite
+    NOJUMP DrawSimple2x3Sprite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

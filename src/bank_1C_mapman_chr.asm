@@ -2,6 +2,9 @@
 
 .include "src/global-import.inc"
 
+.import CHRLoadToA
+
+.export LoadPlayerMapmanCHR
 
 LUT_mapman_CHR:
     .byte $07, $08, $10, $10, $14, $16, $17, $3f, $00, $07, $0f, $0f, $0f, $0f, $09, $05
@@ -207,3 +210,25 @@ LUT_mapman_CHR:
     .byte $00, $e0, $10, $08, $c8, $88, $d0, $f0, $00, $00, $e0, $f0, $f0, $f0, $e0, $c0
     .byte $0f, $0f, $09, $0a, $12, $14, $10, $38, $07, $00, $06, $05, $0d, $0b, $0f, $1f
     .byte $f8, $70, $50, $48, $88, $c8, $e4, $c4, $70, $80, $a0, $b0, $70, $70, $78, $38
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Player Mapman CHR  [$E92E :: 0x3E93E]
+;;
+;;   Loads CHR for the player mapman graphic based on the lead party member's class
+;;
+;;  TMP:  tmp and tmp+1 used
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadPlayerMapmanCHR:
+    LDA #<LUT_mapman_CHR          ; #0 -> tmp
+    STA tmp
+    LDA ch_class    ; Get lead party member's class
+    CLC
+    ADC #>LUT_mapman_CHR
+    STA tmp+1       ; (tmp) is now $9x00 (where x=lead party member's class).
+                    ;    This points to mapman graphics for that class
+    LDX #1          ; X=1  (load 1 row of tiles)
+    LDA #$10        ; A=$10 (high byte of dest address:  $1000)
+    JUMP CHRLoadToA  ; jump to CHR loader

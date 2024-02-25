@@ -2,6 +2,11 @@
 
 .include "src/global-import.inc"
 
+.import CHRLoadToA
+
+.export LoadOWObjectCHR
+
+
 LUT_MapObj_CHR:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
@@ -99,3 +104,24 @@ LUT_MapObj_CHR:
     .byte $02, $25, $38, $3a, $02, $16, $14, $19, $02, $2c, $30, $27, $02, $26, $31, $17
     .byte $02, $25, $38, $3a, $02, $16, $14, $19, $02, $2c, $30, $27, $02, $26, $31, $17
     .byte $02, $25, $38, $3a, $02, $16, $14, $19, $02, $2c, $30, $27, $02, $26, $31, $17
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load OW Object CHR  [$E940 :: 0x3E950]
+;;
+;;   Loads CHR for all overworld objects and mapmans
+;;   This includes:  ship, canoe, airship, bridge, canal, etc
+;;   It is assumed the proper CHR bank is swapped in.
+;;
+;;  IN:   tmp  = assumed to contain 0  (this routine does not explicitly clear it)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadOWObjectCHR:
+    LDA #<LUT_MapObj_CHR         ; source address is $9C00 (note:  low byte not explicitly cleared)
+    STA tmp
+    LDA #>LUT_MapObj_CHR
+    STA tmp+1
+    LDX #$06         ; 6 rows to load
+    LDA #$11         ; dest address is $1100
+    JUMP CHRLoadToA
