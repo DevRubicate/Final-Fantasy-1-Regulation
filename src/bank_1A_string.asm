@@ -12,12 +12,9 @@ DrawComplexString_Exit:
     STA PPUSCROLL
     STA PPUSCROLL
     RTS
-    ;LDA ret_bank   ; swap back to original bank
-    ;JUMP SwapPRG  ;   then return
+
 
 DrawComplexString_New:
-    ;LDA cur_bank
-    ;CALL SwapPRG
     CALL CoordToNTAddr
 
     @StallAndDraw:
@@ -27,7 +24,6 @@ DrawComplexString_New:
     @Draw_NoStall:
 
     LDY #0            ; zero Y -- we don't want to use it as an index.  Rather, the pointer is updated
-    ;LDA (text_ptr), Y ;   after each fetch
     JSR Impl_FARBYTE
     BEQ DrawComplexString_Exit   ; if the character is 0  (null terminator), exit the routine
 
@@ -132,7 +128,6 @@ DrawComplexString_New:
     AND #$C0
     STA char_index ; store index
 
-    ;LDA (text_ptr), Y   ; get the next byte in the string (the stat to draw)
     JSR Impl_FARBYTE
     INC text_ptr        ; inc our string pointer
     BNE :+
@@ -348,14 +343,6 @@ DrawComplexString_New:
 
     @DrawItem:
     CALL @Save             ; drawing an item requires a substring.  Save current string
-    TAX                   ; put item ID in X temporarily
-
-    ;LDA #BANK_ITEMS
-    LDA #$1A
-    STA cur_bank 
-    ;CALL SwapPRG         ; swap to BANK_ITEMS (contains item strings)
-
-    TXA                   ; get item ID
     ASL A                 ; double it (for pointer table lookup)
     TAX                   ; put low byte in X for indexing
 
@@ -423,7 +410,6 @@ DrawComplexString_New:
     STA text_ptr+1
     LDA tmp_hi+2
     STA cur_bank
-    ;CALL SwapPRG      ; swap the data bank back in
     JUMP @Draw_NoStall  ;  and continue with text processing
 
 
@@ -475,8 +461,6 @@ DrawItemBox:
     STA box_wd       ;  with DrawMainItemBox
     LDA #$13
     STA box_ht
-    ;LDA #BANK_MENUS
-    ;STA cur_bank
     CALL DrawBox
 
     INC dest_y       ; inc the dest row by 1 and the dest col by 2
@@ -533,11 +517,6 @@ DrawItemBox:
     ASL A              ; otherwise double the item ID
     TAX                ;  and put it in X to index (will be used to index the string pointer table)
 
-    ;LDA #BANK_MENUS    ; set the return bank to BANK_MENUS.
-    ;STA ret_bank       ;   this is required for DrawComplexString (called below)
-    ;LDA #BANK_ITEMS    ; swap to BANK_ITEMS (bank containing item names)
-    ;CALL SwapPRG
-
     LDA LUT_ItemNamePtrTbl, X   ; get the pointer to this item name
     STA tmp                     ;  and put it in (tmp)
     LDA LUT_ItemNamePtrTbl+1, X
@@ -549,7 +528,6 @@ DrawItemBox:
 
     LDA #(BANK_ITEMS * 2) | %10000000
     JSR Impl_FARBYTE2
-    ;LDA (tmp), Y         ; copy each character
     STA str_buf+$20, Y   ; and put in str_buf+$20.  Cannot use str_buf as it is,
     DEY                  ;   because it shares RAM with item_box, which we can't overwrite
     BPL @CopyLoop        ; loop until Y wraps (copies 7 characters)
@@ -656,14 +634,6 @@ lut_DTE1:
     .byte $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
 
 LUT_ItemNamePtrTbl:
-    .word $ffff
-    .word $ffff
-    .word $8f00
-    .word $9cb5
-    .word $9159
-    .word $ffb4
-    .word $9700
-    .word $568b
     .word $b900
     .word $b901
     .word $b909

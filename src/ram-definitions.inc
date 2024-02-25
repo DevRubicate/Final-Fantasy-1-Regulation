@@ -438,38 +438,38 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     GAP                                                 5
     RES             gold,                               3 ; $601C   ; 3 bytes
     GAP                                                 1
-    RES             items,                              0 ; $6020
+    RES             items,                              1 ; 
     RES             item_lute,                          1 ; $6020
-    RES             item_crown,                         1 ; $6021
-    RES             item_crystal,                       1 ; $6022
-    RES             item_herb,                          1 ; $6023
-    RES             item_mystickey,                     1 ; $6024
-    RES             item_tnt,                           1 ; $6025
-    RES             item_adamant,                       1 ; $6026
-    RES             item_slab,                          1 ; $6027
-    RES             item_ruby,                          1 ; $6028
-    RES             item_rod,                           1 ; $6029
-    RES             item_floater,                       1 ; $602A
-    RES             item_chime,                         1 ; $602B
-    RES             item_tail,                          1 ; $602C
-    RES             item_cube,                          1 ; $602D
-    RES             item_bottle,                        1 ; $602E
-    RES             item_oxyale,                        1 ; $602F
-    RES             item_canoe,                         1 ; $6030
-    RES             item_orb_start,                     0 ; $6031
-    RES             orb_fire,                           1 ; $6032
+    RES             item_crown,                         1 ; $6020
+    RES             item_crystal,                       1 ; $6021
+    RES             item_herb,                          1 ; $6022
+    RES             item_mystickey,                     1 ; $6023
+    RES             item_tnt,                           1 ; $6024
+    RES             item_adamant,                       1 ; $6025
+    RES             item_slab,                          1 ; $6026
+    RES             item_ruby,                          1 ; $6027
+    RES             item_rod,                           1 ; $6028
+    RES             item_floater,                       1 ; $6029
+    RES             item_chime,                         1 ; $602A
+    RES             item_tail,                          1 ; $602B
+    RES             item_cube,                          1 ; $602C
+    RES             item_bottle,                        1 ; $602D
+    RES             item_oxyale,                        1 ; $602E
+    RES             item_canoe,                         1 ; $602F
+    RES             item_orb_start,                     0 ; $6030
+    RES             orb_fire,                           1 ; $6031
     RES             orb_water,                          1 ; $6032
-    RES             orb_air,                            1 ; $6033
-    RES             orb_earth,                          1 ; $6034
-    RES             item_qty_start,                     0 ; $6035
-    RES             item_tent,                          1 ; $6036
+    RES             orb_air,                            1 ; $6032
+    RES             orb_earth,                          1 ; $6033
+    RES             item_qty_start,                     0 ; $6034
+    RES             item_tent,                          1 ; $6035
     RES             item_cabin,                         1 ; $6036
-    RES             item_house,                         1 ; $6037
-    RES             item_heal,                          1 ; $6038
-    RES             item_pure,                          1 ; $6039
-    RES             item_soft,                          1 ; $603A
-    RES             item_stop,                          1 ; $603B
-    GAP                                                 196
+    RES             item_house,                         1 ; $6036
+    RES             item_heal,                          1 ; $6037
+    RES             item_pure,                          1 ; $6038
+    RES             item_soft,                          1 ; $6039
+    RES             item_stop,                          1 ; $603A
+    GAP                                                 195
     RES_PAGE        ch_stats,                           0 ; $6100  ; MUST be on page bound.  Each character allowed $40 bytes, so use 00,40,80,C0 to index ch_stats
     RES             ch_class,                           1 ; ch_stats + $00
     RES             ch_ailments,                        1 ; ch_stats + $01
