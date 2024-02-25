@@ -53,6 +53,137 @@
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Wait an Altar Scanline  [$DB00 :: 0x3DB10]
+;;
+;;    This routine is similar to WaitScanline, however it is specifically applicable
+;;  to the Altar effect because it waits *exactly* 109 cycles (and not 108.66667).  This
+;;  causes a wait a little longer than a full scanline (1 dot longer), which produces a diagonal
+;;  raster effect, rather than a perfect vertical line.
+;;
+;;    JSRing to this routine eats exactly 109 cycles.  When placed inside a 'DEX/BNE' loop,
+;;  this totals 114 cycles (DEX+BNE = 5 cycles) which is 1 dot longer than a scanline.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitAltarScanline:   ; CALL to routine = 6 cycles
+    LDY #18          ; +2 = 8
+  @Loop:
+     DEY
+     BNE @Loop       ; 5 cycle loop * 18 iterations - 1 = 89 cycles for loop
+                     ; 8+89 = 97 cycs
+
+       CRITPAGECHECK @Loop
+
+    NOP              ; +2 = 99
+    NOP              ; +2 = 101
+    NOP              ; +2 = 103
+    RTS              ; +6 = 109
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Wait a Scanline  [$D788 :: 0x3D798]
+;;
+;;    JSRing to this routine eats up exactly 109 cycles 2 times out of 3, and 108
+;;  cycles 1 time out of 3.  So it effectively eats 108.6667 cycles.  This includes
+;;  the CALL.  When placed inside a simple 'DEX/BNE' loop (DEX+BNE = 5 cycles), it
+;;  burns 113.6667 cycles, which is EXACTLY one scanline.
+;;
+;;    This is used as a timing mechanism for some PPU effects like the screen
+;;  wipe transition that occurs when you switch maps.
+;;
+;;    tmp+2 is used as the 3-step counter to switch between waiting 108 and 109
+;;  cycles.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitScanline:
+    LDY #16          ; +2 cycles
+   @Loop:
+      DEY            ;   +2
+      BNE @Loop      ;   +3  (5 cycle loop * 16 iterations = 80-1 = 79 cycles for loop)
+
+  CRITPAGECHECK @Loop      ; ensure above loop does not cross page boundary
+
+    LDA tmp+2        ; +3
+    DEC tmp+2        ; +5
+    BNE @NoReload    ; +3 (if no reload -- 2/3)
+                     ;   or +2 (if reload -- 1/3)
+
+  CRITPAGECHECK @NoReload  ; ensure jump to NoReload does not require jump across page boundary
+
+  @Reload:
+    LDA #3           ; +2   Both Reload and NoReload use the same
+    STA tmp+2        ; +3    amount of cycles.. but Reload reloads tmp+2
+    RTS              ; +6    with 3 so that it counts down again
+
+  @NoReload:
+    LDA #0           ; +2
+    LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
+    RTS              ; +6
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DialogueBox_Frame  [$D6A1 :: 0x3D6B1]
+;;
+;;    Does frame work related to drawing the dialogue box.  This mainly involves timing the screen
+;;  splits required to make the dialogue box visible.
+;;
+;;  IN:  tmp+10 = "offscreen" NT (soft2000 XOR #$01) -- NT containing dialogue box
+;;       tmp+11 = number of scanlines (-8) the dialogue box is to be visible.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DialogueBox_Frame:
+    FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
+    LDA #>oam          ; do sprite DMA
+    STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
+
+    LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
+    STA PPUCTRL
+
+        ; now the game loops to burn VBlank time, so that it can start doing raster effects to split the screen
+
+    LDY #$FC           ; count Y down from $FC
+  @BurnVBlankLoop:     ; On entry to this loop, game is about 565 cycles into VBlank)
+    DEY                    ; 2 cycles
+    NOP                    ; +2=4
+    NOP                    ; +2=6
+    NOP                    ; +2=8
+    BNE @BurnVBlankLoop    ; +3=11   (11*$FC)-1 = 2771 cycles burned in loop.
+                           ;         2771 + 565 = 3336 cycles since VBl start
+                           ; First visible rendered scanline starts 2387 cycles into VBlank
+                           ; 3336 - 2387 = 949 cycles into rendering
+                           ; 949 / 113.6667 = currently on scanline ~8.3
+       PAGECHECK @BurnVBlankLoop
+
+        ; here, thanks to above loop, the game is ~8.3 scanlines into rendering.  Since scroll changes
+        ;  are not visible until the end of the scanline, you can round up and say that we're on scanline 9
+        ;  since that'll be when scroll changes are first visible.
+
+    LDX tmp+11             ; get the height of the box
+    DEX                    ; decrement it BEFORE burning scanlines (since we're on scanline 9, this would
+                           ;   mean the last visible dialogue box line is 8+N  -- where N is tmp+11)
+
+  @ScanlineLoop:
+    CALL WaitScanline       ; burn the desired number of scanlines
+    DEX
+    BNE @ScanlineLoop
+
+       PAGECHECK @ScanlineLoop
+
+      ; now... the dialogue box has been visible for 8+N scanlines, and we're to its bottom line
+      ; so we don't want it to be visible any more for the rest of this frame
+
+    LDA soft2000                   ; so get the normal "onscreen" NT
+    STA PPUCTRL                      ; and set it
+    FARJUMP MusicPlay       ; then call the Music Play routine and exit
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Do Overworld  [$C0CB :: 0x3C0DB]
@@ -2429,63 +2560,6 @@ ShowDialogueBox:
     RTS          ; then the dialogue box is done!
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DialogueBox_Frame  [$D6A1 :: 0x3D6B1]
-;;
-;;    Does frame work related to drawing the dialogue box.  This mainly involves timing the screen
-;;  splits required to make the dialogue box visible.
-;;
-;;  IN:  tmp+10 = "offscreen" NT (soft2000 XOR #$01) -- NT containing dialogue box
-;;       tmp+11 = number of scanlines (-8) the dialogue box is to be visible.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.align $100
-
-DialogueBox_Frame:
-    FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
-    LDA #>oam          ; do sprite DMA
-    STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
-
-    LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
-    STA PPUCTRL
-
-        ; now the game loops to burn VBlank time, so that it can start doing raster effects to split the screen
-
-    LDY #$FC           ; count Y down from $FC
-  @BurnVBlankLoop:     ; On entry to this loop, game is about 565 cycles into VBlank)
-    DEY                    ; 2 cycles
-    NOP                    ; +2=4
-    NOP                    ; +2=6
-    NOP                    ; +2=8
-    BNE @BurnVBlankLoop    ; +3=11   (11*$FC)-1 = 2771 cycles burned in loop.
-                           ;         2771 + 565 = 3336 cycles since VBl start
-                           ; First visible rendered scanline starts 2387 cycles into VBlank
-                           ; 3336 - 2387 = 949 cycles into rendering
-                           ; 949 / 113.6667 = currently on scanline ~8.3
-       PAGECHECK @BurnVBlankLoop
-
-        ; here, thanks to above loop, the game is ~8.3 scanlines into rendering.  Since scroll changes
-        ;  are not visible until the end of the scanline, you can round up and say that we're on scanline 9
-        ;  since that'll be when scroll changes are first visible.
-
-    LDX tmp+11             ; get the height of the box
-    DEX                    ; decrement it BEFORE burning scanlines (since we're on scanline 9, this would
-                           ;   mean the last visible dialogue box line is 8+N  -- where N is tmp+11)
-
-  @ScanlineLoop:
-    CALL WaitScanline       ; burn the desired number of scanlines
-    DEX
-    BNE @ScanlineLoop
-
-       PAGECHECK @ScanlineLoop
-
-      ; now... the dialogue box has been visible for 8+N scanlines, and we're to its bottom line
-      ; so we don't want it to be visible any more for the rest of this frame
-
-    LDA soft2000                   ; so get the normal "onscreen" NT
-    STA PPUCTRL                      ; and set it
-    FARJUMP MusicPlay       ; then call the Music Play routine and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2519,49 +2593,6 @@ DialogueBox_Sfx:
     RTS            ; and exit
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Wait a Scanline  [$D788 :: 0x3D798]
-;;
-;;    JSRing to this routine eats up exactly 109 cycles 2 times out of 3, and 108
-;;  cycles 1 time out of 3.  So it effectively eats 108.6667 cycles.  This includes
-;;  the CALL.  When placed inside a simple 'DEX/BNE' loop (DEX+BNE = 5 cycles), it
-;;  burns 113.6667 cycles, which is EXACTLY one scanline.
-;;
-;;    This is used as a timing mechanism for some PPU effects like the screen
-;;  wipe transition that occurs when you switch maps.
-;;
-;;    tmp+2 is used as the 3-step counter to switch between waiting 108 and 109
-;;  cycles.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-.align $100
-
-WaitScanline:
-    LDY #16          ; +2 cycles
-   @Loop:
-      DEY            ;   +2
-      BNE @Loop      ;   +3  (5 cycle loop * 16 iterations = 80-1 = 79 cycles for loop)
-
-  CRITPAGECHECK @Loop      ; ensure above loop does not cross page boundary
-
-    LDA tmp+2        ; +3
-    DEC tmp+2        ; +5
-    BNE @NoReload    ; +3 (if no reload -- 2/3)
-                     ;   or +2 (if reload -- 1/3)
-
-  CRITPAGECHECK @NoReload  ; ensure jump to NoReload does not require jump across page boundary
-
-  @Reload:
-    LDA #3           ; +2   Both Reload and NoReload use the same
-    STA tmp+2        ; +3    amount of cycles.. but Reload reloads tmp+2
-    RTS              ; +6    with 3 so that it counts down again
-
-  @NoReload:
-    LDA #0           ; +2
-    LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
-    RTS              ; +6
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3407,36 +3438,6 @@ AltarFrame:
       DEY
       BNE @Loop       ; 5*6 - 1 = 29 for loop
     RTS               ; +6 for RTS = routine exits ~593 cycs into VBl
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Wait an Altar Scanline  [$DB00 :: 0x3DB10]
-;;
-;;    This routine is similar to WaitScanline, however it is specifically applicable
-;;  to the Altar effect because it waits *exactly* 109 cycles (and not 108.66667).  This
-;;  causes a wait a little longer than a full scanline (1 dot longer), which produces a diagonal
-;;  raster effect, rather than a perfect vertical line.
-;;
-;;    JSRing to this routine eats exactly 109 cycles.  When placed inside a 'DEX/BNE' loop,
-;;  this totals 114 cycles (DEX+BNE = 5 cycles) which is 1 dot longer than a scanline.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-.align $100
-
-WaitAltarScanline:   ; CALL to routine = 6 cycles
-    LDY #18          ; +2 = 8
-  @Loop:
-     DEY
-     BNE @Loop       ; 5 cycle loop * 18 iterations - 1 = 89 cycles for loop
-                     ; 8+89 = 97 cycs
-
-       CRITPAGECHECK @Loop
-
-    NOP              ; +2 = 99
-    NOP              ; +2 = 101
-    NOP              ; +2 = 103
-    RTS              ; +6 = 109
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
