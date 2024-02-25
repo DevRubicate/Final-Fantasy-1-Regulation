@@ -1812,7 +1812,7 @@ EnterLineupMenu:
     LDA #$08
     STA soft2000          ; reset soft2000 to typical setup
 
-    CALL LoadMenuCHRPal    ; load menu related CHR and palettes
+    FARCALL LoadMenuCHRPal    ; load menu related CHR and palettes
     CALL ClearNT           ; clear the nametable
 
     LDA #$0A              ; box coords = $0A,$05
@@ -3542,7 +3542,7 @@ IntroTitlePrepare:
     LDA #0
     STA PPUMASK              ; turn off the PPU
 
-    CALL LoadMenuCHRPal     ; Load necessary CHR and palettes
+    FARCALL LoadMenuCHRPal     ; Load necessary CHR and palettes
 
     LDA #$41
     STA music_track        ; Start up the crystal theme music
@@ -6077,7 +6077,7 @@ EnterMainMenu:
     STA PPUMASK           ; turn off the PPU (we need to do some drawing)     
     STA PAPU_EN           ; and silence the APU.  Music sill start next time MusicPlay is called.
 
-    CALL LoadMenuCHRPal        ; load menu related CHR and palettes
+    FARCALL LoadMenuCHRPal        ; load menu related CHR and palettes
     LDX #$0B
   @Loop:                      ; load a few other main menu related palettes
       LDA lutMenuPalettes, X  ; fetch the palette from the LUT

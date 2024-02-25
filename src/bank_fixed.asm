@@ -20,7 +20,7 @@
 .import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
 .import OpenTreasureChest, AddGPToParty, LoadPrice
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart, LoadOWTilesetData, GetBattleFormation
+.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error
@@ -37,7 +37,7 @@
 .export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
 .export DrawEquipMenuStrings, DrawItemBox, EraseBox
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette
-.export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal
+.export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
@@ -5216,15 +5216,13 @@ LoadBridgeSceneGFX:
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
     CALL LoadBattleBGCHRAndPalettes
-    JUMP LoadBatSprCHRPalettes
+    FARJUMP LoadBatSprCHRPalettes
 
-LoadMenuCHRPal:                ; does not load 'lit orb' palette, or the two middle palettes ($03C0-03CB)
-    FARCALL LoadMenuBGCHRAndPalettes
-    JUMP LoadBatSprCHRPalettes
+
 
 LoadShopCHRPal:
     FARCALL LoadShopBGCHRPalettes
-    JUMP LoadBatSprCHRPalettes
+    FARJUMP LoadBatSprCHRPalettes
 
 LoadSMCHR:                     ; standard map -- does not any palettes
     LDA #BANK_MAPCHR
@@ -5539,88 +5537,6 @@ LoadBattleBGCHRPointers:
     STA tmp
     RTS               ;  and exit!
 
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Sprite CHR and Palettes  [$EAB9 :: 0x3EAC9]
-;;
-;;    Comes in 2 flavors.  The first loads all 6 class graphics and the cursor graphic
-;;     This is used for the 'New Game' screen where you select your party
-;;
-;;    Next is the in-game flavor that loads 4 classes based on the characters in
-;;     The party.  It also loads the cursor, as well as other in-battle sprites, such
-;;     as those little magic and weapon animations, and the "fight cloud" that appears
-;;     when you attack an enemy.
-;;
-;;    Both load all palettes used by battle sprites to $03Dx
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;LoadBatSprCHRPalettes_NewGame:
-;    LDA #BANK_BTLCHR
-;    CALL SwapPRG  ; Swap to bank 9
-;    LDA PPUSTATUS      ; Reset PPU Addr Toggle
-;    LDA #$10
-;    STA PPUADDR      ;  set dest PPU Addr to $1000
-;    LDA #$00
-;    STA PPUADDR
-;
-;    LDA #>lut_BatSprCHR    ;  set source pointer
-;    STA tmp+1
-;    LDA #<lut_BatSprCHR
-;    STA tmp
-;
-;    LDX #2*6       ;  12 rows (2 rows per class * 6 classes)
-;    CALL CHRLoad    ; Load up the CHR
-;    
-;    LDA #>(lut_BatObjCHR + $400)  ; change source pointer to bottom half of cursor and related CHR
-;    STA tmp+1
-;    LDX #$04                      ; load 4 rows (bottom half)
-;    CALL CHRLoad_Cont   ; load cursor and other battle related CHR
-;    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
-;    LDA #BANK_MENUS
-;    JUMP SwapPRG      ; and swap to bank E on exit
-;
-
-LoadBatSprCHRPalettes:
-    LDA #BANK_BTLCHR
-    CALL SwapPRG  ; swap to bank 9
-    LDA PPUSTATUS      ; reset ppu addr toggle
-    LDA #$10
-    STA PPUADDR      ; set dest ppu addr to $1000
-    LDA #$00
-    STA PPUADDR
-    STA tmp           ; clear low byte of source pointer
-    LDA ch_class      ; get character 1's class
-    CALL @LoadClass    ;  load it
-    LDA ch_class+$40  ; character 2's
-    CALL @LoadClass
-    LDA ch_class+$80  ; character 3's
-    CALL @LoadClass
-    LDA ch_class+$C0  ; character 4's
-    CALL @LoadClass
-    LDA #>lut_BatObjCHR  ; once all character's class graphics are loaded
-    STA tmp+1            ;   change source pointer to $A800  (start of cursor and related battle CHR)
-    LDX #$08             ; signal to load 8 rows
-
-    CALL CHRLoad_Cont   ; load cursor and other battle related CHR
-    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
-    LDA #BANK_MENUS
-    JUMP SwapPRG      ; and swap to bank E on exit
-
-    @LoadClass:
-
-    ASL A               ; double class index (each class has 2 rows of tiles)
-    CLC
-    ADC #>lut_BatSprCHR ; add high byte of the source pointer
-    STA tmp+1
-    LDX #$02            ; signal to load 2 rows
-    JUMP CHRLoad         ; and load them!
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Load Border Palette  [$EB29 :: 0x3EB39]
@@ -5650,16 +5566,6 @@ LoadBorderPalette_Black:
        LDA #$30
        STA cur_pal+$F   ; White always to color 3
        RTS
-
-
-
-
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
