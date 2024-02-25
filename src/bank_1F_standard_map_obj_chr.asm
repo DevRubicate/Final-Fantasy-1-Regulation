@@ -2,6 +2,8 @@
 
 .include "src/global-import.inc"
 
+.export LoadMapObjCHR
+
 LUT_Standard_Map_Obj_Objects:
     .byte $31, $10, $01, $32, $07, $0d, $34, $44, $01, $35, $0f, $0c, $36, $12, $14, $37
     .byte $05, $06, $38, $1b, $05, $39, $1e, $0b, $00, $00, $00, $00, $00, $00, $00, $00
@@ -776,3 +778,82 @@ LUT_Standard_Map_Obj_CHR:
     .byte $39, $24, $02, $01, $00, $00, $00, $00, $01, $18, $3c, $2e, $2f, $2d, $2d, $5b
     .byte $9c, $24, $40, $80, $00, $00, $00, $00, $80, $18, $3c, $74, $f4, $b4, $b4, $da
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Map Object CHR Loading  [$E99E :: 0x3E9AE]
+;;
+;;   Loads CHR for map objects (townspeople, etc)  For standard maps only
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadMapObjCHR:
+    LDA PPUSTATUS      ; reset PPU toggle
+    LDA #$11
+    STA PPUADDR
+    LDA #$00
+    STA PPUADDR      ; set PPU Addr to $1100 (start of map object CHR)
+
+    LDA #0
+    STA tmp+5      ; 0 -> tmp+5
+    LDA cur_map    ; get current map ID
+    ASL A          ; multiply by 16 (rotating carry into tmp+5)
+    ROL tmp+5
+    ASL A
+    ROL tmp+5
+    ASL A
+    ROL tmp+5
+    ASL A
+    ROL tmp+5
+    STA tmp+4      ; tmp+4 is now 16-bit value:  map_id*16
+
+    LDY tmp+5      ; put high byte in Y (temporary).
+    ASL tmp+4      ; shift again (*32)
+    ROL tmp+5      ; tmp+4 is now 16-bit value:  map_id*32... A,Y are now 16-bit value:  map_id*16
+
+    CLC
+    ADC tmp+4
+    STA tmp+4
+    TYA
+    ADC tmp+5             ; add them together (effectively multiplying by 48).  Carry after this is impossible even if map_id == FF
+    CLC
+    ADC #>LUT_Standard_Map_Obj_Objects  ; add to the high byte of our pointer
+    STA tmp+5             ; (tmp+4) now effectively a pointer to:  LUT_Standard_Map_Obj_Objects + map_id*48
+
+    LDA #<LUT_Standard_Map_Obj_Objects  ; add to the high byte of our pointer
+    CLC
+    ADC tmp+4
+    STA tmp+4
+
+    LDA tmp+5
+    ADC #0
+    STA tmp+5
+
+
+    LDY #0         ; zero out Y (our source index)
+
+  @ObjLoop:
+    LDA (tmp+4), Y       ; get object ID
+    TAX                  ; put it in X
+    LDA LUT_Standard_Map_Obj_Gfx, X ; index to get graphic ID based on object ID
+    CLC
+    ADC #>LUT_Standard_Map_Obj_CHR  ; add to high byte of pointer
+    STA tmp+1
+    LDA #<LUT_Standard_Map_Obj_CHR
+    STA tmp              ; CHR source pointer (tmp) now = lut_MapObjCHR + (graphic_id * $100)
+
+    TYA              ; back up obj source index by pushing it to the stack
+    PHA
+    LDY #0           ; clear Y for upcoming CHR loading loop
+  @CHRLoop:
+      LDA (tmp), Y   ; load 256 bytes of CHR (16 tiles -- 1 row)
+      STA PPUDATA
+      INY
+      BNE @CHRLoop
+    PLA              ; pull obj source index from stack
+    CLC
+    ADC #$03         ; increment it by 3
+    TAY              ; put it back in Y
+    CMP #15*3        ; loop until 15 objects have been loaded
+    BCC @ObjLoop
+
+    RTS              ; then exit

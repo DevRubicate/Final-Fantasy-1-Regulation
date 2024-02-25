@@ -38,6 +38,8 @@
 .import LoadPlayerMapmanCHR
 ; bank_1D_world_map_obj_chr
 .import LoadOWObjectCHR
+; bank_1F_standard_map_obj_chr
+.import LoadMapObjCHR
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -4764,11 +4766,9 @@ LoadShopCHRPal:
     FARJUMP LoadBatSprCHRPalettes
 
 LoadSMCHR:                     ; standard map -- does not any palettes
-    LDA #BANK_MAPCHR
-    CALL SwapPRG
     FARCALL LoadPlayerMapmanCHR
     FARCALL LoadTilesetAndMenuCHR
-    JUMP LoadMapObjCHR
+    FARJUMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
@@ -4834,78 +4834,7 @@ CHRLoad_Cont:
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Map Object CHR Loading  [$E99E :: 0x3E9AE]
-;;
-;;   Loads CHR for map objects (townspeople, etc)  For standard maps only
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadMapObjCHR:
-    LDA PPUSTATUS      ; reset PPU toggle
-    LDA #$11
-    STA PPUADDR
-    LDA #$00
-    STA PPUADDR      ; set PPU Addr to $1100 (start of map object CHR)
-
-    LDA #0
-    STA tmp+5      ; 0 -> tmp+5
-    LDA cur_map    ; get current map ID
-    ASL A          ; multiply by 16 (rotating carry into tmp+5)
-    ROL tmp+5
-    ASL A
-    ROL tmp+5
-    ASL A
-    ROL tmp+5
-    ASL A
-    ROL tmp+5
-    STA tmp+4      ; tmp+4 is now 16-bit value:  map_id*16
-
-    LDY tmp+5      ; put high byte in Y (temporary).
-    ASL tmp+4      ; shift again (*32)
-    ROL tmp+5      ; tmp+4 is now 16-bit value:  map_id*32... A,Y are now 16-bit value:  map_id*16
-
-    CLC
-    ADC tmp+4
-    STA tmp+4
-    TYA
-    ADC tmp+5             ; add them together (effectively multiplying by 48).  Carry after this is impossible even if map_id == FF
-    ADC #>lut_MapObjects  ; add to the high byte of our pointer
-    STA tmp+5             ; (tmp+4) now effectively a pointer to:  lut_MapObjects + map_id*48
-
-    LDY #0         ; zero out Y (our source index)
-
-  @ObjLoop:
-    LDA #BANK_OBJINFO  ; swap to bank containing object info
-    CALL SwapPRG
-    LDA (tmp+4), Y       ; get object ID
-    TAX                  ; put it in X
-    LDA lut_MapObjGfx, X ; index to get graphic ID based on object ID
-    CLC
-    ADC #>lut_MapObjCHR  ; add to high byte of pointer
-    STA tmp+1
-    LDA #<lut_MapObjCHR
-    STA tmp              ; CHR source pointer (tmp) now = lut_MapObjCHR + (graphic_id * $100)
-
-    LDA #BANK_MAPCHR
-    CALL SwapPRG    ; swap to bank containing mapman CHR
-    TYA              ; back up obj source index by pushing it to the stack
-    PHA
-    LDY #0           ; clear Y for upcoming CHR loading loop
-  @CHRLoop:
-      LDA (tmp), Y   ; load 256 bytes of CHR (16 tiles -- 1 row)
-      STA PPUDATA
-      INY
-      BNE @CHRLoop
-    PLA              ; pull obj source index from stack
-    CLC
-    ADC #$03         ; increment it by 3
-    TAY              ; put it back in Y
-    CMP #15*3        ; loop until 15 objects have been loaded
-    BCC @ObjLoop
-
-    RTS              ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
