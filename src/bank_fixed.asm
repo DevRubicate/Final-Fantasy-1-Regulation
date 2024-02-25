@@ -8772,13 +8772,14 @@ Impl_FARJUMP:
         PLA
         STA trampoline_high
 
-
-    ; Load A
-    LDA safecall_reg_a
     ; Load flags
     LDA safecall_reg_flags
     PHA
     PLP
+
+    ; Load A
+    LDA safecall_reg_a
+
     ; Load Y
     LDY safecall_reg_y
         
