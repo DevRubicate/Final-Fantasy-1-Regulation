@@ -3434,7 +3434,7 @@ EnterTitleScreen:
     STA text_ptr+1
     LDA #0
     STA menustall    ; disable menu stalling (PPU is off)
-     CALL DrawComplexString
+    FARCALL DrawComplexString_New
 
     LDA #15          ; next box is same X pos and same dims, but at Y=15
     STA box_y        ;  and contains text "New Game"
@@ -3443,7 +3443,7 @@ EnterTitleScreen:
     STA text_ptr
     LDA #>lut_TitleText_NewGame
     STA text_ptr+1
-      CALL DrawComplexString
+    FARCALL DrawComplexString_New
 
     LDA #20          ; last box is moved left and down a bit (8,20)
     STA box_y        ;  and is a little fatter (wd=16)
@@ -3456,7 +3456,7 @@ EnterTitleScreen:
     STA text_ptr
     LDA #>lut_TitleText_RespondRate
     STA text_ptr+1
-      CALL DrawComplexString
+    FARCALL DrawComplexString_New
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
     STA PAPU_EN               ;   will do this automatically)
