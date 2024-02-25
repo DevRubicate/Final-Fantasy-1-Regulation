@@ -36,7 +36,7 @@
 .import LoadOWBGCHR
 ; bank_1C_mapman_chr
 .import LoadPlayerMapmanCHR
-; bank_1D_mapobj_chr
+; bank_1D_world_map_obj_chr
 .import LoadOWObjectCHR
 
 .export SwapPRG
@@ -4771,8 +4771,6 @@ LoadSMCHR:                     ; standard map -- does not any palettes
     JUMP LoadMapObjCHR
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
-    LDA #BANK_MAPCHR
-    CALL SwapPRG
     FARCALL LoadOWBGCHR
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
