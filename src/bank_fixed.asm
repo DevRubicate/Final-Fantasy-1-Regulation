@@ -36,7 +36,7 @@
 .export SwapPRG
 .export DoOverworld, DrawImageRect, DrawComplexString
 .export DrawPalette, UpdateJoy
-.export DrawBox, UpdateJoy, DrawPalette, DrawComplexString
+.export DrawBox, UpdateJoy, DrawPalette
 .export DrawEquipMenuStrings, EraseBox
 .export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox
@@ -5908,7 +5908,7 @@ DrawEquipMenuStrings:
   @NotEquipped:
     LDA #<(str_buf+$10)          ; finally load the low byte of our text pointer
     STA text_ptr                 ;  why this isn't done above with the high byte is beyond me
-    CALL DrawComplexString        ; then draw the complex string
+    FARCALL DrawComplexString_New; then draw the complex string
 
     PLA                          ; pull the main loop counter
     CLC
