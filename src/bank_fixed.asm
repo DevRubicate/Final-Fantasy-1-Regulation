@@ -41,7 +41,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal
 
 
 .export SwapPRG
@@ -63,6 +63,140 @@
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Do Altar Effect [$DA4E :: 0x3DA5E]
+;;
+;;    This routine performs the "Altar" raster effect.  This effect occurs when you
+;;  step on any one of the four altars which revive the orbs.  It creates a 'beam of light'
+;;  that starts on the screen where the player is standing and moves towards the upper-left
+;;  corner of the screen, while the screen gently shakes and a "voooom" sound effect is played.
+;;
+;;    Music is silenced during this time, and all input is ignored.  The game is essentially
+;;  frozen until this routine exits and the effect is complete (it takes several frames).
+;;
+;;    The routine uses a few areas in temp RAM for a few things:
+;;
+;;    tmp    = number of scanlines to delay before starting to illuminate scanlines
+;;    tmp+1  = number of scanlines to illuminate
+;;    tmp+2  = 0 when the 'beam' is expanding upward from the player sprite to the UL corner
+;;             1 when the 'beam' has reached the UL corner and begins retracting to the UL corner
+;;              (moving away from the player sprite)
+;;    tmp+15 = desired X scroll for the screen (as it needs to be written to PPUSCROLL)
+;;
+;;    "Illuminated" scanlines just have the monochrome effect switched on for part of them.  There
+;;  are no palette changes involved in this effect.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+DoAltarEffect:
+    LDA sm_scroll_x      ; get the X scroll for the map
+    ASL A                ; multiply it by 16 to get the value need to be written to PPUSCROLL
+    ASL A
+    ASL A
+    ASL A
+    STA tmp+15           ; record it for future use in the routine
+
+    LDA NTsoft2000       ; copy the NT scroll to the main soft2000 var
+    STA soft2000         ; 'soft2000' is written to PPUCTRL automatically every frame (in OnNMI)
+                         ; This ensures that the NT scroll will be correct during this routine
+
+    LDA #0
+    STA tmp+2            ; clear the phase (start with beam expanding outward from player)
+    STA altareffect      ; clear the altar effect flag
+
+    LDA #138
+    STA tmp              ; start with a 138 scanline delay before illumination
+    LDA #2
+    STA tmp+1            ; start with 2 scanlines illuminated
+
+    LDA #$30
+    STA PAPU_NCTL1            ; silence all audio channels by writing setting their volume to 0
+    STA PAPU_CTL2
+    STA PAPU_CTL1            ;  note this doesn't silence the triangle because tri has no volume control
+    STA PAPU_TCR1            ; instead it marks the linear counter to silence the triangle after $30 clocks (12 frames)
+
+    LDA #$0E
+    STA PAPU_NFREQ1            ; set noise to play freq $E  (2nd lowest pitch possible for noise)
+    LDA #$00
+    STA PAPU_NFREQ2            ; start noise playback.  Note noise is still inaudible because its vol=0, but will
+                         ; become audible as soon as its volume is changed (see AltarFrame)
+
+    STA PAPU_FT2            ; set sq2's freq to $500 (low pitch) and start playback
+    LDA #$05             ; again it isn't immediately audible, but will be as soon as its vol is changed
+    STA PAPU_CT2
+
+    LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
+
+    @MainLoop:
+
+    CALL AltarFrame         ; do a frame and sync to desired raster time
+
+    LDX tmp                ; delay 'tmp' scanlines
+    @LinesDelay:
+      CALL WaitAltarScanline
+      DEX
+      BNE @LinesDelay
+          PAGECHECK @LinesDelay
+
+    LDX tmp+1              ; then illuminate 'tmp+1' scanlines
+    @LinesIllum:
+      CALL DoAltarScanline
+      DEX
+      BNE @LinesIllum
+          PAGECHECK @LinesIllum
+
+    LDA tmp+2              ; check the phase to see if the beam is expanding/retracting
+    BNE @RetractBeam       ; if retracting, jump ahead
+                           ; otherwise, beam is expanding
+
+  @ExpandBeam:
+    LDA tmp+1           ; inc the number of illuminated scanlines by 2
+    CLC
+    ADC #$02
+    STA tmp+1
+
+    LDA tmp             ; and decrease the delay by 2 (moves top of beam up, but does not move
+    SEC                 ; bottom of beam)
+    SBC #$02
+    STA tmp
+
+    CMP #32             ; see if the delay is < 32 scanlines
+    BCS @MainLoop       ; if not, continue as normal
+
+    LDA #1              ; otherwise (< 32 scanline delay), beam has reached top (but not quite top of screen)
+    STA tmp+2           ; switch the phase over so that it starts retracting the beam.
+    JUMP @MainLoop       ; and continue looping
+
+  @RetractBeam:
+    LDA tmp+1           ; to retract the beam, simply reduce the number of illuminated lines by 2
+    SEC                 ; and do not change the delay
+    SBC #$02
+    STA tmp+1
+
+    CMP #$08            ; keep looping until < 8 lines are illuminated
+    BCS @MainLoop       ;  at which point, we're done
+
+
+  @Done:                ; altar effect is complete
+    NOP
+    NOP
+
+    LDA tmp+15          ; restore the desired X scroll (to undo the possible shaking)
+    STA PPUSCROLL
+
+    LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
+    STA PAPU_CT2           ;  however note that sq2 is currently playing the wrong note (freq was changed for
+    STA PAPU_NCTL1           ;  the sound effect)
+    STA PAPU_CTL2
+
+    LDA #1              ; to prevent sq2 from playing the wrong note, mark it as playing a sound effect so
+    STA sq2_sfx         ; the proper freq will be set by the music playback.
+
+    RTS                 ; then exit!
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -379,7 +513,7 @@ DoOWTransitions:
     STA PPUMASK              ; turn off the PPU
     STA PAPU_EN              ; and APU
 
-    CALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
+    FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
 
     LDA btlformation
     CALL EnterBattle      ; start the battle!
@@ -600,7 +734,7 @@ StandardMapLoop:
     STA PPUMASK
     STA PAPU_EN
 
-    CALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
+    FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
     LDA btlformation
     CALL EnterBattle       ; start the battle!
     BCC :+                  ;  see if this battle was the end game battle
@@ -3275,137 +3409,6 @@ PalCyc_Step:
     RTS                ; then exit
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Altar Effect [$DA4E :: 0x3DA5E]
-;;
-;;    This routine performs the "Altar" raster effect.  This effect occurs when you
-;;  step on any one of the four altars which revive the orbs.  It creates a 'beam of light'
-;;  that starts on the screen where the player is standing and moves towards the upper-left
-;;  corner of the screen, while the screen gently shakes and a "voooom" sound effect is played.
-;;
-;;    Music is silenced during this time, and all input is ignored.  The game is essentially
-;;  frozen until this routine exits and the effect is complete (it takes several frames).
-;;
-;;    The routine uses a few areas in temp RAM for a few things:
-;;
-;;    tmp    = number of scanlines to delay before starting to illuminate scanlines
-;;    tmp+1  = number of scanlines to illuminate
-;;    tmp+2  = 0 when the 'beam' is expanding upward from the player sprite to the UL corner
-;;             1 when the 'beam' has reached the UL corner and begins retracting to the UL corner
-;;              (moving away from the player sprite)
-;;    tmp+15 = desired X scroll for the screen (as it needs to be written to PPUSCROLL)
-;;
-;;    "Illuminated" scanlines just have the monochrome effect switched on for part of them.  There
-;;  are no palette changes involved in this effect.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-DoAltarEffect:
-    LDA sm_scroll_x      ; get the X scroll for the map
-    ASL A                ; multiply it by 16 to get the value need to be written to PPUSCROLL
-    ASL A
-    ASL A
-    ASL A
-    STA tmp+15           ; record it for future use in the routine
-
-    LDA NTsoft2000       ; copy the NT scroll to the main soft2000 var
-    STA soft2000         ; 'soft2000' is written to PPUCTRL automatically every frame (in OnNMI)
-                         ; This ensures that the NT scroll will be correct during this routine
-
-    LDA #0
-    STA tmp+2            ; clear the phase (start with beam expanding outward from player)
-    STA altareffect      ; clear the altar effect flag
-
-    LDA #138
-    STA tmp              ; start with a 138 scanline delay before illumination
-    LDA #2
-    STA tmp+1            ; start with 2 scanlines illuminated
-
-    LDA #$30
-    STA PAPU_NCTL1            ; silence all audio channels by writing setting their volume to 0
-    STA PAPU_CTL2
-    STA PAPU_CTL1            ;  note this doesn't silence the triangle because tri has no volume control
-    STA PAPU_TCR1            ; instead it marks the linear counter to silence the triangle after $30 clocks (12 frames)
-
-    LDA #$0E
-    STA PAPU_NFREQ1            ; set noise to play freq $E  (2nd lowest pitch possible for noise)
-    LDA #$00
-    STA PAPU_NFREQ2            ; start noise playback.  Note noise is still inaudible because its vol=0, but will
-                         ; become audible as soon as its volume is changed (see AltarFrame)
-
-    STA PAPU_FT2            ; set sq2's freq to $500 (low pitch) and start playback
-    LDA #$05             ; again it isn't immediately audible, but will be as soon as its vol is changed
-    STA PAPU_CT2
-
-    LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
-
-@MainLoop:
-    CALL AltarFrame         ; do a frame and sync to desired raster time
-
-    LDX tmp                ; delay 'tmp' scanlines
-    @LinesDelay:
-      CALL WaitAltarScanline
-      DEX
-      BNE @LinesDelay
-          PAGECHECK @LinesDelay
-
-    LDX tmp+1              ; then illuminate 'tmp+1' scanlines
-    @LinesIllum:
-      CALL DoAltarScanline
-      DEX
-      BNE @LinesIllum
-          PAGECHECK @LinesIllum
-
-    LDA tmp+2              ; check the phase to see if the beam is expanding/retracting
-    BNE @RetractBeam       ; if retracting, jump ahead
-                           ; otherwise, beam is expanding
-
-  @ExpandBeam:
-    LDA tmp+1           ; inc the number of illuminated scanlines by 2
-    CLC
-    ADC #$02
-    STA tmp+1
-
-    LDA tmp             ; and decrease the delay by 2 (moves top of beam up, but does not move
-    SEC                 ; bottom of beam)
-    SBC #$02
-    STA tmp
-
-    CMP #32             ; see if the delay is < 32 scanlines
-    BCS @MainLoop       ; if not, continue as normal
-
-    LDA #1              ; otherwise (< 32 scanline delay), beam has reached top (but not quite top of screen)
-    STA tmp+2           ; switch the phase over so that it starts retracting the beam.
-    JUMP @MainLoop       ; and continue looping
-
-  @RetractBeam:
-    LDA tmp+1           ; to retract the beam, simply reduce the number of illuminated lines by 2
-    SEC                 ; and do not change the delay
-    SBC #$02
-    STA tmp+1
-
-    CMP #$08            ; keep looping until < 8 lines are illuminated
-    BCS @MainLoop       ;  at which point, we're done
-
-
-  @Done:                ; altar effect is complete
-    NOP
-    NOP
-
-    LDA tmp+15          ; restore the desired X scroll (to undo the possible shaking)
-    STA PPUSCROLL
-
-    LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
-    STA PAPU_CT2           ;  however note that sq2 is currently playing the wrong note (freq was changed for
-    STA PAPU_NCTL1           ;  the sound effect)
-    STA PAPU_CTL2
-
-    LDA #1              ; to prevent sq2 from playing the wrong note, mark it as playing a sound effect so
-    STA sq2_sfx         ; the proper freq will be set by the music playback.
-
-    RTS                 ; then exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4758,12 +4761,7 @@ LoadBridgeSceneGFX:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadBattleCHRPal:              ; does not load palettes for enemies
-    FARCALL LoadBattleBackdropCHR
-    FARCALL LoadBattleFormationCHR
-    FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
-    FARCALL LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
-    FARJUMP LoadBatSprCHRPalettes
+
 
 LoadShopCHRPal:
     FARCALL LoadShopBGCHRPalettes

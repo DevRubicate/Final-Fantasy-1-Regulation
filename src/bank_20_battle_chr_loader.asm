@@ -2,9 +2,9 @@
 
 .include "src/global-import.inc"
 
-.import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1
+.import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal
 
 
 
@@ -191,6 +191,14 @@ LUT_BackdropPalette:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
+
+
+LoadBattleCHRPal:              ; does not load palettes for enemies
+    CALL LoadBattleBackdropCHR
+    CALL LoadBattleFormationCHR
+    FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
+    CALL LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
+    FARJUMP LoadBatSprCHRPalettes
 
 LoadBattleBackdropCHR:
 
