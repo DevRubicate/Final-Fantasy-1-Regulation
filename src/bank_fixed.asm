@@ -57,7 +57,7 @@
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
-.export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue, LoadBattleBGCHRPointers
+.export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
@@ -4854,54 +4854,6 @@ LoadBattleBGCHRAndPalettes:
     FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
     JUMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Load Battle BG CHR pointers   [$EA7A :: 0x3EA8A]
-;;
-;;
-;;   Takes given Battle BG (or Enemy group image) ID
-;;    Swaps in the bank containing that CHR
-;;    and points (tmp) to the CHR
-;;
-;;   Each Battle BG CHR set is $0800 bytes
-;;
-;;   X, Y are left unchanged
-;;
-;;   IN:   A       = Battle BG ID whose pointers to load
-;;
-;;   OUT:  (tmp)   = Pointer to start of CHR
-;;         *       = Desired bank swapped in
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattleBGCHRPointers:
-    AND #$0F     ; mask with $0F (there are only 16 battle BGs)
-    CMP #$08     ; if the BG is >= 8, then it's on the second bank of Battle BG CHR
-    BCS @SecondBank
-
-       ; otherwise it's on the first bank
-       ASL A          ; multiply index by 8
-       ASL A
-       ASL A
-       ORA #$80       ; and OR with $80 to get the high byte of the pointer
-       STA tmp+1
-       LDA #BANK_BATTLECHR   ; and indicate first bank of Battle BG CHR
-       JUMP @FinishUp
-
-    @SecondBank:
-       AND #$07       ; subtract 8 by masking
-       ASL A
-       ASL A
-       ASL A          ; multiply by 8
-       ORA #$80       ; and OR to get high byte
-       STA tmp+1
-       LDA #BANK_BATTLECHR+1 ; and indiate second bank of Battle BG CHR
-
-    @FinishUp:
-    CALL SwapPRG     ; Swap in indicated bank
-    LDA #$00          ;  and set low byte of pointer to 0
-    STA tmp
-    RTS               ;  and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

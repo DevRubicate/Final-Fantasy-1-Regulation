@@ -30,7 +30,7 @@ lut_BattleFormations:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LUT for battle encounter rates per map  [$8C00 :: 0x2CC10]
-
+.ALIGN $100            ; must be on page bound
 lut_BattleRates:
   .incbin "bin/0B_8C00_mapencounterrates.bin"
 
