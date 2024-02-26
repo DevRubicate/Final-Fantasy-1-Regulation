@@ -5,7 +5,7 @@
 .import DrawCursor, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes, LoadMenuBGCHRAndPalettes, LoadBackdropPalette
 
 .export DrawEquipMenuCursSecondary, DrawEquipMenuCurs, LoadBatSprCHRPalettes_NewGame, LoadNewGameCHRPal, LoadMenuCHRPal, LoadBatSprCHRPalettes
-.export LoadBattleBackdropPalette
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -160,23 +160,6 @@ LoadBatSprCHRPalettes:
     STA tmp
     LDX #$02            ; signal to load 2 rows
     JUMP CHRLoad         ; and load them!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Backdrop Palette  [$EB7C :: 0x3EB8C]
-;;
-;;   Loads required battle backdrop palette.  Note the difference between this and
-;;    LoadBackdropPalette.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattleBackdropPalette:
-    LDX ow_tile              ; Get last OW tile stepped on
-    LDA LUT_BtlBackdrops, X  ; use it to index and get battle backdrop ID
-    AND #$0F                 ; multiply ID by 4
-    ASL A
-    ASL A                    ; and load up the palette
-    FARJUMP LoadBackdropPalette
 
 
 
@@ -2488,21 +2471,3 @@ LUT_BatObjCHR:
   .byte $00
   .byte $00
   .byte $00
-
-LUT_BtlBackdrops:
-    .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
-    .byte $ff, $ff, $ff, $04, $04, $04, $03, $03, $03, $ff, $ff, $09, $09, $0b, $06, $ff
-    .byte $ff, $ff, $ff, $04, $04, $04, $00, $03, $00, $09, $09, $0d, $ff, $ff, $ff, $02
-    .byte $ff, $ff, $02, $ff, $02, $02, $06, $06, $09, $09, $02, $00, $ff, $ff, $ff, $00
-    .byte $0a, $0a, $06, $06, $0a, $06, $0f, $ff, $ff, $00, $03, $ff, $00, $00, $00, $ff
-    .byte $0a, $0a, $06, $06, $00, $07, $00, $05, $05, $00, $00, $ff, $ff, $0c, $ff, $ff
-    .byte $00, $00, $07, $07, $0e, $0e, $02, $02, $02, $02, $02, $ff, $02, $00, $01, $ff
-    .byte $00, $00, $07, $07, $00, $00, $00, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00

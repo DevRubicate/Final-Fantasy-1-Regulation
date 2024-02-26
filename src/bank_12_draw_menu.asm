@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import CHRLoadToA, LoadBorderPalette_Blue
+.import CHRLoadToA
 
 .export LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadShopBGCHRPalettes, LoadBackdropPalette, LoadShopBGCHRPalettes
 
@@ -105,6 +105,30 @@ LoadBackdropPalette:
     STA cur_pal+3
     RTS
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Border Palette  [$EB29 :: 0x3EB39]
+;;
+;;    Loads the greyscale palette used for the border in menus
+;;   The routine has 2 entry points... one to load the BLACK bg (used in battle)
+;;   and one to load the BLUE bg (used in menus/shops)
+;;
+;;   X,Y remain unchanged
+;;
+;;   OUT:  $03CC-03CF = border palette
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBorderPalette_Blue:
+    LDA #$01
+    STA cur_pal+$E   ; Blue goes to color 2
+    LDA #$0F
+    STA cur_pal+$C   ; Black always to color 0
+    LDA #$00
+    STA cur_pal+$D   ; Grey always to color 1
+    LDA #$30
+    STA cur_pal+$F   ; White always to color 3
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

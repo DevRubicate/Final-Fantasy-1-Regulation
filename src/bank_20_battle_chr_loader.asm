@@ -4,7 +4,7 @@
 
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes
 
 
 
@@ -162,6 +162,35 @@ LUT_BattleFormations:
     .byte $01, $20, $0e, $0d, $0f, $00, $00, $00, $99, $00, $08, $0b, $04, $a1, $12, $88
     .byte $2b, $0e, $69, $6e, $00, $00, $11, $00, $00, $00, $13, $2e, $04, $41, $00, $12
 
+LUT_BackdropPalette:
+    .byte $0f, $31, $29, $30, $0f, $0c, $17, $07, $0f, $1c, $2b, $1b, $0f, $30, $3c, $22
+    .byte $0f, $18, $0a, $1c, $0f, $3c, $1c, $0c, $0f, $37, $31, $28, $0f, $27, $17, $1c
+    .byte $0f, $1a, $17, $07, $0f, $30, $10, $00, $0f, $22, $1a, $10, $0f, $37, $10, $00
+    .byte $0f, $21, $12, $03, $0f, $31, $22, $13, $0f, $26, $16, $06, $0f, $2b, $1c, $0c
+    .byte $0f, $30, $00, $31, $0f, $10, $27, $17, $0f, $3c, $1c, $0c, $0f, $3b, $1b, $0b
+    .byte $0f, $37, $16, $10, $0f, $36, $16, $07, $0f, $37, $17, $07, $0f, $30, $28, $16
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
+    .byte $ff, $ff, $ff, $04, $04, $04, $03, $03, $03, $ff, $ff, $09, $09, $0b, $06, $ff
+    .byte $ff, $ff, $ff, $04, $04, $04, $00, $03, $00, $09, $09, $0d, $ff, $ff, $ff, $02
+    .byte $ff, $ff, $02, $ff, $02, $02, $06, $06, $09, $09, $02, $00, $ff, $ff, $ff, $00
+    .byte $0a, $0a, $06, $06, $0a, $06, $0f, $ff, $ff, $00, $03, $ff, $00, $00, $00, $ff
+    .byte $0a, $0a, $06, $06, $00, $07, $00, $05, $05, $00, $00, $ff, $ff, $0c, $ff, $ff
+    .byte $00, $00, $07, $07, $0e, $0e, $02, $02, $02, $02, $02, $ff, $02, $00, $01, $ff
+    .byte $00, $00, $07, $07, $00, $00, $00, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
 
 LoadBattleBackdropCHR:
 
@@ -305,3 +334,69 @@ LoadBattleFormationCHR:
     LDY #$20
     LDX #7                  ; load 7 rows              
     JUMP Impl_FARPPUCOPY
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Battle BG Palettes  [$EB8D :: 0x3EB9D]
+;;
+;;    Loads both the Battle Backdrop palette, and border palette
+;;    Does not load sprite palettes or palette for the enemies
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBattleBGPalettes:
+    CALL LoadBattleBackdropPalette
+    LDA #$0F
+    STA cur_pal+$E   ; Black to color 2
+    LDA #$0F
+    STA cur_pal+$C   ; Black always to color 0
+    LDA #$00
+    STA cur_pal+$D   ; Grey always to color 1
+    LDA #$30
+    STA cur_pal+$F   ; White always to color 3
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Battle Backdrop Palette  [$EB7C :: 0x3EB8C]
+;;
+;;   Loads required battle backdrop palette.  Note the difference between this and
+;;    LoadBackdropPalette.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBattleBackdropPalette:
+    LDX ow_tile              ; Get last OW tile stepped on
+    LDA LUT_BtlBackdrops, X  ; use it to index and get battle backdrop ID
+    AND #$0F                 ; multiply ID by 4
+    ASL A
+    ASL A                    ; and load up the palette
+    NOJUMP LoadBackdropPalette
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Backdrop Palette  [$EB5A :: 0x3EB6A]
+;;
+;;   Fetches palette for desired backdrop (battle or shop).
+;;
+;;   Y is unchanged
+;;
+;;   IN:   A = backdrop ID * 4
+;;         * = Required bank must be swapped in
+;;
+;;   OUT:  $03C0-03C4 = backdrop palette
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBackdropPalette:
+    TAX                       ; backdrop ID * 4 in X for indexing
+    LDA LUT_BackdropPalette, X    ; copy the palette over
+    STA cur_pal
+    LDA LUT_BackdropPalette+1, X
+    STA cur_pal+1
+    LDA LUT_BackdropPalette+2, X
+    STA cur_pal+2
+    LDA LUT_BackdropPalette+3, X
+    STA cur_pal+3
+    RTS
+

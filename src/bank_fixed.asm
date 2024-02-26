@@ -41,7 +41,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes
 
 
 .export SwapPRG
@@ -57,7 +57,7 @@
 .export BattleCrossPageJump, ClearBattleMessageBuffer
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
-.export LoadBattleBGCHRAndPalettes, CHRLoadToA, LoadBorderPalette_Blue
+.export CHRLoadToA
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
@@ -4759,10 +4759,11 @@ LoadBridgeSceneGFX:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
-    CALL LoadBattleBGCHRAndPalettes
+    FARCALL LoadBattleBackdropCHR
+    FARCALL LoadBattleFormationCHR
+    FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
+    FARCALL LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
     FARJUMP LoadBatSprCHRPalettes
-
-
 
 LoadShopCHRPal:
     FARCALL LoadShopBGCHRPalettes
@@ -4837,78 +4838,6 @@ CHRLoad_Cont:
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
  
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LoadBattleBGCHRAndPalettes  [$EA28 :: 0x3EA38]
-;;
-;;   Loads all BG CHR (but not sprite CHR) for battle
-;;  Also loads palettes for backdrop and border, but not for sprites or enemies
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattleBGCHRAndPalettes:
-    FARCALL LoadBattleBackdropCHR
-    FARCALL LoadBattleFormationCHR
-    FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
-    JUMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Border Palette  [$EB29 :: 0x3EB39]
-;;
-;;    Loads the greyscale palette used for the border in menus
-;;   The routine has 2 entry points... one to load the BLACK bg (used in battle)
-;;   and one to load the BLUE bg (used in menus/shops)
-;;
-;;   X,Y remain unchanged
-;;
-;;   OUT:  $03CC-03CF = border palette
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBorderPalette_Blue:
-    LDA #$01
-    BNE :+         ; always branches
-
-LoadBorderPalette_Black:
-    LDA #$0F
-
-    :  STA cur_pal+$E   ; Black or Blue goes to color 2
-       LDA #$0F
-       STA cur_pal+$C   ; Black always to color 0
-       LDA #$00
-       STA cur_pal+$D   ; Grey always to color 1
-       LDA #$30
-       STA cur_pal+$F   ; White always to color 3
-       RTS
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle BG Palettes  [$EB8D :: 0x3EB9D]
-;;
-;;    Loads both the Battle Backdrop palette, and border palette
-;;    Does not load sprite palettes or palette for the enemies
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattleBGPalettes:
-    FARCALL LoadBattleBackdropPalette
-    JUMP LoadBorderPalette_Black
-
-    ;; Faux routine -- same as above but gives the menus a blue background instead of black
-    ;;   I do not believe this code is ever used by the game
-
-Faux_LoadBattleBGPalettes:
-    FARCALL LoadBattleBackdropPalette
-    JUMP LoadBorderPalette_Blue
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
