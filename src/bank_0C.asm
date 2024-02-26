@@ -10,7 +10,7 @@
 .import BattleOver_ProcessResult
 .import Impl_Call_Bank1
 
-.export lut_BattlePalettes, BankC_CrossBankJumpList
+.export BankC_CrossBankJumpList
 
 
 
@@ -96,15 +96,6 @@ lut_MagicBattleMessages:
 data_EnemyStats:
   .incbin "bin/0C_8520_enemydata.bin"
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LUT for Battle Palettes [$8F20 :: 0x30F30]
-;;
-;;    LUT of 64 4-byte palettes for use with battle formations
-
-lut_BattlePalettes:
-  .incbin "bin/0C_8F20_battlepalettes.bin"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

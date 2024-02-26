@@ -4,14 +4,7 @@
 
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal
-
-
-
-
-
-
-
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -30,7 +23,6 @@ LUT_BtlBackdrops:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
 
 LUT_BattleFormations:
     .byte $00, $00, $00, $01, $00, $00, $35, $00, $00, $00, $00, $01, $04, $40, $36, $04
@@ -191,7 +183,29 @@ LUT_BackdropPalette:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  LUT for Battle Palettes [$8F20 :: 0x30F30]
+;;
+;;    LUT of 64 4-byte palettes for use with battle formations
 
+LUT_BattlePalettes:
+    .byte $0f, $36, $27, $16, $0f, $36, $22, $13, $0f, $25, $29, $1b, $0f, $23, $26, $16
+    .byte $0f, $24, $30, $22, $0f, $26, $2b, $19, $0f, $3a, $16, $1b, $0f, $30, $31, $22
+    .byte $0f, $37, $26, $16, $0f, $30, $2b, $1c, $0f, $36, $21, $12, $0f, $30, $28, $19
+    .byte $0f, $30, $23, $1b, $0f, $37, $25, $16, $0f, $38, $26, $14, $0f, $23, $29, $19
+    .byte $0f, $17, $31, $1c, $0f, $36, $26, $14, $0f, $25, $2b, $19, $0f, $30, $2c, $13
+    .byte $0f, $30, $22, $12, $0f, $2b, $26, $16, $0f, $16, $2c, $18, $0f, $23, $30, $00
+    .byte $0f, $30, $28, $1c, $0f, $30, $2a, $18, $0f, $32, $1c, $0c, $0f, $37, $27, $13
+    .byte $0f, $16, $37, $18, $0f, $30, $28, $17, $0f, $25, $2b, $19, $0f, $30, $12, $16
+    .byte $0f, $37, $16, $13, $0f, $30, $28, $1a, $0f, $36, $26, $16, $0f, $30, $37, $1a
+    .byte $0f, $30, $32, $0c, $0f, $30, $26, $16, $0f, $30, $27, $12, $0f, $30, $27, $16
+    .byte $0f, $30, $2c, $1c, $0f, $36, $26, $16, $0f, $26, $3c, $1b, $0f, $25, $2a, $1a
+    .byte $0f, $1b, $27, $16, $0f, $37, $32, $00, $0f, $37, $10, $1c, $0f, $30, $26, $00
+    .byte $0f, $17, $38, $18, $0f, $13, $37, $1b, $0f, $30, $27, $18, $0f, $14, $30, $22
+    .byte $0f, $36, $26, $16, $0f, $36, $10, $00, $0f, $30, $28, $04, $0f, $30, $16, $23
+    .byte $0f, $16, $14, $30, $0f, $16, $14, $28, $0f, $27, $30, $23, $0f, $3b, $13, $23
+    .byte $0f, $16, $2b, $12, $0f, $27, $2b, $13, $0f, $23, $28, $18, $0f, $30, $28, $18
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
     CALL LoadBattleBackdropCHR
@@ -408,3 +422,31 @@ LoadBackdropPalette:
     STA cur_pal+3
     RTS
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Battle Palette  [$F471 :: 0x3F481]
+;;
+;;    Loads a single (4-color) battle palette into 'btl_palettes' with the given
+;;  offset.
+;;
+;;  IN:  A = ID of battle palette (as stored in the battle formation data)
+;;       Y = offset from which to index btl_palettes
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBattlePalette:
+    ASL A             ; multiply the palette ID by 4 (4 colors per palette)
+    ASL A
+    TAX               ; throw in X
+    LDA #4
+    STA btltmp+10     ; set the loop down counter
+
+  @Loop:
+      LDA LUT_BattlePalettes, X   ; get the color from the ROM
+      STA btl_palettes, Y         ; write it to our output buffer
+      INX             ; inc our indeces
+      INY
+      DEC btltmp+10   ; dec our loop counter
+      BNE @Loop       ; and loop until it expires (4 iterations)
+
+    RTS               ; then exit!

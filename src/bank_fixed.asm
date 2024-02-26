@@ -40,7 +40,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette
 ; bank_21_altar
 .import DoAltarEffect
 ; bank_22_bridge
@@ -5093,10 +5093,10 @@ EnterBattle:
 
     LDA btlform_plts          ; use the formation data to get the ID of the palettes to load
     LDY #4                    ;   load the first one into the 2nd palette slot ($xxx4)
-    CALL LoadBattlePalette
+    FARCALL LoadBattlePalette
     LDA btlform_plts+1        ;   and the second one into the 3rd slot ($xxx8)
     LDY #8
-    CALL LoadBattlePalette
+    FARCALL LoadBattlePalette
 
   ;; Draw the battle backdrop
 
@@ -5325,34 +5325,6 @@ BattleScreenShake:
     CALL WaitForVBlank
     JUMP BattleUpdateAudio_FixedBank
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Palette  [$F471 :: 0x3F481]
-;;
-;;    Loads a single (4-color) battle palette into 'btl_palettes' with the given
-;;  offset.
-;;
-;;  IN:  A = ID of battle palette (as stored in the battle formation data)
-;;       Y = offset from which to index btl_palettes
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattlePalette:
-    ASL A             ; multiply the palette ID by 4 (4 colors per palette)
-    ASL A
-    TAX               ; throw in X
-    LDA #4
-    STA btltmp+10     ; set the loop down counter
-
-  @Loop:
-      LDA lut_BattlePalettes, X   ; get the color from the ROM
-      STA btl_palettes, Y         ; write it to our output buffer
-      INX             ; inc our indeces
-      INY
-      DEC btltmp+10   ; dec our loop counter
-      BNE @Loop       ; and loop until it expires (4 iterations)
-
-    RTS               ; then exit!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
