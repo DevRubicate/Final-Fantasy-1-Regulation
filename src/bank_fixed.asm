@@ -7,7 +7,7 @@
 
 .import MinimapDecompress
 .import EnterMinimap
-.import data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, lut_BattleFormations, data_BattleMessages
+.import data_EnemyNames, PrepBattleVarsAndEnterBattle, lut_BattleRates, data_BattleMessages, lut_BattleFormations
 .import lut_BattlePalettes
 .import EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .import PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
@@ -41,7 +41,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR
 
 
 .export SwapPRG
@@ -4849,38 +4849,8 @@ CHRLoad_Cont:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleBGCHRAndPalettes:
-
     FARCALL LoadBattleBackdropCHR
-
-    LDA btlformation ; get battle formation number
-    ASL A            ; multiply it by 16
-    ASL A
-    ASL A
-    ASL A
-    STA tmp+4        ; put low byte in tmp+4
-    LDA btlformation
-    AND #$7F         ; drop the "Formation B" bit
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    CLC
-    ADC #>lut_BattleFormations   ; add to high byte of pointer
-    STA tmp+5         ; and put it in $15.  (tmp+4) now points to lut_BattleFormations+(formation * 16)
-
-    LDA #BANK_BTLDATA ; swap to required bank
-    CALL SwapPRG
-
-    LDY #0
-    LDA (tmp+4), Y   ; load Enemy CHR page ID from Battle formation data
-    AND #$0F         ;  mask out lower bits (higher bits are different formation data)
-    LDY #$20         ; set Y to #$20, so that CHR loading will continue 2 tiles into the row
-    STA enCHRpage    ; put Enemy CHR page ID in enCHRpage (for future use?)
-
-    CALL LoadBattleBGCHRPointers    ; load pointers for Enemy CHR
-    INC tmp+1                      ; increment high byte of pointer (enemy CHR starts 1 row in, before that is battle backdrop)
-    LDX #$07                       ; load 7 rows
-    CALL CHRLoad_Cont               ;   continue CHR loading from Y=$20
+    FARCALL LoadBattleFormationCHR
     FARCALL LoadMenuCHR                ; load CHR for font/menu/etc
     JUMP LoadBattleBGPalettes       ; finally.. load palettes for menu and backdrop
 
