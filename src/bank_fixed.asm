@@ -40,6 +40,9 @@
 .import LoadOWObjectCHR
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
+; bank_20_battle_bg_chr
+.import LoadBattleBackdropCHR
+
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -59,7 +62,7 @@
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
-.export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2
+.export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4846,22 +4849,8 @@ CHRLoad_Cont:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBattleBGCHRAndPalettes:
-    LDA #BANK_OWINFO              ; Swap to BANK_OWINFO
-    CALL SwapPRG
 
-    LDX ow_tile                   ; Get last OW tile we stepped on
-    LDA lut_BtlBackdrops, X       ; Use it as an index to get the backdrop ID
-    CALL LoadBattleBGCHRPointers   ; Swap in desired bank, and set up pointers to battle backdrop
-    LDA #$00                      ; Dest address = $0000
-    LDX #$01                      ; Load 1 row of tiles
-    CALL CHRLoadToA                ; Load up the CHR
-
-  @Loop:                  ; Battle backdrops are actually 1 row + 2 tiles ($12 tiles)
-      LDA (tmp), Y        ;   so loop to load another 2 tiles ($20 bytes)
-      STA PPUDATA
-      INY
-      CPY #$20
-      BCC @Loop
+    FARCALL LoadBattleBackdropCHR
 
     LDA btlformation ; get battle formation number
     ASL A            ; multiply it by 16
@@ -4929,7 +4918,7 @@ LoadBattleBGCHRPointers:
        LDA #BANK_BATTLECHR   ; and indicate first bank of Battle BG CHR
        JUMP @FinishUp
 
-@SecondBank:
+    @SecondBank:
        AND #$07       ; subtract 8 by masking
        ASL A
        ASL A
@@ -4938,7 +4927,7 @@ LoadBattleBGCHRPointers:
        STA tmp+1
        LDA #BANK_BATTLECHR+1 ; and indiate second bank of Battle BG CHR
 
-@FinishUp:
+    @FinishUp:
     CALL SwapPRG     ; Swap in indicated bank
     LDA #$00          ;  and set low byte of pointer to 0
     STA tmp
@@ -7949,6 +7938,20 @@ Impl_FARBYTE2:
     LDA current_bank1
     STA MMC5_PRG_BANK1
     PLA
+    RTS
+
+Impl_FARPPUCOPY:
+    STA MMC5_PRG_BANK1
+    @loop:
+            LDA (tmp), Y      ; read a byte from source pointer
+            STA PPUDATA       ; and write it to CHR-RAM
+            INY               ; inc our source index
+        BNE @loop         ; if it didn't wrap, continue looping
+        INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
+        DEX               ; and decrement our row counter (256 bytes = a full row of tiles)
+    BNE @loop         ; if we've loaded all requested rows, exit.  Otherwise continue loading
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
     RTS
 
 Impl_FARJUMP:
