@@ -40,7 +40,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow
 ; bank_21_altar
 .import DoAltarEffect
 ; bank_22_bridge
@@ -5049,16 +5049,16 @@ EnterBattle:
 
     LDA #<$2042                 ; draw the first row of the backdrop
     LDY #0<<2                   ;  to $2042
-    CALL DrawBattleBackdropRow
+    FARCALL DrawBattleBackdropRow
     LDA #<$2062                 ; then at $2062
     LDY #1<<2                   ;   draw the next row
-    CALL DrawBattleBackdropRow
+    FARCALL DrawBattleBackdropRow
     LDA #<$2082                 ; etc
     LDY #2<<2
-    CALL DrawBattleBackdropRow
+    FARCALL DrawBattleBackdropRow
     LDA #<$20A2
     LDY #3<<2
-    CALL DrawBattleBackdropRow   ; 4 rows total
+    FARCALL DrawBattleBackdropRow   ; 4 rows total
 
   ;; Clear the '$FF' tile so it's fully transparent instead of
   ;;   fully solid (normally is innards of box body)
@@ -5079,52 +5079,6 @@ EnterBattle:
     STA battle_bank
     CALL SwapPRG
     JMP PrepBattleVarsAndEnterBattle            ; and jump to battle routine!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Battle Backdrop Row  [$F385 :: 0x3F395]
-;;
-;;    Draws one row of NT data for the battle backdrop.  Does not
-;;  do any attribute updates.
-;;
-;;  IN:  A = low byte of target PPU Addr
-;;       Y = tile additive (added to each drawn tile)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleBackdropRow:
-    LDX #$20
-    CALL SetPPUAddr_XA    ; set PPU address to $20nn where A=nn
-
-    STY btltmp+10        ; record tile additive for future use
-    LDY #14
-    STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
-    CALL @Section         ; draw first section
-
-    LDA PPUDATA            ; inc the PPU address by 2 to skip over those two bars of
-    LDA PPUDATA            ;  the box boundaries.
-
-    LDY #6               ; do 6 columns for the second section
-    STY btltmp+11
-    NOJUMP @Section         ; draw second section and exit
-
-
-  @Section:
-    LDX #0
-   @Loop:
-      LDA @lut_BackdropLayout, X   ; get the tile to draw in this column
-      CLC
-      ADC btltmp+10                ; add to that our additive (to draw the right row)
-      STA PPUDATA                    ; draw the tile
-      INX                          ; inc our loop counter
-      CPX btltmp+11                ; and loop until we've drawn the desired number of columns
-      BNE @Loop
-    RTS
-
-  ;; the layout of the battle backdrop -- the way the columns are arranged
-
-    @lut_BackdropLayout:
-  .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

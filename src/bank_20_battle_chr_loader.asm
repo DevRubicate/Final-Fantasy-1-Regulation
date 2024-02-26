@@ -4,7 +4,7 @@
 
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -450,3 +450,50 @@ LoadBattlePalette:
       BNE @Loop       ; and loop until it expires (4 iterations)
 
     RTS               ; then exit!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Battle Backdrop Row  [$F385 :: 0x3F395]
+;;
+;;    Draws one row of NT data for the battle backdrop.  Does not
+;;  do any attribute updates.
+;;
+;;  IN:  A = low byte of target PPU Addr
+;;       Y = tile additive (added to each drawn tile)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBattleBackdropRow:
+    LDX #$20
+    STX PPUADDR   ; write X as high byte
+    STA PPUADDR   ; A as low byte
+
+    STY btltmp+10        ; record tile additive for future use
+    LDY #14
+    STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
+    CALL @Section         ; draw first section
+
+    LDA PPUDATA            ; inc the PPU address by 2 to skip over those two bars of
+    LDA PPUDATA            ;  the box boundaries.
+
+    LDY #6               ; do 6 columns for the second section
+    STY btltmp+11
+    NOJUMP @Section         ; draw second section and exit
+
+
+  @Section:
+    LDX #0
+   @Loop:
+      LDA @lut_BackdropLayout, X   ; get the tile to draw in this column
+      CLC
+      ADC btltmp+10                ; add to that our additive (to draw the right row)
+      STA PPUDATA                    ; draw the tile
+      INX                          ; inc our loop counter
+      CPX btltmp+11                ; and loop until we've drawn the desired number of columns
+      BNE @Loop
+    RTS
+
+  ;; the layout of the battle backdrop -- the way the columns are arranged
+
+    @lut_BackdropLayout:
+  .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
