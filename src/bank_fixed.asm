@@ -45,6 +45,8 @@
 .import DoAltarEffect
 ; bank_22_bridge
 .import LoadBridgeSceneGFX
+; bank_23_epilogue
+.import LoadEpilogueSceneGFX
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -580,7 +582,7 @@ StandardMapLoop:
     BCC :+                  ;  see if this battle was the end game battle
 
     @VictoryLoop:
-      CALL LoadEpilogueSceneGFX
+      FARCALL LoadEpilogueSceneGFX
       FARCALL EnterEndingScene
       JUMP @VictoryLoop
 
@@ -4417,45 +4419,6 @@ LoadSingleMapObject:
 
     RTS                     ; and exit!
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Epilogue Scene GFX  [$E89C :: 0x3E8AC]
-;;
-;;    Loads all CHR required for the epilogue scene.  Also
-;;  loads the nametables for the bridge/ending scene!
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadEpilogueSceneGFX:
-    LDA #$00                ; This routine is 100% identical to 
-    STA PPUMASK               ;   LoadBridgeSceneGFX below, except it loads CHR from
-    STA PAPU_EN               ;   a different address.
-    
-    LDA #<data_EpilogueCHR
-    STA tmp
-    LDA #>data_EpilogueCHR
-    STA tmp+1
-    
-    LDX #$08
-    
-    LDA #BANK_EPILOGUEGFX
-    CALL SwapPRG
-    
-    LDA #$00
-    CALL CHRLoadToA
-    
-    LDX #4
-    LDA #$20
-    CALL CHRLoadToA
-    
-    LDA #>data_EpilogueNT
-    STA tmp+1
-    LDX #4
-    CALL CHRLoad_Cont
-    
-    FARJUMP LoadMenuCHR
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Misc "Master" CHR/Palette loading routines  [$E8FA :: 0x3E90A]
@@ -4464,8 +4427,6 @@ LoadEpilogueSceneGFX:
 ;;  situation.  Some also load most/all the palettes.  Exceptions will be noted
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 LoadShopCHRPal:
     FARCALL LoadShopBGCHRPalettes
@@ -4480,8 +4441,6 @@ LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

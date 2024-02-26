@@ -6,7 +6,6 @@
 
 .export LoadBridgeSceneGFX
 
-
 BridgeCHR:
     .byte $ff, $fe, $e8, $c0, $80, $80, $00, $00, $ff, $fe, $e8, $c0, $a0, $80, $00, $00
     .byte $ff, $fe, $00, $01, $ff, $ff, $ff, $fb, $01, $ff, $fe, $00, $00, $00, $04, $f8

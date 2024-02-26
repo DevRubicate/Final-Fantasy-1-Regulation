@@ -84,11 +84,6 @@ lut_MagicBattleMessages:
   .byte $00, $00, $00, $00,  $00, $00, $16, $15,    $00, $1F, $00, $00,  $00, $00, $4D, $00     ; enemy attacks
   .byte $00, $00, $15, $00,  $00, $00, $00, $00,    $00, $00
 
-
-  ; unused padding:
-  .byte $00, $00, $00, $00
-  
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Data for enemy stats [$8520 :: 0x30530]
@@ -6112,7 +6107,6 @@ DoubleXAndY:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadEnemyStats:
-    LDA btl_enemycount      ; useless, as this is immediately discarded
     LDA #$09
     STA tmp_6bd1               ; loop down-counter
     LDA #$00
@@ -9178,7 +9172,7 @@ DrawEnemyEffect:
       BNE @EraseLoop
       
   @Exit:
-    JUMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9285,7 +9279,7 @@ EraseSmallEnemy:
       DEC btltmp
       BNE :-                        ; dec loop counter and loop
       
-    JUMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9296,7 +9290,7 @@ EraseSmallEnemy:
 
 __DrawEnemyEffect_9Small_Exit:
     PLA
-    JUMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9405,11 +9399,11 @@ DrawEnemyEffect_4Large:
       CALL MoveDown1Row_UpdateAudio
       DEC btltmp
       BNE :-
-    JUMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes
 
   @Exit:
     PLA
-    JUMP SwapBtlTmpBytes_Local
+    JUMP SwapBtlTmpBytes
 
   ; [$BD7A :: 0x33D8A]
   @lut_ExplosionCoords_4Large:
@@ -9467,7 +9461,9 @@ DrawEnemyEffect_Mix:
     TAX
     
     LDA btl_enemyeffect
-    BEQ SwapBtlTmpBytes_Local   ; exit unless the enemyeffect is set to erase the enemy
+    BNE @noJump   ; exit unless the enemyeffect is set to erase the enemy
+    JUMP SwapBtlTmpBytes
+    @noJump:
     
     LDA lut_EraseEnemyPPUAddress_Mix_Small, X
     STA btltmp+$A
@@ -9484,18 +9480,6 @@ DrawEnemyEffect_Mix:
     .byte $60, $30
     .byte $60, $70
   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  SwapBtlTmpBytes_Local  [$BDD8 :: 0x33DE8]
-;;
-;;    wtf why does this exist?  Why not just call SwapBtlTmpBytes directly?
-;;  This makes no sense.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SwapBtlTmpBytes_Local:
-    JUMP SwapBtlTmpBytes
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawExplosions  [$BDDB :: 0x33DEB]
@@ -9955,10 +9939,3 @@ data_BattleSoundEffects:
   .byte $00, $00, $00, $00, $01,     $00, $00, $01
   
   
-; BFFB - unused
-  .byte $00
-  .byte $00
-  .byte $01
-  .byte $09
-  .byte $07
-
