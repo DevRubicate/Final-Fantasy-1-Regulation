@@ -12,7 +12,7 @@
 .import PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .import TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
-.import data_EpilogueCHR, data_EpilogueNT, data_BridgeCHR, data_BridgeNT
+.import data_EpilogueCHR, data_EpilogueNT, data_BridgeNT
 .import EnvironmentStartupRoutine
 .import BattleRNG, GetSMTargetCoords, CanTalkToMapObject
 .import DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
@@ -43,6 +43,8 @@
 .import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal
 ; bank_21_altar
 .import DoAltarEffect
+; bank_22_bridge
+.import LoadBridgeSceneGFX
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -60,7 +62,7 @@
 .export CHRLoadToA
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
-.export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc, LoadBridgeSceneGFX
+.export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 
@@ -278,27 +280,28 @@ DoOWTransitions:
     BEQ @SkipBridgeScene  ;   if not triggered... skip it
     BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
 
-      LDA #0
-      CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
+    LDA #0
+    CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
 
-      CALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
-      FARCALL EnterBridgeScene ; do the bridge scene.
+    FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
+    FARCALL EnterBridgeScene ; do the bridge scene.
 
-      LDA #$04
-      CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
-      JUMP EnterOW_PalCyc  ; then re-enter overworld
+    LDA #$04
+    CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
+    JUMP EnterOW_PalCyc  ; then re-enter overworld
 
-  @SkipBridgeScene:
+    @SkipBridgeScene:
+
     LDA entering_shop     ; see if we're entering a shop (caravan)
     BEQ @SkipShop         ; if not... skip it
 
-      FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
-      LDA #$00
-      CALL CyclePalettes   ; cycle out the palette
-      FARCALL EnterShop       ; and enter the shop!
-      JUMP EnterOW_PalCyc  ; then re-enter overworld
+    FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
+    LDA #$00
+    CALL CyclePalettes   ; cycle out the palette
+    FARCALL EnterShop       ; and enter the shop!
+    JUMP EnterOW_PalCyc  ; then re-enter overworld
 
-  @SkipShop:
+    @SkipShop:
     BIT tileprop+1      ; check properties of tile we just moved to
     BMI @Teleport       ; if bit 7 set.. it's a teleport tile
     BVS @Battle         ; otherwise... if bit 6 set, we are to engage in battle
@@ -4452,54 +4455,6 @@ LoadEpilogueSceneGFX:
     CALL CHRLoad_Cont
     
     FARJUMP LoadMenuCHR
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Bridge Scene GFX  [$E8CB :: 0x3E8DB]
-;;
-;;    Loads all CHR required for the bridge scene.  Also
-;;  loads the nametables for the bridge scene!
-;;
-;;    This is also used for the minigame, too.  Since it has the same nametable
-;;  layout and much of the same CHR.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBridgeSceneGFX:
-    LDA #0
-    STA PPUMASK                ; turn off PPU
-    STA PAPU_EN                ; and APU
-
-    LDA #<data_BridgeCHR     ; load a pointer to the bridge scene graphics (CHR first)
-    STA tmp
-    LDA #>data_BridgeCHR
-    STA tmp+1
-
-    LDX #$08                 ; load 8 rows of tiles ($800 bytes)
-
-    LDA #BANK_BRIDGEGFX      ; swap to bank containing the graphics
-    CALL SwapPRG
-
-    LDA #$00                 ; destination address = ppu $0000
-    CALL CHRLoadToA           ; load 8 rows of tiles to ppu $0000
-
-                        ; now this is a little tricky.  It uses the CHR loading routine
-                        ;    to load NT data instead of CHR
-    LDX #4              ; 4 rows of tiles = $400 bytes (1 full NT)
-    LDA #$20            ; destination address = ppu PPUCTRL! (nametable)
-    CALL CHRLoadToA      ; so this fills the whole nametable with NT data
-                        ;  stored at lut_BridgeGFX + $800 (+$800 because of the 8 rows of
-                        ;  tiles that were copied previously)
-
-    LDA #>data_BridgeNT ; reset the source pointer to the start of that NT data
-    STA tmp+1
-
-    LDX #4              ; and set X to 4 again so we draw another $400 bytes (full NT)
-    CALL CHRLoad_Cont    ; draw the SAME nametable.  This makes the nametables at
-                        ;  PPUCTRL and $2400 identical!  This is used for visual effects
-
-
-    FARJUMP LoadMenuCHR     ; after all that, load the usual menu graphics (box borders, font, etc) and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

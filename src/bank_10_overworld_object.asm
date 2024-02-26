@@ -2771,7 +2771,7 @@ ProcessOWInput:
 
     LDA #0                  ; otherwise... they activated the minigame!
     CALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
-    CALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
+    FARCALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
     FARCALL EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
       CALL MinigameReward ;  ... give them their reward
