@@ -111,7 +111,6 @@ WaitScanline:
     LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
     RTS              ; +6
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DialogueBox_Frame  [$D6A1 :: 0x3D6B1]
@@ -168,7 +167,6 @@ DialogueBox_Frame:
     LDA soft2000                   ; so get the normal "onscreen" NT
     STA PPUCTRL                      ; and set it
     FARJUMP MusicPlay       ; then call the Music Play routine and exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -275,7 +273,6 @@ EnterOverworldLoop:
 ;;  takes the game off of the overworld.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 DoOWTransitions:
     LDA bridgescene       ; see if the bridge scene has been triggered
@@ -473,7 +470,6 @@ PrepOverworld:
 ;;    Enters the overworld with the palette cycling effect
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 EnterOW_PalCyc:
     CALL PrepOverworld       ; do all necessary overworld preparation
@@ -809,8 +805,6 @@ ProcessSMInput:
       BCS @Exit            ; if not... exit
       JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Set SM Scroll  [$CCA1 :: 0x3CCB1]
@@ -844,7 +838,6 @@ SetSMScroll:
     STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1966,13 +1959,14 @@ DrawMapRowCol:
 PrepAttributePos:
     LDY #$00        ; zero Y -- our dest index
 
-@Loop:
+    @Loop:
     LDA mapdraw_nty ; get target NT row
     LDX #$0F        ; X=$0F (for odd rows -- bottom half of attribute block)
     LSR A           ; see if row is odd
     BCC :+
        LDX #$F0     ; X=$F0 (for even rows -- top half of attribute block)
-:   ASL A
+    :   
+    ASL A
     ASL A           ; A now = (target_NT_row AND $0E) * 8
     ASL A           ;    which is the row of attribute blocks to use
     STA tmp         ; put it in tmp (low byte of dest ppu address)
@@ -1984,12 +1978,14 @@ PrepAttributePos:
        AND #$0F     ;   need right-hand attribute, mask column to low 4 bits
        LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of PPUCTRL)
 
-:   STX tmp+2       ; put the high byte of the dest ppu address in tmp+2
+    :   
+    STX tmp+2       ; put the high byte of the dest ppu address in tmp+2
     LDX #$33        ; X=$33 (for even columns)
     LSR A           ; divide column by 2
     BCC :+          ; see if it was even or odd
        LDX #$CC     ;   X=$CC (for odd columns)
-:   ORA tmp         ; OR column/2 with low byte of dest address
+    :   
+    ORA tmp         ; OR column/2 with low byte of dest address
     STA tmp         ;    (this is almost the final address for the desired attribute byte)
     TXA             ; Put X (our left/right block mask) in A
     AND tmp+1       ; Combine with our high/low block mask to get the final attribute mask
@@ -2018,22 +2014,21 @@ PrepAttributePos:
        BCS @Exit
        JUMP @Loop
 
-@IncByColumn:
+    @IncByColumn:
        LDA mapdraw_nty  ; get current row to draw
        CLC
        ADC #$01         ; increment by 1
        CMP #$0F         ; but wrap $0E->$00 because there's only 15 rows of tiles per NT
        BCC :+
          SBC #$0F
-:      STA mapdraw_nty  ; write it back (overwriting row/column draw information!)
+    :
+    STA mapdraw_nty  ; write it back (overwriting row/column draw information!)
        INY              ; inc our dest counter
        CPY #$0F         ; and loop until we've prepped all 15 rows in this column
        BCS @Exit
        JUMP @Loop
-
-@Exit: 
+    @Exit: 
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2082,12 +2077,12 @@ DrawMapAttributes:
     AND #$02        ; check if we're drawing a row or column
     BEQ :+ 
       LDX #$0F      ; set X to $0F (if column)
-
-:   STX tmp+1       ; dump X to tmp+1.  This is our upper-bound
+    :
+    STX tmp+1       ; dump X to tmp+1.  This is our upper-bound
     LDX #$00        ; clear X (source index)
     LDA PPUSTATUS       ; reset PPU toggle
 
-@Loop:
+    @Loop:
     LDA draw_buf_at_hi, X  ; set our PPU addr to desired value
     STA PPUADDR
     LDA draw_buf_at_lo, X
@@ -2107,7 +2102,6 @@ DrawMapAttributes:
     CPX tmp+1              ; and loop until it reaches our upper-bound
     BCC @Loop
     RTS             ; exit once we've done them all
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2138,7 +2132,8 @@ DrawDialogueBox:
     CMP #$0F
     BCC :+
       SBC #$0F        ;   wrap $E->$0
-:   STA mapdraw_nty   ; store this as the target NT row on which we'll be drawing
+    :   
+    STA mapdraw_nty   ; store this as the target NT row on which we'll be drawing
                       ;  in addition to being to row which we're drawing... this is also the loop
                       ;  down counter for the upcoming loop
 
@@ -2207,14 +2202,14 @@ DrawDialogueBox:
     CMP #30             ; but wrap 29->0  (NTs are only 30 tiles tall)
     BCC :+
       SBC #30
-:   STA box_y           ; this is our target Y coord for the text
+    :   
+    STA box_y           ; this is our target Y coord for the text
 
     LDA #$80            ; enable menu stalling (kind of pointless because the upcoming routine
     STA menustall       ;  doesn't check it
 
     PLA                      ; then pull the dialogue text ID that was pushed at the start of the routine
     JUMP DrawDialogueString   ; draw it, then exit!
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2409,8 +2404,6 @@ DlgBoxPrep_DR:
 lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
 lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Show Dialogue Box [$D602 :: 0x3D612]
@@ -2460,7 +2453,8 @@ ShowDialogueBox:
     CMP #1
     BEQ :+                 ; if dlgsfx > 1...
       LDX #$58             ;  ... then use track $58 instead (treasure chest ditty)
-:   STX music_track        ; write the desired track to the music_track to get it started
+    :   
+    STX music_track        ; write the desired track to the music_track to get it started
 
   ; there are two seperate 'WaitForButton' loops because the dialogue box closes when the
   ; user presses A, or when they press any directional button.  The first loop waits
@@ -2482,7 +2476,8 @@ ShowDialogueBox:
       STA music_track          ; and restart it
       LDA #0
       STA dlgsfx               ; then clear the dlgsfx flag
-:   LDA joy                 ; check directional buttons
+    :   
+    LDA joy                 ; check directional buttons
     AND #$0F
     BNE @WaitForButton_1    ; and continue first loop until they're all lifted
 
@@ -2499,7 +2494,8 @@ ShowDialogueBox:
       STA music_track
       LDA #0
       STA dlgsfx
-:   LDA joy
+    :   
+    LDA joy
     AND #$0F
     BEQ @WaitForButton_2    ; except here, we loop until a direction is pressed (BEQ instead of BNE)
 
@@ -2545,9 +2541,6 @@ ShowDialogueBox:
 
     RTS          ; then the dialogue box is done!
 
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DialogueBox_Sfx   [$D6C7 :: 0x3D6D7]
@@ -2559,7 +2552,6 @@ ShowDialogueBox:
 ;;        A=$95 for the sweep-down sound (closing)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 DialogueBox_Sfx:
     LDX #$38
@@ -2578,9 +2570,6 @@ DialogueBox_Sfx:
     STA PAPU_CT2
     RTS            ; and exit
 
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Update Joy  [$D7C2 :: 0x3D7D2]
@@ -2594,12 +2583,10 @@ DialogueBox_Sfx:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 UpdateJoy:
     CALL ReadJoypadData
     CALL ProcessJoyButtons
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2618,7 +2605,7 @@ ReadJoypadData:
     STA JOYPAD
 
     LDX #$08     ; loop 8 times (have to read each of the 8 buttons 1 at a time)
-@Loop:
+    @Loop:
       LDA JOYPAD  ; get the button state
       AND #$03   ;  button state gets put in bit 0 usually, but it's on bit 1 for the Famicom if
       CMP #$01   ;  the user is using the seperate controllers.  So doing this AND+CMP combo will set
@@ -2628,9 +2615,6 @@ ReadJoypadData:
       BNE @Loop  ; loop until X expires (8 reads, once for each button)
 
     RTS
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2655,7 +2639,8 @@ ProcessJoyButtons:
     AND #$03        ; check Left and Right button states
     BEQ :+          ; if either are pressed...
       LDX #$03      ;   X=$03, otherwise, X=$00
-:   STX tmp+1       ; back that value up
+    :   
+    STX tmp+1       ; back that value up
 
     LDA joy         ; get joy data again
     AND #$0C        ; this time, check Up and Down buttons
@@ -2664,7 +2649,8 @@ ProcessJoyButtons:
       ORA #$0C      ;  tmp+1 is now a mask indicating which directional buttons we want to keep
       STA tmp+1     ;  directional buttons not included in the mask will be discarded
 
-:   LDA joy         ; get joy data -- do some EOR magic
+    :   
+    LDA joy         ; get joy data -- do some EOR magic
     EOR joy_ignore  ;  invert it with all the buttons to ignore.
     AND tmp+1       ;  mask out the directional buttons to keep
     EOR joy_ignore  ;  and re-invert, restoring ALL buttons *except* the directional we want to keep
@@ -2705,12 +2691,13 @@ ProcessJoyButtons:
     AND #$10        ; see if start is being pressed (as opposed to released)
     BEQ :+          ;  if it is....
       INC joy_start ;   increment our joy_start var
-:   LDA joy_ignore  ; then, toggle the ignore bit so that it will be ignored next time (if being pressed)
+    :   
+    LDA joy_ignore  ; then, toggle the ignore bit so that it will be ignored next time (if being pressed)
     EOR #$10        ;  or will no longer be ignored (if being released)
     STA joy_ignore  ;  the reason for the ignore is because you don't want a button to be pressed
                     ;  a million times as you hold it (like rapid-fire)
 
-@select:
+    @select:
     TXA             ; restore the backed up transition byte
     AND #$20        ; and do all the same things... but with the select button
     BEQ @btn_b
@@ -2718,11 +2705,12 @@ ProcessJoyButtons:
     AND #$20
     BEQ :+
       INC joy_select
-:   LDA joy_ignore
+    :   
+    LDA joy_ignore
     EOR #$20
     STA joy_ignore
 
-@btn_b:
+    @btn_b:
     TXA
     AND #$40
     BEQ @btn_a
@@ -2730,12 +2718,13 @@ ProcessJoyButtons:
     AND #$40
     BEQ :+
       INC joy_b
-:   LDA joy_ignore
+    :   
+    LDA joy_ignore
     EOR #$40
     STA joy_ignore
 
 
-@btn_a:
+    @btn_a:
     TXA
     AND #$80
     BEQ @Exit
@@ -2743,13 +2732,13 @@ ProcessJoyButtons:
     AND #$80
     BEQ :+
       INC joy_a
-:   LDA joy_ignore
+    :   
+    LDA joy_ignore
     EOR #$80
     STA joy_ignore
 
-@Exit:
+    @Exit:
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2764,7 +2753,6 @@ ProcessJoyButtons:
 ;;   See ScreenWipeFrame for details.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 DrawPalette:
     LDA PPUSTATUS       ; Reset PPU toggle
@@ -2785,14 +2773,14 @@ DrawMapPalette:
     LDA inroom      ; check in-room flag
     BEQ _DrawPalette_Norm   ; if we're not in a room, copy normal palette...otherwise...
 
-  @InRoomLoop:
+    @InRoomLoop:
       LDA inroom_pal, X ; if we're in a room... the BG palette (first $10 colors) come from
       STA PPUDATA         ;   $03E0 instead
       INX
       CPX #$10          ; loop $10 times to copy the whole BG palette
       BCC @InRoomLoop   ;   once the BG palette is drawn, continue drawing the sprite palette per normal
 
-_DrawPalette_Norm:
+    _DrawPalette_Norm:
     LDA cur_pal, X     ; get normal palette
     STA PPUDATA          ;  and draw it
     INX
@@ -2808,14 +2796,11 @@ _DrawPalette_Norm:
     STA PPUADDR
     RTS
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  WaitVBlank_NoSprites  [$D89F :: 0x3D8AF]
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 WaitVBlank_NoSprites:
     FARCALL ClearOAM              ; clear OAM
@@ -2823,8 +2808,6 @@ WaitVBlank_NoSprites:
     LDA #>oam
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2859,7 +2842,6 @@ LoadMapPalettes:
 
     RTS                     ; then exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Battle Transition [$D8CD :: 0x3D8DD]
@@ -2873,7 +2855,6 @@ LoadMapPalettes:
 ;;  "shhhheeewww  shhhhheeewww" sound effect on the noise.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 BattleTransition:
     LDA #$08
@@ -2967,7 +2948,6 @@ PalCyc_DrawPalette:
 
     RTS                ; and exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Cycle Palettes   [$D946 :: 0x3D956]
@@ -3010,7 +2990,6 @@ PalCyc_DrawPalette:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 CyclePalettes:
     STA palcyc_mode           ; record the mode
     CALL WaitVBlank_NoSprites  ; wait for VBlank, and kill all sprites
@@ -3046,10 +3025,9 @@ CyclePalettes:
     BCS :+            ; if NOT doing reverse....
       LDA #0          ; ... then turn PPU off
       STA PPUMASK
-
-:   LDA #BANK_MENUS   ; swap to menus bank
+    :   
+    LDA #BANK_MENUS   ; swap to menus bank
     JUMP SwapPRG     ; and exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3100,7 +3078,6 @@ PalCyc_SetScroll:
     STA PPUMASK            ; disable sprites
     RTS                  ; exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Palette Cycle -- Get Initial Palette  [$D9B3 :: 0x3D9C3]
@@ -3108,7 +3085,6 @@ PalCyc_SetScroll:
 ;;    Loads up pal_tmp with the initial palette to start cycling
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 PalCyc_GetInitialPal:
     LDX #0              ; start X (our loop counter) at zero
@@ -3163,7 +3139,6 @@ PalCyc_GetInitialPal:
       BCC @OutRoomLoop  ; loop until X=$10 ($10 iterations)
     RTS                 ; then exit
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Palette Cycle -- Step   [$D9EF :: 0x3D9FF]
@@ -3201,7 +3176,8 @@ PalCyc_Step:
 
     BCC :+            ; then check C flag.  If chroma >= $0D....
       LDA #$0F        ; ... replace color with normal black $0F  ($xD, xE, and xF  all get changed to $0F)
-:   STA tmp_pal, X      ; write cycled color back
+    :   
+    STA tmp_pal, X      ; write cycled color back
     INY               ; INY to count this color as 'not done yet'
 
   @NormalSkip:
@@ -3210,8 +3186,7 @@ PalCyc_Step:
     BNE @NormalLoop   ; and loop until X=$10
     RTS               ; then exit
 
-
-@Reverse:
+    @Reverse:
     LSR A             ; shift 'standard map' mode bit into C
     BCC @OutroomLoop  ; if clear (not on standard map), do outroom cycling
     LDA inroom        ; otherwise... check inroom status
@@ -3338,7 +3313,8 @@ DrawDialogueString:
     BNE :+
       INC text_ptr+1             ;   inc high byte if low byte wrapped
 
-:   CMP #$1A
+    :   
+    CMP #$1A
     BCC @ControlCode     ; if the byte is < $1A, it's a control code
 
     CMP #$7A
@@ -3451,7 +3427,7 @@ DrawDialogueString:
     JUMP @Loop              ; then continue
 
 
-@IncDest:                  ; called by DTE bytes to increment the dest address by 1 column
+    @IncDest:                  ; called by DTE bytes to increment the dest address by 1 column
     LDA dest_x             ; add 1 to the X coord
     CLC
     ADC #1
@@ -3461,10 +3437,10 @@ DrawDialogueString:
     AND #$1F               ; then check the low 5 bits.  If they're zero, we just crossed an NT boundary
     BNE :+
       JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
-:   RTS                    ; then return
+    :   
+    RTS                    ; then return
 
-
-@LineBreak:                ; wait a frame between each line break to help ensure we stay in VBlank
+    @LineBreak:                ; wait a frame between each line break to help ensure we stay in VBlank
     CALL SetSMScroll        ; set the scroll
     FARCALL MusicPlay      ; and keep music playing
 
@@ -3482,10 +3458,10 @@ DrawDialogueString:
     CMP #30                ; but wrap from 29->0  because there are only 30 rows on the nametable
     BCC :+
       SBC #30
-:   STA dest_y
+    :   
+    STA dest_y
 
     NOJUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3552,8 +3528,6 @@ CoordToNTAddr:
     STA ppu_dest+1            ;  and record it
     RTS
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Image Rectangle  [$DCBC :: 0x3DCCC]
@@ -3591,14 +3565,15 @@ DrawImageRect:
 
     LDX dest_wd          ; load width into X (column down counter)
    @ColLoop:
-      LDA (image_ptr), Y  ; get a tile from the image
-      BEQ :+              ; if it's nonzero....
+    LDA (image_ptr), Y  ; get a tile from the image
+    BEQ :+              ; if it's nonzero....
         CLC
         ADC tmp+2         ; ...add our modifier to it
-:     STA PPUDATA           ; draw it
-      INY                 ; inc source index
-      DEX                 ; dec our col loop counter
-      BNE @ColLoop        ; continue looping until X expires
+    :     
+    STA PPUDATA           ; draw it
+    INY                 ; inc source index
+    DEX                 ; dec our col loop counter
+    BNE @ColLoop        ; continue looping until X expires
 
     LDA ppu_dest          ; increment the PPU dest by $20 (one row)
     CLC
@@ -3633,9 +3608,6 @@ lut_NTRowStartHi:
   .byte $21,$21,$21,$21,$21,$21,$21,$21
   .byte $22,$22,$22,$22,$22,$22,$22,$22
   .byte $23,$23,$23,$23,$23,$23,$23,$23
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3675,7 +3647,7 @@ DrawBox:
     STA tmp+11        ;  put new height in temp ram
 
     CALL DrawBoxRow_Top    ; Draw the top row of the box
-@Loop:                    ; Loop to draw all inner rows
+    @Loop:                    ; Loop to draw all inner rows
       CALL DrawBoxRow_Mid  ;   draw inner row
       DEC tmp+11          ;   decrement our adjusted height
       BNE @Loop           ;   loop until expires
@@ -3710,7 +3682,6 @@ DrawBox:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 DrawBoxRow_Mid:
     CALL MenuCondStall  ; do the conditional stall
     LDA PPUSTATUS          ; reset PPU toggle
@@ -3723,7 +3694,7 @@ DrawBoxRow_Mid:
     STA PPUDATA          ;   draw left border
 
     LDA #$FF           ; FF = inner box body tile
-@Loop:
+    @Loop:
       STA PPUDATA        ;  draw box body tile
       DEX              ;    until X expires
       BNE @Loop
@@ -3767,7 +3738,7 @@ DrawBoxRow_Bot:
     STA PPUDATA
 
     LDA #$FD            ;  FD = bottom border tile
-@Loop:
+    @Loop:
       STA PPUDATA         ;  Draw it
       DEX               ;   until X expires
       BNE @Loop
@@ -3776,7 +3747,6 @@ DrawBoxRow_Bot:
     STA PPUDATA
 
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3788,7 +3758,6 @@ DrawBoxRow_Bot:
 ;;   OUT: ppu_dest = set to the PPU address of the start of the NEXT row
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 DrawBoxRow_Top:
     CALL MenuCondStall   ; Do the conditional stall
@@ -3803,7 +3772,7 @@ DrawBoxRow_Top:
     STA PPUDATA           ;   draw UL border
 
     LDA #$F8            ; F8 = U border tile
-@Loop:
+    @Loop:
       STA PPUDATA         ;   draw U border
       DEX               ;     until X expires
       BNE @Loop
@@ -3847,10 +3816,8 @@ MenuCondStall:
       FARCALL MusicPlay    ;  Keep the music playing
       CALL WaitForVBlank  ; then wait a frame
 
-@Exit:
+    @Exit:
     RTS
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3925,10 +3892,6 @@ EraseBox:
     STA PPUSCROLL
     RTS             ; and exit!
 
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Map Objects No Update  [$E4F6 :: 0x3E506]
@@ -3939,19 +3902,19 @@ EraseBox:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 DrawMapObjectsNoUpdate:
     LDX #0
   @Loop:                   ; loop through all 15 objects
-     LDA mapobj_id, X
-     BEQ :+                ; check their ID, and only draw them if they actually exist
+    LDA mapobj_id, X
+    BEQ :+                ; check their ID, and only draw them if they actually exist
        FARCALL DrawMapObject   ;  (id is nonzero)
-:    TXA
-     CLC
-     ADC #$10              ; add $10 to index to point to next object
-     TAX
-     CMP #$F0              ; loop until all 15 objects checked
-     BCC @Loop
+    :    
+    TXA
+    CLC
+    ADC #$10              ; add $10 to index to point to next object
+    TAX
+    CMP #$F0              ; loop until all 15 objects checked
+    BCC @Loop
     RTS                    ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3973,7 +3936,8 @@ MapObjectMove:
     CMP #$F0                 ; wrap after 15 objects (don't do the 16th object -- there isn't a 16th)
     BCC :+
       LDA #0
-:   STA cur_mapobj
+    :   
+    STA cur_mapobj
 
     TAX                      ; put the index of the object to update in X
     LDA mapobj_id, X         ; get this object's ID
@@ -3987,7 +3951,8 @@ MapObjectMove:
        @Exit:
          RTS
 
-:   LDA inroom               ; check to see if the player is in a room
+    :   
+    LDA inroom               ; check to see if the player is in a room
     AND #1                   ;  specifically, normal rooms (but not locked rooms)
     BEQ @NotInRoom           ; if player is in a room....
       LDA mapobj_flgs, X     ; ... check this object's inroom flag
@@ -4052,10 +4017,11 @@ MapObjectMove:
     CMP #OBJID_BAT           ; This would look really funky with the bat graphic (would look like garbage)
     BEQ @ForceFaceLeft       ; So we have them face to the left, in order to have fresh graphics for each frame.
 
-:     LDA #<lut_2x2MapObj_Down   ; reaches here if not a bat.  Just load up the pointer
-      STA mapobj_tsaptr, X       ;  to the downward 2x2 tsa table
-      LDA #>lut_2x2MapObj_Down
-      JUMP @StepDone              ; then jump ahead to final cleanup stuff
+    :     
+    LDA #<lut_2x2MapObj_Down   ; reaches here if not a bat.  Just load up the pointer
+    STA mapobj_tsaptr, X       ;  to the downward 2x2 tsa table
+    LDA #>lut_2x2MapObj_Down
+    JUMP @StepDone              ; then jump ahead to final cleanup stuff
 
  ;; jumps here if the attempted move was illegal
 
@@ -4093,10 +4059,11 @@ MapObjectMove:
     CMP #OBJID_BAT
     BEQ @ForceFaceLeft
 
-:     LDA #<lut_2x2MapObj_Up
-      STA mapobj_tsaptr, X
-      LDA #>lut_2x2MapObj_Up
-      JUMP @StepDone
+    :     
+    LDA #<lut_2x2MapObj_Up
+    STA mapobj_tsaptr, X
+    LDA #>lut_2x2MapObj_Up
+    JUMP @StepDone
 
 
   ;; jumps here if trying to move left or right
@@ -4205,7 +4172,8 @@ CanMapObjMove:             ; first thing to check is the map
       SEC                  ;  SEC to indicate failure (can't move)
       RTS                  ; and exit
 
-:   LDA sm_player_x        ; now check to see if they're trying to move on top of the player
+    :   
+    LDA sm_player_x        ; now check to see if they're trying to move on top of the player
     CMP tmp+4
     BNE :+
     LDA sm_player_y
@@ -4214,7 +4182,8 @@ CanMapObjMove:             ; first thing to check is the map
       SEC                  ; if they are, SEC for failure and exit
       RTS
 
-:   LDY #0                 ; now we loop through all other objects to see if we're hitting them
+    :   
+    LDY #0                 ; now we loop through all other objects to see if we're hitting them
   @Loop:                   ; X is index of test object, Y is index of loop object
     STY tmp                ; dump Y to tmp so we can compare to X
     CPX tmp                ; compare the indeces so that the object doesn't collide with itself
@@ -4230,7 +4199,8 @@ CanMapObjMove:             ; first thing to check is the map
       SEC                  ; reaches here if loop object is colliding with test object
       RTS                  ; SEC for failure and exit
 
-:   TYA                    ; otherwise, add $10 to our loop index to test next object
+    :   
+    TYA                    ; otherwise, add $10 to our loop index to test next object
     CLC
     ADC #$10
     TAY
@@ -4239,11 +4209,6 @@ CanMapObjMove:             ; first thing to check is the map
 
     CLC                    ; once all objects checked out, if there wasn't a collision, CLC
     RTS                    ;  to indicate success, and exit!
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4364,7 +4329,8 @@ LoadSingleMapObject:
     AND #$01                ; isolate it
     BEQ :+                  ;   if the object is invisible, replace the ID with zero (no object)
       TXA                   ;   otherwise, restore the raw ID into A (unchanged)
-:   STA (tmp+14), Y         ; record raw ID (or 0 if sprite is invisible) as the 'to-use' object ID
+    :   
+    STA (tmp+14), Y         ; record raw ID (or 0 if sprite is invisible) as the 'to-use' object ID
 
     INY                     ; inc Y to look at next source byte
     LDA (tmp+12), Y         ; get next source byte (X coord and behavior flags)
@@ -4499,7 +4465,6 @@ CHRLoad_Cont:
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
  
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Load Battle Sprite Palettes  [$EB99 :: 0x3EBA9]
@@ -4510,20 +4475,15 @@ CHRLoad_Cont:
 
 LoadBattleSpritePalettes:
     LDX #$0F  ; start at $0F
-  @Loop:
-      LDA @BattleSpritePalettes, X
-      STA cur_pal+$10, X   ; copy color to sprite palette
-      DEX
-      BPL @Loop            ; loop until X wraps ($10 colors copied)
-      RTS
+    @Loop:
+    LDA @BattleSpritePalettes, X
+    STA cur_pal+$10, X   ; copy color to sprite palette
+    DEX
+    BPL @Loop            ; loop until X wraps ($10 colors copied)
+    RTS
 
-@BattleSpritePalettes:
-  .byte $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
-
-
-
-
- 
+    @BattleSpritePalettes:
+    .byte $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4691,8 +4651,6 @@ lutCursor2x2SpriteTable:
   .byte $01, $03      ; UR sprite = tile 1, palette 3
   .byte $03, $03      ; DR sprite = tile 3, palette 3
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Equip Menu Strings  [$ECDA :: 0x3ECEA]
@@ -4709,7 +4667,6 @@ lutCursor2x2SpriteTable:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 DrawEquipMenuStrings:
     LDA #0                       ; string will be placed at str_buf+$10, and will be 8 bytes long
     STA str_buf+$19              ; so put the null terminator at the end right-off
@@ -4722,7 +4679,8 @@ DrawEquipMenuStrings:
     CPX #ch_weapons - ch_stats   ; buf if we're not dealing with weapons....
     BEQ :+
       LDA #$44-1                 ; A=$44-1  (44 = start of armor names in the item list)
-:   STA draweq_stradd            ; this value will be later added to the weapon/armor ID to get
+    :   
+    STA draweq_stradd            ; this value will be later added to the weapon/armor ID to get
                                  ; the proper string ID.  For now, just stuff it in RAM
                                  ; minus 1 because 0 is an empty slot
 
@@ -4807,7 +4765,6 @@ DrawEquipMenuStrings:
     CALL SwapPRG                ; then swap back to that bank
     RTS                          ; and return
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  lut for Equip string positions  [$ED72 :: 0x3ED82]
@@ -4826,13 +4783,6 @@ lut_EquipStringPositions:
   
   .byte $0A, $19,       $14, $19        ; character 3
   .byte $0A, $1B,       $14, $1B
-
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4873,8 +4823,7 @@ SetBattlePPUAddr:
     LDA btltmp+6
     STA PPUADDR
     RTS
-    
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Battle_WritePPUData  [$F23E :: 0x3F24E]
@@ -4918,8 +4867,7 @@ Battle_WritePPUData:
     STA PPUSCROLL
     STA PPUSCROLL
     RTS
-    
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Battle_ReadPPUData  [$F268 :: 0x3F278]
@@ -4964,7 +4912,6 @@ BattleCrossPageJump:
     STA battle_bank
     CALL SwapPRG
     JMP (btltmp+6)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5176,9 +5123,8 @@ DrawBattleBackdropRow:
 
   ;; the layout of the battle backdrop -- the way the columns are arranged
 
-@lut_BackdropLayout:
+    @lut_BackdropLayout:
   .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5192,7 +5138,6 @@ SetPPUAddr_XA:
     STX PPUADDR   ; write X as high byte
     STA PPUADDR   ; A as low byte
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5226,7 +5171,6 @@ Battle_PlayerBox:
     PLA
 
     RTS                ; and exit!
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
