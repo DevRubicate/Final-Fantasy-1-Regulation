@@ -4681,7 +4681,7 @@ MinimapFrame:
     LDA #0
     STA joy_a              ; clear A and B button catchers
     STA joy_b
-    CALL UpdateJoy        ; then update joypad data
+    FARCALL UpdateJoy        ; then update joypad data
 
     INC framecounter       ; inc the frame counter
 

@@ -1164,7 +1164,7 @@ lut_PuzzleStart:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MiniGame_ProcessInput:
-    CALL UpdateJoy      ; update joypad info
+    FARCALL UpdateJoy      ; update joypad info
 
     LDA joy              ; get joy data
     AND #$0F             ; isolate directonal buttons
@@ -2328,7 +2328,7 @@ Story_Wait:
   @Loop:
     CALL WaitForVBlank    ; wait for VBlank
     CALL MusicPlay        ; keep music playing
-    CALL UpdateJoy        ; update joypad data
+    FARCALL UpdateJoy        ; update joypad data
 
     LDA story_dropinput    ; see if we're to drop (ignore) user input
     BNE @CountFrame        ; if we are, skip ahead to @CountFrame

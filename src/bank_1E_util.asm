@@ -6,7 +6,7 @@
 
 .export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
-.export PlaySFX_Error
+.export PlaySFX_Error, UpdateJoy
 
 
 
@@ -391,4 +391,175 @@ PlaySFX_Error:
     STA PAPU_FT2         ; set initial freq to $080 (but it will sweep upwards in pitch quickly)
     LDA #$00          ; and length to $0A  (longer than 1 frame... so length might as well be disabled
     STA PAPU_CT2         ;   because this is written every frame)
+    RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Update Joy  [$D7C2 :: 0x3D7D2]
+;;
+;;    Reads and processes joypad data, updating:
+;;      joy
+;;      joy_select
+;;      joy_start
+;;      joy_b
+;;      joy_a
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateJoy:
+    CALL ReadJoypadData
+    CALL ProcessJoyButtons
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Read Joypad Data  [$D7C9 :: 0x3D7D9]
+;;
+;;    This strobes the joypad and reads joy data into our 'joy' variable
+;;
+;;  OUT:  X is 0 on exit
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadJoypadData:
+    LDA #1
+    STA JOYPAD    ; strobe joypad (refreshes the latch with up to date joy data)
+    LDA #0
+    STA JOYPAD
+
+    LDX #$08     ; loop 8 times (have to read each of the 8 buttons 1 at a time)
+    @Loop:
+      LDA JOYPAD  ; get the button state
+      AND #$03   ;  button state gets put in bit 0 usually, but it's on bit 1 for the Famicom if
+      CMP #$01   ;  the user is using the seperate controllers.  So doing this AND+CMP combo will set
+                 ;  the C flag if either of those bits are set (making this routine FC friendly)
+      ROL joy    ; rotate the C flag (the button state) into our RAM
+      DEX
+      BNE @Loop  ; loop until X expires (8 reads, once for each button)
+
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Process Joy Buttons  [$D7E2 :: 0x3D7F2]
+;;
+;;    This routine examines 'joy' and 'joy_ignore' to determine which buttons are being pressed
+;;  joy_start, joy_select, joy_a, and joy_b are all incremented by 1 if their respective buttons
+;;  have been pressed... but they are not incremented if a button is being held (ie:  the increment
+;;  only happens when you press the button from a released state).
+;;
+;;    The realtime press/release state of all buttons remains unchanged in 'joy'
+;;
+;;    'joy_ignore' is altered, but only so it can be examined the next time this routine is called.
+;;  Other routines do not use 'joy_ignore'
+;;
+;;  Note: X is assumed to be 0 on routine entry
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessJoyButtons:
+    LDA joy         ; get joypad data
+    AND #$03        ; check Left and Right button states
+    BEQ :+          ; if either are pressed...
+      LDX #$03      ;   X=$03, otherwise, X=$00
+    :   
+    STX tmp+1       ; back that value up
+
+    LDA joy         ; get joy data again
+    AND #$0C        ; this time, check Up and Down buttons
+    BEQ :+
+      TXA           ; if either are pressed, OR previous value with $0C
+      ORA #$0C      ;  tmp+1 is now a mask indicating which directional buttons we want to keep
+      STA tmp+1     ;  directional buttons not included in the mask will be discarded
+
+    :   
+    LDA joy         ; get joy data -- do some EOR magic
+    EOR joy_ignore  ;  invert it with all the buttons to ignore.
+    AND tmp+1       ;  mask out the directional buttons to keep
+    EOR joy_ignore  ;  and re-invert, restoring ALL buttons *except* the directional we want to keep
+    STA joy_ignore  ;  write back to ignore (so that these buttons will be ignored next time joy data is polled
+    EOR joy         ; EOR again with current joy data.
+
+   ; okay this requires a big explanation because it's insane.
+   ; directional buttons (up/down/left/right) are treated seperately than other buttons (A/B/Select/Start)
+   ;  The game creates a mask with those directional buttons so that the most recently pressed direction
+   ;  is ignored, even after it's released.
+   ;
+   ; To illustrate this... imagine that joy buttons have 4 possible states:
+   ;  lifted   (0 -> 0)
+   ;  pressed  (0 -> 1)
+   ;  held     (1 -> 1)
+   ;  released (1 -> 0)
+   ;
+   ;   For directional buttons (U/D/L/R), the above code will produce the following results:
+   ; lifted:   joy_ignore = 0      A = 0
+   ; pressed:  joy_ignore = 1      A = 0
+   ; held:     joy_ignore = 1      A = 0
+   ; released: joy_ignore = 1      A = 0
+   ;
+   ;   For nondirectional buttons (A/B/Sel/Start), the above produces the following:
+   ; lifted:   joy_ignore = 0      A = 0
+   ; pressed:  joy_ignore = 0      A = 1
+   ; held:     joy_ignore = 1      A = 0
+   ; released: joy_ignore = 1      A = 1
+   ;
+   ;  Yes... it's very confusing.  But not a lot more I can do to explain it though  x_x
+   ; Afterwards, A is the non-directioal buttons whose state has transitioned (either pressed or released)
+
+    TAX            ; put transitioned buttons in X (temporary, to back them up)
+
+    AND #$10        ; see if the Start button has transitioned
+    BEQ @select     ;  if not... skip ahead to select button check
+    LDA joy         ; get current joy
+    AND #$10        ; see if start is being pressed (as opposed to released)
+    BEQ :+          ;  if it is....
+      INC joy_start ;   increment our joy_start var
+    :   
+    LDA joy_ignore  ; then, toggle the ignore bit so that it will be ignored next time (if being pressed)
+    EOR #$10        ;  or will no longer be ignored (if being released)
+    STA joy_ignore  ;  the reason for the ignore is because you don't want a button to be pressed
+                    ;  a million times as you hold it (like rapid-fire)
+
+    @select:
+    TXA             ; restore the backed up transition byte
+    AND #$20        ; and do all the same things... but with the select button
+    BEQ @btn_b
+    LDA joy
+    AND #$20
+    BEQ :+
+      INC joy_select
+    :   
+    LDA joy_ignore
+    EOR #$20
+    STA joy_ignore
+
+    @btn_b:
+    TXA
+    AND #$40
+    BEQ @btn_a
+    LDA joy
+    AND #$40
+    BEQ :+
+      INC joy_b
+    :   
+    LDA joy_ignore
+    EOR #$40
+    STA joy_ignore
+
+
+    @btn_a:
+    TXA
+    AND #$80
+    BEQ @Exit
+    LDA joy
+    AND #$80
+    BEQ :+
+      INC joy_a
+    :   
+    LDA joy_ignore
+    EOR #$80
+    STA joy_ignore
+
+    @Exit:
     RTS

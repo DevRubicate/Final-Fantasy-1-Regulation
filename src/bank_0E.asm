@@ -5,7 +5,7 @@
 .import GameStart
 .import lut_IntroStoryText
 .import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString_New
-.import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy
+.import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy, HideMapObject
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
@@ -90,7 +90,7 @@ IntroStory_Joy:
     LDA #0                ; reset the respond rate to zero
     STA a:respondrate     ;  (why do this here?  Very out of place)
 
-    CALL UpdateJoy         ; Update joypad data
+    FARCALL UpdateJoy         ; Update joypad data
     LDA joy
     AND #BTN_START        ; see if start was pressed
     BNE :+                ;  if not, just exit
@@ -112,9 +112,6 @@ TitleScreen_Music:
     FARCALL MusicPlay
     LDA joy_a
     RTS
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -934,48 +931,7 @@ lut_MapObjTalkJumpTbl:
   .WORD Talk_ifevent, Talk_ifevent, Talk_BlackOrb, Talk_norm, Talk_norm, Talk_norm, Talk_norm, Talk_norm                ; C8-CF
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Hide Map Object [$9273 :: 0x39283]
-;;
-;;    Makes the given object ID invisible, and hides one object on the map which uses that
-;;  ID (if there is one).
-;;
-;;  IN:   Y = ID of object to hide
-;;
-;;    Note, this routine writes over 'tmp', so caution should be used when calling from
-;;  one of the talk routines (which also use 'tmp' for something unrelated)
-;;
-;;    X remains unchanged by this routine
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-HideMapObject:
-    STY tmp                   ; back up the object ID
-    LDA game_flags, Y
-    AND #~GMFLG_OBJVISIBLE ; clear the visibility flag for this object
-    STA game_flags, Y
-
-    LDY #0                ; zero Y for loop counter / mapobject indexing
-  @Loop:
-      LDA tmp             ; get the object ID
-      CMP mapobj_id, Y    ; see if it matches this object's ID
-      BEQ @Found          ; if it does, we found the object we need to hide!
-
-      TYA                 ; otherwise, increment the loop counter to look at the next object
-      CLC
-      ADC #$10
-      TAY
-
-      CMP #$F0            ; and keep looping until all 15 map objects checked
-      BCC @Loop
-    RTS
-
-  @Found:                 ; if we've found the map object we're hiding...
-    LDA #0
-    STA mapobj_id, Y      ; set it's ID to zero to hide it
-    RTS                   ;  and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1875,7 +1831,7 @@ EnterLineupMenu:
 
     FARCALL ClearOAM                ; clear OAM
 
-    CALL UpdateJoy               ; update joy data
+    FARCALL UpdateJoy               ; update joy data
     LDA joy                     ;  so we can fill our lu_joyprev
     AND #$0C
     STA lu_joyprev
@@ -1938,7 +1894,7 @@ LineupMenu_UpdateJoy:
     AND #$0C               ; isolate up/down buttons
     STA tmp+7              ; and store in tmp RAM as previous buttons
 
-    CALL UpdateJoy          ; update the joypad
+    FARCALL UpdateJoy          ; update the joypad
 
     LDA joy_a
     ORA joy_b              ; check if either A or B pressed
@@ -2930,7 +2886,7 @@ PtyGen_Joy:
     AND #$0F
     STA tmp+7            ; put old directional buttons in tmp+7 for now
 
-    CALL UpdateJoy        ; then update joypad data
+    FARCALL UpdateJoy        ; then update joypad data
 
     LDA joy_a            ; if either A or B pressed...
     ORA joy_b
@@ -3481,7 +3437,7 @@ EnterTitleScreen:
     STA OAMDMA               ; Then redraw the respond rate
     CALL TitleScreen_DrawRespondRate
 
-    CALL UpdateJoy           ; update joypad data
+    FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
     STA cur_bank
 
@@ -4707,7 +4663,7 @@ ShopFrameNoCursor:
     AND #$0F                   ; isolate the directional buttons
     STA tmp+7                  ; and store it as our prev joy data
 
-    CALL UpdateJoy              ; update joypad data
+    FARCALL UpdateJoy              ; update joypad data
     LDA joy_a                  ; see if either A or B pressed
     ORA joy_b
     BEQ @CheckMovement         ; if not... check directionals
@@ -6911,7 +6867,7 @@ UseItem_Rod:
     LSR A                     ;   shift that flag into C
     BCC @CantUse              ;   if clear, plate is gone, so Rod has already been used.. can't use the Rod again
 
-    CALL HideMapObject           ; otherwise.. first time rod is being used.  Hide the rod plate
+    FARCALL HideMapObject           ; otherwise.. first time rod is being used.  Hide the rod plate
     LDA #$0F                    ;  load up the relevent description text
     CALL DrawItemDescBox_Fanfare ;  and draw it with fanfare!
     JUMP ItemMenu_Loop           ; then return to item loop
@@ -6944,7 +6900,7 @@ UseItem_Lute:
     BCC @CantUse                ;   if clear, lute plate is gone, so lute was already used.  Can't use it again
 
     ASL A                       ; completely pointless shift (undoes above LSR, but has no real effect)
-    CALL HideMapObject           ; hide the lute plate object
+    FARCALL HideMapObject           ; hide the lute plate object
     LDA #$05                    ; get relevent description text
     CALL DrawItemDescBox_Fanfare ;  and draw it ... WITH FANFARE!
     JUMP ItemMenu_Loop           ; then return to item loop
@@ -7787,7 +7743,7 @@ MenuFrame:
     LDA #0                 ; zero joy_a and joy_b so that an increment will bring to a
     STA joy_a              ;   nonzero state
     STA joy_b
-    JUMP UpdateJoy          ; update joypad info, then exit
+    FARJUMP UpdateJoy          ; update joypad info, then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9209,7 +9165,7 @@ EquipMenuFrame:
     LDA joy               ; get the joy data
     AND #$0F              ; isolate directional buttons
     STA tmp+7             ; and store it as the previous joy data
-    CALL UpdateJoy         ; then update joy data
+    FARCALL UpdateJoy         ; then update joy data
 
     LDA joy_a
     ORA joy_b             ; see if either A or B pressed

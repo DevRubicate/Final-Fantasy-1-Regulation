@@ -11,7 +11,7 @@
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 .export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward, GetSMTileProperties
-.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer
+.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2731,7 +2731,7 @@ ProcessOWInput:
       RTS             ; and exit (ignore all input until vehchgpause is zero)
 
   @NoVehPause:
-    CALL UpdateJoy    ; update joypad data
+    FARCALL UpdateJoy    ; update joypad data
 
     LDA joy
     AND #$0F         ; check directional buttons
@@ -3354,3 +3354,46 @@ SMMove_Up:
     STA move_speed         ; if we moved a full tile, zero the move speed (stop player from moving)
     STA move_ctr_y         ; and zero the move counter
     RTS                    ; then exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Hide Map Object [$9273 :: 0x39283]
+;;
+;;    Makes the given object ID invisible, and hides one object on the map which uses that
+;;  ID (if there is one).
+;;
+;;  IN:   Y = ID of object to hide
+;;
+;;    Note, this routine writes over 'tmp', so caution should be used when calling from
+;;  one of the talk routines (which also use 'tmp' for something unrelated)
+;;
+;;    X remains unchanged by this routine
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+HideMapObject:
+    STY tmp                   ; back up the object ID
+    LDA game_flags, Y
+    AND #~GMFLG_OBJVISIBLE ; clear the visibility flag for this object
+    STA game_flags, Y
+
+    LDY #0                ; zero Y for loop counter / mapobject indexing
+  @Loop:
+      LDA tmp             ; get the object ID
+      CMP mapobj_id, Y    ; see if it matches this object's ID
+      BEQ @Found          ; if it does, we found the object we need to hide!
+
+      TYA                 ; otherwise, increment the loop counter to look at the next object
+      CLC
+      ADC #$10
+      TAY
+
+      CMP #$F0            ; and keep looping until all 15 map objects checked
+      BCC @Loop
+    RTS
+
+  @Found:                 ; if we've found the map object we're hiding...
+    LDA #0
+    STA mapobj_id, Y      ; set it's ID to zero to hide it
+    RTS                   ;  and exit
