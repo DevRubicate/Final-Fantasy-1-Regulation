@@ -4,7 +4,7 @@
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 
-.export PrepStandardMap
+.export PrepStandardMap, RedrawDoor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -80,6 +80,80 @@ LoadSMCHR:                     ; standard map -- does not any palettes
     FARCALL LoadTilesetAndMenuCHR
     FARJUMP LoadMapObjCHR
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Redraw Door  [$CEBA :: 0x3CECA]
+;;
+;;    Redraws the necessary door tile when you enter/exit rooms.
+;;  It must be called during VBlank.  Note it only makes NT changes, not attribute changes.
+;;  Therefore open and closed door tiles must share the same palette.
+;;
+;;  IN:  inroom = current state of room transition
+;;       doorppuaddr = PPU address at which to redraw door graphic
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedrawDoor_Exit:
+    RTS
+
+RedrawDoor:
+    LDA inroom                 ; check inroom status
+    BEQ RedrawDoor_Exit        ; if not inroom, no redrawing required
+    BMI RedrawDoor_Exit        ; if already inroom, no redrawing required (redraw only needed for the transition)
+
+    AND #$07                   ; mask out the low bits
+    CMP #$01
+    BEQ @NormalOpen            ; if $01 -> opening a normal door
+    CMP #$02
+    BEQ @LockedOpen            ; $02 -> opening a locked door
+    CMP #$05
+    BEQ @NormalClose           ; $05 -> closing a normal door
+                               ; else ($06) -> closing a locked door
+
+  @LockedClose:
+    LDA #$00                   ; new inroom status ($00 because we're leaving rooms)
+    LDX #MAPTILE_LOCKEDDOOR    ; tile we're to draw
+    JUMP @Redraw                ; redraw it
+
+  @NormalClose:
+    LDA #$00                   ; same...
+    LDX #MAPTILE_CLOSEDDOOR    ; but use normal closed door tile instead of the locked door tile
+    JUMP @Redraw
+
+  @LockedOpen:
+    LDA #$82                   ; $82 indicates inroom, but shows outroom sprites (locked rooms)
+    LDX #MAPTILE_OPENDOOR
+    JUMP @Redraw
+
+  @NormalOpen:
+    LDA #$81                   ; $81 indicates inroom and shows inroom sprites (normal rooms)
+    LDX #MAPTILE_OPENDOOR
+
+  @Redraw:
+    STA inroom             ; record new inroom status (previously stuffed in A)
+    LDA PPUSTATUS              ; reset PPU toggle
+
+    LDA doorppuaddr+1      ; load the target PPU address
+    STA PPUADDR
+    LDA doorppuaddr
+    STA PPUADDR
+    LDA tsa_ul, X          ; and redraw upper two TSA tiles using the current tileset tsa data in RAM
+    STA PPUDATA
+    LDA tsa_ur, X
+    STA PPUDATA
+
+    LDA doorppuaddr+1      ; reload target PPU address
+    STA PPUADDR
+    LDA doorppuaddr
+    ORA #$20               ; but add $20 to it to put it on the second row of the tile (bottom half)
+    STA PPUADDR
+    LDA tsa_dl, X          ; and redraw lower two TSA tiles
+    STA PPUDATA
+    LDA tsa_dr, X
+    STA PPUDATA
+
+    JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
+                           ;  and exit
 
 
  ;; the LUT containing the music tracks for each tileset

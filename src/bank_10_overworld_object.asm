@@ -1691,7 +1691,7 @@ StandardMapMovement:
     LDA #$1E
     STA PPUMASK             ; turn the PPU on
 
-    CALL RedrawDoor        ; redraw an opening/closing door if necessary
+    FARCALL RedrawDoor        ; redraw an opening/closing door if necessary
 
     LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
 
