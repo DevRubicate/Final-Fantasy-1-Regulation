@@ -59,6 +59,7 @@
 ; bank_27_overworld_map
 .import LoadOWCHR
 ; bank_28_battle_util
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -81,7 +82,6 @@
 .export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export DrawFullMap, DrawMapPalette, SetSMScroll
 .export SetSMScroll, WaitVBlank_NoSprites
-.export BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4578,41 +4578,6 @@ Battle_PPUOff:
     STA PPUMASK          ; and turn off PPU
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_UpdatePPU_UpdateAudio_FixedBank  [$F485 :: 0x3F495]
-;;
-;;  Resets scroll and PPUMASK, then updates audio.
-;;
-;;  Used by only a few routines in the fixed bank.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Battle_UpdatePPU_UpdateAudio_FixedBank:
-    LDA btl_soft2001
-    STA PPUMASK
-    LDA #$00            ; reset scroll
-    STA PPUSCROLL
-    STA PPUSCROLL
-    NOJUMP BattleUpdateAudio_FixedBank
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleUpdateAudio_FixedBank  [$F493 :: 0x3F4A3]
-;;
-;;  Same idea as BattleUpdateAudio from bank $C... just in the fixed bank.
-;;
-;;  Note that this routine does NOT update battle sound effects.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-BattleUpdateAudio_FixedBank:
-    LDA a:music_track
-    BPL :+
-      LDA btl_followupmusic
-      STA a:music_track
-    :   
-    FARJUMP MusicPlay
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4669,7 +4634,7 @@ BattleDrawMessageBuffer:
       ADC #$00
       STA btl_tmpvar4
       
-      CALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
+      FARCALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
       
       DEC tmp_68b9         ; loop for each row
       BNE @Loop
@@ -4735,7 +4700,7 @@ BattleDrawMessageBuffer_Reverse:
       CALL @AdjustPointers               ; move ptrs to prev row
       CALL Battle_DrawMessageRow         ; draw another one
       CALL @AdjustPointers               ; move ptrs again
-      CALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
+      FARCALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
       
       DEC tmp_68b9
       BNE @Loop         ; loop until all rows drawn

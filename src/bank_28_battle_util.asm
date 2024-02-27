@@ -2,9 +2,9 @@
 
 .include "src/global-import.inc"
 
-.import BattleRNG, WaitForVBlank, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
+.import BattleRNG, WaitForVBlank, MusicPlay
 
-.export BattleScreenShake
+.export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -50,3 +50,40 @@ BattleScreenShake:
   @Frame:
     CALL WaitForVBlank
     JUMP BattleUpdateAudio_FixedBank
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Battle_UpdatePPU_UpdateAudio_FixedBank  [$F485 :: 0x3F495]
+;;
+;;  Resets scroll and PPUMASK, then updates audio.
+;;
+;;  Used by only a few routines in the fixed bank.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Battle_UpdatePPU_UpdateAudio_FixedBank:
+    LDA btl_soft2001
+    STA PPUMASK
+    LDA #$00            ; reset scroll
+    STA PPUSCROLL
+    STA PPUSCROLL
+    NOJUMP BattleUpdateAudio_FixedBank
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  BattleUpdateAudio_FixedBank  [$F493 :: 0x3F4A3]
+;;
+;;  Same idea as BattleUpdateAudio from bank $C... just in the fixed bank.
+;;
+;;  Note that this routine does NOT update battle sound effects.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+BattleUpdateAudio_FixedBank:
+    LDA a:music_track
+    BPL :+
+      LDA btl_followupmusic
+      STA a:music_track
+    :   
+    FARJUMP MusicPlay
