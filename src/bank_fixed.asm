@@ -25,7 +25,7 @@
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error
 
 ; bank_1E_util
-.import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy
+.import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
 ; bank_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
 ; bank_16_overworld_tileset
@@ -230,7 +230,7 @@ EnterOverworldLoop:
     LDA mapdraw_job            ; check to see if drawjob number 1 is pending
     CMP #1
     BNE :+
-        CALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
+        FARCALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
     :
     LDA move_speed             ; check to see if the player is currently moving
     BNE :+                     ; if not....
@@ -498,7 +498,7 @@ StandardMapLoop:
     LDA mapdraw_job            ; check the map draw job
     CMP #1                     ;  if the next job is to draw attributes
     BNE :+                     ;  then we need to prep them here so they're ready for
-      CALL PrepAttributePos     ;  drawing next frame
+      FARCALL PrepAttributePos     ;  drawing next frame
 
     :   
     LDA move_speed             ; check the player's movement speed to see if they're in motion
@@ -988,7 +988,7 @@ DrawFullMap:
    @Loop:
       CALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
       CALL DrawMapRowCol      ; then draw the row that just got prepped
-      CALL PrepAttributePos   ; prep attributes for that row
+      FARCALL PrepAttributePos   ; prep attributes for that row
       CALL DrawMapAttributes  ; and draw them
       CALL ScrollUpOneRow     ; then force a scroll upward one row
 
@@ -1829,102 +1829,6 @@ DrawMapRowCol:
     BCC @ColLoop_R   ;  once we have... 
     RTS              ;  RTS out!  (full column drawn)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Prep Row or Column Attribute Positions  [$D401 :: 0x3D411]
-;;
-;;    Calculates and preps the drawing positions and masks for attribute updates.
-;;   This routine just fills the intermediate drawing buffer with information to draw later
-;;
-;;    Current row/column draw information is used... and OVERWRITTEN!, so either this must be
-;;   the last thing you do when preparing things to draw, or row/column info must be restored after
-;;   calling this.
-;;
-;;    This routine might seem more complicated than it is, unless you're familiar with how
-;;   the attribute tables are layed out.
-;;
-;;    Attribute bytes are not prepared here -- they're prepared with map TSA data in other routines
-;;
-;;   OUT:  mapdraw_nty, mapdraw_ntx are overwritten and become garbage
-;;
-;;   TMP:  tmp through tmp+2 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrepAttributePos:
-    LDY #$00        ; zero Y -- our dest index
-
-    @Loop:
-    LDA mapdraw_nty ; get target NT row
-    LDX #$0F        ; X=$0F (for odd rows -- bottom half of attribute block)
-    LSR A           ; see if row is odd
-    BCC :+
-       LDX #$F0     ; X=$F0 (for even rows -- top half of attribute block)
-    :   
-    ASL A
-    ASL A           ; A now = (target_NT_row AND $0E) * 8
-    ASL A           ;    which is the row of attribute blocks to use
-    STA tmp         ; put it in tmp (low byte of dest ppu address)
-    STX tmp+1       ; put X (our high/low block mask) in tmp+1
-    LDA mapdraw_ntx ; get target NT column
-    LDX #$23        ; X=$23 (for left-hand attribute table)
-    CMP #$10        ; see if column >= $10... if it is, we need the right-hand attribute table
-    BCC :+
-       AND #$0F     ;   need right-hand attribute, mask column to low 4 bits
-       LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of PPUCTRL)
-
-    :   
-    STX tmp+2       ; put the high byte of the dest ppu address in tmp+2
-    LDX #$33        ; X=$33 (for even columns)
-    LSR A           ; divide column by 2
-    BCC :+          ; see if it was even or odd
-       LDX #$CC     ;   X=$CC (for odd columns)
-    :   
-    ORA tmp         ; OR column/2 with low byte of dest address
-    STA tmp         ;    (this is almost the final address for the desired attribute byte)
-    TXA             ; Put X (our left/right block mask) in A
-    AND tmp+1       ; Combine with our high/low block mask to get the final attribute mask
-    STA tmp+1       ;  store final mask in tmp+1
-
-    LDA tmp+2             ; put high byte of dest ppu address in drawing buffer
-    STA draw_buf_at_hi, Y
-    LDA tmp               ; get low byte of dest ppu address
-    ORA #$C0              ;   or with #$C0 so that it's finalized (Attributes start at $23C0.. not $2300)
-    STA draw_buf_at_lo, Y ;   and put it in drawing buf
-    LDA tmp+1             ; and finally, copy the attribute mask
-    STA draw_buf_at_msk, Y
-
-    LDA mapflags
-    AND #$02         ; check to see if we're doing a row or column
-    BNE @IncByColumn ; if column.. inc by column
-
-         ; otherwise... inc by row
-       LDA mapdraw_ntx  ; get current column to draw
-       CLC
-       ADC #$01         ; increment it by 1 (so that we draw the next column in this row)
-       AND #$1F
-       STA mapdraw_ntx  ; write it back (overwriting row/column draw information!)
-       INY              ; inc our dest counter
-       CPY #$10         ; and loop until we've prepped all 16 columns
-       BCS @Exit
-       JUMP @Loop
-
-    @IncByColumn:
-       LDA mapdraw_nty  ; get current row to draw
-       CLC
-       ADC #$01         ; increment by 1
-       CMP #$0F         ; but wrap $0E->$00 because there's only 15 rows of tiles per NT
-       BCC :+
-         SBC #$0F
-    :
-    STA mapdraw_nty  ; write it back (overwriting row/column draw information!)
-       INY              ; inc our dest counter
-       CPY #$0F         ; and loop until we've prepped all 15 rows in this column
-       BCS @Exit
-       JUMP @Loop
-    @Exit: 
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Map Attributes   [$D46F :: 0x3D47F]
@@ -2063,8 +1967,7 @@ DrawDialogueBox:
       CALL DrawMapRowCol          ; and draw what we just prepped
       CALL SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
       FARCALL MusicPlay                ; and update the music
-
-      CALL PrepAttributePos       ; then prep attribute position data
+      FARCALL PrepAttributePos       ; then prep attribute position data
       LDA mapdraw_nty            ; get dest NT address
       CMP scroll_y               ; compare it to the screen scroll
       BEQ :+                     ; if they're the same (drawing the top/last row)
