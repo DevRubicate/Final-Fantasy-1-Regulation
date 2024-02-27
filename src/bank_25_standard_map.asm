@@ -68,8 +68,6 @@ PrepStandardMap:
     ADC #7
     STA sm_player_y
 
-    ;LDA #BANK_BTLDATA           ; swap to page containging battle rates
-    ;CALL SwapPRG
     LDX cur_map                 ; use current map to index the rate LUT
     LDA LUT_BattleRates+1, X    ; get this map's rate (+1 because first entry is for overworld [unused])
     STA battlerate              ; and record it
@@ -81,10 +79,8 @@ PrepStandardMap:
   @lut_TilesetMusicTrack:
     .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LUT for battle encounter rates per map  [$8C00 :: 0x2CC10]
-.ALIGN $100            ; must be on page bound
 LUT_BattleRates:
-  .incbin "bin/0B_8C00_mapencounterrates.bin"
+    .byte $0a, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $18, $08, $08, $08, $09, $0a, $0b, $0c, $01, $08, $08, $08
