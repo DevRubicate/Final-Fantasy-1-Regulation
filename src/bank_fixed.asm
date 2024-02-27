@@ -6906,61 +6906,6 @@ Copy256:
     INC tmp+3          ; inc dest pointer
     RTS                ; and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Entry / Reset  [$FE2E :: 0x3FE3E]
-;;
-;;   Entry point for the program.  Does NES and mapper prepwork, and gets
-;;   everything started
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OnReset:
-    SEI                     ; Set Interrupt flag (prevent IRQs from occuring)
-    
-    ; MMC5
-    LDX #0
-    STX MMC5_PCM_MODE_IRQ   ; Disable MMC5 PCM and IRQs
-    STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
-    STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
-    STX MMC5_RAM_BANK       ; swap battery-backed PRG RAM into $6000 page.     
-    STX MMC5_SPLIT_MODE     ; disable split-screen mode
-    STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
-    STX MMC5_CHR_BANK7      ; Swap in first CHR Page
-    INX                     ; 01
-    STX MMC5_PRG_MODE       ; set MMC5 to 16k PRG mode
-    STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
-    INX                     ; 02
-    STX MMC5_RAM_PROTECT_1  ; Allow writing to PRG-RAM A
-    STX MMC5_EXRAM_MODE     ; ExRAM mode Ex2   
-    LDX #$44
-    STX MMC5_MIRROR         ; Vertical mirroring
-    LDX #$FF        
-    STX MMC5_PRG_BANK3
-
-    LDA #0
-    STA PAPU_MODCTL         ; disble DMC IRQs
-    STA PPUCTRL             ; Disable NMIs
-    LDA #$C0
-    STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
-
-    LDA #$06
-    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
-    CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
-
-    LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
-  @Loop: 
-      BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
-      BPL @Loop             ;  failure to do this will result in the PPU basically not working
-      DEX
-      BNE @Loop
-
-    FARCALL ResetRAM
-
-    FARCALL DisableAPU
-    SWITCH GameStart
-    JMP GameStart           ; jump to the start of the game!
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;   NMI Vector [$FE9C :: 0x3FEAC] 
@@ -7261,6 +7206,64 @@ Impl_FARCALL:
 
     ; Activate the trampoline
     ;RTS
+
+
+.segment "RESET_VECTOR"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Entry / Reset  [$FE2E :: 0x3FE3E]
+;;
+;;   Entry point for the program.  Does NES and mapper prepwork, and gets
+;;   everything started
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OnReset:
+    SEI                     ; Set Interrupt flag (prevent IRQs from occuring)
+    
+    ; MMC5
+    LDX #0
+    STX MMC5_PCM_MODE_IRQ   ; Disable MMC5 PCM and IRQs
+    STX MMC5_IRQ_STATUS     ; Disable MMC5 scanline IRQs
+    STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
+    STX MMC5_RAM_BANK       ; swap battery-backed PRG RAM into $6000 page.     
+    STX MMC5_SPLIT_MODE     ; disable split-screen mode
+    STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
+    STX MMC5_CHR_BANK7      ; Swap in first CHR Page
+    INX                     ; 01
+    STX MMC5_PRG_MODE       ; set MMC5 to 16k PRG mode
+    STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
+    INX                     ; 02
+    STX MMC5_RAM_PROTECT_1  ; Allow writing to PRG-RAM A
+    STX MMC5_EXRAM_MODE     ; ExRAM mode Ex2   
+    LDX #$44
+    STX MMC5_MIRROR         ; Vertical mirroring
+    LDX #$FF        
+    STX MMC5_PRG_BANK3
+
+    LDA #0
+    STA PAPU_MODCTL         ; disble DMC IRQs
+    STA PPUCTRL             ; Disable NMIs
+    LDA #$C0
+    STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
+
+    LDA #$06
+    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
+    CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
+
+    LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
+    @Loop: 
+        BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
+        BPL @Loop             ;  failure to do this will result in the PPU basically not working
+        DEX
+        BNE @Loop
+
+    FARCALL ResetRAM
+
+    FARCALL DisableAPU
+    SWITCH GameStart
+    JMP GameStart           ; jump to the start of the game!
 
 .segment "VECTORS"
 
