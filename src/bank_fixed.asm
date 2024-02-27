@@ -53,7 +53,7 @@
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; bank_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
@@ -366,27 +366,23 @@ StandardMapLoop:
     LDA mapdraw_job            ; check the map draw job
     CMP #1                     ;  if the next job is to draw attributes
     BNE :+                     ;  then we need to prep them here so they're ready for
-      FARCALL PrepAttributePos     ;  drawing next frame
-
+        FARCALL PrepAttributePos     ;  drawing next frame
     :   
-    LDA move_speed             ; check the player's movement speed to see if they're in motion
-    BNE @Continue              ;  if they are, skip over input and some other checks, and just continue to next
-                               ;  loop iteration
-            ;  This next bit is done only if the player isn't moving, or if they just completed
-            ;  a move this frame
-      LDA altareffect       ; do the altar effect if its flag is set
-      BEQ :+
+    LDA move_speed              ; check the player's movement speed to see if they're in motion
+    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next
+                                ;  loop iteration
+                                ;  This next bit is done only if the player isn't moving, or if they just completed
+                                ;  a move this frame
+    LDA altareffect       ; do the altar effect if its flag is set
+    BEQ :+
         FARCALL DoAltarEffect
-
     :     
     LDA entering_shop     ; jump ahead to shop code if entering a shop
-      BNE @Shop
-
-      LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
-      AND #TP_TELE_MASK | TP_BATTLEMARKER
-      BEQ :+
+    BNE @Shop
+    LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
+    AND #TP_TELE_MASK | TP_BATTLEMARKER
+    BEQ :+
         JUMP @TeleOrBattle
-
     :     
     CALL ProcessSMInput    ; if none of those things -- process input, and continue
   @Continue:
@@ -427,19 +423,17 @@ StandardMapLoop:
     BCC :+                  ;  see if this battle was the end game battle
 
     @VictoryLoop:
-      FARCALL LoadEpilogueSceneGFX
-      FARCALL EnterEndingScene
-      JUMP @VictoryLoop
-
+        FARCALL LoadEpilogueSceneGFX
+        FARCALL EnterEndingScene
+        JUMP @VictoryLoop
     :   
     FARCALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
     JUMP StandardMapLoop     ; and resume the loop
 
-
-  @TeleOrWarp:              ; code reaches here if we're teleporting or warping
+    @TeleOrWarp:              ; code reaches here if we're teleporting or warping
     BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-      FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
-      RTS                   ;   will either go to the overworld loop, or to one "layer" up in this SM loop
+    FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
+    RTS                   ;   will either go to the overworld loop, or to one "layer" up in this SM loop
 
   @Teleport:
     CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
@@ -458,30 +452,7 @@ StandardMapLoop:
     PHA
 
     FARCALL ScreenWipe_Close    ; wipe the screen closed
-    LDA #BANK_TELEPORTINFO  ; swap to the bank containing teleport info
-    CALL SwapPRG
-
-    LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
-
-    LDA lut_NormTele_X, X   ; get the X coord to teleport to
-    SEC                     ;  subtract 7 from desired player coord
-    SBC #7                  ;  and wrap to get scroll pos
-    AND #$3F
-    STA sm_scroll_x
-
-    LDA lut_NormTele_Y, X   ; do same with Y coord
-    SEC
-    SBC #7
-    AND #$3F
-    STA sm_scroll_y
-
-    LDA lut_NormTele_Map, X ; get the map and record it
-    STA cur_map
-
-    TAX                     ; then throw the map in X, and use it to get
-    LDA lut_Tilesets, X     ; the tileset for this map
-    STA cur_tileset
-
+    FARCALL LoadEntranceTeleportData
     CALL DoStandardMap       ; CALL to DoStandardMap -- which runs a NEW instance of this loop
                             ;  this will only return if/when the player WARPs back to this floor
     PLA                     ; and which point we pull all the above stuff we pushed

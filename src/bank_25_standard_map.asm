@@ -6,7 +6,7 @@
 .import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
 
 
-.export PrepStandardMap, RedrawDoor
+.export PrepStandardMap, RedrawDoor, LoadEntranceTeleportData
 .export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects
 
  ;; the LUT containing the music tracks for each tileset
@@ -202,7 +202,7 @@ ReenterStandardMap:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  LoadStandardMapAndObjects  [$CF42 :: 0x3CF52]
+;;  LoadStandardMapAndObjects
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -218,3 +218,78 @@ LoadStandardMapAndObjects:
     FORCEDFARCALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
 
     RTS                   ; exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  LoadTeleportData
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadEntranceTeleportData:
+    LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
+
+    LDA LUT_NormTele_X, X   ; get the X coord to teleport to
+    SEC                     ;  subtract 7 from desired player coord
+    SBC #7                  ;  and wrap to get scroll pos
+    AND #$3F
+    STA sm_scroll_x
+
+    LDA LUT_NormTele_Y, X   ; do same with Y coord
+    SEC
+    SBC #7
+    AND #$3F
+    STA sm_scroll_y
+
+    LDA LUT_NormTele_Map, X ; get the map and record it
+    STA cur_map
+
+    TAX                     ; then throw the map in X, and use it to get
+    LDA LUT_Tilesets, X     ; the tileset for this map
+    STA cur_tileset
+    RTS
+
+LUT_NormTele_X:
+    .byte $0c, $14, $12, $22, $05, $0a, $1b, $3d, $19, $1e, $12, $03, $2e, $23, $20, $1e
+    .byte $03, $37, $27, $06, $3b, $33, $0c, $16, $02, $17, $0e, $0c, $0c, $0a, $01, $06
+    .byte $15, $2d, $0c, $3d, $2f, $36, $30, $2d, $32, $10, $08, $13, $13, $18, $03, $07
+    .byte $08, $10, $01, $14, $28, $03, $0d, $01, $01, $0f, $04, $08, $0e, $17, $0c, $0c
+
+LUT_NormTele_Y:
+    .byte $12, $11, $10, $25, $06, $09, $2d, $21, $35, $20, $02, $17, $17, $06, $1f, $02
+    .byte $02, $05, $06, $14, $21, $0b, $0c, $16, $02, $37, $0c, $09, $10, $0c, $14, $05
+    .byte $2a, $08, $1a, $31, $27, $29, $0a, $14, $30, $1f, $01, $15, $04, $17, $03, $36
+    .byte $1b, $0f, $01, $12, $01, $20, $15, $01, $04, $07, $04, $04, $14, $16, $12, $07
+
+LUT_NormTele_Map:
+    .byte $18, $34, $1b, $1b, $1c, $1d, $1e, $1f, $20, $21, $22, $23, $22, $23, $24, $25
+    .byte $26, $25, $26, $0f, $26, $25, $19, $1a, $0b, $27, $19, $19, $19, $19, $19, $19
+    .byte $2c, $2d, $2e, $2b, $2c, $2d, $2c, $2b, $2a, $28, $29, $2f, $30, $31, $32, $33
+    .byte $37, $35, $36, $35, $34, $37, $38, $39, $3a, $3b, $19, $19, $19, $19, $08, $18
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+LUT_EntrTele_X:
+    .byte $00, $0f, $12, $00, $13, $18, $1a, $0f, $0c, $0c, $05, $08, $1d, $0b, $17, $14
+    .byte $01, $15, $00, $14, $1c, $0b, $1b, $1b, $12, $12, $12, $04, $04, $04, $04, $00
+
+LUT_EntrTele_Y:
+    .byte $07, $07, $01, $08, $0b, $07, $01, $07, $08, $00, $00, $07, $0b, $07, $0b, $07
+    .byte $07, $07, $07, $09, $0b, $03, $01, $02, $01, $0a, $11, $11, $11, $11, $11, $0a
+
+LUT_EntrTele_Map:
+    .byte $0b, $01, $09, $0a, $19, $19, $19, $19, $18, $19, $19, $19, $19, $19, $19, $19
+    .byte $19, $19, $19, $18, $18, $19, $19, $11, $0c, $0c, $0c, $0c, $0c, $0c, $0c, $0c
+
+LUT_ExitTele_X:
+    .byte $0c, $0c, $0c, $0c, $10, $10, $10, $10, $0a, $0a, $0a, $0b, $0a, $0a, $0b, $0a
+
+LUT_ExitTele_Y:
+    .byte $0a, $0a, $01, $01, $0c, $07, $13, $0b, $0b, $0b, $0b, $0b, $0b, $0b, $0b, $0b
+
+LUT_Tilesets:
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
+    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
+    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
+    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
