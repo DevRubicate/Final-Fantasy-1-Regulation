@@ -53,7 +53,7 @@
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; bank_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData, LoadExitTeleportData
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
@@ -80,6 +80,8 @@
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
 .export LoadStandardMap, LoadMapObjects, DoOWTransitions
+.export ProcessSMInput, EnterBattle
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -308,7 +310,7 @@ DoOWTransitions:
     LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
     STA inroom
 
-    CALL DoStandardMap       ; then CALL to the standard map code.  This CALL will only return
+    FARCALL DoStandardMap       ; then CALL to the standard map code.  This CALL will only return
                             ;  if/when the player warps out of the map.  At which point...
     FARJUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
@@ -325,112 +327,6 @@ EnterOW_PalCyc:
     LDA #$01
     CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
     FARJUMP EnterOverworldLoop  ; then enter the overworld loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Standard Map  [$C8B3 :: 0x3C8C3]
-;;
-;;    Enters a standard map, loads all appropriate objects, CHR, palettes... everything.
-;;  Then does the standard map loop
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoStandardMap:
-    FARCALL EnterStandardMap     ; load and prep map stuff
-    NOJUMP StandardMapLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Loop  [$C8B6 :: 0x3C8C6]
-;;
-;;    This is THE loop for game logic when in standard maps.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StandardMapLoop:
-    CALL WaitForVBlank        ; wait for VBlank
-    LDA #>oam                  ; and do Sprite DMA
-    STA OAMDMA
-    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing) this also sets the scroll
-    LDA framecounter
-    CLC                        ; increment the two byte frame counter
-    ADC #1                     ;  seriously... what did Nasir have against INC?
-    STA framecounter           ;  this is criminally inefficient
-    LDA framecounter+1
-    ADC #0
-    STA framecounter+1
-    FARCALL MusicPlay   ; keep music playing
-    LDA mapdraw_job            ; check the map draw job
-    CMP #1                     ;  if the next job is to draw attributes
-    BNE :+                     ;  then we need to prep them here so they're ready for
-        FARCALL PrepAttributePos     ;  drawing next frame
-    :   
-    LDA move_speed              ; check the player's movement speed to see if they're in motion
-    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next loop iteration. This next bit is done only if the player isn't moving, or if they just completed a move this frame
-    LDA altareffect             ; do the altar effect if its flag is set
-    BEQ :+
-        FARCALL DoAltarEffect
-    :     
-    LDA entering_shop     ; jump ahead to shop code if entering a shop
-    BNE @Shop
-    LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
-    AND #TP_TELE_MASK | TP_BATTLEMARKER
-    BNE @TeleOrBattle
-        CALL ProcessSMInput    ; if none of those things -- process input, and continue
-        @Continue:
-        FARCALL ClearOAM            ; clear OAM
-        FARCALL DrawSMSprites       ; and draw all sprites
-        JUMP StandardMapLoop     ; then keep looping
-
-    @Shop:
-        LDA #0
-        STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
-        LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
-        CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
-        FARCALL EnterShop           ; enter the shop
-        FARCALL ReenterStandardMap  ;  then reenter the map
-        JUMP StandardMapLoop     ;  and continue looping
-
-    ;; here if the player is to teleport, or to start a fight
-    @TeleOrBattle:
-    CMP #TP_TELE_WARP       ; see if this is a teleport or fight
-    BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
-        ;;  Otherwise, here, this is a BATTLE
-        FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
-        LDA #0
-        STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
-        FARCALL BattleTransition    ; do the battle transition effect
-        LDA #0                  ; then kill PPU, APU
-        STA PPUMASK
-        STA PAPU_EN
-        FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
-        LDA btlformation
-        CALL EnterBattle       ; start the battle!
-        BCC :+                  ;  see if this battle was the end game battle
-            @VictoryLoop:
-            FARCALL LoadEpilogueSceneGFX
-            FARCALL EnterEndingScene
-            JUMP @VictoryLoop
-        :   
-        FARCALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
-        JUMP StandardMapLoop     ; and resume the loop
-
-    @TeleOrWarp:              ; code reaches here if we're teleporting or warping
-    BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-    FARJUMP ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
-    @Teleport:
-    CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
-    BNE @ExitTeleport     ;    or exit teleport (to overworld map)
-
-    @NormalTeleport:        ; normal teleport!
-        FARCALL ScreenWipe_Close    ; wipe the screen closed
-        FARCALL LoadEntranceTeleportData
-        JUMP DoStandardMap
-
-    @ExitTeleport:
-        FARCALL ScreenWipe_Close    ; wipe the screen closed
-        FARCALL LoadExitTeleportData
-        FARJUMP DoOverworld         ; then jump to the overworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2136,43 +2032,36 @@ PalCyc_DrawPalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CyclePalettes:
-    STA palcyc_mode           ; record the mode
-    CALL WaitVBlank_NoSprites  ; wait for VBlank, and kill all sprites
-    CALL PalCyc_SetScroll      ; set the scroll
-    CALL PalCyc_GetInitialPal  ; load up the initial palette
-
-    LDA #$01                  ; A will be a make-shift frame counter
-  @Loop:
-    PHA                       ; push the frame counter to back it up
-    AND #$03                  ; mask low bits, and only take a step through the cycle
-    BNE @NoStep               ;   if zero (once every 4 frames)
-
-      CALL PalCyc_Step         ; if a 4th frame, take a step through the cycle
-      CPY #0                  ; check to see if Y is zero (cycling is complete)
-      BEQ @Done               ; if cycling is complete, break out of this loop
-
-  @NoStep:
-    CALL WaitForVBlank       ; wait for VBlank
-    CALL PalCyc_DrawPalette    ; draw the new palette
-    CALL PalCyc_SetScroll      ; set the scroll
-    FARCALL MusicPlay  ; and update music  (all the typical frame work)
-
-    PLA                       ; pull the frame counter
+    STA palcyc_mode             ; record the mode
+    CALL WaitVBlank_NoSprites   ; wait for VBlank, and kill all sprites
+    CALL PalCyc_SetScroll       ; set the scroll
+    CALL PalCyc_GetInitialPal   ; load up the initial palette
+    LDA #$01                    ; A will be a make-shift frame counter
+    @Loop:
+    PHA                         ; push the frame counter to back it up
+    AND #$03                    ; mask low bits, and only take a step through the cycle
+    BNE @NoStep                 ;   if zero (once every 4 frames)
+        CALL PalCyc_Step        ; if a 4th frame, take a step through the cycle
+        CPY #0                  ; check to see if Y is zero (cycling is complete)
+        BEQ @Done               ; if cycling is complete, break out of this loop
+    @NoStep:
+    CALL WaitForVBlank          ; wait for VBlank
+    CALL PalCyc_DrawPalette     ; draw the new palette
+    CALL PalCyc_SetScroll       ; set the scroll
+    FARCALL MusicPlay           ; and update music  (all the typical frame work)
+    PLA                         ; pull the frame counter
     CLC
-    ADC #1                    ; and add 1 to it
-    JUMP @Loop                 ; and keep looping until cycling is complete
-
-
-  @Done:
-    PLA               ; pull the frame counter just so it doesn't corrupt the stack (we're done with it)
-    LDA palcyc_mode   ; get mode
-    LSR A             ; check 'reverse' bit
-    BCS :+            ; if NOT doing reverse....
-      LDA #0          ; ... then turn PPU off
-      STA PPUMASK
+    ADC #1                      ; and add 1 to it
+    JUMP @Loop                  ; and keep looping until cycling is complete
+    @Done:
+    PLA                         ; pull the frame counter just so it doesn't corrupt the stack (we're done with it)
+    LDA palcyc_mode             ; get mode
+    LSR A                       ; check 'reverse' bit
+    BCS :+                      ; if NOT doing reverse....
+        LDA #0                  ; ... then turn PPU off
+        STA PPUMASK
     :   
-    LDA #BANK_MENUS   ; swap to menus bank
-    JUMP SwapPRG     ; and exit
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

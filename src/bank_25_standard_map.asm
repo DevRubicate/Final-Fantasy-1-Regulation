@@ -4,10 +4,11 @@
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 .import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
+.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, ProcessSMInput, ClearOAM, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 
 
 .export PrepStandardMap, RedrawDoor, LoadEntranceTeleportData, LoadExitTeleportData
-.export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects
+.export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects, DoStandardMap
 
  ;; the LUT containing the music tracks for each tileset
 
@@ -19,6 +20,52 @@ LUT_BattleRates:
     .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
     .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
     .byte $08, $08, $08, $08, $18, $08, $08, $08, $09, $0a, $0b, $0c, $01, $08, $08, $08
+
+LUT_NormTele_X:
+    .byte $0c, $14, $12, $22, $05, $0a, $1b, $3d, $19, $1e, $12, $03, $2e, $23, $20, $1e
+    .byte $03, $37, $27, $06, $3b, $33, $0c, $16, $02, $17, $0e, $0c, $0c, $0a, $01, $06
+    .byte $15, $2d, $0c, $3d, $2f, $36, $30, $2d, $32, $10, $08, $13, $13, $18, $03, $07
+    .byte $08, $10, $01, $14, $28, $03, $0d, $01, $01, $0f, $04, $08, $0e, $17, $0c, $0c
+
+LUT_NormTele_Y:
+    .byte $12, $11, $10, $25, $06, $09, $2d, $21, $35, $20, $02, $17, $17, $06, $1f, $02
+    .byte $02, $05, $06, $14, $21, $0b, $0c, $16, $02, $37, $0c, $09, $10, $0c, $14, $05
+    .byte $2a, $08, $1a, $31, $27, $29, $0a, $14, $30, $1f, $01, $15, $04, $17, $03, $36
+    .byte $1b, $0f, $01, $12, $01, $20, $15, $01, $04, $07, $04, $04, $14, $16, $12, $07
+
+LUT_NormTele_Map:
+    .byte $18, $34, $1b, $1b, $1c, $1d, $1e, $1f, $20, $21, $22, $23, $22, $23, $24, $25
+    .byte $26, $25, $26, $0f, $26, $25, $19, $1a, $0b, $27, $19, $19, $19, $19, $19, $19
+    .byte $2c, $2d, $2e, $2b, $2c, $2d, $2c, $2b, $2a, $28, $29, $2f, $30, $31, $32, $33
+    .byte $37, $35, $36, $35, $34, $37, $38, $39, $3a, $3b, $19, $19, $19, $19, $08, $18
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+
+LUT_EntrTele_X:
+    .byte $00, $0f, $12, $00, $13, $18, $1a, $0f, $0c, $0c, $05, $08, $1d, $0b, $17, $14
+    .byte $01, $15, $00, $14, $1c, $0b, $1b, $1b, $12, $12, $12, $04, $04, $04, $04, $00
+
+LUT_EntrTele_Y:
+    .byte $07, $07, $01, $08, $0b, $07, $01, $07, $08, $00, $00, $07, $0b, $07, $0b, $07
+    .byte $07, $07, $07, $09, $0b, $03, $01, $02, $01, $0a, $11, $11, $11, $11, $11, $0a
+
+LUT_EntrTele_Map:
+    .byte $0b, $01, $09, $0a, $19, $19, $19, $19, $18, $19, $19, $19, $19, $19, $19, $19
+    .byte $19, $19, $19, $18, $18, $19, $19, $11, $0c, $0c, $0c, $0c, $0c, $0c, $0c, $0c
+
+LUT_ExitTele_X:
+    .byte $2a, $1e, $c5, $82, $99, $41, $bc, $3e, $c2, $00, $00, $00, $00, $00, $00, $00
+
+LUT_ExitTele_Y:
+    .byte $ae, $af, $b7, $2d, $9f, $bb, $cd, $38, $3b, $00, $00, $00, $00, $00, $00, $00
+
+LUT_Tilesets:
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
+    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
+    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
+    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -261,48 +308,108 @@ LoadExitTeleportData:
     STA ow_scroll_y
     RTS
 
-LUT_NormTele_X:
-    .byte $0c, $14, $12, $22, $05, $0a, $1b, $3d, $19, $1e, $12, $03, $2e, $23, $20, $1e
-    .byte $03, $37, $27, $06, $3b, $33, $0c, $16, $02, $17, $0e, $0c, $0c, $0a, $01, $06
-    .byte $15, $2d, $0c, $3d, $2f, $36, $30, $2d, $32, $10, $08, $13, $13, $18, $03, $07
-    .byte $08, $10, $01, $14, $28, $03, $0d, $01, $01, $0f, $04, $08, $0e, $17, $0c, $0c
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Do Standard Map  [$C8B3 :: 0x3C8C3]
+;;
+;;    Enters a standard map, loads all appropriate objects, CHR, palettes... everything.
+;;  Then does the standard map loop
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LUT_NormTele_Y:
-    .byte $12, $11, $10, $25, $06, $09, $2d, $21, $35, $20, $02, $17, $17, $06, $1f, $02
-    .byte $02, $05, $06, $14, $21, $0b, $0c, $16, $02, $37, $0c, $09, $10, $0c, $14, $05
-    .byte $2a, $08, $1a, $31, $27, $29, $0a, $14, $30, $1f, $01, $15, $04, $17, $03, $36
-    .byte $1b, $0f, $01, $12, $01, $20, $15, $01, $04, $07, $04, $04, $14, $16, $12, $07
+DoStandardMap:
+    CALL EnterStandardMap     ; load and prep map stuff
+    NOJUMP StandardMapLoop
 
-LUT_NormTele_Map:
-    .byte $18, $34, $1b, $1b, $1c, $1d, $1e, $1f, $20, $21, $22, $23, $22, $23, $24, $25
-    .byte $26, $25, $26, $0f, $26, $25, $19, $1a, $0b, $27, $19, $19, $19, $19, $19, $19
-    .byte $2c, $2d, $2e, $2b, $2c, $2d, $2c, $2b, $2a, $28, $29, $2f, $30, $31, $32, $33
-    .byte $37, $35, $36, $35, $34, $37, $38, $39, $3a, $3b, $19, $19, $19, $19, $08, $18
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Standard Map Loop  [$C8B6 :: 0x3C8C6]
+;;
+;;    This is THE loop for game logic when in standard maps.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LUT_EntrTele_X:
-    .byte $00, $0f, $12, $00, $13, $18, $1a, $0f, $0c, $0c, $05, $08, $1d, $0b, $17, $14
-    .byte $01, $15, $00, $14, $1c, $0b, $1b, $1b, $12, $12, $12, $04, $04, $04, $04, $00
+StandardMapLoop:
+    CALL WaitForVBlank        ; wait for VBlank
+    LDA #>oam                  ; and do Sprite DMA
+    STA OAMDMA
+    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing) this also sets the scroll
+    LDA framecounter
+    CLC                        ; increment the two byte frame counter
+    ADC #1                     ;  seriously... what did Nasir have against INC?
+    STA framecounter           ;  this is criminally inefficient
+    LDA framecounter+1
+    ADC #0
+    STA framecounter+1
+    FARCALL MusicPlay   ; keep music playing
+    LDA mapdraw_job            ; check the map draw job
+    CMP #1                     ;  if the next job is to draw attributes
+    BNE :+                     ;  then we need to prep them here so they're ready for
+        FARCALL PrepAttributePos     ;  drawing next frame
+    :   
+    LDA move_speed              ; check the player's movement speed to see if they're in motion
+    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next loop iteration. This next bit is done only if the player isn't moving, or if they just completed a move this frame
+    LDA altareffect             ; do the altar effect if its flag is set
+    BEQ :+
+        FARCALL DoAltarEffect
+    :     
+    LDA entering_shop     ; jump ahead to shop code if entering a shop
+    BNE @Shop
+    LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
+    AND #TP_TELE_MASK | TP_BATTLEMARKER
+    BNE @TeleOrBattle
+        CALL ProcessSMInput    ; if none of those things -- process input, and continue
+        @Continue:
+        FARCALL ClearOAM            ; clear OAM
+        FARCALL DrawSMSprites       ; and draw all sprites
+        JUMP StandardMapLoop     ; then keep looping
 
-LUT_EntrTele_Y:
-    .byte $07, $07, $01, $08, $0b, $07, $01, $07, $08, $00, $00, $07, $0b, $07, $0b, $07
-    .byte $07, $07, $07, $09, $0b, $03, $01, $02, $01, $0a, $11, $11, $11, $11, $11, $0a
+    @Shop:
+        LDA #0
+        STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
+        LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
+        CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
+        FARCALL EnterShop           ; enter the shop
+        CALL ReenterStandardMap  ;  then reenter the map
+        JUMP StandardMapLoop     ;  and continue looping
 
-LUT_EntrTele_Map:
-    .byte $0b, $01, $09, $0a, $19, $19, $19, $19, $18, $19, $19, $19, $19, $19, $19, $19
-    .byte $19, $19, $19, $18, $18, $19, $19, $11, $0c, $0c, $0c, $0c, $0c, $0c, $0c, $0c
+    ;; here if the player is to teleport, or to start a fight
+    @TeleOrBattle:
+    CMP #TP_TELE_WARP       ; see if this is a teleport or fight
+    BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
+        ;;  Otherwise, here, this is a BATTLE
+        FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
+        LDA #0
+        STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
+        FARCALL BattleTransition    ; do the battle transition effect
+        LDA #0                  ; then kill PPU, APU
+        STA PPUMASK
+        STA PAPU_EN
+        FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
+        LDA btlformation
+        CALL EnterBattle       ; start the battle!
+        BCC :+                  ;  see if this battle was the end game battle
+            @VictoryLoop:
+            FARCALL LoadEpilogueSceneGFX
+            FARCALL EnterEndingScene
+            JUMP @VictoryLoop
+        :   
+        CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
+        JUMP StandardMapLoop     ; and resume the loop
 
-LUT_ExitTele_X:
-    .byte $2a, $1e, $c5, $82, $99, $41, $bc, $3e, $c2, $00, $00, $00, $00, $00, $00, $00
+    @TeleOrWarp:              ; code reaches here if we're teleporting or warping
+    BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
+    FARJUMP ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
+    @Teleport:
+    CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
+    BNE @ExitTeleport     ;    or exit teleport (to overworld map)
 
-LUT_ExitTele_Y:
-    .byte $ae, $af, $b7, $2d, $9f, $bb, $cd, $38, $3b, $00, $00, $00, $00, $00, $00, $00
+    @NormalTeleport:        ; normal teleport!
+        FARCALL ScreenWipe_Close    ; wipe the screen closed
+        CALL LoadEntranceTeleportData
+        JUMP DoStandardMap
 
-LUT_Tilesets:
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
-    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
-    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
-    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
+    @ExitTeleport:
+        FARCALL ScreenWipe_Close    ; wipe the screen closed
+        CALL LoadExitTeleportData
+        FARJUMP DoOverworld         ; then jump to the overworld
