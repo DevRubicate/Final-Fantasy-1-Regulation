@@ -53,7 +53,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap
 ; bank_26_map
-.import LoadMapPalettes
+.import LoadMapPalettes, BattleTransition
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -74,7 +74,8 @@
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
-.export DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll
+.export DrawFullMap, DrawMapPalette, SetSMScroll
+.export SetSMScroll, WaitVBlank_NoSprites
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -324,7 +325,7 @@ DoOWTransitions:
 
   @Battle:
     FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
-    CALL BattleTransition   ; Do the flashy transition effect
+    FARCALL BattleTransition   ; Do the flashy transition effect
 
     LDA #$00
     STA PPUMASK              ; turn off the PPU
@@ -544,7 +545,7 @@ StandardMapLoop:
     FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
     LDA #0
     STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
-    CALL BattleTransition    ; do the battle transition effect
+    FARCALL BattleTransition    ; do the battle transition effect
 
     LDA #0                  ; then kill PPU, APU
     STA PPUMASK
@@ -2506,75 +2507,7 @@ WaitVBlank_NoSprites:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle Transition [$D8CD :: 0x3D8DD]
-;;
-;;    Does the flashy effect for when you begin a battle.  The effect
-;;  does not alter the palettes like you might think... instead it uses the
-;;  seldom used 'color emphasis' feature of the NES.  It basically cycles
-;;  through all the emphasis modes, which makes the screen appear to flash.
-;;
-;;    This is also coupled with the FF trademarked and ever popular
-;;  "shhhheeewww  shhhhheeewww" sound effect on the noise.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-BattleTransition:
-    LDA #$08
-    STA PAPU_EN             ; silence all audio except for noise
-    LDA #0
-    STA tmp+12            ; zero our loop counter (tmp+12)
-
-  ;; loop from $00 - $41
-
-  @Loop:
-    CALL WaitForVBlank   ; wait for VBlank
-    LDA mapflags          ; get map flags to see if this is OW or SM
-    LSR A
-    BCC @OW               ; fork appropriately
-
-  @SM:
-      CALL SetSMScroll         ; set SM scroll if SM
-      JUMP @Continue
-  @OW:
-      FARCALL SetOWScroll_PPUOn   ; or OW scroll if OW
-
-  @Continue:
-    LDA tmp+12       ; get loop counter
-    ASL A
-    ASL A
-    ASL A            ; left shift 3 to make bits 2-4 the high bits
-    AND #$E0         ; mask them out -- these are our emphasis bits
-                     ; this will switch to a new emphasis mode every 4 frames
-                     ; and will cycle through all 8 emphasis modes a total of 4 times
-
-    ORA #$0A         ; OR emphasis bits with other info for PPUMASK (enable BG rendering, disable sprites)
-    STA PPUMASK        ; write set emphasis
-
-    LDA #$0F         ; enable volume decay for the noise channel
-    STA PAPU_NCTL1        ;   and set it to decay at slowest speed -- but since the decay gets restarted every
-                     ;   frame in this routine -- this effectively just holds the noise at maximum volume
-
-    LDA tmp+12       ; set noise freq to (loopcounter/2)OR3
-    LSR A            ;  this results in the following frequency pattern:
-    ORA #$03         ; 3,3,3,3,3,3,3,3, 7,7,7,7,7,7,7,7, B,B,B,B,B,B,B,B, F,F,F,F,F,F,F,F,
-    STA PAPU_NFREQ1        ;    (repeated again)
-
-    LDA #0
-    STA PAPU_NFREQ2        ; reload length counter
-
-    INC tmp+12       ; inc our loop counter
-    LDA tmp+12
-    CMP #$41
-
-    BCC @Loop        ; and keep looping until it reaches $41
-
-    LDA #$00         ; at which point
-    STA PPUMASK        ; turn off the PPU
-    STA PAPU_EN        ;  and APU
-
-    JUMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
