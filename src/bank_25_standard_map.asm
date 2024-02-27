@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import LoadSMCHR, LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow
+.import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 
 .export PrepStandardMap
 
@@ -52,7 +52,7 @@ PrepStandardMap:
     STA PPUMASK
 
     LDX cur_tileset               ; get the tileset
-    LDA @lut_TilesetMusicTrack, X ; use it to get the music track tied to this tileset
+    LDA LUT_TilesetMusicTrack, X ; use it to get the music track tied to this tileset
     STA music_track               ; play it
     STA dlgmusic_backup           ; and record it so it can be restarted later by the dialogue box
 
@@ -74,9 +74,17 @@ PrepStandardMap:
 
     FARJUMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
 
+
+LoadSMCHR:                     ; standard map -- does not any palettes
+    FARCALL LoadPlayerMapmanCHR
+    FARCALL LoadTilesetAndMenuCHR
+    FARJUMP LoadMapObjCHR
+
+
+
  ;; the LUT containing the music tracks for each tileset
 
-  @lut_TilesetMusicTrack:
+LUT_TilesetMusicTrack:
     .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
 
 LUT_BattleRates:

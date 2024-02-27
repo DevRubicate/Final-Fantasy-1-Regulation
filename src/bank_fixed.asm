@@ -74,7 +74,7 @@
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
-.export LoadSMCHR, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll
+.export DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4062,10 +4062,7 @@ LoadShopCHRPal:
     FARCALL LoadShopBGCHRPalettes
     FARJUMP LoadBatSprCHRPalettes
 
-LoadSMCHR:                     ; standard map -- does not any palettes
-    FARCALL LoadPlayerMapmanCHR
-    FARCALL LoadTilesetAndMenuCHR
-    FARJUMP LoadMapObjCHR
+
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
