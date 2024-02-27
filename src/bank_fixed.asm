@@ -53,7 +53,7 @@
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; bank_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData, LoadExitTeleportData
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
@@ -385,14 +385,14 @@ StandardMapLoop:
         JUMP @TeleOrBattle
     :     
     CALL ProcessSMInput    ; if none of those things -- process input, and continue
-  @Continue:
+    @Continue:
     FARCALL ClearOAM            ; clear OAM
     FARCALL DrawSMSprites       ; and draw all sprites
     JUMP StandardMapLoop     ; then keep looping
 
 
 
-  @Shop:
+    @Shop:
     FARCALL GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
     LDA #0                  ;   this seems totally useless to do here
     STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
@@ -402,12 +402,12 @@ StandardMapLoop:
     FARCALL ReenterStandardMap  ;  then reenter the map
     JUMP StandardMapLoop     ;  and continue looping
 
-  ;; here if the player is to teleport, or to start a fight
-  @TeleOrBattle:
+    ;; here if the player is to teleport, or to start a fight
+    @TeleOrBattle:
     CMP #TP_TELE_WARP       ; see if this is a teleport or fight
     BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
 
-   ;;  Otherwise, here, this is a BATTLE
+    ;;  Otherwise, here, this is a BATTLE
     FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
     LDA #0
     STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
@@ -421,8 +421,7 @@ StandardMapLoop:
     LDA btlformation
     CALL EnterBattle       ; start the battle!
     BCC :+                  ;  see if this battle was the end game battle
-
-    @VictoryLoop:
+        @VictoryLoop:
         FARCALL LoadEpilogueSceneGFX
         FARCALL EnterEndingScene
         JUMP @VictoryLoop
@@ -435,11 +434,11 @@ StandardMapLoop:
     FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
     RTS                   ;   will either go to the overworld loop, or to one "layer" up in this SM loop
 
-  @Teleport:
+    @Teleport:
     CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
     BNE @ExitTeleport     ;    or exit teleport (to overworld map)
 
-  @NormalTeleport:        ; normal teleport!
+    @NormalTeleport:        ; normal teleport!
     LDA sm_scroll_x       ;  push the scroll (player position), inroom flags,
     PHA                   ;  map, and tileset to the stack
     LDA sm_scroll_y       ; This stuff is all recorded on the stack for
@@ -465,31 +464,14 @@ StandardMapLoop:
     STA sm_scroll_y
     PLA
     STA sm_scroll_x
-
     JUMP DoStandardMap       ; then JUMP to DoStandardMap to reload everything that needs reloading
                             ;   and do the map loop
-
     @ExitTeleport:
-
     CMP #TP_TELE_EXIT       ; lastly... check to ensure this is an exit teleport.  It always will be
     BNE ProcessSMInput      ;   unless the battle marker bit was set, too -- in which case just jump
                             ;   over to input processing (should never happen)
-
     FARCALL ScreenWipe_Close    ; wipe the screen closed
-    LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport dataa
-    CALL SwapPRG
-
-    LDX tileprop+1          ; get the teleport ID in X
-    LDA lut_ExitTele_X, X   ;  get X coord
-    SEC                     ;  subtract 7 to get the scroll
-    SBC #7
-    STA ow_scroll_x
-
-    LDA lut_ExitTele_Y, X   ; do same with Y coord
-    SEC
-    SBC #7
-    STA ow_scroll_y
-
+    FARCALL LoadExitTeleportData
     FARJUMP DoOverworld         ; then jump to the overworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -6,7 +6,7 @@
 .import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
 
 
-.export PrepStandardMap, RedrawDoor, LoadEntranceTeleportData
+.export PrepStandardMap, RedrawDoor, LoadEntranceTeleportData, LoadExitTeleportData
 .export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects
 
  ;; the LUT containing the music tracks for each tileset
@@ -248,6 +248,19 @@ LoadEntranceTeleportData:
     STA cur_tileset
     RTS
 
+LoadExitTeleportData:
+    LDX tileprop+1          ; get the teleport ID in X
+    LDA LUT_ExitTele_X, X   ;  get X coord
+    SEC                     ;  subtract 7 to get the scroll
+    SBC #7
+    STA ow_scroll_x
+
+    LDA LUT_ExitTele_Y, X   ; do same with Y coord
+    SEC
+    SBC #7
+    STA ow_scroll_y
+    RTS
+
 LUT_NormTele_X:
     .byte $0c, $14, $12, $22, $05, $0a, $1b, $3d, $19, $1e, $12, $03, $2e, $23, $20, $1e
     .byte $03, $37, $27, $06, $3b, $33, $0c, $16, $02, $17, $0e, $0c, $0c, $0a, $01, $06
@@ -283,10 +296,10 @@ LUT_EntrTele_Map:
     .byte $19, $19, $19, $18, $18, $19, $19, $11, $0c, $0c, $0c, $0c, $0c, $0c, $0c, $0c
 
 LUT_ExitTele_X:
-    .byte $0c, $0c, $0c, $0c, $10, $10, $10, $10, $0a, $0a, $0a, $0b, $0a, $0a, $0b, $0a
+    .byte $2a, $1e, $c5, $82, $99, $41, $bc, $3e, $c2, $00, $00, $00, $00, $00, $00, $00
 
 LUT_ExitTele_Y:
-    .byte $0a, $0a, $01, $01, $0c, $07, $13, $0b, $0b, $0b, $0b, $0b, $0b, $0b, $0b, $0b
+    .byte $ae, $af, $b7, $2d, $9f, $bb, $cd, $38, $3b, $00, $00, $00, $00, $00, $00, $00
 
 LUT_Tilesets:
     .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
