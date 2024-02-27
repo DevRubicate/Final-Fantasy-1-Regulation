@@ -351,8 +351,7 @@ StandardMapLoop:
     CALL WaitForVBlank        ; wait for VBlank
     LDA #>oam                  ; and do Sprite DMA
     STA OAMDMA
-    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing)
-                               ;   this also sets the scroll
+    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing) this also sets the scroll
     LDA framecounter
     CLC                        ; increment the two byte frame counter
     ADC #1                     ;  seriously... what did Nasir have against INC?
@@ -360,20 +359,15 @@ StandardMapLoop:
     LDA framecounter+1
     ADC #0
     STA framecounter+1
-
     FARCALL MusicPlay   ; keep music playing
-
     LDA mapdraw_job            ; check the map draw job
     CMP #1                     ;  if the next job is to draw attributes
     BNE :+                     ;  then we need to prep them here so they're ready for
         FARCALL PrepAttributePos     ;  drawing next frame
     :   
     LDA move_speed              ; check the player's movement speed to see if they're in motion
-    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next
-                                ;  loop iteration
-                                ;  This next bit is done only if the player isn't moving, or if they just completed
-                                ;  a move this frame
-    LDA altareffect       ; do the altar effect if its flag is set
+    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next loop iteration. This next bit is done only if the player isn't moving, or if they just completed a move this frame
+    LDA altareffect             ; do the altar effect if its flag is set
     BEQ :+
         FARCALL DoAltarEffect
     :     
@@ -381,98 +375,62 @@ StandardMapLoop:
     BNE @Shop
     LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
     AND #TP_TELE_MASK | TP_BATTLEMARKER
-    BEQ :+
-        JUMP @TeleOrBattle
-    :     
-    CALL ProcessSMInput    ; if none of those things -- process input, and continue
-    @Continue:
-    FARCALL ClearOAM            ; clear OAM
-    FARCALL DrawSMSprites       ; and draw all sprites
-    JUMP StandardMapLoop     ; then keep looping
-
-
+    BNE @TeleOrBattle
+        CALL ProcessSMInput    ; if none of those things -- process input, and continue
+        @Continue:
+        FARCALL ClearOAM            ; clear OAM
+        FARCALL DrawSMSprites       ; and draw all sprites
+        JUMP StandardMapLoop     ; then keep looping
 
     @Shop:
-    FARCALL GetSMTilePropNow    ; get the 'now' properties of the tile the player is on
-    LDA #0                  ;   this seems totally useless to do here
-    STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
-    LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
-    CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
-    FARCALL EnterShop           ; enter the shop
-    FARCALL ReenterStandardMap  ;  then reenter the map
-    JUMP StandardMapLoop     ;  and continue looping
+        LDA #0
+        STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
+        LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
+        CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
+        FARCALL EnterShop           ; enter the shop
+        FARCALL ReenterStandardMap  ;  then reenter the map
+        JUMP StandardMapLoop     ;  and continue looping
 
     ;; here if the player is to teleport, or to start a fight
     @TeleOrBattle:
     CMP #TP_TELE_WARP       ; see if this is a teleport or fight
     BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
-
-    ;;  Otherwise, here, this is a BATTLE
-    FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
-    LDA #0
-    STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
-    FARCALL BattleTransition    ; do the battle transition effect
-
-    LDA #0                  ; then kill PPU, APU
-    STA PPUMASK
-    STA PAPU_EN
-
-    FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
-    LDA btlformation
-    CALL EnterBattle       ; start the battle!
-    BCC :+                  ;  see if this battle was the end game battle
-        @VictoryLoop:
-        FARCALL LoadEpilogueSceneGFX
-        FARCALL EnterEndingScene
-        JUMP @VictoryLoop
-    :   
-    FARCALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
-    JUMP StandardMapLoop     ; and resume the loop
+        ;;  Otherwise, here, this is a BATTLE
+        FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
+        LDA #0
+        STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
+        FARCALL BattleTransition    ; do the battle transition effect
+        LDA #0                  ; then kill PPU, APU
+        STA PPUMASK
+        STA PAPU_EN
+        FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
+        LDA btlformation
+        CALL EnterBattle       ; start the battle!
+        BCC :+                  ;  see if this battle was the end game battle
+            @VictoryLoop:
+            FARCALL LoadEpilogueSceneGFX
+            FARCALL EnterEndingScene
+            JUMP @VictoryLoop
+        :   
+        FARCALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
+        JUMP StandardMapLoop     ; and resume the loop
 
     @TeleOrWarp:              ; code reaches here if we're teleporting or warping
     BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-    FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS
-    RTS                   ;   will either go to the overworld loop, or to one "layer" up in this SM loop
-
+    FARJUMP ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
     @Teleport:
     CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
     BNE @ExitTeleport     ;    or exit teleport (to overworld map)
 
     @NormalTeleport:        ; normal teleport!
-    LDA sm_scroll_x       ;  push the scroll (player position), inroom flags,
-    PHA                   ;  map, and tileset to the stack
-    LDA sm_scroll_y       ; This stuff is all recorded on the stack for
-    PHA                   ; WARP purposes
-    LDA inroom
-    PHA
-    LDA cur_map
-    PHA
-    LDA cur_tileset
-    PHA
+        FARCALL ScreenWipe_Close    ; wipe the screen closed
+        FARCALL LoadEntranceTeleportData
+        JUMP DoStandardMap
 
-    FARCALL ScreenWipe_Close    ; wipe the screen closed
-    FARCALL LoadEntranceTeleportData
-    CALL DoStandardMap       ; CALL to DoStandardMap -- which runs a NEW instance of this loop
-                            ;  this will only return if/when the player WARPs back to this floor
-    PLA                     ; and which point we pull all the above stuff we pushed
-    STA cur_tileset         ;  to return to the position we were at before the normal teleport
-    PLA
-    STA cur_map
-    PLA
-    STA inroom
-    PLA
-    STA sm_scroll_y
-    PLA
-    STA sm_scroll_x
-    JUMP DoStandardMap       ; then JUMP to DoStandardMap to reload everything that needs reloading
-                            ;   and do the map loop
     @ExitTeleport:
-    CMP #TP_TELE_EXIT       ; lastly... check to ensure this is an exit teleport.  It always will be
-    BNE ProcessSMInput      ;   unless the battle marker bit was set, too -- in which case just jump
-                            ;   over to input processing (should never happen)
-    FARCALL ScreenWipe_Close    ; wipe the screen closed
-    FARCALL LoadExitTeleportData
-    FARJUMP DoOverworld         ; then jump to the overworld
+        FARCALL ScreenWipe_Close    ; wipe the screen closed
+        FARCALL LoadExitTeleportData
+        FARJUMP DoOverworld         ; then jump to the overworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
