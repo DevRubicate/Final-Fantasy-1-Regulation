@@ -4407,7 +4407,7 @@ DoPhysicalAttack:
   @EnemyAttackingPlayer:
     LDA #$01
     CALL PlayBattleSFX           ; play the "boom bash" sound effect
-    CALL BattleScreenShake     ; do the 'screen shake' animation
+    FARCALL BattleScreenShake     ; do the 'screen shake' animation
     
     LDA btl_defender_ailments
     AND #AIL_DEAD | AIL_STONE
