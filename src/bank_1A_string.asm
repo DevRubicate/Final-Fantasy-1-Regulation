@@ -19,7 +19,7 @@ DrawComplexString_New:
 
     @StallAndDraw:
 
-    CALL MenuCondStall ;   this isn't really necessary, since MenuCondStall checks menustall already
+    FARCALL MenuCondStall ;   this isn't really necessary, since MenuCondStall checks menustall already
 
     @Draw_NoStall:
 

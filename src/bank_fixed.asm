@@ -30,6 +30,8 @@
 .import ScreenWipe_Open, ScreenWipe_Close
 ; bank_16_overworld_tileset
 .import LoadSMTilesetData
+; bank_19_menu
+.import MenuCondStall
 ; bank_1A_string
 .import DrawComplexString_New, DrawItemBox
 ; bank_1B_map_chr
@@ -75,7 +77,7 @@
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
-.export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
+.export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export DrawFullMap, DrawMapPalette, SetSMScroll
 .export SetSMScroll, WaitVBlank_NoSprites
 
@@ -3185,7 +3187,7 @@ DrawBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBoxRow_Mid:
-    CALL MenuCondStall  ; do the conditional stall
+    FARCALL MenuCondStall  ; do the conditional stall
     LDA PPUSTATUS          ; reset PPU toggle
     LDA ppu_dest+1
     STA PPUADDR          ; Load up desired PPU address
@@ -3228,7 +3230,7 @@ DrawBoxRow_Mid:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBoxRow_Bot:
-    CALL MenuCondStall   ; Do the conditional stall
+    FARCALL MenuCondStall   ; Do the conditional stall
     LDA PPUSTATUS           ; Reset PPU Toggle
     LDA ppu_dest+1      ;  and load up PPU Address
     STA PPUADDR
@@ -3262,7 +3264,7 @@ DrawBoxRow_Bot:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawBoxRow_Top:
-    CALL MenuCondStall   ; Do the conditional stall
+    FARCALL MenuCondStall   ; Do the conditional stall
     LDA PPUSTATUS           ; reset PPU toggle
     LDA ppu_dest+1
     STA PPUADDR           ; set PPU Address appropriately
@@ -3290,35 +3292,6 @@ DrawBoxRow_Top:
     ADC #0              ; Add 0 to catch the carry
     STA ppu_dest+1
 
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Menu Conditional Stall   [$E12E :: 0x3E13E]
-;;
-;;    This will conditionally stall (wait) a frame for some menu routines.
-;;   For example, if a box is to draw more slowly (one row drawn per frame)
-;;   This is important and should be done when you attempt to draw when the PPU is on
-;;   because it ensures that drawing will occur in VBlank
-;;
-;;  IN:  menustall = the flag to indicate whether or not to stall (nonzero = stall)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MenuCondStall:
-    LDA menustall          ; check stall flag
-    BEQ @Exit              ; if zero, we're not to stall, so just exit
-
-      LDA soft2000         ;  we're stalling... so reset the scroll
-      STA PPUCTRL
-      LDA #0
-      STA PPUSCROLL            ;  scroll inside menus is always 0
-      STA PPUSCROLL
-
-      FARCALL MusicPlay    ;  Keep the music playing
-      CALL WaitForVBlank  ; then wait a frame
-
-    @Exit:
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
