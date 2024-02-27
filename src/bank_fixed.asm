@@ -61,10 +61,8 @@
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
-.export SwapPRG
-.export DoOverworld, DrawImageRect
+.export DrawImageRect
 .export DrawPalette
-.export DrawBox, DrawPalette
 .export DrawEquipMenuStrings, EraseBox
 .export DrawSimple2x3Sprite, lutClassBatSprPalette
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox
@@ -76,12 +74,12 @@
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export CHRLoadToA
 .export DoOverworld, DoMapDrawJob
-.export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
+.export WaitScanline, RedrawDoor
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
-.export DrawFullMap, DrawMapPalette, SetSMScroll
-.export SetSMScroll, WaitVBlank_NoSprites
+.export DrawFullMap, DrawMapPalette
+.export WaitVBlank_NoSprites
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5681,7 +5679,6 @@ lut_EnemyRosterBox:
 ;       hdr   X    Y  width  height
   .byte $00, $01, $00, $0B, $0A
   
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Combat box lut          [$F9E9 :: 0x3F9F9]
@@ -6739,7 +6736,6 @@ Impl_FARCALL:
 
     ; Activate the trampoline
     ;RTS
-
 
 .segment "RESET_VECTOR"
 

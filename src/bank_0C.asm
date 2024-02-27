@@ -165,8 +165,7 @@ FinishBattlePrepAndFadeIn:
     CALL DrawCharacterStatus
     
     JUMP Battle_AfterFadeIn
-    
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  WaitFrames_BattleResult  [$932A :: 0x3133A]
@@ -1182,7 +1181,6 @@ DoFrame_WithInput:
     LDA btl_input       ; reload the controller state, now in A
     RTS
     
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleDraw8x8Sprite  [$97E9 :: 0x317F9]
@@ -1461,7 +1459,6 @@ DrawCharacter:
     INX                             ; inc TSA index so next pose row we'll use different tiles
     NOJUMP Draw16x8SpriteRow        ; Flow continues into Draw16x8SpriteRow, which will draw the tiles
 
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw16x8SpriteRow  [$9998 :: 0x319A8]
@@ -1531,8 +1528,6 @@ DrawCharacter_NextTile:
     STA btl8x8spr_x
     JUMP BattleDraw8x8Sprite ; draw & exit
 
-    
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawWeaponGraphicRow  [$99E5 :: 0x319F5]
@@ -1599,7 +1594,6 @@ PrepAndGetBattleMainCommand:
       BNE :-
     JUMP MenuSelection_2x4
 
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  SelectPlayerTarget  [$9A3A :: 0x31A4A]
@@ -1713,7 +1707,7 @@ lut_EnemyTargetMenuJumpTbl:
   .WORD EnemyTargetMenu_Mix
   .WORD EnemyTargetMenu_FiendChaos
   .WORD EnemyTargetMenu_FiendChaos
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  EnemyTargetMenu_FiendChaos  [$9ACF :: 0x31ADF]
@@ -1768,7 +1762,7 @@ EnemyTargetMenu_9Small:
     LDA #$08
     STA btlcurs_max
     JUMP EnemyTargetMenu
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  EnemyTargetMenu_4Large  [$9B04 :: 0x31B14]
@@ -1907,7 +1901,7 @@ EnemyTargetMenu:
     CMP #$10
     BEQ BattleTarget_Up     ; see if Up pressed
     RTS
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleTarget_Down    [$9BBB :: 0x31BCB]
@@ -1937,7 +1931,7 @@ BattleTarget_DownSub:
     
     STA btlcmd_target           ; once we have a valid slot, store it in ?'btltmp_target'?
     RTS
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleTarget_Up    [$9BD9 :: 0x31BE9]
@@ -1963,7 +1957,7 @@ BattleTarget_Up:
     BEQ BattleTarget_Up     ; if it is, keep moving up
     STA btlcmd_target       ; otherwise, if it's not empty, record the target
     RTS                     ;   and exit
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  MenuSelection_Item  [$9BF8 :: 0x31C08]
