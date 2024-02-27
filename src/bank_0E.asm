@@ -6571,7 +6571,7 @@ UseMagic_EXIT:
     CALL MenuWaitForBtn_SFX    ; wait for button press
 
   UseMagic_DoEXIT:
-    FARJUMP DoOverworld           ; then restart logic on overworld by JMPing to DoOverworld
+    NAKEDJUMP DoOverworld           ; then restart logic on overworld by JMPing to DoOverworld
 
 ;  Notes regarding WARP/EXIT:
 ;

@@ -3,11 +3,31 @@
 .include "src/global-import.inc"
 
 .import LoadOWBGCHR, LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
-.import MusicPlay, PrepAttributePos, DoOWTransitions, ProcessOWInput
+.import MusicPlay, PrepAttributePos, ProcessOWInput
 .import ClearOAM, DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
+.import CyclePalettes, LoadBridgeSceneGFX, EnterBridgeScene, CyclePalettes, CyclePalettes, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
 
 .export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
+
+LUT_EntrTele_X:
+    .byte $1e, $10, $13, $29, $01, $0b, $3d, $01, $13, $0c, $10, $16, $0c, $14, $17, $1b
+    .byte $07, $0c, $02, $39, $16, $0f, $12, $15, $11, $0b, $05, $13, $2b, $3a, $00, $00
+
+LUT_EntrTele_Y:
+    .byte $12, $17, $20, $16, $10, $17, $3d, $0c, $17, $23, $1f, $18, $15, $1e, $18, $0f
+    .byte $01, $0f, $02, $38, $0b, $0b, $0d, $1b, $1f, $0e, $03, $24, $1d, $37, $00, $00
+
+LUT_EntrTele_Map:
+    .byte $10, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
+    .byte $0f, $10, $11, $12, $13, $14, $15, $16, $17, $3c, $3c, $10, $10, $10, $00, $00
+
+LUT_Tilesets:
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
+    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
+    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
+    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
+
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
@@ -175,25 +195,101 @@ LoadEntranceTeleportData:
 
     RTS
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Do Overworld Transitions  [$C140 :: 0x3C150]
+;;
+;;    Called to do any transitions that need to be done from the overworld.
+;;  This includes teleports, battles, entering the caravan, etc.  Anything that
+;;  takes the game off of the overworld.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LUT_EntrTele_X:
-    .byte $1e, $10, $13, $29, $01, $0b, $3d, $01, $13, $0c, $10, $16, $0c, $14, $17, $1b
-    .byte $07, $0c, $02, $39, $16, $0f, $12, $15, $11, $0b, $05, $13, $2b, $3a, $00, $00
+DoOWTransitions:
+    LDA bridgescene       ; see if the bridge scene has been triggered
+    BEQ @SkipBridgeScene  ;   if not triggered... skip it
+    BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
 
-LUT_EntrTele_Y:
-    .byte $12, $17, $20, $16, $10, $17, $3d, $0c, $17, $23, $1f, $18, $15, $1e, $18, $0f
-    .byte $01, $0f, $02, $38, $0b, $0b, $0d, $1b, $1f, $0e, $03, $24, $1d, $37, $00, $00
+    LDA #0
+    CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
 
-LUT_EntrTele_Map:
-    .byte $10, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
-    .byte $0f, $10, $11, $12, $13, $14, $15, $16, $17, $3c, $3c, $10, $10, $10, $00, $00
+    FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
+    FARCALL EnterBridgeScene ; do the bridge scene.
 
-LUT_Tilesets:
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
-    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
-    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
-    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
+    LDA #$04
+    CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
+    JUMP EnterOW_PalCyc  ; then re-enter overworld
 
+    @SkipBridgeScene:
 
+    LDA entering_shop     ; see if we're entering a shop (caravan)
+    BEQ @SkipShop         ; if not... skip it
+
+    FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
+    LDA #$00
+    CALL CyclePalettes   ; cycle out the palette
+    FARCALL EnterShop       ; and enter the shop!
+    JUMP EnterOW_PalCyc  ; then re-enter overworld
+
+    @SkipShop:
+    BIT tileprop+1      ; check properties of tile we just moved to
+    BMI @Teleport       ; if bit 7 set.. it's a teleport tile
+    BVS @Battle         ; otherwise... if bit 6 set, we are to engage in battle
+
+      ;;  If we reach here, there is nothing special that happened due to the player
+      ;;   moving.  So check for start/select button presses
+
+    LDA joy_start         ; did they press start?
+    BEQ @SkipStart        ; if not... skip it
+        LDA #0
+        STA joy_start       ; clear start button catcher
+        STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
+        FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
+        LDA #$00
+        CALL CyclePalettes   ; cycle out the palette
+        FARCALL EnterMainMenu   ; and enter the main menu
+        JUMP EnterOW_PalCyc  ; then re-enter the overworld
+
+    @SkipStart:
+    LDA joy_select        ; check to see if they pressed select
+    BEQ @Exit             ; if not... nothing else to check.  Just exit
+
+    LDA #$00            ; otherwise... if they did press select..
+    STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
+    CALL CyclePalettes   ; cycle out the palette
+
+    LDA joy
+    AND #$40            ; see if the B button is being held down
+    BEQ @Lineup         ;  if not... jump to the lineup menu.  Otherwise do the minimap screen
+
+    @Minimap:
+        FARCALL EnterMinimap     ; do the minimap
+        JUMP EnterOW_PalCyc   ; then re-enter overworld
+
+    @Lineup:
+        FARCALL EnterLineupMenu  ; enter the lineup menu
+        JUMP EnterOW_PalCyc   ; then re-enter overworld
+
+    @Exit:
+    RTS
+
+    @Battle:
+        FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
+        FARCALL BattleTransition   ; Do the flashy transition effect
+        LDA #$00
+        STA PPUMASK              ; turn off the PPU
+        STA PAPU_EN              ; and APU
+        FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
+        LDA btlformation
+        CALL EnterBattle      ; start the battle!
+        JUMP EnterOW_PalCyc     ; then re-enter overworld
+
+    @Teleport:
+        FARCALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
+        FARCALL ScreenWipe_Close    ; wipe the screen closed
+        CALL LoadEntranceTeleportData
+        LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
+        STA inroom
+        NAKEDJUMP DoStandardMap
 
 

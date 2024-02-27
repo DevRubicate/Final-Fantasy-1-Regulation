@@ -57,7 +57,7 @@
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
-.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
+.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
@@ -69,17 +69,17 @@
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump
-.export Impl_FARCALL, Impl_FARJUMP
+.export Impl_FARCALL, Impl_FARJUMP,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export CHRLoadToA
 .export DoMapDrawJob
 .export WaitScanline, SetSMScroll
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont
-.export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
+.export CoordToNTAddr
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
-.export LoadStandardMap, LoadMapObjects, DoOWTransitions
+.export LoadStandardMap, LoadMapObjects
 .export ProcessSMInput, EnterBattle
 
 
@@ -182,113 +182,7 @@ DialogueBox_Frame:
     STA PPUCTRL                      ; and set it
     FARJUMP MusicPlay       ; then call the Music Play routine and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Overworld Transitions  [$C140 :: 0x3C150]
-;;
-;;    Called to do any transitions that need to be done from the overworld.
-;;  This includes teleports, battles, entering the caravan, etc.  Anything that
-;;  takes the game off of the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DoOWTransitions:
-    LDA bridgescene       ; see if the bridge scene has been triggered
-    BEQ @SkipBridgeScene  ;   if not triggered... skip it
-    BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
-
-    LDA #0
-    CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
-
-    FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
-    FARCALL EnterBridgeScene ; do the bridge scene.
-
-    LDA #$04
-    CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
-    JUMP EnterOW_PalCyc  ; then re-enter overworld
-
-    @SkipBridgeScene:
-
-    LDA entering_shop     ; see if we're entering a shop (caravan)
-    BEQ @SkipShop         ; if not... skip it
-
-    FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
-    LDA #$00
-    CALL CyclePalettes   ; cycle out the palette
-    FARCALL EnterShop       ; and enter the shop!
-    JUMP EnterOW_PalCyc  ; then re-enter overworld
-
-    @SkipShop:
-    BIT tileprop+1      ; check properties of tile we just moved to
-    BMI @Teleport       ; if bit 7 set.. it's a teleport tile
-    BVS @Battle         ; otherwise... if bit 6 set, we are to engage in battle
-
-      ;;  If we reach here, there is nothing special that happened due to the player
-      ;;   moving.  So check for start/select button presses
-
-    LDA joy_start         ; did they press start?
-    BEQ @SkipStart        ; if not... skip it
-
-      LDA #0
-      STA joy_start       ; clear start button catcher
-      STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
-
-      FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
-      LDA #$00
-      CALL CyclePalettes   ; cycle out the palette
-      FARCALL EnterMainMenu   ; and enter the main menu
-      JUMP EnterOW_PalCyc  ; then re-enter the overworld
-
-  @SkipStart:
-    LDA joy_select        ; check to see if they pressed select
-    BEQ @Exit             ; if not... nothing else to check.  Just exit
-
-      LDA #$00            ; otherwise... if they did press select..
-      STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
-      CALL CyclePalettes   ; cycle out the palette
-
-      LDA joy
-      AND #$40            ; see if the B button is being held down
-      BEQ @Lineup         ;  if not... jump to the lineup menu.  Otherwise do the minimap screen
-
-      @Minimap:
-        FARCALL EnterMinimap     ; do the minimap
-        JUMP EnterOW_PalCyc   ; then re-enter overworld
-
-      @Lineup:
-        FARCALL EnterLineupMenu  ; enter the lineup menu
-        JUMP EnterOW_PalCyc   ; then re-enter overworld
-
-  @Exit:
-   RTS
-
-  @Battle:
-    FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
-    FARCALL BattleTransition   ; Do the flashy transition effect
-
-    LDA #$00
-    STA PPUMASK              ; turn off the PPU
-    STA PAPU_EN              ; and APU
-
-    FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
-
-    LDA btlformation
-    CALL EnterBattle      ; start the battle!
-    JUMP EnterOW_PalCyc     ; then re-enter overworld
-
-
-  @Teleport:
-    FARCALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
-    FARCALL ScreenWipe_Close    ; wipe the screen closed
-    FARCALL LoadEntranceTeleportData
-
-
-    LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
-    STA inroom
-
-    FARCALL DoStandardMap       ; then CALL to the standard map code.  This CALL will only return
-                            ;  if/when the player warps out of the map.  At which point...
-    FARJUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -302,7 +196,7 @@ EnterOW_PalCyc:
     FARCALL PrepOverworld       ; do all necessary overworld preparation
     LDA #$01
     CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
-    FARJUMP EnterOverworldLoop  ; then enter the overworld loop
+    NAKEDJUMP EnterOverworldLoop  ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5882,6 +5776,71 @@ Impl_FARPPUCOPY:
     LDA current_bank1
     STA MMC5_PRG_BANK1
     RTS
+
+Impl_NAKEDJUMP:
+
+    ; Save A
+    STA safecall_reg_a
+
+    ; Save flags
+    PHP
+    PLA
+    STA safecall_reg_flags
+
+    ; Save Y
+    STY safecall_reg_y
+
+    ; Increment our depth counter
+    INC far_depth
+
+    ; Pull then push the stack to find the low address of our caller
+    PLA
+    STA trampoline_low
+    CLC
+    ADC #3 ; When we return we want to return right after the extra 3 byte data after the CALL instruction
+
+    ; Pull then push the stack to find the high address of our caller
+    PLA
+    STA trampoline_high
+    ADC #0 ; If the previous ADC caused a carry we add it here
+
+    ; Read the low address we want to jump to and push it to the stack
+    LDY #1
+    LDA (trampoline_low), Y
+    PHA
+
+    ; Read the high address we want to jump to and push it to the stack
+    INY
+    LDA (trampoline_low), Y
+    PHA
+
+    ; Read what bank we are going to and switch to it
+    INY
+    LDA (trampoline_low), Y
+    STA current_bank1
+    STA MMC5_PRG_BANK1
+
+        PLA
+        STA trampoline_low
+        PLA
+        STA trampoline_high
+
+    ; Load flags
+    LDA safecall_reg_flags
+    PHA
+    PLP
+
+    ; Load A
+    LDA safecall_reg_a
+
+    ; Load Y
+    LDY safecall_reg_y
+        
+        JMP (trampoline_low)
+
+    ; Activate the trampoline
+    RTS
+
 
 Impl_FARJUMP:
 

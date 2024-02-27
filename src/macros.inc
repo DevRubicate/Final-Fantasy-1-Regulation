@@ -77,6 +77,15 @@
     .assert _address = *, warning, "NOJUMP: Address is not right after jump, use JUMP instead"
 .endmacro
 
+.macro NAKEDJUMP _address
+    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "NAKEDJUMP: Address reachable without a bankswitch, use JUMP instead"
+    JSR Impl_NAKEDJUMP
+    .byte >(_address)
+    .byte <(_address)
+    .byte ((<.bank(_address)) * 2) | %10000000
+.endmacro
+
+
 .macro FIXEDCALL _address, _bank
     .assert .bank(_address) = $FF, warning, "FIXEDCALL: Address must be in fixed bank"
     JSR Impl_FARCALL

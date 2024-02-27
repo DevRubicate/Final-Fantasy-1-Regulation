@@ -382,11 +382,12 @@ StandardMapLoop:
         JUMP StandardMapLoop     ; and resume the loop
 
     @TeleOrWarp:              ; code reaches here if we're teleporting or warping
-    BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-    FARJUMP ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
+        BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
+        FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
+        NAKEDJUMP DoOverworld         ; then jump to the overworld
     @Teleport:
-    CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
-    BNE @ExitTeleport     ;    or exit teleport (to overworld map)
+        CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
+        BNE @ExitTeleport     ;    or exit teleport (to overworld map)
 
     @NormalTeleport:        ; normal teleport!
         FARCALL ScreenWipe_Close    ; wipe the screen closed
@@ -396,4 +397,4 @@ StandardMapLoop:
     @ExitTeleport:
         FARCALL ScreenWipe_Close    ; wipe the screen closed
         CALL LoadExitTeleportData
-        FARJUMP DoOverworld         ; then jump to the overworld
+        NAKEDJUMP DoOverworld         ; then jump to the overworld
