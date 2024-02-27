@@ -21,7 +21,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadSMTilesetData:
-
     ; load tileset properties
 
     LDA #<LUT_SMTilesetProp

@@ -442,7 +442,6 @@ lut_MapObjects     = $B400   ; BANK_OBJINFO -- must be on page
 lut_MapObjGfx      = $AE00   ; BANK_OBJINFO
 lut_MapObjCHR      = $A200   ; BANK_MAPCHR
 
-lut_MapmanPalettes = $83A0   ; BANK_MAPMANPAL
 lut_OWPtrTbl       = $8000   ; BANK_OWMAP
 lut_SMPtrTbl       = $8000   ; BANK_STANDARDMAPS
 lut_EnemyAttack    = $B600   ; BANK_ITEMS

@@ -50,6 +50,10 @@
 .import LoadEpilogueSceneGFX
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
+; bank_25_standard_map
+.import PrepStandardMap
+; bank_26_map
+.import LoadMapPalettes
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -70,6 +74,7 @@
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
+.export LoadSMCHR, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -398,7 +403,7 @@ PrepOverworld:
 
     CALL LoadOWCHR           ; load up necessary CHR
     FARCALL LoadOWTilesetData   ; the tileset
-    CALL LoadMapPalettes     ; palettes
+    FARCALL LoadMapPalettes     ; palettes
     CALL DrawFullMap         ; then draw the map
 
     LDA ow_scroll_x      ; get ow scroll X
@@ -901,7 +906,7 @@ RedrawDoor:
 
 EnterStandardMap:
     CALL LoadStandardMapAndObjects   ; decompress the map, load objects
-    CALL PrepStandardMap             ; draw it, do other prepwork
+    FARCALL PrepStandardMap             ; draw it, do other prepwork
     FARJUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -915,7 +920,7 @@ EnterStandardMap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReenterStandardMap:
-    CALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
+    FARCALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
     LDA #$03              ; then do palette cycling effect code 3 (standard map -- cycling in)
     JUMP CyclePalettes     ;  and exit
 
@@ -937,80 +942,7 @@ LoadStandardMapAndObjects:
     CALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
     RTS                   ; exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Prep Standard Map  [$CF55 :: 0x3DF65]
-;;
-;;    Sets up everything for entering (or re-entering) a standard map except for
-;;  map decompression and object loading.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrepStandardMap:
-    LDA #0
-    STA PPUCTRL               ; disable NMIs
-    STA PPUMASK               ; turn off the PPU
-    STA PAPU_NCTL1               ; ??  tries to silence noise?  This doesn't really accomplish that.
-
-    STA joy_select          ; zero a bunch of other map and input related stuff
-    STA joy_start
-    STA joy_a
-    STA joy_b
-    STA altareffect
-    STA tileprop
-    STA tileprop+1
-    STA entering_shop
-
-    CALL LoadSMCHR           ; load all the necessary CHR
-    FARCALL LoadSMTilesetData   ; load tileset and TSA data
-    CALL LoadMapPalettes     ; load palettes
-    CALL DrawFullMap         ; draw the map onto the screen
-
-    LDA sm_scroll_x         ; get the map x scroll
-    AND #$10                ; isolate the odd NT bit
-    CMP #$10                ; move it into C
-    ROL A                   ; then rotate it into bit 0
-    AND #$01                ; and isolate it again (low bit this time)
-    ORA #$08                ; combine with Spr-pattern-page bit
-    STA NTsoft2000          ; and record as soft2000
-    STA soft2000
-
-    CALL WaitForVBlank     ; wait for vblank
-    CALL DrawMapPalette      ; so we can draw the palette
-    CALL SetSMScroll         ; set the scroll
-
-    LDA #0                  ; turn PPU off (but it's already off!)
-    STA PPUMASK
-
-    LDX cur_tileset               ; get the tileset
-    LDA @lut_TilesetMusicTrack, X ; use it to get the music track tied to this tileset
-    STA music_track               ; play it
-    STA dlgmusic_backup           ; and record it so it can be restarted later by the dialogue box
-
-    LDA #DOWN
-    STA facing              ; start the player facing downward
-
-    LDA sm_scroll_x         ; get the scroll coords and add 7 to them to get the player position
-    CLC                     ; and record that position
-    ADC #7
-    STA sm_player_x
-    LDA sm_scroll_y
-    CLC
-    ADC #7
-    STA sm_player_y
-
-    LDA #BANK_BTLDATA           ; swap to page containging battle rates
-    CALL SwapPRG
-    LDX cur_map                 ; use current map to index the rate LUT
-    LDA lut_BattleRates+1, X    ; get this map's rate (+1 because first entry is for overworld [unused])
-    STA battlerate              ; and record it
-
-    FARJUMP GetSMTilePropNow        ; then get the properties of the current tile, and exit
-
- ;; the LUT containing the music tracks for each tileset
-
-  @lut_TilesetMusicTrack:
-    .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2572,38 +2504,7 @@ WaitVBlank_NoSprites:
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Map Palettes  [$D8AB :: 0x3D8BB]
-;;
-;;    Note palettes are not loaded from ROM, but rather they're loaded from
-;;  the load_map_pal temporary buffer (temporary because it gets overwritten
-;;  due to it sharing space with draw_buf).  So this must be called pretty much
-;;  immediately after the tileset is loaded.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadMapPalettes:
-    LDX #$2F                ; X is loop counter
-  @Loop:
-      LDA load_map_pal, X   ; copy colors from temp palette buffer
-      STA cur_pal, X        ; to our actual palette
-      DEX
-      BPL @Loop             ; loop until X wraps ($30 iterations)
-
-    LDA #BANK_MAPMANPAL
-    CALL SwapPRG           ; swap to bank containing mapman palettes
-
-    LDA ch_class            ; get lead party member's class
-    ASL A                   ; double it, and put it in X
-    TAX
-
-    LDA lut_MapmanPalettes, X   ; use that as an index to get that class's mapman palette
-    STA cur_pal+$12
-    LDA lut_MapmanPalettes+1, X
-    STA cur_pal+$16
-
-    RTS                     ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
