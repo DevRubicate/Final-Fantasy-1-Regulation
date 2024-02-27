@@ -44,7 +44,7 @@ DrawEquipMenuCurs:
     STA spr_x                    ; record X coord
     LDA lut_EquipMenuCurs+1, X   ; then fetch
     STA spr_y                    ;    and record Y coord
-    JUMP DrawCursor               ; draw the cursor, and exit
+    FARJUMP DrawCursor               ; draw the cursor, and exit
 
   lut_EquipMenuCurs:
   .byte $40,$38,   $90,$38

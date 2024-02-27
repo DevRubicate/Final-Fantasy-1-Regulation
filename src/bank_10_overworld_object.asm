@@ -11,7 +11,7 @@
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 .export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward, GetSMTileProperties
-.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject
+.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject, DrawCursor
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -985,6 +985,16 @@ DrawMapObject:
     LDX tmp+15            ; restore X to the previously backed-up object index
     RTS                   ; and exit
 
+
+DrawCursor:
+    LDA #<lutCursor2x2SpriteTable   ; load up the pointer to the cursor sprite
+    STA tmp                         ; arrangement
+    LDA #>lutCursor2x2SpriteTable   ; and store that pointer in (tmp)
+    STA tmp+1
+    LDA #$F0                        ; cursor tiles start at $F0
+    STA tmp+2
+    JUMP Draw2x2Sprite
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawMMV_OnFoot  [$E2F0 :: 0x3E300]
@@ -1101,6 +1111,22 @@ Draw2x2Sprite:
     ADC #16
     STA sprindex
     RTS              ; and exit!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  LUT for cursor sprite arrangement [$ECB0 :: 0x3ECC0]
+;;
+;;   This lut is used for drawing the standard finger cursor.  See Draw2x2Sprite for details
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lutCursor2x2SpriteTable:
+  .byte $00, $03      ; UL sprite = tile 0, palette 3
+  .byte $02, $03      ; DL sprite = tile 2, palette 3
+  .byte $01, $03      ; UR sprite = tile 1, palette 3
+  .byte $03, $03      ; DR sprite = tile 3, palette 3
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

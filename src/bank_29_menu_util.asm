@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.export DrawOBSprite, PtyGen_DrawChars
+.export DrawOBSprite, PtyGen_DrawChars, IsEquipLegal
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -18,6 +18,72 @@ lutClassBatSprPalette:
   .byte $01,$00,$00,$01,$01,$00    ; unpromoted classes
   .byte $01,$01,$00,$01,$01,$00    ; promoted classes
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;   Armor Type LUT  [$BCD1 :: 0x3BCE1]
+;;
+;;   This LUT determines which type of armor each armor piece is.  The 4 basic types are:
+;;
+;;  0 = body armor
+;;  1 = shield
+;;  2 = helmet
+;;  3 = gloves / gauntlets
+;;
+;;   Note the numbers themselves really don't signify anything.  They're only there to
+;;  prevent a player from equipping multiple pieces of armor of the same type.  So you could
+;;  have 256 different types of armor if you wanted (even though there are only 40 pieces of
+;;  armor  ;P).
+;;
+
+lut_ArmorTypes:
+  .byte    0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0        ; 16 pieces of body armor
+  .byte    1,1,1,1,1, 1,1,1,1                        ; 9 shields
+  .byte    2,2,2,2,2, 2,2                            ; 7 helmets
+  .byte    3,3,3,3,3, 3,3,3                          ; 8 gauntlets
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Armor Permissions LUT  [$BFA0 :: 0x3BFB0]
+;;
+;;    Same deal as above, only for the armor instead of the weapons.
+
+lut_ArmorPermissions:
+  .WORD   $0000,$00C3,$06CB,$07CF,$07DF,   $06CB,$07CF,$07CF,$0FDF,$0FDF
+  .WORD   $0000,$0000,$0000,$0000,$0FFD,   $0FFE,$07CF,$07CF,$07CF,$07CF
+  .WORD   $07CF,$0FDF,$0FDF,$02CB,$0208,   $0000,$07CF,$07CF,$07CF,$0FDF
+  .WORD   $0FCF,$0000,$0000,$07CF,$07CF,   $07CB,$0FCB,$07CB,$0FDF,$0000
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Weapon Permissions LUT   [$BF50 :: 0x3BF60]
+;;
+;;    Weapon permissions.  Each word corresponds to the equip permissions for
+;;  a weapon.  See lut_ClassEquipBit for which bit corresponds to which class.
+;;  Note again that bit set = weapon CANNOT be equipped by that class.
+
+lut_WeaponPermissions:
+  .WORD   $0DE7,$028A,$0400,$02CB,$074D,   $06CB,$07CF,$02CB,$0DE7,$028A
+  .WORD   $05C7,$02CB,$06CB,$07CF,$02CB,   $028A,$06CB,$074D,$07CF,$06CB
+  .WORD   $06CB,$02CB,$06CB,$06CB,$02CB,   $06CB,$02CB,$0504,$07CF,$0F6D
+  .WORD   $0FAE,$0FCB,$0FFE,$0FCB,$0FCA,   $0FCD,$0FCB,$0FEF,$0FDF,$0000
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;   Class Equip Bit LUT   [$BCB9 :: 0x3BCC9]
+;;
+;;    For weapon/armor equip permissions, each bit coresponds to a class.  If the class's
+;;  bit is set for the permissions word... then that piece of equipment CANNOT be equipped
+;;  by that class.  Permissions are stored in words (2 bytes) instead of just 1 byte because
+;;  there are more than 8 classes
+;;
+;;    This lookup table is used to get the bit which represents a given class.  The basic
+;;  formula is "equip_bit = ($800 >> class_id)".  So Fighter=$800, Thief=$400, etc
+;;
+
+lut_ClassEquipBit: ;  FT   TH   BB   RM   WM   BM      KN   NJ   MA   RW   WW   BW
+   .WORD            $800,$400,$200,$100,$080,$040,   $020,$010,$008,$004,$002,$001
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -180,4 +246,143 @@ PtyGen_DrawChars:
     STA tmp           ; store it in tmp for DrawSimple2x3Sprite
     JUMP DrawSimple2x3Sprite
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Is Equip Legal [$BC0A :: 0x3BC1A]
+;;
+;;     Checks to see if a specific class can equip a specific item.
+;;  ALSO!  This routine modifies the item_box to de-equip all items of the same
+;;  type that this character is equipping.  So if you test to see if a weapon is
+;;  equippable, and it is, then all other weapons will be unequipped by this routine.
+;;  Or if you try to equip a helmet.. all other helmets will be unequipped.
+;;
+;;  IN:            A = 1-based ID of item to check (0=blank item)
+;;       equipoffset = indicates to check weapon or armor
+;;            cursor = 4* the character ID whose class we're to check against
+;;
+;;  OUT:           C = set if equipping is illegal for this class (can't equip it)
+;;                     clear if legal (can)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+IsEquipLegal:
+    SEC
+    SBC #$01          ; subtract 1 from the item ID to make it zero based
+    ASL A             ; double it
+    STA tmp           ; tmp = (2*item_id)
+
+    LDA cursor        ; get the cursor
+    ASL A
+    ASL A
+    ASL A
+    ASL A
+    AND #$C0          ; shift and mask to get usable character index
+    TAX               ; put char index in X
+
+    LDA ch_class, X   ; get the character's class
+    ASL A             ; double it (2 bytes for equip permissions)
+    TAX               ; and put in X to index the equip bit
+
+    LDA lut_ClassEquipBit, X        ; get the class permissions bit position word
+    STA tmp+4                       ;  and put in tmp+4,5
+    LDA lut_ClassEquipBit+1, X
+    STA tmp+5
+
+    LDY equipoffset              ; now, see if we're dealing with weapons or armor
+    CPY #ch_weapons-ch_stats
+    BNE @Armor
+
+  @Weapon:
+    LDX tmp                        ; get the weapon id (*2)
+    LDA lut_WeaponPermissions, X   ; use it to get the weapon permissions word (low byte)
+    AND tmp+4                      ; mask with low byte of class permissions
+    STA tmp                        ;  temporarily store result
+    LDA lut_WeaponPermissions+1, X ; then do the same with the high byte of the permissions word
+    AND tmp+5                      ;  mask with high byte of class permissions
+    ORA tmp                        ; then combine with results of low mask
+                          ;  here... any nonzero value will indicate that the item cannot be equipped
+
+    CMP #$01              ; compare with 1 (any nonzero value will set C)
+    BCC :+                ; if C is set (can't equip)....
+      RTS                 ;   ... just exit.  otherwise...
+
+:   LDA cursor            ; get the cursor (character id*4)
+    AND #$0C              ; isolate the character bits
+    TAX                   ; and put in X for indexing
+
+    LDA item_box, X       ; unequip all weapons
+    AND #$7F
+    STA item_box, X
+    LDA item_box+1, X
+    AND #$7F
+    STA item_box+1, X
+    LDA item_box+2, X
+    AND #$7F
+    STA item_box+2, X
+    LDA item_box+3, X
+    AND #$7F
+    STA item_box+3, X
+
+    RTS                   ; then exit (C is still clear, indicating item can be equipped)
+
+  @Armor:
+    LDX tmp                       ; get the armor id (*2)
+    LDA lut_ArmorPermissions, X   ; use it to get the armor permissions word
+    AND tmp+4                     ;  and mask it with the class permissions word
+    STA tmp
+    LDA lut_ArmorPermissions+1, X
+    AND tmp+5
+    ORA tmp               ; and OR both high and low bytes of result together.  A nonzero result here indicates
+                          ;  armor cannot be equipped
+
+    CMP #$01              ; compare with 1 (any nonzero value sets C)
+    BCC :+                ; if armor can't be equipped....
+      RTS                 ; .. just exit.  Otherwise...
+
+:   TXA                   ; get back the armor_id*2
+    LSR A                 ; /2 to restore armor_id
+    TAX                   ; and put back in X
+
+    LDA lut_ArmorTypes, X ; use armor ID to index and find out what kind of armor it is (body, helmet, shield, etc)
+    STA tmp+2             ; store armor type in tmp+2
+
+    LDA cursor            ; store current cursor in tmp (seems dumb... we could just reference cursor directly)
+    STA tmp
+    AND #$0C              ; mask out the charater bits  (char ID * 4)
+    STA tmp+1             ;  store that in tmp+1  (loop's item to unequip)
+
+    LDY #$04              ; set Y (loop counter) to 4 (loop 4 times)
+
+  @ArmorLoop:
+    LDA tmp+1             ; get the loop item index
+    CMP tmp               ; compare to the item we're trying to equip
+    BEQ @ArmorSkip        ; if they're equal, skip over this item (seems pointless... the item we're checking wouldn't be equipped)
+
+    LDX tmp+1             ; put loop item index in X
+    LDA item_box, X       ;  use it to get that item from the item_box
+    BPL @ArmorSkip        ; if that item is not equipped, skip it
+
+    SEC                   ; otherwise (it is equipped), subtract $81 to get the armor ID
+    SBC #$81
+    TAX                   ; put armor ID in X
+    LDA lut_ArmorTypes, X ; use that to look up what type of armor this is
+
+    CMP tmp+2             ; compare that to the type of armor we're trying to equip
+    BNE @ArmorSkip        ; if it doesn't match (different kind of armor), skip it
+
+                          ; otherwise... it's a match!  need to unequip it.
+    LDX tmp+1             ; get this loop item index in X
+    LDA item_box, X       ; use it to get the item from the item box
+    AND #$7F              ;    unequip it
+    STA item_box, X       ;    then write it back
+
+  @ArmorSkip:
+    INC tmp+1             ; increment our loop item counter (to examine next item in the item box)
+    DEY                   ; decrement our loop counter
+    BNE @ArmorLoop        ; and keep looping until it expires
+
+    CLC                   ; once we're done with all that, CLC to indicate the item can be equipped
+    RTS                   ; and exit
 
