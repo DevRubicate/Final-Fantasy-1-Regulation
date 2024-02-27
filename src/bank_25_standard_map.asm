@@ -3,8 +3,23 @@
 .include "src/global-import.inc"
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
+.import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
+
 
 .export PrepStandardMap, RedrawDoor
+.export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects
+
+ ;; the LUT containing the music tracks for each tileset
+
+LUT_TilesetMusicTrack:
+    .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
+
+LUT_BattleRates:
+    .byte $0a, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
+    .byte $08, $08, $08, $08, $18, $08, $08, $08, $09, $0a, $0b, $0c, $01, $08, $08, $08
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -155,14 +170,50 @@ RedrawDoor:
     JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Enter Standard Map  [$CF2E :: 0x3CF3E]
+;;
+;;    Called when entering a standard map for the first time, or when
+;;  changing standard maps.  Map needs to be decompressed and all objects
+;;  reloaded.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
- ;; the LUT containing the music tracks for each tileset
+EnterStandardMap:
+    CALL LoadStandardMapAndObjects   ; decompress the map, load objects
+    CALL PrepStandardMap             ; draw it, do other prepwork
+    FARJUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
 
-LUT_TilesetMusicTrack:
-    .byte $47, $48, $49, $4A, $4B, $4C, $4D, $4E
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Reenter Standard Map  [$CF3A :: 0x3CF4A]
+;;
+;;    Called to reenter (but not reload) a standard map.  Like when you exit
+;;  a shop or menu... the map and objects haven't changed, but the map
+;;  needs to be redrawn and such.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LUT_BattleRates:
-    .byte $0a, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
-    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
-    .byte $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08, $08
-    .byte $08, $08, $08, $08, $18, $08, $08, $08, $09, $0a, $0b, $0c, $01, $08, $08, $08
+ReenterStandardMap:
+    CALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
+    LDA #$03              ; then do palette cycling effect code 3 (standard map -- cycling in)
+    JUMP CyclePalettes     ;  and exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  LoadStandardMapAndObjects  [$CF42 :: 0x3CF52]
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadStandardMapAndObjects:
+    LDA #$01
+    STA mapflags          ; set the standard map flag
+
+    LDA #0
+    STA PPUCTRL             ; disable NMIs
+    STA PPUMASK             ; turn off PPU
+
+    CALL LoadStandardMap   ; decompress the map
+    CALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
+    RTS                   ; exit

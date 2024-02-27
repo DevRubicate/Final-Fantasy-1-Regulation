@@ -53,7 +53,7 @@
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; bank_25_standard_map
-.import PrepStandardMap
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
@@ -79,6 +79,7 @@
 .export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
+.export LoadStandardMap, LoadMapObjects
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -468,7 +469,7 @@ EnterOW_PalCyc:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoStandardMap:
-    CALL EnterStandardMap     ; load and prep map stuff
+    FARCALL EnterStandardMap     ; load and prep map stuff
     NOJUMP StandardMapLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -535,7 +536,7 @@ StandardMapLoop:
     LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
     CALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
     FARCALL EnterShop           ; enter the shop
-    CALL ReenterStandardMap  ;  then reenter the map
+    FARCALL ReenterStandardMap  ;  then reenter the map
     JUMP StandardMapLoop     ;  and continue looping
 
   ;; here if the player is to teleport, or to start a fight
@@ -564,7 +565,7 @@ StandardMapLoop:
       JUMP @VictoryLoop
 
     :   
-    CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
+    FARCALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
     JUMP StandardMapLoop     ; and resume the loop
 
 
@@ -710,20 +711,17 @@ ProcessSMInput:
     @DialogueBox:
       CALL DrawDialogueBox     ; draw the dialogue box and containing text
 
-      CALL WaitForVBlank       ; wait a frame
-      LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
-      STA OAMDMA
-      CALL SetSMScroll
-      LDA #$1E
-      STA PPUMASK
-      FARCALL MusicPlay
-
-      CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
-
-      LDA dlgflg_reentermap     ; check the reenter map flag
-      BEQ :+
-        JUMP ReenterStandardMap  ; ... and reenter map if set
-
+    CALL WaitForVBlank       ; wait a frame
+    LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
+    STA OAMDMA
+    CALL SetSMScroll
+    LDA #$1E
+    STA PPUMASK
+    FARCALL MusicPlay
+    CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
+    LDA dlgflg_reentermap     ; check the reenter map flag
+    BEQ :+
+        FARJUMP ReenterStandardMap  ; ... and reenter map if set
     :     
     LDA #0            ; then clear A, Start and Select button catchers
       STA joy_a
@@ -749,7 +747,7 @@ ProcessSMInput:
       LDA #$02
       CALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
       FARCALL EnterMainMenu        ; enter the main menu
-      JUMP ReenterStandardMap   ; then reenter the map
+      FARJUMP ReenterStandardMap   ; then reenter the map
 
   ;; if neither A nor Start pressed... jumps here to check select
 
@@ -768,7 +766,7 @@ ProcessSMInput:
       LDA #$02
       CALL CyclePalettes
       FARCALL EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
-      JUMP ReenterStandardMap
+      FARJUMP ReenterStandardMap
 
   ;; A, Start, Select -- none of them pressed.  Now check directional buttons
 
@@ -819,56 +817,6 @@ SetSMScroll:
     STA PPUSCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Enter Standard Map  [$CF2E :: 0x3CF3E]
-;;
-;;    Called when entering a standard map for the first time, or when
-;;  changing standard maps.  Map needs to be decompressed and all objects
-;;  reloaded.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterStandardMap:
-    CALL LoadStandardMapAndObjects   ; decompress the map, load objects
-    FARCALL PrepStandardMap             ; draw it, do other prepwork
-    FARJUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Reenter Standard Map  [$CF3A :: 0x3CF4A]
-;;
-;;    Called to reenter (but not reload) a standard map.  Like when you exit
-;;  a shop or menu... the map and objects haven't changed, but the map
-;;  needs to be redrawn and such.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReenterStandardMap:
-    FARCALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
-    LDA #$03              ; then do palette cycling effect code 3 (standard map -- cycling in)
-    JUMP CyclePalettes     ;  and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LoadStandardMapAndObjects  [$CF42 :: 0x3CF52]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadStandardMapAndObjects:
-    LDA #$01
-    STA mapflags          ; set the standard map flag
-
-    LDA #0
-    STA PPUCTRL             ; disable NMIs
-    STA PPUMASK             ; turn off PPU
-
-    CALL LoadStandardMap   ; decompress the map
-    CALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
-    RTS                   ; exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2261,8 +2209,6 @@ ShowDialogueBox:
 
 
     RTS          ; then the dialogue box is done!
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3833,11 +3779,6 @@ CHRLoad_Cont:
     DEX               ; and decrement our row counter (256 bytes = a full row of tiles)
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
- 
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
