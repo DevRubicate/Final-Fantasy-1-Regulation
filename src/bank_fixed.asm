@@ -49,7 +49,7 @@
 ; bank_23_epilogue
 .import LoadEpilogueSceneGFX
 ; bank_24_sound_util
-.import PlayDoorSFX, DialogueBox_Sfx
+.import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -222,49 +222,19 @@ EnterOverworldLoop:
     LDA mapdraw_job            ; check to see if drawjob number 1 is pending
     CMP #1
     BNE :+
-      CALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
+        CALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
     :
     LDA move_speed             ; check to see if the player is currently moving
     BNE :+                     ; if not....
-      LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
-      STA vehicle
-      CALL DoOWTransitions      ; check for any transitions that need to be done
-      FARCALL ProcessOWInput       ; process overworld input
+        LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
+        STA vehicle
+        CALL DoOWTransitions      ; check for any transitions that need to be done
+        FARCALL ProcessOWInput       ; process overworld input
     :
     FARCALL ClearOAM           ; clear OAM
     FARCALL DrawOWSprites      ; and draw all overworld sprites
+    FARCALL VehicleSFX
 
-    LDA vehicle       ; Get currnt vehicle
-    AND #$0C          ; isolate ship and airship bits
-    BEQ @Loop         ; if not in ship or airship, just jump back to the loop
-                      ;   otherwise... there's a sound effect we need to be playing
-
-    CMP #$08          ; see if we're in the airship
-    BNE @ShipSFX      ; if not.. jump ahead to Ship SFX
-
-  @AirshipSFX:
-    LDA #$38          ; The airship sound effect performed here is exactly the same
-    STA PAPU_NCTL1         ;  as the one desribed in AirshipTransitionFrame  (see that routine
-    LDA framecounter  ;  for details).  Only difference here is that the framecounter
-    ASL A             ;  is doubled -- which means the sound effect cycles twice as fast,
-    JUMP @PlaySFX      ;  so it sounds like the propellers are spinning faster.
-
-  @ShipSFX:
-    LDA framecounter  ; get frame counter
-    BPL :+            ; if it's negative...
-      EOR #$FF        ;  invert it
-  :   LSR A             ; then right shift by 4.
-    LSR A             ; this produces a triangle pattern between 0-7:
-    LSR A             ;     0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0,0,1,2,3....  etc
-    LSR A
-    ORA #$30          ; use this pattern as the noise volume
-    STA PAPU_NCTL1         ;   so the noise is constantly, slowly fading in and out (sounds like ocean waves)
-    LDA #$0A          ; use a fixed frequency of $0A
-
-  @PlaySFX:
-    STA PAPU_NFREQ1         ; write specified frequency
-    LDA #0
-    STA PAPU_NFREQ2         ; write to last noise reg to reload length counter and get channel started
     JUMP @Loop         ; then jump back to loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
