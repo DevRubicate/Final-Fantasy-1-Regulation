@@ -2101,7 +2101,7 @@ SMMove_CloseRoom:
     BPL SMMove_OK     ; if we're not, just move normally
     EOR #$84          ; otherwise, clear the inroom flag, and set the 'exiting' flag
     STA inroom        ; record that so the room will be exited
-    CALL PlayDoorSFX   ; play the door sound effect
+    FARCALL PlayDoorSFX   ; play the door sound effect
 
     ; no JUMP or RTS -- code continues on to SMMove_OK
     ;  note the game doesn't set doorppuaddr here even though closing the door
@@ -2156,7 +2156,7 @@ SMMove_Door:
     ASL inroom           ; shift the inroom flag (high bit) into C
     STA inroom           ; then write the door bits to inroom to mark that we're opening a door (or locked door)
     BCS :+               ; if the inroom flag was previously cleared (coming from outside a room)...
-      CALL PlayDoorSFX    ;  ... play the door sound effect
+        FARCALL PlayDoorSFX    ;  ... play the door sound effect
 
 :   LDA scroll_y         ; get the Y scroll for drawing
     CLC

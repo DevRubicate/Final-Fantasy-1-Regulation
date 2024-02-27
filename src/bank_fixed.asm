@@ -23,6 +23,7 @@
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error
+
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy
 ; bank_18_screen_wipe
@@ -47,6 +48,8 @@
 .import LoadBridgeSceneGFX
 ; bank_23_epilogue
 .import LoadEpilogueSceneGFX
+; bank_24_sound_util
+.import PlayDoorSFX, DialogueBox_Sfx
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -64,7 +67,7 @@
 .export CHRLoadToA
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
-.export PlayDoorSFX, CyclePalettes, EnterOW_PalCyc
+.export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
 .export CoordToNTAddr, MenuCondStall, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 
@@ -914,20 +917,7 @@ RedrawDoor:
     JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Play Door SFX  [$CF1E :: 0x3CF2E]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PlayDoorSFX:
-    LDA #%00001100  ; enable noise decay, set decay speed to $0C (moderately slow)
-    STA PAPU_NCTL1
-    LDA #$0E
-    STA PAPU_NFREQ1       ; set freq to $0E  (2nd lowest possible for noise)
-    LDA #$30
-    STA PAPU_NFREQ2       ; start noise playback -- set length counter to stop after $25 frames
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2424,7 +2414,7 @@ ShowDialogueBox:
     LDA #53
     STA sq2_sfx            ; indicate sq2 is going to be playing a sound effect for the next 53 frames
     LDA #$8E
-    CALL DialogueBox_Sfx    ; and play the "upward sweep" sound effect that plays when the dialogue box opened.
+    FARCALL DialogueBox_Sfx    ; and play the "upward sweep" sound effect that plays when the dialogue box opened.
 
     LDA soft2000           ; get the onscreen NT
     EOR #$01               ; toggle the NT bit to make it the offscreen NT (where the dialogue box is drawn)
@@ -2525,7 +2515,7 @@ ShowDialogueBox:
     LDA #37
     STA sq2_sfx            ; indicate that sq2 is to be playing a sfx for the next 37 frames
     LDA #$95
-    CALL DialogueBox_Sfx    ; and start the downward sweep sound effect you hear when you close the dialogue box
+    FARCALL DialogueBox_Sfx    ; and start the downward sweep sound effect you hear when you close the dialogue box
 
   @CloseLoop:
       CALL DialogueBox_Frame; do a frame
@@ -2541,34 +2531,7 @@ ShowDialogueBox:
 
     RTS          ; then the dialogue box is done!
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DialogueBox_Sfx   [$D6C7 :: 0x3D6D7]
-;;
-;;    Plays the opening/closing sound effect heard when you open/close the dialogue
-;;  box.  Note it does not change 'sq2_sfx' -- that is done outside this routine
-;;
-;;  IN:   A=$8E for the sweep-up sound (opening)
-;;        A=$95 for the sweep-down sound (closing)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DialogueBox_Sfx:
-    LDX #$38
-    STX PAPU_CTL2      ; 12.5% duty (harsh), volume=8
-    STA PAPU_RAMP2      ; for open ($8E):  sweep period=0 (fastest), sweep upwards in pitch, shift=6 (shallow steps)
-                   ; for close ($95): sweep period=1 (fast), sweep down in pitch, shift=5 (not as shallow)
-
-    LSR A          ; rotate sweep value by 2 bits
-    ROR A
-    EOR #$FF       ; and invert
-    STA PAPU_FT2      ; use that as low byte of F value
-                   ; for open:   F = $0DC
-                   ; for close:  F = $035
-
-    LDA #0         ; set high byte of F value to 0, and reload length counter
-    STA PAPU_CT2
-    RTS            ; and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
