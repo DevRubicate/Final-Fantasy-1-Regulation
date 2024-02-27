@@ -214,6 +214,7 @@ LoadStandardMapAndObjects:
     STA PPUCTRL             ; disable NMIs
     STA PPUMASK             ; turn off PPU
 
-    CALL LoadStandardMap   ; decompress the map
-    CALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
+    FORCEDFARCALL LoadStandardMap   ; decompress the map
+    FORCEDFARCALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
+
     RTS                   ; exit

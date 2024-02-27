@@ -51,6 +51,13 @@
     .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
+.macro FORCEDFARCALL _address
+    JSR Impl_FARCALL
+    .byte >(_address)
+    .byte <(_address)
+    .byte ((<.bank(_address)) * 2) | %10000000
+.endmacro
+
 .macro JUMP _address
     .assert _address <> * + 3, warning, "JUMP: Address is right after jump, use NOJUMP instead"
     .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "JUMP: Address on different bank, use FARJUMP instead"
