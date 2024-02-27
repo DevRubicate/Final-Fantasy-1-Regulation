@@ -2,9 +2,9 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites
+.import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
 
-.export LoadMapPalettes, BattleTransition
+.export LoadMapPalettes, BattleTransition, LoadShopCHRPal
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -38,6 +38,9 @@ LoadMapPalettes:
     RTS                     ; then exit
 
 
+LoadShopCHRPal:
+    FARCALL LoadShopBGCHRPalettes
+    FARJUMP LoadBatSprCHRPalettes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

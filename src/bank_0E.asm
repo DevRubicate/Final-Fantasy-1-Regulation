@@ -3818,7 +3818,7 @@ EnterShop:
     STA joy_b              ; erase joypad A and B buttons
     STA joy_a
 
-    CALL LoadShopCHRPal     ; load up the CHR and palettes (and the shop type)
+    FARCALL LoadShopCHRPal     ; load up the CHR and palettes (and the shop type)
     CALL DrawShop           ; draw the shop
 
     LDA shop_type              ; use the shop type to get the entry point for this shop

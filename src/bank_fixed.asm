@@ -54,13 +54,15 @@
 .import PrepStandardMap
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
+; bank_27_overworld_map
+.import LoadOWCHR
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
 .export DrawPalette
 .export DrawBox, DrawPalette
 .export DrawEquipMenuStrings, EraseBox
-.export LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette
+.export DrawSimple2x3Sprite, lutClassBatSprPalette
 .export DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox
 .export SwapBtlTmpBytes, FormatBattleString, BattleScreenShake, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
@@ -402,7 +404,7 @@ PrepOverworld:
     STA joy_select
     STA mapflags        ; zeroing map flags indicates we're on the overworld map
 
-    CALL LoadOWCHR           ; load up necessary CHR
+    FARCALL LoadOWCHR           ; load up necessary CHR
     FARCALL LoadOWTilesetData   ; the tileset
     FARCALL LoadMapPalettes     ; palettes
     CALL DrawFullMap         ; then draw the map
@@ -3981,26 +3983,6 @@ LoadSingleMapObject:
     STA tmp+14
 
     RTS                     ; and exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Misc "Master" CHR/Palette loading routines  [$E8FA :: 0x3E90A]
-;;
-;;   These "Master" routines load all CHR (BG and Sprite) necessary for the given
-;;  situation.  Some also load most/all the palettes.  Exceptions will be noted
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadShopCHRPal:
-    FARCALL LoadShopBGCHRPalettes
-    FARJUMP LoadBatSprCHRPalettes
-
-
-
-LoadOWCHR:                     ; overworld map -- does not load any palettes
-    FARCALL LoadOWBGCHR
-    FARCALL LoadPlayerMapmanCHR
-    FARJUMP LoadOWObjectCHR
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
