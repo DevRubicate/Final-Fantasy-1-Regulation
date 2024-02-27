@@ -4,7 +4,7 @@
 
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -206,6 +206,45 @@ LUT_BattlePalettes:
     .byte $0f, $36, $26, $16, $0f, $36, $10, $00, $0f, $30, $28, $04, $0f, $30, $16, $23
     .byte $0f, $16, $14, $30, $0f, $16, $14, $28, $0f, $27, $30, $23, $0f, $3b, $13, $23
     .byte $0f, $16, $2b, $12, $0f, $27, $2b, $13, $0f, $23, $28, $18, $0f, $30, $28, $18
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Battle Screen Attribute table LUT  [$F400 :: 0x3F410]
+;;
+;;    A copy of the attribute table for the battle screen.  This is
+;;  further modified to set enemy attributes appropriately, but this is
+;;  the base for it.
+;;
+;;    This LUT is copied in full to the attribute table.
+
+
+LUT_BtlAttrTbl:
+  .byte $3F,$0F,$0F,$0F,$3F,$0F,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
+  .byte $F3,$F0,$F0,$F0,$F3,$F0,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+  .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
+
+
+LoadBattleAttributeTable:
+  ;; Draw Attribute Table
+    LDX #>$23C0
+    LDA #<$23C0
+    ; set PPU Address to $23C0 (start of attribute table)
+    STX PPUADDR   ; write X as high byte
+    STA PPUADDR   ; A as low byte
+    LDX #0
+    @AttrLoop:
+        LDA LUT_BtlAttrTbl, X   ; copy over attribute bytes
+        STA PPUDATA
+        INX
+        CPX #$40
+        BNE @AttrLoop           ; loop until all $40 bytes copied
+    RTS
 
 LoadBattleCHRPal:              ; does not load palettes for enemies
     CALL LoadBattleBackdropCHR

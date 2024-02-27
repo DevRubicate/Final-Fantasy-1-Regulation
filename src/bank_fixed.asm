@@ -40,7 +40,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
 ; bank_21_altar
 .import DoAltarEffect
 ; bank_22_bridge
@@ -4842,20 +4842,9 @@ EnterBattle:
     LDX #3
     CALL Battle_PlayerBox
 
-  ;; Draw Attribute Table
+    FARCALL LoadBattleAttributeTable
 
-    LDX #>$23C0
-    LDA #<$23C0
-    CALL SetPPUAddr_XA     ; set PPU Address to $23C0 (start of attribute table)
-    LDX #0
-  @AttrLoop:
-      LDA lut_BtlAttrTbl, X   ; copy over attribute bytes
-      STA PPUDATA
-      INX
-      CPX #$40
-      BNE @AttrLoop           ; loop until all $40 bytes copied
-
-  ;; Load palettes
+    ;; Load palettes
 
     LDX #0
   @PalLoop:                   ; copy the loaded palettes (backdrop, menu, sprites)
@@ -4986,27 +4975,6 @@ Battle_PPUOff:
     STA PPUMASK          ; and turn off PPU
     RTS
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle Screen Attribute table LUT  [$F400 :: 0x3F410]
-;;
-;;    A copy of the attribute table for the battle screen.  This is
-;;  further modified to set enemy attributes appropriately, but this is
-;;  the base for it.
-;;
-;;    This LUT is copied in full to the attribute table.
-
-
-lut_BtlAttrTbl:
-  .byte $3F,$0F,$0F,$0F,$3F,$0F,$FF,$FF
-  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
-  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
-  .byte $33,$00,$00,$00,$33,$00,$FF,$FF
-  .byte $F3,$F0,$F0,$F0,$F3,$F0,$FF,$FF
-  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-  .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
