@@ -4577,7 +4577,6 @@ Battle_PPUOff:
     STA PPUMASK          ; and turn off PPU
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleScreenShake  [$F440 :: 0x3F450]
@@ -4623,8 +4622,6 @@ BattleScreenShake:
     CALL WaitForVBlank
     JUMP BattleUpdateAudio_FixedBank
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Battle_UpdatePPU_UpdateAudio_FixedBank  [$F485 :: 0x3F495]
@@ -4661,7 +4658,6 @@ BattleUpdateAudio_FixedBank:
     :   
     FARJUMP MusicPlay
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleWaitForVBlank  [$F4A1 :: 0x3F4B1]
@@ -4675,7 +4671,6 @@ BattleWaitForVBlank:
     STA a:soft2000
     JUMP WaitForVBlank
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleDrawMessageBuffer  [$F4AA :: 0x3F4BA]
@@ -4902,7 +4897,6 @@ DrawBattleBox_Row:
     
     RTS
 
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleBox  [$F59B :: 0x3F5AB]
@@ -4958,7 +4952,6 @@ DrawBattleBox:
     
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleBox_NextBlock  [$F5ED :: 0x3F5FD]
@@ -4991,11 +4984,9 @@ DrawBattleBox_FetchBlock:
       CPY #$05
       BNE :-
     NOJUMP DrawBattleBox_Exit
-    
-    
+
 DrawBattleBox_Exit:
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5099,7 +5090,6 @@ DrawBlockBuffer:
     STA btldraw_blockptrend+1
     
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5316,8 +5306,7 @@ DrawCombatBox:
     
     CALL BattleDraw_AddBlockToBuffer ; add this text block
     JUMP DrawBlockBuffer             ; then draw it.
-    
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  ClearUnformattedCombatBoxBuffer  [$F757 :: 0x3F767]
@@ -5662,7 +5651,6 @@ DrawBattleItemBox:
     ; Finally, after all rows added, Actually draw the block buffer and exit
     JUMP DrawBlockBuffer
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawDrinkBox  [$F921 :: 0x3F931]
@@ -6106,8 +6094,6 @@ DrawBattle_Division:
     LDA btl_magdataptr         ; and put the result in A before exiting
     RTS
 
-    
-    
 ;;  DrawBattleString_Code11  [$FB1E :: 0x3FB2E]
 DrawBattleString_Code11:            ; print a number 
     CALL DrawBattle_IncSrcPtr        ;   pointer to the number to print is in the source string
@@ -6127,7 +6113,6 @@ DrawBattleString_Code0C:            ; print a number (indirect)
     LDA (btldraw_src), Y
     STA btldraw_subsrc+1
     NOJUMP DrawBattle_Number
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6198,7 +6183,6 @@ DrawBattle_Number:
 ;;  far away to branch to.
 DrawBattleString_Code11_Short:
     JUMP DrawBattleString_Code11
-    
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6317,7 +6301,6 @@ BattleDrawLoadSubSrcPtr:
     
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleMessage  [$FC26 :: 0x3FC36]
@@ -6405,7 +6388,6 @@ DrawEntityName:
     LDA btl_enemystats + en_enemyid, X   ; get this enemy's ID
     NOJUMP DrawEnemyName
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawEnemyName  [$FC7A :: 0x3FC8A]
@@ -6488,7 +6470,6 @@ lut_CharacterNamePtr:
   .WORD ch_name+$80
   .WORD ch_name+$C0
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattle_IncSrcPtr  [$FCB2 :: 0x3FCC2]
@@ -6523,7 +6504,6 @@ DrawBattleString_IncDstPtr:
       INC btldraw_dst+1
   : RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  SwapBtlTmpBytes  [$FCCF :: 0x3FCDF]
@@ -6553,7 +6533,6 @@ SwapBtlTmpBytes:
     PLA
     RTS
     
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Copy 256  [$CC74 :: 0x3CC84]
@@ -6619,7 +6598,6 @@ WaitForVBlank:
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
     @LoopForever:
     JMP @LoopForever     ; then loop forever! (or really until the NMI is triggered)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
