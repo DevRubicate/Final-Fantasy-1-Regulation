@@ -154,7 +154,7 @@ FinishBattlePrepAndFadeIn:
     LDA #$0E
     STA btl_soft2001
     
-    CALL ClearBattleMessageBuffer
+    FARCALL ClearBattleMessageBuffer
     CALL BattleFadeIn
     
     LDA #$1E

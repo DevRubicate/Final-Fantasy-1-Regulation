@@ -4,7 +4,7 @@
 
 .import BattleRNG, WaitForVBlank, MusicPlay
 
-.export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
+.export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -87,3 +87,39 @@ BattleUpdateAudio_FixedBank:
       STA a:music_track
     :   
     FARJUMP MusicPlay
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ClearBattleMessageBuffer  [$F620 :: 0x3F630]
+;;
+;;  Clears the battle message buffer in memory, but does not do any actual drawing.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearBattleMessageBuffer:
+    ; Clear the message buffer
+    LDY #$00
+    LDA #$00
+    : STA btl_msgbuffer, Y      ; clear the message buffer
+      STA btl_msgbuffer+$80, Y  ;   (write $180 bytes)
+      INY
+      BNE :-
+    
+    ; After the message buffer is clear, it has to draw the bottom row of the
+    ;  bounding box for the enemies/player.  This gets drawn over by other boxes.
+    
+    LDA #$FD                    ; tile FD is the bottom-box tile
+    : STA btl_msgbuffer+1, Y    ; draw the row
+      INY
+      CPY #$17
+      BNE :-
+    
+    LDA #$FC                    ; FC = lower left corner tile
+    STA btl_msgbuffer+$01       ; for enemy box
+    STA btl_msgbuffer+$11       ; for player box
+    LDA #$FE                    ; FE = lower right corner tile
+    STA btl_msgbuffer+$10       ; for enemy box
+    STA btl_msgbuffer+$18       ; for player box
+    
+    RTS

@@ -59,7 +59,7 @@
 ; bank_27_overworld_map
 .import LoadOWCHR
 ; bank_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
 .export SwapPRG
 .export DoOverworld, DrawImageRect
@@ -71,7 +71,7 @@
 .export SwapBtlTmpBytes, FormatBattleString, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
 .export DrawCombatBox, DrawBattleItemBox, DrawDrinkBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
-.export BattleCrossPageJump, ClearBattleMessageBuffer
+.export BattleCrossPageJump
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export CHRLoadToA
@@ -4954,41 +4954,6 @@ DrawBattleBoxAndText:
       CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
       CALL DrawBattleString              ; and use it to draw text
       JUMP @Loop                         ; keep going until null terminator is found
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ClearBattleMessageBuffer  [$F620 :: 0x3F630]
-;;
-;;  Clears the battle message buffer in memory, but does not do any actual drawing.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearBattleMessageBuffer:
-    ; Clear the message buffer
-    LDY #$00
-    LDA #$00
-    : STA btl_msgbuffer, Y      ; clear the message buffer
-      STA btl_msgbuffer+$80, Y  ;   (write $180 bytes)
-      INY
-      BNE :-
-    
-    ; After the message buffer is clear, it has to draw the bottom row of the
-    ;  bounding box for the enemies/player.  This gets drawn over by other boxes.
-    
-    LDA #$FD                    ; tile FD is the bottom-box tile
-    : STA btl_msgbuffer+1, Y    ; draw the row
-      INY
-      CPY #$17
-      BNE :-
-    
-    LDA #$FC                    ; FC = lower left corner tile
-    STA btl_msgbuffer+$01       ; for enemy box
-    STA btl_msgbuffer+$11       ; for player box
-    LDA #$FE                    ; FE = lower right corner tile
-    STA btl_msgbuffer+$10       ; for enemy box
-    STA btl_msgbuffer+$18       ; for player box
-    
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5025,7 +4990,7 @@ UndrawBattleBlock:
     LDA btl_msgdraw_blockcount
     STA tmp_6aa4                       ; backup the block count
     DEC tmp_6aa4                       ; reduce the count by 1 so we draw one less
-    CALL ClearBattleMessageBuffer    ; erase everything in the buffer
+    FARCALL ClearBattleMessageBuffer    ; erase everything in the buffer
     
     LDA #<btlbox_blockdata          ; reset the blockptr
     STA btldraw_blockptrstart
