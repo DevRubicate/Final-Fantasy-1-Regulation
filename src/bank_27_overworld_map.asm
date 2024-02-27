@@ -4,16 +4,29 @@
 
 .import LoadOWBGCHR, LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
 .import MusicPlay, PrepAttributePos, DoOWTransitions, ProcessOWInput
-.import ClearOAM, DrawOWSprites, VehicleSFX
+.import ClearOAM, DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
 
 
-.export LoadOWCHR, EnterOverworldLoop, PrepOverworld
+.export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Do Overworld  [$C0CB :: 0x3C0DB]
+;;
+;;    Called when you enter (or exit to) the overworld.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoOverworld:
+    CALL PrepOverworld          ; do all overworld preparation
+    FARCALL ScreenWipe_Open        ; then do the screen wipe effect
+    NOJUMP EnterOverworldLoop   ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

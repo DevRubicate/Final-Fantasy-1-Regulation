@@ -57,7 +57,7 @@
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
-.import LoadOWCHR, EnterOverworldLoop, PrepOverworld
+.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
@@ -72,7 +72,7 @@
 .export Impl_FARCALL, Impl_FARJUMP
 .export lut_2x2MapObj_Right, lut_2x2MapObj_Left, lut_2x2MapObj_Up, lut_2x2MapObj_Down, MapObjectMove
 .export CHRLoadToA
-.export DoOverworld, DoMapDrawJob
+.export DoMapDrawJob
 .export WaitScanline, SetSMScroll
 .export CyclePalettes, EnterOW_PalCyc
 .export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont
@@ -179,19 +179,6 @@ DialogueBox_Frame:
     LDA soft2000                   ; so get the normal "onscreen" NT
     STA PPUCTRL                      ; and set it
     FARJUMP MusicPlay       ; then call the Music Play routine and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Overworld  [$C0CB :: 0x3C0DB]
-;;
-;;    Called when you enter (or exit to) the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoOverworld:
-    FARCALL PrepOverworld          ; do all overworld preparation
-    FARCALL ScreenWipe_Open        ; then do the screen wipe effect
-    FARJUMP EnterOverworldLoop   ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -323,7 +310,7 @@ DoOWTransitions:
 
     CALL DoStandardMap       ; then CALL to the standard map code.  This CALL will only return
                             ;  if/when the player warps out of the map.  At which point...
-    JUMP DoOverworld         ; we jump to reload and start the overworld all over again.
+    FARJUMP DoOverworld         ; we jump to reload and start the overworld all over again.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -532,7 +519,7 @@ StandardMapLoop:
     SBC #7
     STA ow_scroll_y
 
-    JUMP DoOverworld         ; then jump to the overworld
+    FARJUMP DoOverworld         ; then jump to the overworld
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

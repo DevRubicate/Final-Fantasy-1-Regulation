@@ -105,7 +105,7 @@ GameStart:
     STA vehicle_next                ;   this always be 'on-foot'?)
     STA vehicle
     
-    JUMP DoOverworld
+    FARJUMP DoOverworld
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
