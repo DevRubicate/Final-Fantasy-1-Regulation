@@ -7,7 +7,7 @@
 .import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, ProcessSMInput, ClearOAM, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 
 
-.export PrepStandardMap, RedrawDoor, LoadEntranceTeleportData, LoadExitTeleportData
+.export PrepStandardMap, RedrawDoor
 .export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects, DoStandardMap
 
  ;; the LUT containing the music tracks for each tileset
@@ -38,22 +38,6 @@ LUT_NormTele_Map:
     .byte $26, $25, $26, $0f, $26, $25, $19, $1a, $0b, $27, $19, $19, $19, $19, $19, $19
     .byte $2c, $2d, $2e, $2b, $2c, $2d, $2c, $2b, $2a, $28, $29, $2f, $30, $31, $32, $33
     .byte $37, $35, $36, $35, $34, $37, $38, $39, $3a, $3b, $19, $19, $19, $19, $08, $18
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-    .byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
-LUT_EntrTele_X:
-    .byte $00, $0f, $12, $00, $13, $18, $1a, $0f, $0c, $0c, $05, $08, $1d, $0b, $17, $14
-    .byte $01, $15, $00, $14, $1c, $0b, $1b, $1b, $12, $12, $12, $04, $04, $04, $04, $00
-
-LUT_EntrTele_Y:
-    .byte $07, $07, $01, $08, $0b, $07, $01, $07, $08, $00, $00, $07, $0b, $07, $0b, $07
-    .byte $07, $07, $07, $09, $0b, $03, $01, $02, $01, $0a, $11, $11, $11, $11, $11, $0a
-
-LUT_EntrTele_Map:
-    .byte $0b, $01, $09, $0a, $19, $19, $19, $19, $18, $19, $19, $19, $19, $19, $19, $19
-    .byte $19, $19, $19, $18, $18, $19, $19, $11, $0c, $0c, $0c, $0c, $0c, $0c, $0c, $0c
 
 LUT_ExitTele_X:
     .byte $2a, $1e, $c5, $82, $99, $41, $bc, $3e, $c2, $00, $00, $00, $00, $00, $00, $00
@@ -272,7 +256,7 @@ LoadStandardMapAndObjects:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LoadEntranceTeleportData:
+LoadNormalTeleportData:
     LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
 
     LDA LUT_NormTele_X, X   ; get the X coord to teleport to
@@ -406,7 +390,7 @@ StandardMapLoop:
 
     @NormalTeleport:        ; normal teleport!
         FARCALL ScreenWipe_Close    ; wipe the screen closed
-        CALL LoadEntranceTeleportData
+        CALL LoadNormalTeleportData
         JUMP DoStandardMap
 
     @ExitTeleport:

@@ -456,15 +456,15 @@ lut_BatObjCHR      = $A800   ; BANK_BTLCHR -- page
 
 lut_DialoguePtrTbl = $8000   ; BANK_DIALOGUE
 
-lut_Tilesets       = $ACC0   ; BANK_TELEPORTINFO
+;lut_Tilesets       = $ACC0   ; BANK_TELEPORTINFO
 ;lut_NormTele_X     = $AD00   ; BANK_TELEPORTINFO
 ;lut_NormTele_Y     = $AD40   ; BANK_TELEPORTINFO
 ;lut_NormTele_Map   = $AD80   ; BANK_TELEPORTINFO
 ;lut_ExitTele_X     = $AC60   ; BANK_TELEPORTINFO
 ;lut_ExitTele_Y     = $AC70   ; BANK_TELEPORTINFO
-lut_EntrTele_X     = $AC00   ; BANK_TELEPORTINFO
-lut_EntrTele_Y     = $AC20   ; BANK_TELEPORTINFO
-lut_EntrTele_Map   = $AC40   ; BANK_TELEPORTINFO
+;lut_EntrTele_X     = $AC00   ; BANK_TELEPORTINFO
+;lut_EntrTele_Y     = $AC20   ; BANK_TELEPORTINFO
+;lut_EntrTele_Map   = $AC40   ; BANK_TELEPORTINFO
 
 ; These are used as offsets for btl_enemystats
 en_romptr       = $00  ; 2 bytes - pointer to enemy stats in ROM

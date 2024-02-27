@@ -53,11 +53,11 @@
 ; bank_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; bank_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadEntranceTeleportData, LoadExitTeleportData, DoStandardMap
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
-.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld
+.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
@@ -280,32 +280,8 @@ DoOWTransitions:
   @Teleport:
     FARCALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
     FARCALL ScreenWipe_Close    ; wipe the screen closed
+    FARCALL LoadEntranceTeleportData
 
-    LDA #BANK_TELEPORTINFO  ; swap to bank containing teleport data
-    CALL SwapPRG
-
-    LDA tileprop+1          ; get the teleport ID
-    AND #$3F                ;  remove the teleport/battle bits, leaving just the teleport ID
-    TAX                     ;  put the ID in X for indexing
-
-    LDA lut_EntrTele_X, X   ; get the X coord, and subtract 7 from it to get the scroll
-    SEC
-    SBC #7
-    AND #$3F                ; wrap around edge of the map
-    STA sm_scroll_x
-
-    LDA lut_EntrTele_Y, X   ; do same with Y coord
-    SEC
-    SBC #7
-    AND #$3F
-    STA sm_scroll_y
-
-    LDA lut_EntrTele_Map, X ; get the map
-    STA cur_map
-
-    TAX                     ; throw map in X
-    LDA lut_Tilesets, X     ; and use it to get the tileset for this map
-    STA cur_tileset
 
     LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
     STA inroom

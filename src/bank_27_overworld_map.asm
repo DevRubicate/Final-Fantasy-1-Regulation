@@ -7,8 +7,7 @@
 .import ClearOAM, DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
 
-
-.export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld
+.export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadOWBGCHR
@@ -142,3 +141,59 @@ PrepOverworld:
   .byte $44,$44           ; canoe (2nd byte unused)
   .byte $45,$45,$45,$45   ; ship (last 3 bytes unused)
   .byte $46               ; airship
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  LoadTeleportData
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadEntranceTeleportData:
+
+    LDA tileprop+1          ; get the teleport ID
+    AND #$3F                ;  remove the teleport/battle bits, leaving just the teleport ID
+    TAX                     ;  put the ID in X for indexing
+
+    LDA LUT_EntrTele_X, X   ; get the X coord, and subtract 7 from it to get the scroll
+    SEC
+    SBC #7
+    AND #$3F                ; wrap around edge of the map
+    STA sm_scroll_x
+
+    LDA LUT_EntrTele_Y, X   ; do same with Y coord
+    SEC
+    SBC #7
+    AND #$3F
+    STA sm_scroll_y
+
+    LDA LUT_EntrTele_Map, X ; get the map
+    STA cur_map
+
+    TAX                     ; throw map in X
+    LDA LUT_Tilesets, X     ; and use it to get the tileset for this map
+    STA cur_tileset
+
+    RTS
+
+
+LUT_EntrTele_X:
+    .byte $1e, $10, $13, $29, $01, $0b, $3d, $01, $13, $0c, $10, $16, $0c, $14, $17, $1b
+    .byte $07, $0c, $02, $39, $16, $0f, $12, $15, $11, $0b, $05, $13, $2b, $3a, $00, $00
+
+LUT_EntrTele_Y:
+    .byte $12, $17, $20, $16, $10, $17, $3d, $0c, $17, $23, $1f, $18, $15, $1e, $18, $0f
+    .byte $01, $0f, $02, $38, $0b, $0b, $0d, $1b, $1f, $0e, $03, $24, $1d, $37, $00, $00
+
+LUT_EntrTele_Map:
+    .byte $10, $00, $01, $02, $03, $04, $05, $06, $07, $08, $09, $0a, $0b, $0c, $0d, $0e
+    .byte $0f, $10, $11, $12, $13, $14, $15, $16, $17, $3c, $3c, $10, $10, $10, $00, $00
+
+LUT_Tilesets:
+    .byte $00, $00, $00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $05, $02, $02, $03
+    .byte $03, $03, $03, $03, $03, $03, $04, $04, $01, $01, $01, $04, $04, $02, $02, $02
+    .byte $02, $02, $02, $02, $02, $03, $03, $03, $04, $04, $05, $05, $05, $05, $05, $06
+    .byte $06, $06, $06, $06, $07, $07, $07, $07, $07, $07, $07, $07, $02, $00, $00, $00
+
+
+
+
