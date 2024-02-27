@@ -57,7 +57,7 @@
 ; bank_26_map
 .import LoadMapPalettes, BattleTransition
 ; bank_27_overworld_map
-.import LoadOWCHR
+.import LoadOWCHR, EnterOverworldLoop
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 
@@ -79,7 +79,7 @@
 .export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
-.export LoadStandardMap, LoadMapObjects
+.export LoadStandardMap, LoadMapObjects, DoOWTransitions
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -191,60 +191,7 @@ DialogueBox_Frame:
 DoOverworld:
     CALL PrepOverworld          ; do all overworld preparation
     FARCALL ScreenWipe_Open        ; then do the screen wipe effect
-    NOJUMP EnterOverworldLoop   ; then enter the overworld loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Main Overworld Game Logic Loop  [$C0D1 :: 0x3C0E1]
-;;
-;;   This is where everything spawns from on the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterOverworldLoop:
-
-    FARCALL GetOWTile       ; get the current overworld tile information
-
-   ;;
-   ;; THE overworld loop
-   ;;
-
-  @Loop:  
-    CALL WaitForVBlank        ; wait for VBlank
-    LDA #>oam                  ; and do sprite DMA
-    STA OAMDMA
-
-    FARCALL OverworldMovement      ; do any pending movement animations and whatnot
-                               ;   also does any required map drawing and updates
-                               ;   the scroll appropriately
-
-    LDA framecounter           ; increment the *two byte* frame counter
-    CLC                        ;   what does this game have against the INC instruction?
-    ADC #1
-    STA framecounter
-    LDA framecounter+1
-    ADC #0
-    STA framecounter+1
-
-    FARCALL MusicPlay   ; Keep the music playing
-
-    LDA mapdraw_job            ; check to see if drawjob number 1 is pending
-    CMP #1
-    BNE :+
-        FARCALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
-    :
-    LDA move_speed             ; check to see if the player is currently moving
-    BNE :+                     ; if not....
-        LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
-        STA vehicle
-        CALL DoOWTransitions      ; check for any transitions that need to be done
-        FARCALL ProcessOWInput       ; process overworld input
-    :
-    FARCALL ClearOAM           ; clear OAM
-    FARCALL DrawOWSprites      ; and draw all overworld sprites
-    FARCALL VehicleSFX
-
-    JUMP @Loop         ; then jump back to loop
+    FARJUMP EnterOverworldLoop   ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -457,7 +404,7 @@ EnterOW_PalCyc:
     CALL PrepOverworld       ; do all necessary overworld preparation
     LDA #$01
     CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
-    JUMP EnterOverworldLoop  ; then enter the overworld loop
+    FARJUMP EnterOverworldLoop  ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
