@@ -376,11 +376,6 @@ PrepOverworld:
     LDA @lut_VehicleMusic, X  ; use the current vehicle as an index
     STA music_track           ;   to get the proper music track -- and play it
 
-    LDA #BANK_BTLDATA     ; swap to battle rate bank and get the battle rate for the overworld
-    CALL SwapPRG         ;  (first entry in the table).  And record it to 'battlerate'.
-    LDA lut_BattleRates   ; However, this value goes unused because the battle rate for overworld
-    STA battlerate        ; is hardcoded... so this is effectively useless for OW (it's used for SM, though).
-
     RTS                   ; then exit!
 
   ;;  The lut for knowing which track to play based on the current vehicle
