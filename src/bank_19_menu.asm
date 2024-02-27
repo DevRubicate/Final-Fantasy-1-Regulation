@@ -103,7 +103,7 @@ LoadBatSprCHRPalettes_NewGame:
 
     LDX #$04                      ; load 4 rows (bottom half)
     CALL CHRLoad_Cont   ; load cursor and other battle related CHR
-    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
+    FARCALL LoadBattleSpritePalettes  ; load palettes for these sprites
     RTS
 
 
@@ -148,9 +148,7 @@ LoadBatSprCHRPalettes:
     LDX #$08             ; signal to load 8 rows
 
     CALL CHRLoad_Cont   ; load cursor and other battle related CHR
-    CALL LoadBattleSpritePalettes  ; load palettes for these sprites
-    ;LDA #BANK_MENUS
-    ;JUMP SwapPRG      ; and swap to bank E on exit
+    FARCALL LoadBattleSpritePalettes  ; load palettes for these sprites
 
     @LoadClass:
     ASL A               ; double class index (each class has 2 rows of tiles)

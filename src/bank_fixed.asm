@@ -76,7 +76,7 @@
 .export DoOverworld, DoMapDrawJob
 .export WaitScanline, SetSMScroll, DrawMapPalette, RedrawDoor
 .export CyclePalettes, EnterOW_PalCyc
-.export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont, LoadBattleSpritePalettes
+.export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export DrawFullMap, DrawMapPalette, SetSMScroll
 .export SetSMScroll, WaitVBlank_NoSprites
@@ -3917,26 +3917,6 @@ CHRLoad_Cont:
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Sprite Palettes  [$EB99 :: 0x3EBA9]
-;;
-;;    Loads palettes for all sprites in battle and in menus
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattleSpritePalettes:
-    LDX #$0F  ; start at $0F
-    @Loop:
-    LDA @BattleSpritePalettes, X
-    STA cur_pal+$10, X   ; copy color to sprite palette
-    DEX
-    BPL @Loop            ; loop until X wraps ($10 colors copied)
-    RTS
-
-    @BattleSpritePalettes:
-    .byte $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Out of Battle Sprite [$EBFC :: 0x3EC0C]

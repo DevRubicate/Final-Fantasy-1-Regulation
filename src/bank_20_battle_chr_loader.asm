@@ -5,6 +5,7 @@
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
 .export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
+.export LoadBattleSpritePalettes
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -228,6 +229,26 @@ LUT_BtlAttrTbl:
   .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
   .byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
   .byte $0F,$0F,$0F,$0F,$0F,$0F,$0F,$0F
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Load Battle Sprite Palettes  [$EB99 :: 0x3EBA9]
+;;
+;;    Loads palettes for all sprites in battle and in menus
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LoadBattleSpritePalettes:
+    LDX #$0F  ; start at $0F
+    @Loop:
+    LDA @BattleSpritePalettes, X
+    STA cur_pal+$10, X   ; copy color to sprite palette
+    DEX
+    BPL @Loop            ; loop until X wraps ($10 colors copied)
+    RTS
+
+    @BattleSpritePalettes:
+    .byte $0F,$28,$18,$21,  $0F,$16,$30,$36,   $0F,$30,$22,$12,  $0F,$30,$10,$00
 
 
 LoadBattleAttributeTable:
