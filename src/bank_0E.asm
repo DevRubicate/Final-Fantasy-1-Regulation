@@ -9,6 +9,7 @@
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, DrawCursor, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
+.import PtyGen_DrawChars
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -2272,7 +2273,7 @@ LineupMenu_DrawCharSprites:
     STA spr_y
 
     LDA str_buf+1, Y        ; get slot's char index
-    CALL DrawOBSprite        ; and draw that sprite
+    FARCALL DrawOBSprite        ; and draw that sprite
 
     PLA                     ; pull our loop counter
     CLC
@@ -2529,7 +2530,7 @@ NewGamePartyGeneration:
     ; Once all 4 characters have been generated and named...
     CALL PtyGen_DrawScreen       ; Draw the screen one more time
     FARCALL ClearOAM                ; Clear OAM
-    CALL PtyGen_DrawChars        ; Redraw char sprites
+    FARCALL PtyGen_DrawChars        ; Redraw char sprites
     CALL WaitForVBlank         ; Do a frame
     LDA #>oam                   ;   with a proper OAM update
     STA OAMDMA
@@ -2829,7 +2830,7 @@ DoNameInput:
 
 PtyGen_Frame:
     FARCALL ClearOAM           ; wipe OAM then draw all sprites
-    CALL PtyGen_DrawChars
+    FARCALL PtyGen_DrawChars
     CALL PtyGen_DrawCursor
 
     CALL WaitForVBlank    ; VBlank and DMA
@@ -3089,44 +3090,6 @@ CharName_DrawCursor:
     JUMP DrawCursor
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawChars  [$9F4E :: 0x39F5E]
-;;
-;;    Draws the sprites for all 4 characters on the party gen screen.
-;;  This routine uses DrawSimple2x3Sprite to draw the sprites.
-;;  See that routine for details.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawChars:
-    LDX #$00         ; Simply call @DrawOne four times, each time
-    CALL @DrawOne     ;  having the index of the char to draw in X
-    LDX #$10
-    CALL @DrawOne
-    LDX #$20
-    CALL @DrawOne
-    LDX #$30
-
-  @DrawOne:
-    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
-    STA spr_x
-    LDA ptygen_spr_y, X
-    STA spr_y
-
-    LDA ptygen_class, X   ; get the class
-    TAX
-    LDA lutClassBatSprPalette, X   ; get the palette that class uses
-    STA tmp+1             ; write the palette to tmp+1  (used by DrawSimple2x3Sprite)
-
-    TXA               ; multiply the class index by $20
-    ASL A             ;  this gets the tiles in the pattern tables which have this
-    ASL A             ;  sprite's CHR ($20 tiles is 2 rows, there are 2 rows of tiles
-    ASL A             ;  per class)
-    ASL A
-    ASL A
-    STA tmp           ; store it in tmp for DrawSimple2x3Sprite
-    JUMP DrawSimple2x3Sprite
 
 
 
@@ -5318,24 +5281,24 @@ DrawShopPartySprites:
     LDA #$38
     STA spr_y
     LDA #1<<6
-    CALL DrawOBSprite    ; draw char 1 at $98,$38
+    FARCALL DrawOBSprite    ; draw char 1 at $98,$38
 
     LDA #$50
     STA spr_y
     LDA #2<<6
-    CALL DrawOBSprite    ; draw char 2 at $98,$50
+    FARCALL DrawOBSprite    ; draw char 2 at $98,$50
 
     LDA #$68
     STA spr_y
     LDA #3<<6
-    CALL DrawOBSprite    ; draw char 3 at $98,$68
+    FARCALL DrawOBSprite    ; draw char 3 at $98,$68
 
     LDA #$50
     STA spr_y
     LDA #$88
     STA spr_x
     LDA #0<<6
-    JUMP DrawOBSprite    ; draw char 0 at $88,$50, then exit
+    FARJUMP DrawOBSprite    ; draw char 0 at $88,$50, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7425,7 +7388,7 @@ EnterStatusMenu:
     ROR A
     ROR A
     AND #$C0                ; shift to make ID a usable index
-    CALL DrawOBSprite        ; then draw this character's OB sprite
+    FARCALL DrawOBSprite        ; then draw this character's OB sprite
 
     CALL TurnMenuScreenOn    ; turn the screen on
     JUMP MenuWaitForBtn_SFX  ; then just wait for the user to press a button before exiting
@@ -7683,22 +7646,22 @@ DrawMainMenuCharSprites:
     LDA #$18
     STA spr_y
     LDA #$00
-    CALL DrawOBSprite
+    FARCALL DrawOBSprite
 
     LDA #$D8           ; Draw char 1's OB sprite at $D8,$18
     STA spr_x
     LDA #$40
-    CALL DrawOBSprite
+    FARCALL DrawOBSprite
 
     LDA #$88           ; Draw char 3's OB sprite at $D8,$88
     STA spr_y
     LDA #$C0
-    CALL DrawOBSprite
+    FARCALL DrawOBSprite
 
     LDA #$88           ; and lastly, char 2's OB sprite at $88,$88
     STA spr_x
     LDA #$80
-    JUMP DrawOBSprite   ; then exit
+    FARJUMP DrawOBSprite   ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
