@@ -43,7 +43,7 @@
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
-.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
+.import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable, LoadBattleFormationInto_btl_formdata
 ; bank_21_altar
 .import DoAltarEffect
 ; bank_22_bridge
@@ -3299,42 +3299,14 @@ EnterBattle:
     LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
     STA OAMDMA                 ;  off at this point
 
-  ;; Load formation data to buffer in RAM
+    ;; Load formation data to buffer in RAM
 
-    LDA #BANK_BTLDATA         ; here we load the battle formation data
-    CALL SwapPRG             ; swap to the bank containing that data
-    LDA a:btlformation        ; get the formation ID
-    AND #$7F                  ; remove the 'Formation B' bit to get the raw formation ID
-    LDX #0                    ;  mulitply the formation ID by 16 (shift by 4) and rotate
-    STX btltmp+11             ;  bits into btltmp+11.  The end result is that (btltmp+10) will
-    ASL A                     ;  be formation*16
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    STA btltmp+10
+    FARCALL LoadBattleFormationInto_btl_formdata
 
-    CLC                       ; add to that the high byte of the formation data pointer
-    LDA btltmp+11             ;  and (btltmp+10) now points to our formation data.
-    ADC #>lut_BattleFormations
-    STA btltmp+11
-
-    LDX #$10                  ; $10 bytes of formation data (down counter)
-    LDY #0                    ; index  (seems pointless to use both X and Y here -- could've just used Y)
-  @FormationLoop:
-      LDA (btltmp+10), Y      ; copy a byte from the LUT in ROM
-      STA btl_formdata, Y     ;  to our formation data buffer in RAM
-      INY                     ; inc index
-      DEX                     ; dec loop counter
-      BNE @FormationLoop      ; and loop until all $10 bytes copied
-
-  ;; Turn off PPU and clear nametables
+    ;; Turn off PPU and clear nametables
 
     LDA #0
-    STA a:menustall           ; disable menu stalling
+    STA menustall           ; disable menu stalling
     CALL Battle_PPUOff         ; turn PPU off
     LDA PPUSTATUS                 ; reset PPU toggle
 
@@ -3343,25 +3315,25 @@ EnterBattle:
     CALL SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
 
     LDY #8                    ; loops to clear $0800 bytes of NT data (both nametables)
-  @ClearNT_OuterLoop:
-      LDX #0
-    @ClearNT_InnerLoop:         ; inner loop clears $100 bytes
-        STA PPUDATA
-        DEX
-        BNE @ClearNT_InnerLoop
-      DEY                       ; outer loop runs inner loop 8 times
-      BNE @ClearNT_OuterLoop    ;  clearing $800 bytes total
+    @ClearNT_OuterLoop:
+        LDX #0
+        @ClearNT_InnerLoop:         ; inner loop clears $100 bytes
+            STA PPUDATA
+            DEX
+            BNE @ClearNT_InnerLoop
+        DEY                       ; outer loop runs inner loop 8 times
+        BNE @ClearNT_OuterLoop    ;  clearing $800 bytes total
 
-  ;; Draw Various (hardcoded) boxes on the screen
+    ;; Draw Various (hardcoded) boxes on the screen
 
     LDA #1              ; box at 1,1
-    STA a:box_x         ; with dims 16,18
+    STA box_x         ; with dims 16,18
     LDX #16             ;  this is the box housing the enemies (big box on the left)
     LDY #18
     CALL BattleBox_vAXY
 
     LDA #17             ; box at 17,1
-    STA a:box_x         ; with dims 8,16
+    STA box_x         ; with dims 8,16
     LDA #1              ;  this is the box housing the player sprites (box on right)
     LDX #8
     LDY #18
@@ -3382,15 +3354,12 @@ EnterBattle:
     ;; Load palettes
 
     LDX #0
-  @PalLoop:                   ; copy the loaded palettes (backdrop, menu, sprites)
-      LDA cur_pal, X          ;  to the battle palette buffer
-      STA btl_palettes, X
-      INX
-      CPX #$20
-      BNE @PalLoop            ; all $20 bytes
-
-    LDA #BANK_BTLPALETTES     ; then swap to the bank containing the battle palettes
-    CALL SwapPRG             ;   (for enemies)
+    @PalLoop:                   ; copy the loaded palettes (backdrop, menu, sprites)
+        LDA cur_pal, X          ;  to the battle palette buffer
+        STA btl_palettes, X
+        INX
+        CPX #$20
+        BNE @PalLoop            ; all $20 bytes
 
     LDA btlform_plts          ; use the formation data to get the ID of the palettes to load
     LDY #4                    ;   load the first one into the 2nd palette slot ($xxx4)

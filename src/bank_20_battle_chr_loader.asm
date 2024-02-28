@@ -5,7 +5,7 @@
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
 .export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
-.export LoadBattleSpritePalettes
+.export LoadBattleSpritePalettes, LoadBattleFormationInto_btl_formdata
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -557,3 +557,43 @@ DrawBattleBackdropRow:
 
     @lut_BackdropLayout:
   .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
+
+LoadBattleFormationInto_btl_formdata:
+    LDA btlformation        ; get the formation ID
+    AND #$7F                  ; remove the 'Formation B' bit to get the raw formation ID
+    LDX #0                    ;  mulitply the formation ID by 16 (shift by 4) and rotate
+    STX btltmp+11             ;  bits into btltmp+11.  The end result is that (btltmp+10) will
+    ASL A                     ;  be formation*16
+    ROL btltmp+11
+    ASL A
+    ROL btltmp+11
+    ASL A
+    ROL btltmp+11
+    ASL A
+    ROL btltmp+11
+    STA btltmp+10
+
+    CLC                       ; add to that the high byte of the formation data pointer
+    LDA btltmp+11             ;  and (btltmp+10) now points to our formation data.
+    ADC #>LUT_BattleFormations
+    STA btltmp+11
+
+    LDA btltmp+10
+    CLC
+    ADC #<LUT_BattleFormations
+    STA btltmp+10
+
+    LDA btltmp+11
+    ADC #0
+    STA btltmp+11
+
+
+    LDX #$10                  ; $10 bytes of formation data (down counter)
+    LDY #0                    ; index  (seems pointless to use both X and Y here -- could've just used Y)
+    @FormationLoop:
+        LDA (btltmp+10), Y      ; copy a byte from the LUT in ROM
+        STA btl_formdata, Y     ;  to our formation data buffer in RAM
+        INY                     ; inc index
+        DEX                     ; dec loop counter
+        BNE @FormationLoop      ; and loop until all $10 bytes copied
+    RTS
