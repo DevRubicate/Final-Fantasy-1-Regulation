@@ -463,7 +463,7 @@ DrawItemBox:
     STA box_wd       ;  with DrawMainItemBox
     LDA #$13
     STA box_ht
-    CALL DrawBox
+    FARCALL DrawBox
 
     INC dest_y       ; inc the dest row by 1 and the dest col by 2
     INC dest_x       ;  but this is utterly pointless because dest_x and dest_y

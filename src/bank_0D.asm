@@ -815,7 +815,7 @@ EnterMiniGame:
     LDA #$0A
     STA box_wd
     STA box_ht
-    CALL DrawBox
+    FARCALL DrawBox
 
     ;; here we start loading CHR for the minigame.  There are 16 sliding puzzle pieces in CHR
     ;;  one is blank (no number), and the others are numbered 1-15.  Each sliding puzzle piece
@@ -2098,7 +2098,7 @@ EnterEndingScene:
     STA box_wd
     LDA #$0C
     STA box_ht
-    CALL DrawBox
+    FARCALL DrawBox
 
     CALL Story_OpenShutters      ; Do the shutter opening effect to reveal the empty story box
 
@@ -2295,7 +2295,7 @@ Story_DoPage:
     LDA #$0C
     STA box_ht
 
-    CALL DrawBox            ; draw the box (erases contents)
+    FARCALL DrawBox            ; draw the box (erases contents)
     CALL Story_DrawText       ; draw this page of story text / credits
     CALL Story_OpenShutters   ; do the open shutter effect
     CALL Story_Wait           ; wait for user to read the text

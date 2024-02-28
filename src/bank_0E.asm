@@ -1816,7 +1816,7 @@ EnterLineupMenu:
     AND #$02
     STA str_buf+(3*8)
 
-    CALL DrawBox                 ; draw box (coords/dims previously filled)
+    FARCALL DrawBox                 ; draw box (coords/dims previously filled)
     CALL DrawLineupMenuNames     ; draw names of all the characters
     CALL WaitForVBlank         ; wait for VBlank
     CALL DrawPalette             ; and draw the palette
@@ -2939,7 +2939,7 @@ PtyGen_DrawBoxes:
 
     LDA #0
     STA menustall        ; disable menustalling (PPU is off)
-    JUMP DrawBox          ;  draw the box, and exit
+    FARJUMP DrawBox          ;  draw the box, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3167,7 +3167,7 @@ DrawNameInputScreen:
     STA box_wd
     LDA #$14
     STA box_ht
-    CALL DrawBox
+    FARCALL DrawBox
     
     LDA #$0D                ; Draw the small top box containing the player's name
     STA box_x
@@ -3177,7 +3177,7 @@ DrawNameInputScreen:
     STA box_wd
     LDA #$04
     STA box_ht
-    CALL DrawBox
+    FARCALL DrawBox
     
     LDA #<lut_NameInput     ; Print the NameInput lut as a string.  This will fill
     STA text_ptr            ;  the bottom box with the characters the user can select.
@@ -3346,7 +3346,7 @@ EnterTitleScreen:
     STA box_ht
     LDA #10
     STA box_wd
-      CALL DrawBox
+    FARCALL DrawBox
     LDA #<lut_TitleText_Continue
     STA text_ptr
     LDA #>lut_TitleText_Continue
@@ -3357,7 +3357,7 @@ EnterTitleScreen:
 
     LDA #15          ; next box is same X pos and same dims, but at Y=15
     STA box_y        ;  and contains text "New Game"
-      CALL DrawBox
+    FARCALL DrawBox
     LDA #<lut_TitleText_NewGame
     STA text_ptr
     LDA #>lut_TitleText_NewGame
@@ -3370,7 +3370,7 @@ EnterTitleScreen:
     STA box_x
     LDA #16
     STA box_wd
-      CALL DrawBox
+    FARCALL DrawBox
     LDA #<lut_TitleText_RespondRate
     STA text_ptr
     LDA #>lut_TitleText_RespondRate
@@ -5355,7 +5355,7 @@ DrawShopComplexString:
 
 DrawShopBox:
     CALL LoadShopBoxDims      ; load the dims
-    JUMP DrawBox              ; draw it, then exit
+    FARJUMP DrawBox              ; draw it, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7260,7 +7260,7 @@ DrawItemTargetMenu:
     STA box_wd
     LDA #$08
     STA box_ht
-    CALL DrawBox          ; draw it
+    FARCALL DrawBox          ; draw it
 
     CALL @DrawBoxBody                ; draw the box body
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen back on.  then exit
@@ -7404,7 +7404,7 @@ EnterStatusMenu:
     STA box_wd
     LDA @lutStatusBoxes+3, X
     STA box_ht
-    JUMP DrawBox                  ; then draw the box and return
+    FARJUMP DrawBox                  ; then draw the box and return
 
  @lutStatusBoxes:             ; coords and dims for status menu boxes
   .byte $01,$03,$08,$05       ; box containing character name                (top left)
@@ -8244,7 +8244,7 @@ DrawOrbBox:
 
 DrawMainItemBox:
     CALL LoadMainItemBoxDims
-    JUMP DrawBox
+    FARJUMP DrawBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9227,7 +9227,7 @@ DrawEquipMenu:
     LDA #BANK_THIS            ; set cur_bank (for DrawMenuString?) -- kind of pointless because DrawMenuString
     STA cur_bank              ;   already does this
 
-    JUMP DrawBox               ; then draw the box, and return
+    FARJUMP DrawBox               ; then draw the box, and return
 
  @lut_EquipBoxes:
   .byte $01,$01,$07,$04   ; title box
