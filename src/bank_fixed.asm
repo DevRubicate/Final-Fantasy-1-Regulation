@@ -238,10 +238,10 @@ ProcessSMInput:
       LDX talkobj        ; and index of object to talk to
       BCC @TalkToTile    ; examine C flag to see if there was an object to talk to.  If there was....
 
-        LDA #0
-        STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
-        FARCALL TalkToObject    ; then talk to this object.
-        JUMP @DialogueBox
+    LDA #0
+    STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
+    FARCALL TalkToObject    ; then talk to this object.
+    JUMP @DialogueBox
 
 
       @TalkToTile:          ; if there was no object to talk to....
@@ -253,8 +253,7 @@ ProcessSMInput:
      ;; text ID we need to draw
 
     @DialogueBox:
-      CALL DrawDialogueBox     ; draw the dialogue box and containing text
-
+    CALL DrawDialogueBox     ; draw the dialogue box and containing text
     CALL WaitForVBlank       ; wait a frame
     LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
     STA OAMDMA
@@ -268,10 +267,10 @@ ProcessSMInput:
         FARJUMP ReenterStandardMap  ; ... and reenter map if set
     :     
     LDA #0            ; then clear A, Start and Select button catchers
-      STA joy_a
-      STA joy_start
-      STA joy_select
-      RTS               ; and exit
+    STA joy_a
+    STA joy_start
+    STA joy_select
+    RTS               ; and exit
 
   ;; if A button wasn't pressed, it jumps here to check for Start
 
@@ -1422,7 +1421,7 @@ DrawDialogueBox:
     STA menustall       ;  doesn't check it
 
     PLA                      ; then pull the dialogue text ID that was pushed at the start of the routine
-    JUMP DrawDialogueString   ; draw it, then exit!
+    FORCEDFARJUMP DrawDialogueString   ; draw it, then exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2184,19 +2183,22 @@ DrawDialogueString:
     BCS @HiTbl            ; if string ID was >= $80 use 2nd half of table, otherwise use first half
 
     @LoTbl:
-      LDA lut_DialoguePtrTbl, X        ; load up the pointer into text_ptr
-      STA text_ptr
-      LDA lut_DialoguePtrTbl+1, X
-      STA text_ptr+1
-      JUMP @PtrLoaded                   ; then jump ahead
+
+    LDA lut_DialoguePtrTbl, X        ; load up the pointer into text_ptr
+    STA text_ptr
+    LDA lut_DialoguePtrTbl+1, X
+    STA text_ptr+1
+    JUMP @PtrLoaded                   ; then jump ahead
 
     @HiTbl:
-      LDA lut_DialoguePtrTbl+$100, X   ; same, but read from 2nd half of pointer table
-      STA text_ptr
-      LDA lut_DialoguePtrTbl+$101, X
-      STA text_ptr+1
 
-  @PtrLoaded:             ; here, text_ptr points to the desired string
+    LDA lut_DialoguePtrTbl+$100, X   ; same, but read from 2nd half of pointer table
+    STA text_ptr
+    LDA lut_DialoguePtrTbl+$101, X
+    STA text_ptr+1
+
+    @PtrLoaded:             ; here, text_ptr points to the desired string
+
     LDA #10
     STA tmp+7             ;  set precautionary counter to 10
 
@@ -2208,15 +2210,15 @@ DrawDialogueString:
     STA dest_y
     CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
-  @Loop:
+    @Loop:
+
     LDY #0                       ; zero Y for indexing
     LDA (text_ptr), Y            ; get the next byte in the string
     BEQ DrawDialogueString_Done  ; if it's zero (null terminator), exit
 
     INC text_ptr                 ; otherwise increment the pointer
     BNE :+
-      INC text_ptr+1             ;   inc high byte if low byte wrapped
-
+        INC text_ptr+1             ;   inc high byte if low byte wrapped
     :   
     CMP #$1A
     BCC @ControlCode     ; if the byte is < $1A, it's a control code
@@ -2224,22 +2226,23 @@ DrawDialogueString:
     CMP #$7A
     BCC @DTE             ; if $1A-$79, it's a DTE code
 
-   @SingleTile:
-      STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
+    @SingleTile:
+    
+    STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
 
-      LDA dest_x           ; increment the dest address by 1
-      CLC
-      ADC #1
-      AND #$3F             ; and mask it with $3F so it wraps around both NTs appropriately
-      STA dest_x           ; then write back
+    LDA dest_x           ; increment the dest address by 1
+    CLC
+    ADC #1
+    AND #$3F             ; and mask it with $3F so it wraps around both NTs appropriately
+    STA dest_x           ; then write back
 
-      AND #$1F             ; then mask with $1F.  If result is zero, it means we're crossing an NT boundary
-      BNE @Loop            ;  if not zero, just continue looping
+    AND #$1F             ; then mask with $1F.  If result is zero, it means we're crossing an NT boundary
+    BNE @Loop            ;  if not zero, just continue looping
         CALL SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
         JUMP @Loop             ;  then jump back to loop
 
 
-   @DTE:                 ; if byte fetched was a DTE code ($1A-79)
+    @DTE:                 ; if byte fetched was a DTE code ($1A-79)
       SEC
       SBC #$1A           ; subtract $1A to make the DTE code zero based
       TAX                ; put in X for indexing
@@ -5778,7 +5781,6 @@ Impl_FARPPUCOPY:
     RTS
 
 Impl_NAKEDJUMP:
-
     ; Save A
     STA safecall_reg_a
 
