@@ -61,7 +61,7 @@
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 
@@ -3087,7 +3087,7 @@ ClearUnformattedCombatBoxBuffer:
       BNE :-
       
     RTS
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleMagicBox  [$F764 :: 0x3F774]
@@ -3734,50 +3734,7 @@ DrawBattleString_DrawChar:
     STA (btldraw_dst), Y        ; and top part in position [0]
     JUMP DrawBattleString_IncDstPtr
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattle_Division   [$FAFC :: 0x3FB0C]
-;;
-;;    Kind of a junky division routine that is used by FormatBattleString
-;;  to draw numerical values.
-;;
-;;  end result:
-;;                  A = btltmp6,7 / YX
-;;          btltmp6,7 = btltmp6,7 % YX   (remainder)
-;;
-;;    This division routine is a simple "keep subtracting until we
-;;  fall below zero".  Which means that if btltmp+6,7 is zero, the
-;;  routine will loop forever and the game will deadlock.  This routine
-;;  is kind of junky.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawBattle_Division:
-    LDA #$00
-    STA btl_magdataptr         ; initialize result with zero
-  @Loop:
-    STX btlsfxnse_len
-    LDA btltmp+6
-    SEC
-    SBC btlsfxnse_len
-    PHA             ; low byte = btlsfxnse_len-X, back it up
-    
-    STY btlsfxnse_len
-    LDA btltmp+7
-    SBC btlsfxnse_len         ; high byte = $97-Y
-    
-    BMI @Done       ; if result is negative, we're done
-    
-    INC btl_magdataptr         ; otherwise, increment our result counter
-    STA btltmp+7    ; overwrite btltmp+6 with the result of the subtraction
-    PLA
-    STA btltmp+6
-    JUMP @Loop       ; and keep going until we fall below zero
-    
-  @Done:            ; once the result is negative
-    PLA             ; throw away the back-up byte
-    LDA btl_magdataptr         ; and put the result in A before exiting
-    RTS
 
 ;;  DrawBattleString_Code11  [$FB1E :: 0x3FB2E]
 DrawBattleString_Code11:            ; print a number 
@@ -3820,18 +3777,18 @@ DrawBattle_Number:
     
     LDX #<10000
     LDY #>10000
-    CALL DrawBattle_Division
+    CALL @Divide
     STA tmp_9a                     ; start pulling digits out and stuff them in tmp_9a
     LDX #<1000
     LDY #>1000
-    CALL DrawBattle_Division
+    CALL @Divide
     STA tmp_9b
     LDX #<100
     LDY #>100
-    CALL DrawBattle_Division
+    CALL @Divide
     STA tmp_9c
     LDX #<10
-    CALL DrawBattle_Division
+    CALL @Divide
     STA tmp_9d
     
     LDX #$00
@@ -3862,7 +3819,10 @@ DrawBattle_Number:
     ORA #$80
     LDX #$FF
     JUMP DrawBattleString_DrawChar   ; and print it
-    
+
+    @Divide:
+    FARJUMP DrawBattle_Division
+
 ;;  DrawBattleString_Code11_Short  [$FB93 :: 0x3FBA3]
 ;;    Just jumps to the actual routine.  Only exists here because the routine is too
 ;;  far away to branch to.
