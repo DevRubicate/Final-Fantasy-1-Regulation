@@ -814,10 +814,10 @@ BattleSubMenu_Drink:
     LDA btl_potion_heal         ; see if there are any Heal/Pure potions remaining
     ORA btl_potion_pure
     BNE :+                      ; if there are no potions...
-      CALL DoNothingMessageBox   ; show the 'Nothing' box
-      JUMP CancelBattleAction    ; then cancel
-    
-  : CALL DrawDrinkBox          ; otherwise (have at least 1 potion), draw the drink box
+        CALL DoNothingMessageBox   ; show the 'Nothing' box
+        JUMP CancelBattleAction    ; then cancel
+    : 
+    FARCALL DrawDrinkBox          ; otherwise (have at least 1 potion), draw the drink box
   
     CALL MenuSelection_Drink     ; get menu selection from the player  
     PHA                         ; backup the A/B button press

@@ -5,8 +5,20 @@
 .import BattleRNG, WaitForVBlank, MusicPlay
 .import LoadBattleFormationInto_btl_formdata, Battle_PPUOff, SetPPUAddr_XA, BattleBox_vAXY, BattleBox_vAXY, Battle_PlayerBox, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle
+.import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 
-.export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
+.export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Combat Drink Box lut    [$FA16 :: 0x3FA26]
+;;
+;;      The weird miniature box that pops up for the DRINK menu
+
+lut_CombatDrinkBox:
+;       hdr    X    Y   wd   ht 
+  .byte $00, $03, $01, $0C, $06
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -249,3 +261,71 @@ ClearBattleMessageBuffer:
     STA btl_msgbuffer+$18       ; for player box
     
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawDrinkBox  [$F921 :: 0x3F931]
+;;
+;;    Draws the "Drink box" that appears in the battle menu when the player
+;;  selects the DRINK option in the battle menu
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawDrinkBox:
+    LDY #$05
+    : 
+    LDA lut_CombatDrinkBox-1, Y       ; load the specs for the drink box
+    STA btl_msgdraw_hdr-1, Y          ; -1 because Y is 1-based
+    DEY
+    BNE :-
+    
+    CALL BattleDraw_AddBlockToBuffer     ; add the box to the block buffer
+    
+    CALL ClearUnformattedCombatBoxBuffer ; clear the unformatted buffer (we'll be drawing to it)
+    
+    INC btl_msgdraw_hdr                 ; For text, hdr=1
+    INC btl_msgdraw_x                   ; move text right+down 1 tile from where the box was drawn
+    INC btl_msgdraw_y
+    LDA btl_potion_heal
+    BEQ :+                              ; if there are any heal potions
+        STA btl_unfmtcbtbox_buffer + 5    ; set buffer to:   FF 0E 19 FF 11 xx xx 00  noting:
+        LDA #$11                          ;   FF       = space
+        STA btl_unfmtcbtbox_buffer + 4    ;   0E 19    = 0E prints an item name, 19 indicates the Heal Potion item
+        LDA #$19                          ;   11 xx xx = 11 prints a number, xx xx is the qty (which in this case is 
+        STA btl_unfmtcbtbox_buffer + 2    ;                  the number of potions
+        LDA #$0E
+        STA btl_unfmtcbtbox_buffer + 1
+    : 
+    LDA #$00
+    STA btl_unfmtcbtbox_buffer + 6      ; The high byte of the qty
+    STA btl_unfmtcbtbox_buffer + 7      ; The null terminator
+    
+    LDA #<btl_unfmtcbtbox_buffer        ; set the block pointer to the data
+    STA btl_msgdraw_srcptr
+    LDA #>btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr+1
+    CALL BattleDraw_AddBlockToBuffer     ; and add the block (drawing the Heal Potions)
+    
+    INC btl_msgdraw_y                   ; move down 2 rows for Pure portions
+    INC btl_msgdraw_y
+    LDA btl_potion_pure
+    BEQ :+
+        STA btl_unfmtcbtbox_buffer + $25  ; Exact same deal as above, only it works for the Pure Potion
+        LDA #$11
+        STA btl_unfmtcbtbox_buffer + $24
+        LDA #$1A
+        STA btl_unfmtcbtbox_buffer + $22
+        LDA #$0E
+        STA btl_unfmtcbtbox_buffer + $21
+    : 
+    LDA #$00
+    STA btl_unfmtcbtbox_buffer + $26
+    STA btl_unfmtcbtbox_buffer + $27
+    
+    LDA #<(btl_unfmtcbtbox_buffer + $20)
+    STA btl_msgdraw_srcptr
+    LDA #>(btl_unfmtcbtbox_buffer + $20)
+    STA btl_msgdraw_srcptr+1
+    CALL BattleDraw_AddBlockToBuffer     ; add the block for the Pure potions
+    
+    JUMP DrawBlockBuffer                 ; then draw the actual blocks and exit
