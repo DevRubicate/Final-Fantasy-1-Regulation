@@ -80,7 +80,8 @@
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
 .export LoadStandardMap, LoadMapObjects
-.export ProcessSMInput, EnterBattle
+.export EnterBattle
+.export DrawDialogueBox, DrawMapObjectsNoUpdate, ShowDialogueBox
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -198,134 +199,6 @@ EnterOW_PalCyc:
     CALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
     NAKEDJUMP EnterOverworldLoop  ; then enter the overworld loop
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Process SM input   [$C23C :: 0x3C24C]
-;;
-;;    Updates joy data and does input processing for standard maps.  Shouldn't
-;;  be called when player is in motion.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessSMInput:  
-    LDA joy_a              ; see if user pressed the A button
-    BEQ @CheckStart        ; if not, skip ahead to check Start button.  Otherwise...
-
-    ;;
-    ;; A button pressed
-    ;;
-
-      LDA #0
-      STA joy_a              ; clear A button marker
-      STA dlgsfx             ;  and a few dialogue flags
-      STA dlgflg_reentermap
-
-      CALL WaitForVBlank      ; wait for VBlank and keep music playing
-      FARCALL MusicPlay ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
-
-      LDA facing               ; use the direction the player is facing
-      FARCALL GetSMTargetCoords    ;  as the direction to get SM target coords
-
-      FARCALL CanTalkToMapObject   ; see if there's a map object at those target coords
-      STX talkobj              ; store the index to that object (if any) in talkobj
-      PHP                      ; back up the C flag (whether or not there was an object to talk to)
-
-      LDA #4*4                    ; redraw all map objects starting at the 4th sprite
-      STA sprindex                ;  this will cause the object we're talking to (if any) to face the player
-      CALL DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
-
-      PLP                ; restore C flag
-      LDX talkobj        ; and index of object to talk to
-      BCC @TalkToTile    ; examine C flag to see if there was an object to talk to.  If there was....
-
-    LDA #0
-    STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
-    FARCALL TalkToObject    ; then talk to this object.
-    JUMP @DialogueBox
-
-
-      @TalkToTile:          ; if there was no object to talk to....
-        FARCALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
-        LDX #0              ; clear tile properties (prevent unwanted teleport/battle)
-        STX tileprop
-
-     ;; whether we talked to an object or the SM tile, here, A contains the dialogue
-     ;; text ID we need to draw
-
-    @DialogueBox:
-    CALL DrawDialogueBox     ; draw the dialogue box and containing text
-    CALL WaitForVBlank       ; wait a frame
-    LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
-    STA OAMDMA
-    CALL SetSMScroll
-    LDA #$1E
-    STA PPUMASK
-    FARCALL MusicPlay
-    CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
-    LDA dlgflg_reentermap     ; check the reenter map flag
-    BEQ :+
-        FARJUMP ReenterStandardMap  ; ... and reenter map if set
-    :     
-    LDA #0            ; then clear A, Start and Select button catchers
-    STA joy_a
-    STA joy_start
-    STA joy_select
-    RTS               ; and exit
-
-  ;; if A button wasn't pressed, it jumps here to check for Start
-
-    @CheckStart:
-
-    LDA joy_start      ; check to see if Start pressed
-    BEQ @CheckSelect   ; if not... jump ahead to check select.  Otherwise....
-
-    ;;
-    ;; Start button pressed
-    ;;
-
-      LDA #0
-      STA joy_start            ; clear start button catcher
-
-      FARCALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
-      LDA #$02
-      CALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
-      FARCALL EnterMainMenu        ; enter the main menu
-      FARJUMP ReenterStandardMap   ; then reenter the map
-
-  ;; if neither A nor Start pressed... jumps here to check select
-
-    @CheckSelect:
-
-    LDA joy_select       ; is select pressed?
-    BEQ @CheckDirection  ; if not... jump ahead.  Otherwise...
-
- ;;
- ;; Select button pressed
- ;;
-
-      FARCALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
-      LDA #0                   ;   though I don't know why you'd need to get the now tile properties...
-      STA joy_select
-      LDA #$02
-      CALL CyclePalettes
-      FARCALL EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
-      FARJUMP ReenterStandardMap
-
-  ;; A, Start, Select -- none of them pressed.  Now check directional buttons
-
-    @CheckDirection:
-
-    FARCALL UpdateJoy       ; update joy data
-    LDA joy             ; get updated data, and isolate the directional buttons
-    AND #$0F
-    BNE @Move           ; if any buttons down, move in that direction
-  @Exit:                ;  otherwise, just exit
-      RTS
-  @Move:
-      STA facing           ; record directions pressed as our new facing direction
-      FARCALL CanPlayerMoveSM  ; check to see if the player can move that way
-      BCS @Exit            ; if not... exit
-      JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
