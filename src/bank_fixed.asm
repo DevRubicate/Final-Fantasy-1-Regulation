@@ -22,7 +22,7 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error
+.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow
 
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
@@ -84,7 +84,7 @@
 .export LoadStandardMap, LoadMapObjects
 .export DrawMapObjectsNoUpdate, ShowDialogueBox
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawDialogueString, DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr, PrepDialogueBoxRow
+.export DrawDialogueString, DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1209,165 +1209,6 @@ PrepDialogueBoxAttr:
       BNE @Loop            ; loop until X=0 (do not change draw_buf_attr+0!)
     RTS                    ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Prep Dialogue Box Row  [$D549 :: 0x3D559]
-;;
-;;    Prepares a row of 16x16 tiles to be drawn for the desired row of the dialogue
-;;  box.  Note that the map row must've been prepped before this -- as the dialogue
-;;  box is simply written over it.  Some map graphics are still visible underneath
-;;  the dialogue box (dialogue box doesn't write over every graphic in the row)
-;;
-;;  IN:  dlgbox_row = the row of the dialogue box to draw (1-7)
-;;
-;;  OUT: dlgbox_row = decremented by 1
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrepDialogueBoxRow:
-    DEC dlgbox_row     ; decrement the row (drawing bottom up)
-    BEQ @Exit          ; if this is the very top row, draw nothing -- since the map is visible
-                       ;  for the top 16 pixels of the screen
-
-    LDA dlgbox_row
-    CMP #6             ; Otherwise, see if this is the bottom row
-    BEQ @BottomRow     ;   if it is, prepare it specially
-
-    CMP #1
-    BEQ @TopRow        ; same with the top row of the dialogue box (2nd row of 16x16 tiles)
-
-                 ; otherwise, just draw a normal "inner" row
-
-  @InnerRows:
-    LDA #$FA           ; use tile $FA for the leftmost tile in the row (left box graphic)
-    STA tmp
-    LDA #$FF           ; tile $FF for all other tiles in the row (inner box graphic / empty space)
-    STA tmp+1
-    CALL DlgBoxPrep_UL  ;  prep UL tiles
-
-    LDA #$FB           ; $FB as rightmost tile in row (right box graphic)
-    STA tmp
-    CALL DlgBoxPrep_UR  ;  prep UR tiles
-
-    CALL DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
-    JUMP DlgBoxPrep_DR  ;   and exit
-
-  @TopRow:
-    LDA #$F7           ; use tile $F7 for the leftmost tile in the row (UL box graphic)
-    STA tmp
-    LDA #$F8           ; use tile $F8 for every other tile in the row (top box graphic)
-    STA tmp+1
-    CALL DlgBoxPrep_UL  ;  prep the UL tiles
-
-    LDA #$F9           ; use tile $F9 for the rightmost tile in the row (UR box graphic)
-    STA tmp
-    CALL DlgBoxPrep_UR  ;  prep the UR tiles
-
-    CALL DlgBoxPrep_DL  ; then prep the fixed DL/DR tiles
-    JUMP DlgBoxPrep_DR  ;   and exit
-
-  @BottomRow:
-    LDA #$FC           ; use tile $FC for the leftmost tile in the row (DL box graphic)
-    STA tmp
-    LDA #$FD           ; use tile $FD for every other tile in the row (bottom box graphic)
-    STA tmp+1
-    CALL DlgBoxPrep_UL  ;  prep the UL tiles
-
-    LDA #$FE           ; use tile $FE for the rightmost tile in the row (DR box graphic)
-    STA tmp
-    JUMP DlgBoxPrep_UR  ;  prep the UR tiles and exit
-
-                 ; notice that for the bottom row, the border graphics are drawn on the
-                 ; top half of the tile, and that the bottom half of the tile is not changed.
-
-  @Exit:
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Dialogue Box Prep Support Routines  [$D59A :: 0x3D5AA]
-;;
-;;    These routines fill each portion of the TSA draw buffer for the dialogue
-;;  box.  UL and UR are configurable and take tmp and tmp+1 as parameters, but
-;;  DL and DR are fixed and will draw the same tiles every time.
-;;
-;;    Each routine fills draw_buf_xx+1 to draw_buf_xx+$E.  +0 and +$F are not
-;;  changed because the map is to remain visible in the left and right 16-pixels
-;;  of the screen.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
- ;;
- ;;  UL  [$D59A ::0x3D5AA]
- ;;   tmp   = tile for leftmost tile
- ;;   tmp+1 = tile for all other tiles
- ;;
-
-DlgBoxPrep_UL:
-    LDA tmp               ; get the desired leftmost tile
-    STA draw_buf_ul+1     ; record it
-
-    LDX #$02
-    LDA tmp+1             ; then get the main tile
-   @Loop:
-      STA draw_buf_ul, X  ; and record it for +2 to +$E
-      INX
-      CPX #$0F
-      BCC @Loop           ; stop when X gets to $F (don't want to change $F)
-    RTS                   ; and exit
-
- ;;
- ;;  UR  [$D5AC ::0x3D5BC]
- ;;   tmp   = tile for all other tiles
- ;;   tmp+1 = tile for rightmost tile
- ;;
-
-DlgBoxPrep_UR:
-    LDA tmp+1             ; get main tile
-    LDX #$01
-   @Loop:
-      STA draw_buf_ur, X  ; and write it to +1 to +$D
-      INX
-      CPX #$0E
-      BCC @Loop
-
-    LDA tmp               ; then copy the right-most tile to +$E
-    STA draw_buf_ur+$E
-    RTS
-
- ;;
- ;;  DL  [$D5BE :: 0x3D5CE]
- ;;
-
-DlgBoxPrep_DL:
-    LDA #$FA              ; load hardcoded tile $FA (box left border graphic)
-    STA draw_buf_dl+1     ; to leftmost tile
-
-    LDX #$02
-    LDA #$FF              ; then hardcoded tile $FF (blank space / box inner graphic)
-   @Loop:
-      STA draw_buf_dl, X  ;   to the rest of the row
-      INX
-      CPX #$0F
-      BCC @Loop
-    RTS
-
- ;;
- ;;  DR  [$D5D0 :: 0x3D5E0]
- ;;
-
-DlgBoxPrep_DR:
-    LDA #$FF              ; load hardcoded tile $FF (blank space / box inner graphic)
-    LDX #$01
-   @Loop:
-      STA draw_buf_dr, X  ;   to all tiles in row except the rightmost
-      INX
-      CPX #$0E
-      BCC @Loop
-
-    LDA #$FB              ; load hardcoded tile $FB (box right border graphic)
-    STA draw_buf_dr+$E    ; to rightmost tile
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1587,8 +1428,6 @@ WaitVBlank_NoSprites:
     LDA #>oam
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1977,8 +1816,6 @@ lut_NTRowStartHi:
   .byte $21,$21,$21,$21,$21,$21,$21,$21
   .byte $22,$22,$22,$22,$22,$22,$22,$22
   .byte $23,$23,$23,$23,$23,$23,$23,$23
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2940,7 +2777,6 @@ Battle_PPUOff:
     STA PPUCTRL          ; disable NMIs
     STA PPUMASK          ; and turn off PPU
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
