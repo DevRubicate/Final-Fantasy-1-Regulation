@@ -211,13 +211,13 @@ DoOWTransitions:
     BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
 
     LDA #0
-    CALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
+    FARCALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
 
     FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
     FARCALL EnterBridgeScene ; do the bridge scene.
 
     LDA #$04
-    CALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
+    FARCALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
     JUMP EnterOW_PalCyc  ; then re-enter overworld
 
     @SkipBridgeScene:
@@ -227,7 +227,7 @@ DoOWTransitions:
 
     FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
     LDA #$00
-    CALL CyclePalettes   ; cycle out the palette
+    FARCALL CyclePalettes   ; cycle out the palette
     FARCALL EnterShop       ; and enter the shop!
     JUMP EnterOW_PalCyc  ; then re-enter overworld
 
@@ -246,7 +246,7 @@ DoOWTransitions:
         STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
         FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
         LDA #$00
-        CALL CyclePalettes   ; cycle out the palette
+        FARCALL CyclePalettes   ; cycle out the palette
         FARCALL EnterMainMenu   ; and enter the main menu
         JUMP EnterOW_PalCyc  ; then re-enter the overworld
 
@@ -256,7 +256,7 @@ DoOWTransitions:
 
     LDA #$00            ; otherwise... if they did press select..
     STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
-    CALL CyclePalettes   ; cycle out the palette
+    FARCALL CyclePalettes   ; cycle out the palette
 
     LDA joy
     AND #$40            ; see if the B button is being held down

@@ -2796,7 +2796,7 @@ ProcessOWInput:
     BNE @Exit          ; if not... exit
 
     LDA #0                  ; otherwise... they activated the minigame!
-    CALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
+    FARCALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
     FARCALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
     FARCALL EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
@@ -2804,7 +2804,7 @@ ProcessOWInput:
 
     :   
     LDA #$04             ; cycle palettes out from the minigame screen
-    CALL CyclePalettes    ; code=4 (zero scroll, cycle out)
+    FARCALL CyclePalettes    ; code=4 (zero scroll, cycle out)
     JUMP EnterOW_PalCyc   ; then re-enter overworld
   @Exit:
     RTS
