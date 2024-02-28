@@ -455,7 +455,7 @@ ProcessSMInput:
      ;; text ID we need to draw
 
     @DialogueBox:
-    CALL DrawDialogueBox     ; draw the dialogue box and containing text
+    FARCALL DrawDialogueBox     ; draw the dialogue box and containing text
     CALL WaitForVBlank       ; wait a frame
     LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
     STA OAMDMA
