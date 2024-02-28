@@ -61,7 +61,7 @@
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division, DrawCombatBox
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 
@@ -71,7 +71,7 @@
 .export WaitForVBlank
 .export SwapBtlTmpBytes, FormatBattleString, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
-.export DrawCombatBox, DrawBattleItemBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
+.export DrawBattleItemBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump
 .export Impl_FARCALL, Impl_FARJUMP,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export CHRLoadToA
@@ -3023,52 +3023,6 @@ DrawCommandBox:
       BNE @Loop
       
     JUMP DrawBlockBuffer            ; then finally draw it
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawCombatBox  [$F71C :: 0x3F72C]
-;;
-;;  input:  A = ID of box to draw (0-4)
-;;         YX = pointer to text data to put in that box
-;;
-;;  Combat boxes are the boxes that pop up during combat that show attackers/damage/etc.
-;;  See lut_CombatBoxes for more.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawCombatBox:
-    STX tmp_68b3           ; stuff X,Y in temp mem
-    STY tmp_68b4
-    
-    ASL A               ; Y = A * 8  (8 bytes per box)
-    ASL A
-    ASL A
-    TAY
-    
-    LDX #$00
-    : LDA lut_CombatBoxes, Y    ; copy first 5 bytes (Box data)
-      STA btl_msgdraw_hdr, X
-      INX
-      INY
-      CPX #$05
-      BNE :-
-    CALL BattleDraw_AddBlockToBuffer ; add the block
-    
-    LDX #$00
-    : LDA lut_CombatBoxes, Y    ; copy 3 more bytes (Text data)
-      STA btl_msgdraw_hdr, X
-      INX
-      INY
-      CPX #$03
-      BNE :-
-      
-    LDA tmp_68b3                   ; use temp mem (YX provided at start of routine)
-    STA btl_msgdraw_srcptr      ;  as pointer to text data
-    LDA tmp_68b4
-    STA btl_msgdraw_srcptr+1
-    
-    CALL BattleDraw_AddBlockToBuffer ; add this text block
-    JUMP DrawBlockBuffer             ; then draw it.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3490,21 +3444,6 @@ DrawBattleString:
 lut_EnemyRosterBox:
 ;       hdr   X    Y  width  height
   .byte $00, $01, $00, $0B, $0A
-  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Combat box lut          [$F9E9 :: 0x3F9F9]
-;;
-;;  These are all the boxes that pop up during combat to show attackers/damage/etc
-
-lut_CombatBoxes:
-;             BOX                      TEXT
-;       hdr    X    Y   wd   ht     hdr    X    Y
-  .byte $00, $01, $01, $0A, $04,    $01, $02, $02       ; attacker name
-  .byte $00, $0B, $01, $0C, $04,    $01, $0C, $02       ; their attack ("FROST", "2Hits!" etc)
-  .byte $00, $01, $04, $0A, $04,    $01, $02, $05       ; defender name
-  .byte $00, $0B, $04, $0B, $04,    $01, $0C, $05       ; damage
-  .byte $00, $01, $07, $18, $04,    $01, $02, $08       ; bottom message ("Terminated", "Critical Hit", etc)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

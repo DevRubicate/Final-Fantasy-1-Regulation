@@ -1106,7 +1106,7 @@ LvlUp_LevelUp:
       LDA #$04
       LDX #<displaybuffer
       LDY #>displaybuffer
-      CALL DrawCombatBox           ; draw this string in combat box 4
+      FARCALL DrawCombatBox           ; draw this string in combat box 4
       
       CALL RespondDelay              ; wait a bit for them to read it
       CALL WaitForAnyInput           ; wait a bit more for the user to press something
@@ -1580,7 +1580,7 @@ DrawEOBCombatBox:
     TAY
     
     LDA temporary_1               ; restore combo box ID in A
-    CALL DrawCombatBox     ; A = box ID, YX = pointer to string
+    FARCALL DrawCombatBox     ; A = box ID, YX = pointer to string
     
     INC btl_combatboxcount  ; count this combat box
     RTS                     ; and exit!

@@ -982,7 +982,7 @@ DoNothingMessageBox:
     LDA #$04                    ; Draw the "Nothing" combat box
     LDX #<data_NothingText
     LDY #>data_NothingText
-    CALL DrawCombatBox
+    FARCALL DrawCombatBox
     
   @InputLoop:                   ; Wait for the player to provide
       CALL DoFrame_WithInput     ;   ANY input
@@ -2996,7 +2996,7 @@ PrepareAndDrawSimpleCombatBox:
     INC btl_combatboxcount      ; count this combat box
     
     PLA                         ; restore combat box ID in A
-    JUMP DrawCombatBox         ; draw the combat box!
+    FARJUMP DrawCombatBox         ; draw the combat box!
     
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4562,7 +4562,7 @@ DoPhysicalAttack:
       LDA #$01                          ; draw it in combat box 1
       LDX #<(btl_unfmtcbtbox_buffer + $10)
       LDY #>(btl_unfmtcbtbox_buffer + $10)
-      CALL DrawCombatBox
+      FARCALL DrawCombatBox
       
       INC btl_combatboxcount            ; inc box counter
       
@@ -4594,7 +4594,7 @@ DoPhysicalAttack:
     LDA #$03                            ; output either damage or "Missed!"
     LDX #<(btl_unfmtcbtbox_buffer + $30);  to the #3 combat box
     LDY #>(btl_unfmtcbtbox_buffer + $30)
-    CALL DrawCombatBox
+    FARCALL DrawCombatBox
     INC btl_combatboxcount              ; and inc combatbox count
     
     LDA battle_critsconnected
@@ -6416,7 +6416,7 @@ DrawCombatBox_Defender:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawCombatBox_RestoreAXY:
-    CALL DrawCombatBox
+    FARCALL DrawCombatBox
     JUMP RestoreAXY
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -6502,7 +6502,7 @@ ShowAltBattleMessage:
     LDY #>btltmp_altmsgbuffer
     LDA #$04                    ; combat box 4 is the bottom battle message box
     
-    CALL DrawCombatBox         ; show the box
+    FARCALL DrawCombatBox         ; show the box
     CALL RespondDelay            ; wait
     LDA #$01
     CALL UndrawNBattleBlocks   ; hide the box
@@ -6584,7 +6584,7 @@ BtlMag_PrintMagicMessage:
     LDX #<tmp_6d19
     LDY #>tmp_6d19                     ; YA is pointer to the text to print
     LDA #$04                        ; combat box 4 (battle message box)
-    CALL DrawCombatBox             ; Draw it!
+    FARCALL DrawCombatBox             ; Draw it!
     
     CALL RespondDelay                ; Wait a bit so they can read it
     
