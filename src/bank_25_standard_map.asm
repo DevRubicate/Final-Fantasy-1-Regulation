@@ -372,7 +372,7 @@ StandardMapLoop:
         STA PAPU_EN
         FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
         LDA btlformation
-        FORCEDFARCALL EnterBattle       ; start the battle!
+        FARCALL EnterBattle       ; start the battle!
         BCC :+                  ;  see if this battle was the end game battle
             @VictoryLoop:
             FARCALL LoadEpilogueSceneGFX

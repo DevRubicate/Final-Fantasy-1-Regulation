@@ -281,7 +281,7 @@ DoOWTransitions:
         STA PAPU_EN              ; and APU
         FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
         LDA btlformation
-        FORCEDFARCALL EnterBattle      ; start the battle!
+        FARCALL EnterBattle      ; start the battle!
         JUMP EnterOW_PalCyc     ; then re-enter overworld
 
     @Teleport:

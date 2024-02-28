@@ -59,7 +59,7 @@
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 ; bank_2A_draw_util
 .import DrawBox
 
@@ -82,9 +82,8 @@
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
 .export LoadStandardMap, LoadMapObjects
-.export EnterBattle
 .export DrawDialogueBox, DrawMapObjectsNoUpdate, ShowDialogueBox
-
+.export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3277,131 +3276,6 @@ BattleCrossPageJump:
     STA battle_bank
     CALL SwapPRG
     JMP (btltmp+6)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Enter Battle  [$F28D :: 0x3F29D]
-;;
-;;    Called to initiate a battle.  Does a lot of prepwork, then calls
-;;  another routine to do more prepwork and enter the battle loop.
-;;
-;;    This routine assumes some CHR and palettes have already been loaded.
-;;  Specifically... LoadBattleCHRPal should have been called prior to this routine.
-;;
-;;    Also somewhat oddly, absolute mode is forced for a lot of zero page vars
-;;  here (hence all the "a:" crap).  I have yet to understand that.  Must've been
-;;  an assembler quirk.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterBattle:
-    CALL WaitForVBlank       ; wait for VBlank and do Sprite DMA
-    LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
-    STA OAMDMA                 ;  off at this point
-
-    ;; Load formation data to buffer in RAM
-
-    FARCALL LoadBattleFormationInto_btl_formdata
-
-    ;; Turn off PPU and clear nametables
-
-    LDA #0
-    STA menustall           ; disable menu stalling
-    CALL Battle_PPUOff         ; turn PPU off
-    LDA PPUSTATUS                 ; reset PPU toggle
-
-    LDX #>PPUCTRL
-    LDA #<PPUCTRL
-    CALL SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
-
-    LDY #8                    ; loops to clear $0800 bytes of NT data (both nametables)
-    @ClearNT_OuterLoop:
-        LDX #0
-        @ClearNT_InnerLoop:         ; inner loop clears $100 bytes
-            STA PPUDATA
-            DEX
-            BNE @ClearNT_InnerLoop
-        DEY                       ; outer loop runs inner loop 8 times
-        BNE @ClearNT_OuterLoop    ;  clearing $800 bytes total
-
-    ;; Draw Various (hardcoded) boxes on the screen
-
-    LDA #1              ; box at 1,1
-    STA box_x         ; with dims 16,18
-    LDX #16             ;  this is the box housing the enemies (big box on the left)
-    LDY #18
-    CALL BattleBox_vAXY
-
-    LDA #17             ; box at 17,1
-    STA box_x         ; with dims 8,16
-    LDA #1              ;  this is the box housing the player sprites (box on right)
-    LDX #8
-    LDY #18
-    CALL BattleBox_vAXY
-
-    LDA #25               ; draw the four boxes that will house player stats
-    LDX #21               ; draw them from the bottom up so that top boxes appear to lay over
-    CALL Battle_PlayerBox  ;  top of the bottom boxes
-    LDX #15
-    CALL Battle_PlayerBox
-    LDX #9
-    CALL Battle_PlayerBox
-    LDX #3
-    CALL Battle_PlayerBox
-
-    FARCALL LoadBattleAttributeTable
-
-    ;; Load palettes
-
-    LDX #0
-    @PalLoop:                   ; copy the loaded palettes (backdrop, menu, sprites)
-        LDA cur_pal, X          ;  to the battle palette buffer
-        STA btl_palettes, X
-        INX
-        CPX #$20
-        BNE @PalLoop            ; all $20 bytes
-
-    LDA btlform_plts          ; use the formation data to get the ID of the palettes to load
-    LDY #4                    ;   load the first one into the 2nd palette slot ($xxx4)
-    FARCALL LoadBattlePalette
-    LDA btlform_plts+1        ;   and the second one into the 3rd slot ($xxx8)
-    LDY #8
-    FARCALL LoadBattlePalette
-
-  ;; Draw the battle backdrop
-
-    LDA #<$2042                 ; draw the first row of the backdrop
-    LDY #0<<2                   ;  to $2042
-    FARCALL DrawBattleBackdropRow
-    LDA #<$2062                 ; then at $2062
-    LDY #1<<2                   ;   draw the next row
-    FARCALL DrawBattleBackdropRow
-    LDA #<$2082                 ; etc
-    LDY #2<<2
-    FARCALL DrawBattleBackdropRow
-    LDA #<$20A2
-    LDY #3<<2
-    FARCALL DrawBattleBackdropRow   ; 4 rows total
-
-  ;; Clear the '$FF' tile so it's fully transparent instead of
-  ;;   fully solid (normally is innards of box body)
-
-    CALL WaitForVBlank     ; wait for VBlank again  (why!  PPU is off!)
-    LDX #>$0FF0
-    LDA #<$0FF0             ;  set PPU addr to $0FF0 (CHR for tile $FF)
-    CALL SetPPUAddr_XA
-
-    LDA #0
-    LDX #$10
-  @ClearFFLoop:
-      STA PPUDATA             ; write $10 zeros to clear the tile
-      DEX
-      BNE @ClearFFLoop
-
-    LDA #BANK_BATTLE        ; swap in the battle bank
-    STA battle_bank
-    CALL SwapPRG
-    JMP PrepBattleVarsAndEnterBattle            ; and jump to battle routine!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
