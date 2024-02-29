@@ -4,7 +4,7 @@
 
 .import Impl_FARBYTE, Impl_FARBYTE2, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
 
-.export DrawComplexString_New, DrawItemBox, SeekItemStringPtr, SeekItemStringPtrForEquip
+.export DrawComplexString_New, DrawItemBox, SeekItemStringPtr, SeekItemStringPtrForEquip, DrawEquipMenuStrings
 
 
 DrawComplexString_Exit:
@@ -1772,3 +1772,125 @@ SeekItemStringPtrForEquip:
     LDA LUT_ItemNamePtrTbl+1, X
     STA tmp+1
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Equip Menu Strings  [$ECDA :: 0x3ECEA]
+;;
+;;    String is placed at str_buf+$10 because first 16 bytes are used for item_box
+;;  (the equipment list)
+;;
+;;    This routine is called when the equip menus change.  If an item is equipped/unequipped
+;;  or dropped, or traded.  As such, the entire string of changed items needs to be redrawn.
+;;  therefore for drawing empty slots, multiple blank tiles (FF) must be drawn to erase the
+;;  item name that was previously drawn.  Blank tiles must also extend past the end of
+;;  shorter equipment names.  So that if you have "Wooden" and trade it with "Cap", you're
+;;  not left with "Capden".
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawEquipMenuStrings:
+    LDA #0                       ; string will be placed at str_buf+$10, and will be 8 bytes long
+    STA str_buf+$19              ; so put the null terminator at the end right-off
+
+    LDA #1
+    STA menustall                ; the PPU is currently on, so set menustall.
+
+    LDA #$1C-1                   ; A=$1C-1  (1C = start of weapon names in the item list)
+    LDX equipoffset
+    CPX #ch_weapons - ch_stats   ; buf if we're not dealing with weapons....
+    BEQ :+
+        LDA #$44-1                 ; A=$44-1  (44 = start of armor names in the item list)
+    :   
+    STA draweq_stradd            ; this value will be later added to the weapon/armor ID to get
+                                 ; the proper string ID.  For now, just stuff it in RAM
+                                 ; minus 1 because 0 is an empty slot
+
+    LDA #>(str_buf+$10)          ; set high byte of text pointer
+    STA text_ptr+1               ; low byte is set later (why not here?)
+    LDA #$00                     ; Set A to zero.  This is our loop counter
+  @MainLoop:
+    PHA                          ; push the loop counter to the stack
+    TAX                          ; then move it to X
+    ASL A
+    TAY                          ; and move it*2 to Y
+
+    LDA lut_EquipStringPositions, Y     ; use Y to index a positioning LUT
+    STA dest_x                          ;  load up x,y coords for this string
+    LDA lut_EquipStringPositions+1, Y
+    STA dest_y
+
+    LDA #$FF                     ; fill first 2 bytes of the string with blank spaces (tile FF)
+    STA str_buf+$10              ; later, these spaces will be replaced with "E-" if the item
+    STA str_buf+$11              ;  is currently equipped.
+
+    LDA item_box, X              ; get the current item ID
+    STA tmp+2                    ; and stick it in temp ram for later
+
+    AND #$7F                     ; remove the equip bit (get just the item ID)
+    BNE @LoadName                ; if nonzero, load up the other name...
+
+    LDA #$FF                   ; otherwise (zero), slot is empty, just fill the string with spaces
+    STA str_buf+$12
+    STA str_buf+$13
+    STA str_buf+$14
+    STA str_buf+$15
+    STA str_buf+$16
+    STA str_buf+$17
+    STA str_buf+$18
+    BNE @NotEquipped           ; then skip ahead (always branches)
+
+    @LoadName:                     ; if the slot is not empty....
+    CLC                          ; add the weapon/armor offset to the equipment ID.
+    ADC draweq_stradd            ;  now A is the proper item ID
+
+    CALL SeekItemStringPtrForEquip
+
+    LDY #$06                     ; copy 7 characters from the item name (doesn't look for null termination)
+    @LoadNameLoop:
+        LDA #(BANK_ITEMS * 2) | %10000000 ; #BANK_ITEMS
+        JSR Impl_FARBYTE2          ; load a character in the string        
+        STA str_buf+$12, Y         ; and write it to our string buffer.  +2 because the first 2 bytes are the equip state
+        DEY                        ; (that "E-" if equipped).  Then decrement Y
+        BPL @LoadNameLoop          ; and loop until it wraps (7 iterations)
+
+    LDA tmp+2                    ; get the item ID (to see if it's equipped)
+    BPL @NotEquipped             ; if not equipped... skip ahead.  Otherwise
+
+    LDA #$C7                   ; draw special "E" tile
+    STA str_buf+$10
+    LDA #$C2                   ; and "-" tile.
+    STA str_buf+$11            ; draw them to indicate item is equipped
+
+    @NotEquipped:
+    LDA #<(str_buf+$10)          ; finally load the low byte of our text pointer
+    STA text_ptr                 ;  why this isn't done above with the high byte is beyond me
+
+    CALL DrawComplexString_New; then draw the complex string
+
+    PLA                          ; pull the main loop counter
+    CLC
+    ADC #$01                     ; increment it by one
+    CMP #16                      ; and loop until it reaches 16 (16 equipment names to draw)
+    BCC @MainLoop
+
+    RTS                          ; and return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  lut for Equip string positions  [$ED72 :: 0x3ED82]
+;;
+;;   X,Y positions for equipment text to be printed in equip menus
+
+lut_EquipStringPositions:
+  .byte $0A, $07,       $14, $07        ; character 0
+  .byte $0A, $09,       $14, $09
+  
+  .byte $0A, $0D,       $14, $0D        ; character 1
+  .byte $0A, $0F,       $14, $0F
+  
+  .byte $0A, $13,       $14, $13        ; character 2
+  .byte $0A, $15,       $14, $15
+  
+  .byte $0A, $19,       $14, $19        ; character 3
+  .byte $0A, $1B,       $14, $1B

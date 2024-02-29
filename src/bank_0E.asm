@@ -8708,7 +8708,7 @@ EnterEquipMenu:
 
     LDA #1
     STA menustall                   ; now that the PPU is on, turn on menu stalling (DrawEquipMenuStrings does
-    CALL DrawEquipMenuStrings        ;   this already though...).  Then draw the menu strings (item names)
+    FARCALL DrawEquipMenuStrings        ;   this already though...).  Then draw the menu strings (item names)
 
   @Start:
     LDA #0
@@ -8803,7 +8803,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     AND #$7F             ;  unequip it
     STA item_box, Y      ; and move X item to Y item (swapped the two items)
 
-    CALL DrawEquipMenuStrings   ; redraw all the equipment strings to reflect changes
+    FARCALL DrawEquipMenuStrings   ; redraw all the equipment strings to reflect changes
     JUMP EquipMenu_TRADE        ; then jump back to Trade loop
 
 ;;
@@ -8846,7 +8846,7 @@ EquipMenu_EQUIP:
     LDA item_box, X           ; get the item
     EOR #$80                  ; toggle its equip state (unequip it if equipped... or equip it if unequipped)
     STA item_box, X           ; and write it back
-    CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
+    FARCALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
     JUMP EquipMenu_EQUIP       ; and continue looping
 
 
@@ -8899,7 +8899,7 @@ EquipMenu_DROP:
     LDX cursor                ; get the cursor in X
     LDA #0
     STA item_box, X           ; erase the item from the item box
-    CALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
+    FARCALL DrawEquipMenuStrings  ; redraw the item names to reflect changes
     JUMP EquipMenu_DROP        ; and return to Drop loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
