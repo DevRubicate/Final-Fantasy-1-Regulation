@@ -2,11 +2,11 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, DrawPalette, MusicPlay, SetBattlePPUAddr
+.import WaitForVBlank, DrawPalette, MusicPlay, SetBattlePPUAddr, Battle_WritePPUData
 
 .export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
-.export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData
+.export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData, WriteAttributesToPPU
 
 
 
@@ -688,4 +688,31 @@ Battle_ReadPPUData:
         DEX
         BNE @Loop
       
+    RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  WriteAttributesToPPU [$A702 :: 0x2E712]
+;;
+;;  Reads the data from btltmp_attr
+;;  Write to the attribute table in PPU memory
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteAttributesToPPU:
+    LDA #<btltmp_attr       ; set source pointer
+    STA btltmp+4
+    LDA #>btltmp_attr
+    STA btltmp+5
+    
+    LDA #<$23C0             ; set dest address
+    STA btltmp+6
+    LDA #>$23C0
+    STA btltmp+7
+    
+    LDA #$40                ; copy 4 tiles
+    STA btltmp+8
+    
+    FORCEDFARCALL Battle_WritePPUData   ; actually do the write, then exit
     RTS

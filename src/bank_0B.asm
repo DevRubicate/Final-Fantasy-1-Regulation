@@ -8,7 +8,7 @@
 
 .import Battle_ReadPPUData, Battle_WritePPUData, WaitForVBlank, UndrawNBattleBlocks
 .import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList, MusicPlay
-.import DrawEOBCombatBox
+.import DrawEOBCombatBox, WriteAttributesToPPU
 
 
 BANK_THIS = $0B
@@ -2247,7 +2247,7 @@ PrepareEnemyFormation_Fiend:
   @RowLoop:
       LDA #$08
       STA btltmp+8              ; copy 8 bytes
-      CALL Battle_WritePPUData ; Do the PPU writing with the given params
+      FORCEDFARCALL Battle_WritePPUData ; Do the PPU writing with the given params
       
       CLC
       LDA btltmp+4              ; add 8 to the source pointer to point to next row of tiles
@@ -2351,7 +2351,7 @@ PrepareEnemyFormation_Chaos:
       LDA #$0E
       STA btltmp+8              ; draw $0E tiles
       
-      CALL Battle_WritePPUData ; do the actual drawing for this row
+      FORCEDFARCALL Battle_WritePPUData ; do the actual drawing for this row
       
       CLC                   ; add $0E to source pointer to point to next row
       LDA btltmp+4
@@ -3169,34 +3169,7 @@ ReadAttributesFromPPU:
     
     FARJUMP Battle_ReadPPUData    ; do the reading, and exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  WriteAttributesToPPU [$A702 :: 0x2E712]
-;;
-;;  Reads the data from btltmp_attr
-;;  Write to the attribute table in PPU memory
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteAttributesToPPU:
-    LDA #<btltmp_attr       ; set source pointer
-    STA btltmp+4
-    LDA #>btltmp_attr
-    STA btltmp+5
-    
-    LDA #<$23C0             ; set dest address
-    STA btltmp+6
-    LDA #>$23C0
-    STA btltmp+7
-    
-    LDA #$40                ; copy 4 tiles
-    STA btltmp+8
-    
-    LDA #BANK_THIS          ; from this bank (although it's actually from RAM, so this
-    STA btltmp+9            ;   isn't strictly necessary)
-    
-    CALL Battle_WritePPUData   ; actually do the write, then exit
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3435,7 +3408,7 @@ IncYBy4:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 WriteAttributes_ClearUnusedEnStats:
-    CALL WriteAttributesToPPU
+    FARCALL WriteAttributesToPPU
     
     LDA #$00
     STA btltmp+2            ; loop up-counter - the current enemy we're looking at

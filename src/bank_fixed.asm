@@ -42,6 +42,8 @@
 .import LoadPlayerMapmanCHR
 ; bank_1D_world_map_obj_chr
 .import LoadOWObjectCHR
+; bank_1E_util
+
 ; bank_1F_standard_map_obj_chr
 .import LoadMapObjCHR
 ; bank_20_battle_bg_chr
@@ -1132,16 +1134,13 @@ Battle_WritePPUData:
     LDY #$00                    ; Y is loop up-counter
     LDX btltmp+8                ; X is loop down-counter
     
-  @Loop:
-      LDA (btltmp+4), Y         ; copy source data to PPU
-      STA PPUDATA
-      INY
-      DEX
-      BNE @Loop
-      
-    LDA battle_bank             ; swap battle_bank back in
-    CALL SwapPRG
-    
+    @Loop:
+        LDA (btltmp+4), Y         ; copy source data to PPU
+        STA PPUDATA
+        INY
+        DEX
+        BNE @Loop
+          
     LDA #$00                    ; reset scroll before exiting
     STA PPUMASK
     STA PPUSCROLL
