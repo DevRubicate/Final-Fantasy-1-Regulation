@@ -4178,7 +4178,7 @@ EnterShop_Inn:
 
     LDA #$03
     CALL LoadShopBoxDims         ; erase shop box 3 (command box)
-    CALL EraseBox
+    FARCALL EraseBox
 
     FARCALL ClearOAM                ; clear OAM (to remove the cursor)
     CALL DrawShopPartySprites    ; draw the party
@@ -4206,7 +4206,7 @@ EnterShop_Inn:
   @Exit:
     LDA #$03
     CALL LoadShopBoxDims         ; erase shop box 3 (the command box)
-    CALL EraseBox                ; this is redundant if they stayed at the inn, but
+    FARCALL EraseBox                ; this is redundant if they stayed at the inn, but
                                 ; if the code jumped here because the user wanted to
                                 ; exit the inn, then this has meaning
 
@@ -4294,7 +4294,7 @@ EnterShop_Clinic:
 
     LDA #$03
     CALL LoadShopBoxDims        ; erase shop box 3 (command box)
-    CALL EraseBox
+    FARCALL EraseBox
 
   @ReviveLoop:
     CALL ShopFrameNoCursor      ; do a frame
@@ -4924,7 +4924,7 @@ ShopSelectBuyItem:
 
     LDA #$03
     CALL LoadShopBoxDims
-    CALL EraseBox           ; erase shop box #3 (command box)
+    FARCALL EraseBox           ; erase shop box #3 (command box)
 
     JUMP CommonShopLoop_List  ; everything's ready!  Just run the common loop from here, then return
 
@@ -5250,7 +5250,7 @@ ShopSelectBuyMagic:
 
     LDA #$03
     CALL LoadShopBoxDims         ; then erase shop box 3 (command box)
-    CALL EraseBox
+    FARCALL EraseBox
 
     JUMP CommonShopLoop_List     ; and have the user select an option from the shop inventory list
 
@@ -8400,7 +8400,7 @@ EraseDescBox:
     STA menustall            ; set menustall -- we will need to stall here, since the PPU is on
     LDA #$08
     CALL LoadMainItemBoxDims  ; load box dimensions for box ID 8 (the item description box)
-    JUMP EraseBox             ;  erase the box, then exit
+    FARJUMP EraseBox             ;  erase the box, then exit
 
 
 

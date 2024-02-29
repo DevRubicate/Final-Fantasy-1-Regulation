@@ -57,7 +57,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
-.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes
+.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
@@ -65,13 +65,12 @@
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
-.import ShowDialogueBox
+.import ShowDialogueBox, EraseBox
 ; bank_2C_dialog_string
 .import DrawDialogueString
 
 .export DrawImageRect
 .export DrawPalette
-.export EraseBox
 .export WaitForVBlank
 .export SwapBtlTmpBytes, FormatBattleString, DrawBattleMagicBox
 .export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
@@ -79,7 +78,6 @@
 .export BattleCrossPageJump
 .export Impl_FARCALL, Impl_FARJUMP,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export CHRLoadToA
-.export DoMapDrawJob
 .export WaitScanline, SetSMScroll
 .export EnterOW_PalCyc
 .export Copy256, CHRLoad, CHRLoad_Cont
@@ -296,49 +294,6 @@ DrawFullMap:
        ;   performed to draw the map.
 
     RTS
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Map Draw Job  [$D0E9 :: 0x3D0F9]
-;;
-;;     This performs the indicated map drawing job.
-;;
-;;  job=1  update map attributes to reflect the new row/col being scrolled in
-;;  job=2  update map tiles to reflect the new row/col
-;;  other  do nothing
-;;
-;;     The mapdraw_job is then decremented to indicate the previous
-;;  job was complete (and move onto the next job)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoMapDrawJob:
-    LDA PPUSTATUS           ; reset PPU toggle  (seems odd to do here...)
-
-    LDA mapdraw_job     ; find which job we're to do
-    SEC
-    SBC #1              ; decrement the job (to mark this job as complete 
-    STA mapdraw_job     ;   and to move to the next job)
-
-    BEQ @Attributes     ; if original job was 1 (0 after decrement)... do attributes
-
-    CMP #1              ; otherwise, if original job was 2 (1 after decrement)
-    BEQ @Tiles          ;   ... do a row/column of tiles
-
-    RTS                 ; if job was neither of those, do nothing and just exit
-
-  @Tiles:
-    CALL DrawMapRowCol       ; draw a row or column of tiles
-    RTS                     ;  and exit
-
-  @Attributes:
-    FARCALL DrawMapAttributes   ; draw attributes
-    RTS                     ;  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1124,78 +1079,7 @@ DrawImageRect:
 
     RTS                   ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Erase Box  [$E146 :: 0x3E156]
-;;
-;;     Same idea as DrawBox -- only instead of drawing a box, it erases one.
-;;   erases bottom row first, and works it's way up.
-;;
-;;  IN:  box_x, box_y, box_wd, box_ht, menustall
-;;  TMP: tmp+11 used
-;;
-;;   cur_bank must also be set appropriately, as this routine can FARCALL MusicPlay
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EraseBox:
-    LDA box_x          ; copy box X coord to dest_x
-    STA dest_x
-    LDA box_y          ; get box Y coord
-    CLC
-    ADC box_ht         ;  add the box height, and then subtract 1
-    SEC
-    SBC #$01           ;  and write that to dest_y
-    STA dest_y         ;  this puts dest_y to the last row
-    FARCALL CoordToNTAddr  ; fill ppu_dest appropriately
-    LDA box_ht         ; get the box height
-    STA tmp+11         ; and put it in temp RAM (will be down counter for loop)
-
-  @RowLoop:
-     LDA menustall      ; see if we need to stall the menu (draw one row per frame)
-     BEQ @NoStall       ; if not, skip over this stalling code
-
-       LDA soft2000         ; reset scroll
-       STA PPUCTRL
-       LDA #0
-       STA PPUSCROLL
-       STA PPUSCROLL
-       FARCALL MusicPlay    ; call music play routine
-       CALL WaitForVBlank  ; and wait for vblank
-
-   @NoStall:
-     LDA PPUSTATUS          ; reset PPU toggle
-     LDA ppu_dest+1     ; set the desired PPU address
-     STA PPUADDR
-     LDA ppu_dest
-     STA PPUADDR
-
-     LDX box_wd         ; get box width in X (downcounter for upcoming loop)
-     LDA #0             ; zero A
-   @ColLoop:
-       STA PPUDATA        ; draw tile 0 (blank tile)
-       DEX              ; decrement X
-       BNE @ColLoop     ; loop until X expires (box_wd iterations)
-
-     LDA ppu_dest        ; subtract $20 from the PPU address (move it one row up)
-     SEC
-     SBC #$20
-     STA ppu_dest
-
-     LDA ppu_dest+1      ; catch borrow
-     SBC #0
-     STA ppu_dest+1
-
-     DEC tmp+11          ; decrement our row counter
-     BNE @RowLoop        ;  if we still have rows to erase, keep looping
-
-
-    LDA soft2000    ; otherwise, we're done.  Reset the scroll
-    STA PPUCTRL
-    LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
-    RTS             ; and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

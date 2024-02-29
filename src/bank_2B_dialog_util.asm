@@ -3,9 +3,9 @@
 .include "src/global-import.inc"
 
 .import PrepRowCol, WaitForVBlank, DrawMapRowCol, SetSMScroll, MusicPlay, PrepAttributePos, PrepDialogueBoxAttr, DrawMapAttributes
-.import DrawDialogueString, DialogueBox_Frame, UpdateJoy, DialogueBox_Sfx
+.import DrawDialogueString, DialogueBox_Frame, UpdateJoy, DialogueBox_Sfx, CoordToNTAddr
 
-.export DrawDialogueBox, PrepDialogueBoxRow, ShowDialogueBox
+.export DrawDialogueBox, PrepDialogueBoxRow, ShowDialogueBox, EraseBox
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -407,3 +407,77 @@ DlgBoxPrep_DR:
     LDA #$FB              ; load hardcoded tile $FB (box right border graphic)
     STA draw_buf_dr+$E    ; to rightmost tile
     RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Erase Box  [$E146 :: 0x3E156]
+;;
+;;     Same idea as DrawBox -- only instead of drawing a box, it erases one.
+;;   erases bottom row first, and works it's way up.
+;;
+;;  IN:  box_x, box_y, box_wd, box_ht, menustall
+;;  TMP: tmp+11 used
+;;
+;;   cur_bank must also be set appropriately, as this routine can FARCALL MusicPlay
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EraseBox:
+    LDA box_x          ; copy box X coord to dest_x
+    STA dest_x
+    LDA box_y          ; get box Y coord
+    CLC
+    ADC box_ht         ;  add the box height, and then subtract 1
+    SEC
+    SBC #$01           ;  and write that to dest_y
+    STA dest_y         ;  this puts dest_y to the last row
+    FARCALL CoordToNTAddr  ; fill ppu_dest appropriately
+    LDA box_ht         ; get the box height
+    STA tmp+11         ; and put it in temp RAM (will be down counter for loop)
+
+    @RowLoop:
+    LDA menustall      ; see if we need to stall the menu (draw one row per frame)
+    BEQ @NoStall       ; if not, skip over this stalling code
+
+    LDA soft2000         ; reset scroll
+    STA PPUCTRL
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL
+    FARCALL MusicPlay    ; call music play routine
+    CALL WaitForVBlank  ; and wait for vblank
+
+    @NoStall:
+    LDA PPUSTATUS          ; reset PPU toggle
+    LDA ppu_dest+1     ; set the desired PPU address
+    STA PPUADDR
+    LDA ppu_dest
+    STA PPUADDR
+
+    LDX box_wd         ; get box width in X (downcounter for upcoming loop)
+    LDA #0             ; zero A
+    @ColLoop:
+    STA PPUDATA        ; draw tile 0 (blank tile)
+    DEX              ; decrement X
+    BNE @ColLoop     ; loop until X expires (box_wd iterations)
+
+    LDA ppu_dest        ; subtract $20 from the PPU address (move it one row up)
+    SEC
+    SBC #$20
+    STA ppu_dest
+
+    LDA ppu_dest+1      ; catch borrow
+    SBC #0
+    STA ppu_dest+1
+
+    DEC tmp+11          ; decrement our row counter
+    BNE @RowLoop        ;  if we still have rows to erase, keep looping
+
+
+    LDA soft2000    ; otherwise, we're done.  Reset the scroll
+    STA PPUCTRL
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL
+    RTS             ; and exit!

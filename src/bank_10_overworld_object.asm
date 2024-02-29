@@ -325,7 +325,7 @@ OWCanMove:
 OWMove_Right:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise, do the job
+    FARCALL DoMapDrawJob     ; otherwise, do the job
 
   @NoJob:
     CALL SetOWScroll_PPUOn  ; turn on PPU, set scroll
@@ -366,7 +366,7 @@ OWMove_Right:
 OWMove_Left:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise... do the job
+      FARCALL DoMapDrawJob     ; otherwise... do the job
 
   @NoJob:
     CALL SetOWScroll_PPUOn  ; set scroll and turn PPU on
@@ -465,7 +465,7 @@ OWMove_Down:
     BNE @NoJob          ; if not 8 pixels between the move... don't do the job
 
   @Job:
-    CALL DoMapDrawJob       ; do the map drawing job, then proceed normally
+    FARCALL DoMapDrawJob       ; do the map drawing job, then proceed normally
 
   @NoJob:
     CALL SetOWScroll_PPUOn  ; turn the PPU on, and set the appropriate overworld scroll
@@ -515,7 +515,7 @@ OWMove_Up:
     BNE @NoJob
 
   @Job:
-    CALL DoMapDrawJob
+    FARCALL DoMapDrawJob
 
   @NoJob:
     CALL SetOWScroll_PPUOn  ; turn PPU on and set scroll
@@ -3197,7 +3197,7 @@ TalkToSMTile:
 SMMove_Right:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise, do the job
+      FARCALL DoMapDrawJob     ; otherwise, do the job
 
   @NoJob:
     CALL SetSMScroll        ; set scroll
@@ -3239,7 +3239,7 @@ SMMove_Right:
 SMMove_Left:
     LDA mapdraw_job        ; is there a draw job to do?
     BEQ @NoJob             ; if not... no job
-      CALL DoMapDrawJob     ; otherwise... do the job
+      FARCALL DoMapDrawJob     ; otherwise... do the job
 
   @NoJob:
     CALL SetSMScroll        ; set scroll
@@ -3315,7 +3315,7 @@ SMMove_Down:
     BNE @NoJob          ; if not 8 pixels between the move... don't do the job
 
   @Job:
-    CALL DoMapDrawJob       ; do the map drawing job, then proceed normally
+    FARCALL DoMapDrawJob       ; do the map drawing job, then proceed normally
 
   @NoJob:
     CALL SetSMScroll        ; set SM scroll
@@ -3369,7 +3369,7 @@ SMMove_Up:
     BNE @NoJob
 
   @Job:
-    CALL DoMapDrawJob
+    FARCALL DoMapDrawJob
 
   @NoJob:
     CALL SetSMScroll        ; set scroll

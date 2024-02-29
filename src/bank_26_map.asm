@@ -3,9 +3,9 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
-.import LoadOWMapRow, PrepRowCol
+.import LoadOWMapRow, PrepRowCol, DrawMapRowCol
 
-.export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes
+.export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob
 
 LUT_MapmanPalettes:
     .byte $16, $16, $12, $17, $27, $12, $16, $16, $30, $30, $27, $12, $16, $16, $16, $16
@@ -356,3 +356,41 @@ DrawMapAttributes:
     CPX tmp+1              ; and loop until it reaches our upper-bound
     BCC @Loop
     RTS             ; exit once we've done them all
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Do Map Draw Job  [$D0E9 :: 0x3D0F9]
+;;
+;;     This performs the indicated map drawing job.
+;;
+;;  job=1  update map attributes to reflect the new row/col being scrolled in
+;;  job=2  update map tiles to reflect the new row/col
+;;  other  do nothing
+;;
+;;     The mapdraw_job is then decremented to indicate the previous
+;;  job was complete (and move onto the next job)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DoMapDrawJob:
+    LDA PPUSTATUS           ; reset PPU toggle  (seems odd to do here...)
+
+    LDA mapdraw_job     ; find which job we're to do
+    SEC
+    SBC #1              ; decrement the job (to mark this job as complete 
+    STA mapdraw_job     ;   and to move to the next job)
+
+    BEQ @Attributes     ; if original job was 1 (0 after decrement)... do attributes
+
+    CMP #1              ; otherwise, if original job was 2 (1 after decrement)
+    BEQ @Tiles          ;   ... do a row/column of tiles
+
+    RTS                 ; if job was neither of those, do nothing and just exit
+
+  @Tiles:
+    CALL DrawMapRowCol       ; draw a row or column of tiles
+    RTS                     ;  and exit
+
+  @Attributes:
+    CALL DrawMapAttributes   ; draw attributes
+    RTS                     ;  and exit
