@@ -463,7 +463,7 @@ ProcessSMInput:
     LDA #$1E
     STA PPUMASK
     FARCALL MusicPlay
-    CALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
+    FARCALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
     LDA dlgflg_reentermap     ; check the reenter map flag
     BEQ :+
         JUMP ReenterStandardMap  ; ... and reenter map if set

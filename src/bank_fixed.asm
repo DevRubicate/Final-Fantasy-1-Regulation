@@ -64,6 +64,8 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division, DrawCombatBox
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
+; bank_2B_dialog_util
+.import ShowDialogueBox
 ; bank_2C_dialog_string
 .import DrawDialogueString
 
@@ -85,11 +87,11 @@
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
 .export LoadStandardMap, LoadMapObjects
-.export DrawMapObjectsNoUpdate, ShowDialogueBox
+.export DrawMapObjectsNoUpdate
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
 .export DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
-.export SetPPUAddrToDest
+.export SetPPUAddrToDest, DialogueBox_Frame
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1227,142 +1229,6 @@ PrepDialogueBoxAttr:
 lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
 lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Show Dialogue Box [$D602 :: 0x3D612]
-;;
-;;    This makes the dialogue box and contained text visible (but doesn't draw it to NT,
-;;  that must've already been done -- see DrawDialogueBox).  Once the box is fully visible,
-;;  it plays any special TC sound effect or fanfare music associated with the box and waits
-;;  for player input to close the box -- and returns once the box is no longer visible.
-;;
-;;  IN:  dlgsfx = 0 if no special sound effect needed.  1 if special fanfare, else do treasure chest ditty.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShowDialogueBox:
-    LDA #3
-    STA tmp+2              ; reset the 3-step counter for WaitScanline
-
-    LDA #53
-    STA sq2_sfx            ; indicate sq2 is going to be playing a sound effect for the next 53 frames
-    LDA #$8E
-    FARCALL DialogueBox_Sfx    ; and play the "upward sweep" sound effect that plays when the dialogue box opened.
-
-    LDA soft2000           ; get the onscreen NT
-    EOR #$01               ; toggle the NT bit to make it the offscreen NT (where the dialogue box is drawn)
-    STA tmp+10             ; store "offscreen" NT in tmp+10
-
-    LDA #$08               ; start the visibility scanline at 8(+8).  This means the first scanline of the box
-    STA tmp+11             ;  that's visible will be on scanline 16 -- which is the start of where the box is drawn
-
-     ; open the dialogue box
-
-   @OpenLoop:
-      CALL DialogueBox_Frame; do a frame
-
-      LDA tmp+11
-      CLC
-      ADC #2
-      STA tmp+11           ; increment the visible scanlines by 2 (box grows 2 pixels/frame)
-
-      CMP #$60             ; see if visiblity lines >= $60 (bottom row of dialogue box)
-      BCC @OpenLoop        ; keep looping until the entire box is visible
-
-
-    LDA dlgsfx             ; see if a sound effect needs to be played
-    BEQ @WaitForButton_1   ; if not (dlgsfx = 0), skip ahead
-    LDX #$54               ; Use music track $54 for sfx (special fanfare music)
-    CMP #1
-    BEQ :+                 ; if dlgsfx > 1...
-      LDX #$58             ;  ... then use track $58 instead (treasure chest ditty)
-    :   
-    STX music_track        ; write the desired track to the music_track to get it started
-
-  ; there are two seperate 'WaitForButton' loops because the dialogue box closes when the
-  ; user presses A, or when they press any directional button.  The first loop waits
-  ; for all directional buttons to be lifted, and the second loop waits for a directional
-  ; button to be pressed.  Both loops exit the dialogue box when A is pressed.  Having
-  ; the first loop wait for directions to be lifted prevents the box from closing immediately
-  ; if you have a direction held.
-
-  @WaitForButton_1:           ;  The loop that waits for the direction to lift
-    CALL DialogueBox_Frame   ; Do a frame
-    FARCALL UpdateJoy           ; update joypad data
-    LDA joy_a               ; check A button
-    BNE @ExitDialogue       ; and exit if A pressed
-
-    LDA music_track         ; otherwise, check the music track
-    CMP #$81                ; see if it's set to $81 (special sound effect is done playing)
-    BNE :+                  ; if not, skip ahead (either no sound effect, or sound effect is still playing)
-      LDA dlgmusic_backup      ; if sound effect is done, get the backup track
-      STA music_track          ; and restart it
-      LDA #0
-      STA dlgsfx               ; then clear the dlgsfx flag
-    :   
-    LDA joy                 ; check directional buttons
-    AND #$0F
-    BNE @WaitForButton_1    ; and continue first loop until they're all lifted
-
-  @WaitForButton_2:           ;  The loop that waits for a direciton to press
-    CALL DialogueBox_Frame   ; exactly the same as above loop
-    FARCALL UpdateJoy
-    LDA joy_a
-    BNE @ExitDialogue
-
-    LDA music_track
-    CMP #$81
-    BNE :+
-      LDA dlgmusic_backup
-      STA music_track
-      LDA #0
-      STA dlgsfx
-    :   
-    LDA joy
-    AND #$0F
-    BEQ @WaitForButton_2    ; except here, we loop until a direction is pressed (BEQ instead of BNE)
-
-
-
-  @ExitDialogue:
-    LDA dlgsfx              ; see if a sfx is still playing
-    BEQ @StartClosing       ; if not, start closing the dialogue box immediately
-
-
-  @WaitForSfx:              ; otherwise (sfx is still playing
-    LDA music_track         ;   we need to wait for it to end.  check the music track
-    CMP #$81                ; and see if it's $81 (sfx over)
-    BEQ @SfxIsDone          ; if it is, break out of this loop
-      CALL DialogueBox_Frame   ; otherwise, keep doing frames
-      JUMP @WaitForSfx         ; and loop until the sfx is done
-
-  @SfxIsDone:
-    LDA dlgmusic_backup     ; once the sfx is done restore the music track to the backup value
-    STA music_track
-    LDA #0
-    STA dlgsfx              ; and clear sfx flag
-
-
-
-  @StartClosing:
-    LDA #37
-    STA sq2_sfx            ; indicate that sq2 is to be playing a sfx for the next 37 frames
-    LDA #$95
-    FARCALL DialogueBox_Sfx    ; and start the downward sweep sound effect you hear when you close the dialogue box
-
-  @CloseLoop:
-      CALL DialogueBox_Frame; do a frame
-
-      LDA tmp+11        ; subtract 3 from the dialogue visibility scanline (move it 3 lines up
-      SEC               ;    retracting box visibility)
-      SBC #3
-      STA tmp+11        ; box closes 3 pixels/frame.
-
-      CMP #$12          ; and keep looping until line is below $12
-      BCS @CloseLoop
-
-
-    RTS          ; then the dialogue box is done!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
