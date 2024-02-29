@@ -2840,15 +2840,15 @@ UndrawBattleBlock:
     LDA #$00
     STA btl_msgdraw_blockcount      ; clear the block count
     
-  @Loop:
-      LDA btl_msgdraw_blockcount    ; compare block count
-      CMP tmp_6aa4                     ;   to 1-less-than original block count
-      BEQ :+                        ; if we've reached that, we're done
-      CALL DrawBattleBoxAndText      ; otherwise, draw another block
-      INC btl_msgdraw_blockcount
-      JUMP @Loop                     ; and repeat
-
-  : CALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
+    @Loop:
+        LDA btl_msgdraw_blockcount    ; compare block count
+        CMP tmp_6aa4                     ;   to 1-less-than original block count
+        BEQ :+                        ; if we've reached that, we're done
+        CALL DrawBattleBoxAndText      ; otherwise, draw another block
+        INC btl_msgdraw_blockcount
+        JUMP @Loop                     ; and repeat
+    : 
+    CALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
     LDA btldraw_blockptrstart           ; move the end pointer to this position, so
     STA btldraw_blockptrend             ; the block we dropped will be actually removed
     LDA btldraw_blockptrstart+1

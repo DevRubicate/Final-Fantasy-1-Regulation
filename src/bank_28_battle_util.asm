@@ -8,7 +8,50 @@
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
-.export DrawBattle_Division, DrawCombatBox
+.export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  lut for End of Battle text  [$A00E :: 0x3201E]
+;;
+;;    Strings used for DrawEOBCombatBox.  I have no idea why some of the
+;; string data is stored here, and some of it is stored way back at $9950.
+
+lut_EOBText:
+  .WORD @MnstPrsh               ; 0
+  .WORD @ExpUp                  ; 1
+  .WORD @ExpVal                 ; 2
+  .WORD @Gold                   ; 3
+  .WORD @GoldVal                ; 4
+  .WORD @LevUp                  ; 5
+  .WORD eobtext_NameLN          ; 6
+  .WORD eobtext_HPMax           ; 7
+  .WORD eobtext_Npts            ; 8
+  .WORD eobtext_PartyPerished   ; 9
+  
+  @MnstPrsh: .byte $0F, $3D, $0F, $3C, $00      ; "Monsters perished"
+  @ExpUp:    .byte $0F, $49, $00                ; "EXP up"
+  @ExpVal:   .byte $0C
+             .WORD eob_exp_reward
+             .byte $99, $00                     ; "##P"  where ## is the experience reward
+  @Gold:     .byte $90, $98, $95, $8D, $00      ; "GOLD"
+  @GoldVal:  .byte $0C
+             .WORD eob_gp_reward
+             .byte $90, $00, $00                ; "##G"   where ## is the GP reward
+  @LevUp:    .byte $0F, $30, $00                ; "Lev. up!"
+
+eobtext_NameLN:
+  .byte $02, $FF, $95, $0C
+  .WORD eobtext_print_level
+  .byte $00                                 ; "<Name> L##", where <Name> is btl_attacker's name and ## is value at $687A
+eobtext_HPMax:
+  .byte $0F, $31, $00                       ; "HP max"
+eobtext_Npts:
+  .byte $0C
+  .WORD eobtext_print_hp
+  .byte $0F, $32, $00                       ; "##pts." where ## is value at $687C
+eobtext_PartyPerished:
+  .byte $04, $0F, $3E, $0F, $3C, $00        ; "<Name> party perished", where <Name> is the party leader's name
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -435,3 +478,35 @@ DrawCombatBox:
     
     CALL BattleDraw_AddBlockToBuffer ; add this text block
     JUMP DrawBlockBuffer             ; then draw it.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawEOBCombatBox  [$9F3B :: 0x2DF4B]
+;;
+;;    Draws an "End of Battle" (EOB) combat box.  These are boxes containing
+;;  text that is shown at the end of battle... like "Level up!" kind of stuff.
+;;
+;;  input:  A = combat box ID to draw
+;;          X = EOB string ID   (see lut_EOBText for valid values)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawEOBCombatBox:
+    STA temporary_1               ; backup the combo box ID
+    
+    LDA #$0B          ; set the current bank for the music driver
+    STA cur_bank          ; seems weird to do this here...
+    
+    TXA                     ; Get the EOB string ID to print
+    ASL A                   ; x2 to use as index
+    
+    TAY
+    LDX lut_EOBText, Y      ; load pointer from lut
+    LDA lut_EOBText+1, Y    ; and put in YX
+    TAY
+    
+    LDA temporary_1               ; restore combo box ID in A
+    FORCEDFARCALL DrawCombatBox     ; A = box ID, YX = pointer to string
+    
+    INC btl_combatboxcount  ; count this combat box
+    RTS                     ; and exit!

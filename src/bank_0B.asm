@@ -8,6 +8,7 @@
 
 .import Battle_ReadPPUData, Battle_WritePPUData, WaitForVBlank, UndrawNBattleBlocks
 .import DrawCombatBox, BattleRNG, BattleCrossPageJump, BankC_CrossBankJumpList, MusicPlay
+.import DrawEOBCombatBox
 
 
 BANK_THIS = $0B
@@ -113,28 +114,6 @@ data_ChaosTSA:
 data_EnemyNames:
   .incbin "bin/0B_94E0_enemynames.bin"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;  Misc End-Of-Battle text [$9950 :: 0x2D960]
-;;
-;;    I don't know why these strings are stored here and not with the rest of the
-;;  end of battle strings at $A00E.  Whatever.
-
-        eobtext_print_level = $687A
-        eobtext_print_hp    = $687C
-
-eobtext_NameLN:
-  .byte $02, $FF, $95, $0C
-  .WORD eobtext_print_level
-  .byte $00                                 ; "<Name> L##", where <Name> is btl_attacker's name and ## is value at $687A
-eobtext_HPMax:
-  .byte $0F, $31, $00                       ; "HP max"
-eobtext_Npts:
-  .byte $0C
-  .WORD eobtext_print_hp
-  .byte $0F, $32, $00                       ; "##pts." where ## is value at $687C
-eobtext_PartyPerished:
-  .byte $04, $0F, $3E, $0F, $3C, $00        ; "<Name> party perished", where <Name> is the party leader's name
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  LvlUp_AdjustBBSubStats  [$9966 :: 0x2D976]
@@ -614,7 +593,7 @@ GameOver:
     
     LDA #$04                    ; draw the "Party Perished" text
     LDX #$09                    ;  in combat box 4 (bottom/wide one)
-    CALL DrawEOBCombatBox
+    FARCALL DrawEOBCombatBox
     
     CALL WaitForAnyInput                     ; wait for user to press any button
     CALL RespondDelay_UndrawAllCombatBoxes   ; then undraw "Party Perished" box
@@ -637,7 +616,7 @@ EndOfBattleWrapUp:
     
     TAX
     LDA #$04
-    CALL DrawEOBCombatBox            ; draw "mosters perished" in combat box 4
+    FARCALL DrawEOBCombatBox            ; draw "mosters perished" in combat box 4
     
     CALL WaitForAnyInput                     ; wait for the user to press any button
     CALL RespondDelay_UndrawAllCombatBoxes   ; then delay and undraw all boxes
@@ -676,8 +655,9 @@ EndOfBattleWrapUp:
     CALL Draw4EobBoxes
     
     CALL WaitForAnyInput                         ; wait for input
-    CALL RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
-    
+    ; TODO: This produces giberish as it undraws boxes because the undrawing process also includes redrawing boxes
+    ; and the right bank (this one) won't be loaded in when the redrawing happens
+    ;CALL RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
     LDA #$00                    ; award XP to all 4 party members
     CALL LvlUp_AwardAndUpdateExp
     LDA #$01
@@ -1146,16 +1126,16 @@ LvlUp_LevelUp:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Draw4EobBoxes:
-  @Loop:
-      LDA eobbox_slotid         ; draw one EOB box
-      LDX eobbox_textid
-      CALL DrawEOBCombatBox
+    @Loop:
+    LDA eobbox_slotid         ; draw one EOB box
+    LDX eobbox_textid
+    FARCALL DrawEOBCombatBox
       
-      INC eobbox_slotid         ; inc slot and text
-      INC eobbox_textid
-      LDA eobbox_slotid
-      CMP #$04                  ; keep looping until all 4 slots drawn
-      BNE @Loop
+    INC eobbox_slotid         ; inc slot and text
+    INC eobbox_textid
+    LDA eobbox_slotid
+    CMP #$04                  ; keep looping until all 4 slots drawn
+    BNE @Loop
     RTS
 
 
@@ -1552,39 +1532,6 @@ RandAX:
     
     RTS
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawEOBCombatBox  [$9F3B :: 0x2DF4B]
-;;
-;;    Draws an "End of Battle" (EOB) combat box.  These are boxes containing
-;;  text that is shown at the end of battle... like "Level up!" kind of stuff.
-;;
-;;  input:  A = combat box ID to draw
-;;          X = EOB string ID   (see lut_EOBText for valid values)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawEOBCombatBox:
-    STA temporary_1               ; backup the combo box ID
-    
-    LDA #BANK_THIS          ; set the current bank for the music driver
-    STA a:cur_bank          ; seems weird to do this here...
-    
-    TXA                     ; Get the EOB string ID to print
-    ASL A                   ; x2 to use as index
-    
-    TAY
-    LDX lut_EOBText, Y      ; load pointer from lut
-    LDA lut_EOBText+1, Y    ; and put in YX
-    TAY
-    
-    LDA temporary_1               ; restore combo box ID in A
-    FARCALL DrawCombatBox     ; A = box ID, YX = pointer to string
-    
-    INC btl_combatboxcount  ; count this combat box
-    RTS                     ; and exit!
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  RespondDelay_UndrawAllCombatBoxes [$9F57 :: 0x2DF67]
@@ -1765,38 +1712,6 @@ Battle_FlipCharSprite:
     ORA #$40                ; set the 'flip-X' bit
     STA (btl_tmpvar3), Y            ; write it back
     RTS
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  lut for End of Battle text  [$A00E :: 0x3201E]
-;;
-;;    Strings used for DrawEOBCombatBox.  I have no idea why some of the
-;; string data is stored here, and some of it is stored way back at $9950.
-
-lut_EOBText:
-  .WORD @MnstPrsh               ; 0
-  .WORD @ExpUp                  ; 1
-  .WORD @ExpVal                 ; 2
-  .WORD @Gold                   ; 3
-  .WORD @GoldVal                ; 4
-  .WORD @LevUp                  ; 5
-  .WORD eobtext_NameLN          ; 6
-  .WORD eobtext_HPMax           ; 7
-  .WORD eobtext_Npts            ; 8
-  .WORD eobtext_PartyPerished   ; 9
-  
-  @MnstPrsh: .byte $0F, $3D, $0F, $3C, $00      ; "Monsters perished"
-  @ExpUp:    .byte $0F, $49, $00                ; "EXP up"
-  @ExpVal:   .byte $0C
-             .WORD eob_exp_reward
-             .byte $99, $00                     ; "##P"  where ## is the experience reward
-  @Gold:     .byte $90, $98, $95, $8D, $00      ; "GOLD"
-  @GoldVal:  .byte $0C
-             .WORD eob_gp_reward
-             .byte $90, $00, $00                ; "##G"   where ## is the GP reward
-  @LevUp:    .byte $0F, $30, $00                ; "Lev. up!"
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

@@ -662,9 +662,11 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             eob_exp_reward,                     1 ; $6878
     RES             btlmag_attacker_unk6879,            0 ; $6879 ; Enemy:  high byte of GP       Player:  class
     RES             btl_defender_absorb,                1 ; $6879
+    RES             eobtext_print_level,                0 ; $687A
     RES             btlmag_defender_hp,                 0 ; $687A
     RES             btl_defender_magdef,                1 ; $687A
     RES             btl_defender_elemresist,            1 ; $687B
+    RES             eobtext_print_hp,                   0 ; $687C
     RES             btl_defender_hp,                    1 ; $687C
     RES             btlmag_defender_numhitsmult,        1 ; $687D
     RES             btlmag_defender_morale,             1 ; $687E
