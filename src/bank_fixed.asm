@@ -22,7 +22,7 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow
+.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr
 
 ; bank_10_overworld_object
 .import MapObjectMove, AimMapObjDown
@@ -35,7 +35,7 @@
 ; bank_19_menu
 .import MenuCondStall
 ; bank_1A_string
-.import DrawComplexString_New, DrawItemBox
+.import DrawComplexString_New, DrawItemBox, SeekItemStringAddress, SeekItemStringPtr
 ; bank_1B_map_chr
 .import LoadOWBGCHR
 ; bank_1C_mapman_chr
@@ -1473,33 +1473,11 @@ DrawDialogueString_Done:
     RTS                   ; and exit
 
 DrawDialogueString:
-    TAX                   ; put string ID in X temporarily
+
+    FARCALL SeekDialogStringPtr
 
     LDA #BANK_DIALOGUE
     STA cur_bank          ; set cur_bank to bank containing dialogue text (for Music_Play)
-    CALL SwapPRG         ; and swap to that bank
-
-    TXA                   ; get the string ID back
-    ASL A                 ; double it (2 bytes per pointer)
-    TAX                   ; and put in X for indexing
-    BCS @HiTbl            ; if string ID was >= $80 use 2nd half of table, otherwise use first half
-
-    @LoTbl:
-
-    LDA lut_DialoguePtrTbl, X        ; load up the pointer into text_ptr
-    STA text_ptr
-    LDA lut_DialoguePtrTbl+1, X
-    STA text_ptr+1
-    JUMP @PtrLoaded                   ; then jump ahead
-
-    @HiTbl:
-
-    LDA lut_DialoguePtrTbl+$100, X   ; same, but read from 2nd half of pointer table
-    STA text_ptr
-    LDA lut_DialoguePtrTbl+$101, X
-    STA text_ptr+1
-
-    @PtrLoaded:             ; here, text_ptr points to the desired string
 
     LDA #10
     STA tmp+7             ;  set precautionary counter to 10
@@ -1513,9 +1491,8 @@ DrawDialogueString:
     CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
     @Loop:
-
-    LDY #0                       ; zero Y for indexing
-    LDA (text_ptr), Y            ; get the next byte in the string
+    LDY #0
+    JSR Impl_FARBYTE
     BEQ DrawDialogueString_Done  ; if it's zero (null terminator), exit
 
     INC text_ptr                 ; otherwise increment the pointer
@@ -1545,93 +1522,79 @@ DrawDialogueString:
 
 
     @DTE:                 ; if byte fetched was a DTE code ($1A-79)
-      SEC
-      SBC #$1A           ; subtract $1A to make the DTE code zero based
-      TAX                ; put in X for indexing
-      PHA                ; and push it to back it up (will need it again later)
+    SEC
+    SBC #$1A           ; subtract $1A to make the DTE code zero based
+    TAX                ; put in X for indexing
+    PHA                ; and push it to back it up (will need it again later)
 
-      LDA lut_DTE1, X    ; get the first byte in the DTE pair
-      STA PPUDATA          ; and draw it
-      CALL @IncDest       ; update PPU dest address
+    LDA lut_DTE1, X    ; get the first byte in the DTE pair
+    STA PPUDATA          ; and draw it
+    CALL @IncDest       ; update PPU dest address
 
-      PLA                ; restore DTE code
-      TAX                ; and put it in X again (X was corrupted by @IncDest call)
-      LDA lut_DTE2, X    ; get second byte in DTE pair
-      STA PPUDATA          ; draw it
-      CALL @IncDest       ; and update PPU address again
+    PLA                ; restore DTE code
+    TAX                ; and put it in X again (X was corrupted by @IncDest call)
+    LDA lut_DTE2, X    ; get second byte in DTE pair
+    STA PPUDATA          ; draw it
+    CALL @IncDest       ; and update PPU address again
 
-      DEC tmp+7            ; decrement cautionary counter
-      BNE @Loop            ; if it hasn't expired yet, keep drawing.  Otherwise...
+    DEC tmp+7            ; decrement cautionary counter
+    BNE @Loop            ; if it hasn't expired yet, keep drawing.  Otherwise...
 
-        CALL SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
-        FARCALL MusicPlay    ; keep music playing
-        CALL WaitForVBlank  ; then wait another frame before continuing drawing
+    CALL SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
+    FARCALL MusicPlay    ; keep music playing
+    CALL WaitForVBlank  ; then wait another frame before continuing drawing
 
-        LDA #10
-        STA tmp+7            ; reload precautionary counter
-        CALL SetPPUAddrToDest ; and set PPU address appropriately
-        JUMP @Loop            ; then resume drawing
+    LDA #10
+    STA tmp+7            ; reload precautionary counter
+    CALL SetPPUAddrToDest ; and set PPU address appropriately
+    JUMP @Loop            ; then resume drawing
 
-  @ControlCode:          ; if the byte fetched was a control code ($01-19)
+    @ControlCode:          ; if the byte fetched was a control code ($01-19)
     CMP #$03             ; was the code $03?
     BNE @Code_Not03      ; if not jump ahead
 
     @PrintName:            ; Control Code $03 = prints the name of the lead character
-      LDA ch_name          ; copy lead character's name to format buffer
-      STA format_buf+3
-      LDA ch_name+1        ; note that this does not back up the original string, which means
-      STA format_buf+4     ; after this name is drawn, dialogue printing stops!  I don't know if
-      LDA ch_name+2        ; that was intentional or not -- I don't see why it would be.  Therefore
-      STA format_buf+5     ; I would say this is BUGGED, even though I don't think
-      LDA ch_name+3        ; it's ever used in the game
-      STA format_buf+6
+    LDA ch_name          ; copy lead character's name to format buffer
+    STA format_buf+3
+    LDA ch_name+1        ; note that this does not back up the original string, which means
+    STA format_buf+4     ; after this name is drawn, dialogue printing stops!  I don't know if
+    LDA ch_name+2        ; that was intentional or not -- I don't see why it would be.  Therefore
+    STA format_buf+5     ; I would say this is BUGGED, even though I don't think
+    LDA ch_name+3        ; it's ever used in the game
+    STA format_buf+6
 
-      LDA #<(format_buf+3) ; make text_ptr point to the format buffer
-      STA text_ptr
-      LDA #>(format_buf+3)
-      STA text_ptr+1
+    LDA #<(format_buf+3) ; make text_ptr point to the format buffer
+    STA text_ptr
+    LDA #>(format_buf+3)
+    STA text_ptr+1
 
-      JUMP @Loop            ; and continue printing (to print the name, then quit)
+    JUMP @Loop            ; and continue printing (to print the name, then quit)
 
-
-  @Code_Not03:           ; Control codes other than $03
+    @Code_Not03:           ; Control codes other than $03
     CMP #$02             ; was code $02
     BNE @Code_Not02_03   ; if not, jump ahead
 
     @PrintItemName:        ; Control Code $02 = prints the ID of the item stored in dlg_itemid (used for treasure chests)
-      LDA text_ptr         ; push the text pointer to the stack to back it up
-      PHA
-      LDA text_ptr+1
-      PHA
+    LDA text_ptr         ; push the text pointer to the stack to back it up
+    PHA
+    LDA text_ptr+1
+    PHA
 
-      LDA dlg_itemid       ; get the item ID whose name we're to print
-      ASL A                ; double it (2 bytes per pointer)
-      TAX                  ; and put in X for indexing
-      BCS @ItemHiTbl       ; if the item ID was >= $80, use second half of pointer table
+    LDA dlg_itemid       ; get the item ID whose name we're to print
 
-      @ItemLoTbl:
-        LDA lut_ItemNamePtrTbl, X    ; load pointer from first half if ID <= $7F
-        STA text_ptr
-        LDA lut_ItemNamePtrTbl+1, X
-        JUMP @ItemPtrLoaded
+    FARCALL SeekItemStringPtr
 
-      @ItemHiTbl:
-        LDA lut_ItemNamePtrTbl+$100, X   ; or from 2nd half if ID >= $80
-        STA text_ptr
-        LDA lut_ItemNamePtrTbl+$101, X
+    STA text_ptr+1
+    CALL @Loop            ; once pointer is loaded, CALL to the @Loop to draw the item name
 
-      @ItemPtrLoaded:
-      STA text_ptr+1
-      CALL @Loop            ; once pointer is loaded, CALL to the @Loop to draw the item name
+    PLA                  ; then restore the original string pointer by pulling it from the stack
+    STA text_ptr+1
+    PLA
+    STA text_ptr
 
-      PLA                  ; then restore the original string pointer by pulling it from the stack
-      STA text_ptr+1
-      PLA
-      STA text_ptr
+    JUMP @Loop            ; and continue drawing the rest of the string
 
-      JUMP @Loop            ; and continue drawing the rest of the string
-
-  @Code_Not02_03:          ; all other control codes besides 02 and 03
+    @Code_Not02_03:          ; all other control codes besides 02 and 03
     CALL @LineBreak         ; just do a line break
     JUMP @Loop              ; then continue
 
@@ -1645,7 +1608,7 @@ DrawDialogueString:
 
     AND #$1F               ; then check the low 5 bits.  If they're zero, we just crossed an NT boundary
     BNE :+
-      JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
+        JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
     :   
     RTS                    ; then return
 
@@ -1666,7 +1629,7 @@ DrawDialogueString:
     ADC #1
     CMP #30                ; but wrap from 29->0  because there are only 30 rows on the nametable
     BCC :+
-      SBC #30
+        SBC #30
     :   
     STA dest_y
 

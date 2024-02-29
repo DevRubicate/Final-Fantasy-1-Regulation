@@ -4,7 +4,7 @@
 
 .import Impl_FARBYTE, Impl_FARBYTE2, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
 
-.export DrawComplexString_New, DrawItemBox
+.export DrawComplexString_New, DrawItemBox, SeekItemStringPtr
 
 
 DrawComplexString_Exit:
@@ -415,31 +415,6 @@ DrawComplexString_New:
     JUMP @Draw_NoStall  ;  and continue with text processing
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawItemBox  [$EF18 :: 0x3EF28]
@@ -590,25 +565,6 @@ lutItemBoxStrPos:
   .byte $04,$10,   $0D,$10,   $16,$10
   .byte $04,$12,   $0D,$12,   $16,$12
   .byte $04,$14,   $0D,$14,   $16,$14
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1788,3 +1744,22 @@ LUT_ItemNamePtrTbl:
     .word $5352
     .word $5514
     .word $5756
+
+SeekItemStringPtr:
+    ASL A                ; double it (2 bytes per pointer)
+    TAX                  ; and put in X for indexing
+    BCS @ItemHiTbl       ; if the item ID was >= $80, use second half of pointer table
+
+    @ItemLoTbl:
+    LDA LUT_ItemNamePtrTbl, X    ; load pointer from first half if ID <= $7F
+    STA text_ptr
+    LDA LUT_ItemNamePtrTbl+1, X
+    JUMP @ItemPtrLoaded
+
+    @ItemHiTbl:
+    LDA LUT_ItemNamePtrTbl+$100, X   ; or from 2nd half if ID >= $80
+    STA text_ptr
+    LDA LUT_ItemNamePtrTbl+$101, X
+
+    @ItemPtrLoaded:
+    RTS
