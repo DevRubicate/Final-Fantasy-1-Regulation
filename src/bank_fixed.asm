@@ -22,7 +22,7 @@
 .import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr
+.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 
 ; bank_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -1295,54 +1295,6 @@ BattleDrawMessageBuffer_Reverse:
     
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  GetBattleMessagePtr  [$F544 :: 0x3F554]
-;;
-;;  Gets a pointer to the given X,Y position in the battle message buffer.
-;;
-;;  input:  X = desired X coord
-;;          Y = desired Y coord
-;;
-;;  output:  YX = 16-bit ptr
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetBattleMessagePtr:
-    LDA #$00
-    STA btl_tmpvar2     ; zero high byte of temp memory
-    
-    TYA         ; multiply Y coord by $20
-    ASL A
-    ROL btl_varJ
-    ASL A
-    ROL btl_varJ
-    ASL A
-    ROL btl_varJ
-    ASL A
-    ROL btl_varJ
-    ASL A
-    ROL btl_varJ     ; high byte gets rolled into btl_varJ
-    STA btl_tmpvar1     ; low byte in btl_varI
-    
-    TXA         ; Add X coord to low byte
-    CLC
-    ADC btl_varI
-    STA btl_varI
-    
-    LDA #$00    ; add any carry to high byte
-    ADC btl_varJ
-    STA btl_varJ
-    
-    CLC                 ; lastly, sum that result with 'btl_msgbuffer'
-    LDA #<btl_msgbuffer
-    ADC btl_varI
-    TAX                 ; low byte in X
-    LDA #>btl_msgbuffer
-    ADC btl_varJ
-    TAY                 ; high byte in Y
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleBox_Row  [$F572 :: 0x3F582]
@@ -1405,7 +1357,7 @@ DrawBattleBox_Row:
 DrawBattleBox:
     LDX btl_msgdraw_x           ; get X,Y coords of box
     LDY btl_msgdraw_y
-    CALL GetBattleMessagePtr
+    FARCALL GetBattleMessagePtr
     STX btl_varI                     ; put in btl_varI,btl_varJ, this is our destination pointer
     STY btl_varJ
     
@@ -2100,7 +2052,7 @@ GetPointerToRosterString:
 DrawBattleString:
     LDX btl_msgdraw_x
     LDY btl_msgdraw_y
-    CALL GetBattleMessagePtr
+    FARCALL GetBattleMessagePtr
     STX btl_tmpvar3                 ; store target pointer in temp ram
     STY btl_tmpvar4
     

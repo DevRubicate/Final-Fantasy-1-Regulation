@@ -8,7 +8,7 @@
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
-.export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer
+.export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -600,4 +600,52 @@ BattleDrawMessageBuffer:
       
       DEC tmp_68b9         ; loop for each row
       BNE @Loop
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  GetBattleMessagePtr  [$F544 :: 0x3F554]
+;;
+;;  Gets a pointer to the given X,Y position in the battle message buffer.
+;;
+;;  input:  X = desired X coord
+;;          Y = desired Y coord
+;;
+;;  output:  YX = 16-bit ptr
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBattleMessagePtr:
+    LDA #$00
+    STA btl_tmpvar2     ; zero high byte of temp memory
+    
+    TYA         ; multiply Y coord by $20
+    ASL A
+    ROL btl_varJ
+    ASL A
+    ROL btl_varJ
+    ASL A
+    ROL btl_varJ
+    ASL A
+    ROL btl_varJ
+    ASL A
+    ROL btl_varJ     ; high byte gets rolled into btl_varJ
+    STA btl_tmpvar1     ; low byte in btl_varI
+    
+    TXA         ; Add X coord to low byte
+    CLC
+    ADC btl_varI
+    STA btl_varI
+    
+    LDA #$00    ; add any carry to high byte
+    ADC btl_varJ
+    STA btl_varJ
+    
+    CLC                 ; lastly, sum that result with 'btl_msgbuffer'
+    LDA #<btl_msgbuffer
+    ADC btl_varI
+    TAX                 ; low byte in X
+    LDA #>btl_msgbuffer
+    ADC btl_varJ
+    TAY                 ; high byte in Y
     RTS
