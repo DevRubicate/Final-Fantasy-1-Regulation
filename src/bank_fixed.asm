@@ -57,7 +57,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
-.import LoadMapPalettes, BattleTransition
+.import LoadMapPalettes, BattleTransition, StartMapMove
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
@@ -82,7 +82,7 @@
 .export DoMapDrawJob
 .export WaitScanline, SetSMScroll
 .export EnterOW_PalCyc
-.export StartMapMove, Copy256, CHRLoad, CHRLoad_Cont
+.export Copy256, CHRLoad, CHRLoad_Cont
 .export DrawFullMap, DrawMapPalette
 .export WaitVBlank_NoSprites
 .export LoadStandardMap, LoadMapObjects
@@ -90,7 +90,7 @@
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
 .export DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
-.export DialogueBox_Frame
+.export DialogueBox_Frame, LoadOWMapRow, PrepRowCol
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -278,7 +278,7 @@ DrawFullMap:
     STA facing           ; have the player face upwards (for purposes of following loop)
 
    @Loop:
-      CALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
+      FARCALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
       CALL DrawMapRowCol      ; then draw the row that just got prepped
       FARCALL PrepAttributePos   ; prep attributes for that row
       CALL DrawMapAttributes  ; and draw them
@@ -297,172 +297,10 @@ DrawFullMap:
 
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Start Map Move    [$D023 :: 0x3D033]
-;;
-;;    This routine starts the player moving in the direction they're facing.
-;;
-;;    The routine does not check to see if a move is legal.  Once this
-;;  routine is called, it's assumed it's a legal move and the player starts
-;;  moving unconditionally.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartMapMove:
-    LDA scroll_y         ; copy Y scroll to 
-    STA mapdraw_nty      ;   nt draw Y
-
-    LDA #$FF             ; put overworld mask ($FF -- ow is 256x256 tiles )
-    STA tmp+8            ; in tmp+8 for later
-    LDX ow_scroll_x      ; put scrollx in X
-    LDY ow_scroll_y      ; and scrolly in Y
-
-    LDA mapflags         ; get mapflags
-    LSR A                ; shift SM bit into C
-    BCC :+               ; if we're in a standard map...
-
-      LDX sm_scroll_x    ; ... replace above OW data with SM versions
-      LDY sm_scroll_y    ; scrollx in X, scrolly in Y
-      LDA #$3F           ; and sm mask ($3F -- 64x64) in tmp+8
-      STA tmp+8
-    : 
-
-    STX mapdraw_x        ; store desired scrollx in mapdraw_x
-    STY mapdraw_y        ; and Y scroll
-
-    TXA                  ; then put X scroll in A
-    AND #$1F             ; mask out low bits (32 tiles in a 2-NT wide window)
-    STA mapdraw_ntx      ; and that's our nt draw X
-
-    LDA facing           ; check which direction we're facing
-    LSR A                ; shift until we find the appropriate direction, and branch to it
-    BCS @Right
-    LSR A
-    BCS @Left
-    LSR A
-    BCS @Down
-    LSR A
-    BCS @Up
-
-    RTS                  ; if not facing any direction (doing initial map draw), just exit
 
 
-  @Right:
-    LDA sm_scroll_x      ; update player's SM coord to be the SM scroll
-    CLC                  ;  +7 (to center him on screen), +1 (to move him right one)
-    ADC #7+1
-    AND #$3F             ; and wrap around edge of map
-    STA sm_player_x
-
-    LDA mapdraw_x        ; add 16 to the mapdraw_x (draw a column on the right side -- 16 tiles to right of screen)
-    CLC
-    ADC #16
-
-  @Horizontal:
-    AND tmp+8            ; mask column with map mask ($FF for OW, $3F for SM)
-    STA mapdraw_x        ; set that as our new mapdraw_x
-
-    AND #$1F             ; from that, calculate the NTX
-    STA mapdraw_ntx
-
-    LDA mapflags         ; set the 'draw column' map flag
-    ORA #$02
-    STA mapflags
-
-    CALL PrepRowCol       ; and prep the column
-
-  @Finalize:
-    LDA #$02
-    STA mapdraw_job      ; mark that drawjob #2 needs to be done (tiles need drawing)
-
-    LDA #$01
-    STA move_speed       ; set movement speed to move in desired direction
-
-    LDA mapflags         ; check map flags
-    LSR A                ; put SM flag in C
-    BCS @Exit            ; if in a SM, just exit
-
-    LDA vehicle          ; otherwise (OW), get current vehicle
-    CMP #$02
-    BCC @Exit            ; if vehicle is < 2 (on foot), exit (speed remains 1)
-
-    LSR A                ; otherwise, replace speed with vehicle/2
-    STA move_speed       ;  which works out to:  canoe=1   ship=2   airship=4
-
-  @Exit:
-    RTS
-
-  @Left:
-    LDA sm_scroll_x      ; exactly the same as @Right... except..
-    CLC
-    ADC #7-1             ; 7-1 to move him left, instead of right
-    AND #$3F
-    STA sm_player_x
-
-    LDA mapdraw_x
-    SEC
-    SBC #1               ; and subtract 1 from the mapdraw column (one tile left of screen)
-
-    JUMP @Horizontal
 
 
-  @Down:
-    LDA sm_scroll_y      ; calculate player SM Y position
-    CLC                  ; based on SM scroll Y
-    ADC #7+1             ; +7 to center him, +1 to move him down 1
-    AND #$3F             ; mask to wrap around map boundaries
-    STA sm_player_y
-
-    LDA #15              ; want to add 15 rows to mapdraw_y.  For whatever reason
-    STA tmp              ;   this addition is done in @Vertical.  So write the desired addivite to tmp
-
-    LDA mapdraw_nty      ; add $F to the NT Y
-    CLC                  ;   just so we can subtract it later
-    ADC #$0F             ; Waste of time.  The row to draw to is the row that we're scrolled to
-    CMP #$0F             ;   so we don't need to change mapdraw_nty at all when moving down
-    BCC @Vertical        ; will never branch
-
-    SEC                  ; subtract the $F we just added (dumb)
-    SBC #$0F
-    JUMP @Vertical
-
-  @Up:
-    LDA sm_scroll_y      ; same idea as @Down
-    CLC
-    ADC #7-1             ; only -1 to move up 1 tile
-    AND #$3F
-    STA sm_player_y
-
-    LDA #-1              ; we want to subtract 1 from mapdraw_y
-    STA tmp              ;  which is the same as adding -1  ($FF)
-
-    LDA mapdraw_nty
-    SEC
-    SBC #$01             ; subtract 1 from mapdraw_nty.  Unlike for @Down -- this is actually important
-    BCS @Vertical
-    CLC
-    ADC #$0F             ; but wrap from 0->E
-
-  @Vertical:
-    STA mapdraw_nty      ; record new NT Y
-
-    LDA mapdraw_y        ; get mapdraw_y
-    CLC
-    ADC tmp              ; add our additive to it (down = 15,up = -1)
-    AND tmp+8            ; mask with map size to keep within map bound
-    STA mapdraw_y        ; write back
-
-    LDA mapflags         ; turn off the 'draw column' map flag
-    AND #~$02            ; to indicate we want to draw a row
-    STA mapflags
-
-    CALL LoadOWMapRow     ; need to decompress a new row when moving vertically on the OW map
-    CALL PrepRowCol       ; then prep the row
-    JUMP @Finalize        ; and jump to @Finalize to do final stuff
-
-
-    RTS                  ; useless RTS (impossible to reach)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

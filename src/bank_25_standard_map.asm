@@ -527,4 +527,4 @@ ProcessSMInput:
       STA facing           ; record directions pressed as our new facing direction
       FARCALL CanPlayerMoveSM  ; check to see if the player can move that way
       BCS @Exit            ; if not... exit
-      JUMP StartMapMove     ; otherwise... start them moving that direction, and exit
+      FARJUMP StartMapMove     ; otherwise... start them moving that direction, and exit

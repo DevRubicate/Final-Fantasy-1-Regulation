@@ -2877,7 +2877,7 @@ ProcessOWInput:
     LDA joy               ; get joy
     AND #$0F              ; isolate the direction(s) they're pressing (ie, where they're trying to move)
     STA facing            ; set that as our facing
-    JUMP StartMapMove      ; then start the map move!  and exit
+    FARJUMP StartMapMove      ; then start the map move!  and exit
 
   @MoveShip:           ; Here if trying to move when in the ship
     CALL OWCanMove      ; see if they can move in desired direction
