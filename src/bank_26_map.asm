@@ -3,9 +3,9 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
-.import LoadOWMapRow, PrepRowCol, DrawMapRowCol
+.import LoadOWMapRow, PrepRowCol, DrawMapRowCol, PrepAttributePos, ScrollUpOneRow
 
-.export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob
+.export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob, DrawFullMap
 
 LUT_MapmanPalettes:
     .byte $16, $16, $12, $17, $27, $12, $16, $16, $30, $30, $27, $12, $16, $16, $16, $16
@@ -394,3 +394,62 @@ DoMapDrawJob:
   @Attributes:
     CALL DrawMapAttributes   ; draw attributes
     RTS                     ;  and exit
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Full Map   [$CFE7 :: 0x3CFF7]
+;;
+;;    Draws 15 rows of tiles for the map, filling the entire screen.
+;;  It accomplishes this by adding 15 to the map scroll, then faking
+;;  upward movement to draw rows bottom first.
+;;
+;;    For Standard maps, this does no map decompression.  However for the overworld,
+;;  each row is decompressed prior to drawing.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawFullMap:
+    LDA #0
+    STA scroll_y         ; zero y scroll
+
+    LDA mapflags         ; see if we're on the overworld or not
+    LSR A                ; put SM flag in C
+    BCS @SM              ;  and jump ahead if in SM
+  @OW:
+     LDA ow_scroll_y     ; add 15 to OW scroll Y
+     CLC
+     ADC #15
+     STA ow_scroll_y
+     JUMP @StartLoop
+
+  @SM:
+     LDA sm_scroll_y     ; same, but add to sm scroll
+     CLC
+     ADC #15
+     AND #$3F            ; and wrap around map boundary
+     STA sm_scroll_y
+
+  @StartLoop:
+    LDA #$08
+    STA facing           ; have the player face upwards (for purposes of following loop)
+
+   @Loop:
+      CALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
+      CALL DrawMapRowCol      ; then draw the row that just got prepped
+      FARCALL PrepAttributePos   ; prep attributes for that row
+      CALL DrawMapAttributes  ; and draw them
+      CALL ScrollUpOneRow     ; then force a scroll upward one row
+
+      LDA scroll_y           ; check scroll_y
+      BNE @Loop              ; and loop until it reaches 0 again (15 iterations)
+
+    LDA #0
+    STA facing           ; clear facing
+    STA mapdraw_job      ; clear the draw job (all drawing is done)
+    STA move_speed       ; clear move speed (player isn't moving)
+
+       ; those above 3 lines essentially "cancel" the fake moves that were only
+       ;   performed to draw the map.
+
+    RTS

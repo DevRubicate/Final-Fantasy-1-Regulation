@@ -80,7 +80,7 @@ PrepStandardMap:
     CALL LoadSMCHR           ; load all the necessary CHR
     FARCALL LoadSMTilesetData   ; load tileset and TSA data
     FARCALL LoadMapPalettes     ; load palettes
-    CALL DrawFullMap         ; draw the map onto the screen
+    FARCALL DrawFullMap         ; draw the map onto the screen
 
     LDA sm_scroll_x         ; get the map x scroll
     AND #$10                ; isolate the odd NT bit
