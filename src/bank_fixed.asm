@@ -64,6 +64,8 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division, DrawCombatBox
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
+; bank_2C_dialog_string
+.import DrawDialogueString
 
 .export DrawImageRect
 .export DrawPalette
@@ -85,8 +87,9 @@
 .export LoadStandardMap, LoadMapObjects
 .export DrawMapObjectsNoUpdate, ShowDialogueBox
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawDialogueString, DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
+.export DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
+.export SetPPUAddrToDest
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1430,210 +1433,7 @@ WaitVBlank_NoSprites:
     STA OAMDMA                 ; then do sprite DMA (hide all sprites)
     RTS                       ; exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Dialogue String [$DB64 :: 0x3DB74]
-;;
-;;    Draws a string to the dialogue.  This is similar to DrawComplexString, however
-;;  unlike DrawComplexString, this routine is written to handle the drawing crossing an
-;;  NT boundary.  The control codes are also a bit different (and there aren't near as many of them)
-;;
-;;  IN:             A = dialogue string ID to draw
-;;       box_x, box_y = name might be confusing, these are actually the coords at which
-;;                        to start string drawing (IE:  they're not really the coords of the
-;;                        containing box).
-;;         dlg_itemid = item ID for use with the $02 control code (see below)
-;;
-;;    tmp+7 is used as a "precautionary counter" that decrements every time a DTE code is
-;;  used.  Once it expires, the game stalls for a frame.  Since all this drawing is done
-;;  while the PPU is on, this helps ensure that writes don't spill out past the end of VBlank.
-;;  A stall also occurs on line breaks.
-;;
-;;  Byte codes are as follows:
-;;
-;;  $00 = null terminator (marks end of string)
-;;  $01 = line break (only seems to be used in the treasure chest "You Found..." dialogue)
-;;  $02 = control code to draw an item name (item ID whose name to draw is in dlg_itemid)
-;;  $03 = draw the name of the lead character, then stop string drawing (I believe this is BUGGED)
-;;  $05 = line break
-;;  $04,$06-19 = unused, but defaults to a line break
-;;  $1A-79 = DTE codes
-;;  $7A-FF = single tile output
-;;
-;;    I don't think code $03 is used anywhere in the game.  It's a little bizarre... maybe it was used
-;;  in the J version?
-;;
-;;    Control code $02 is used for the treasure chest text in order to print the item you found.
-;;  the item found is stored in dlg_itemid prior to this routine being called.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawDialogueString_Done:
-    CALL SetSMScroll       ; when done drawing, simply reset the scroll
-    RTS                   ; and exit
-
-DrawDialogueString:
-
-    FARCALL SeekDialogStringPtr
-
-    LDA #BANK_DIALOGUE
-    STA cur_bank          ; set cur_bank to bank containing dialogue text (for Music_Play)
-
-    LDA #10
-    STA tmp+7             ;  set precautionary counter to 10
-
-    CALL WaitForVBlank   ; wait for VBlank
-
-    LDA box_x             ; copy placement coords (box_*) to dest coords (dest_*)
-    STA dest_x
-    LDA box_y
-    STA dest_y
-    CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-
-    @Loop:
-    LDY #0
-    JSR Impl_FARBYTE
-    BEQ DrawDialogueString_Done  ; if it's zero (null terminator), exit
-
-    INC text_ptr                 ; otherwise increment the pointer
-    BNE :+
-        INC text_ptr+1             ;   inc high byte if low byte wrapped
-    :   
-    CMP #$1A
-    BCC @ControlCode     ; if the byte is < $1A, it's a control code
-
-    CMP #$7A
-    BCC @DTE             ; if $1A-$79, it's a DTE code
-
-    @SingleTile:
-    
-    STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
-
-    LDA dest_x           ; increment the dest address by 1
-    CLC
-    ADC #1
-    AND #$3F             ; and mask it with $3F so it wraps around both NTs appropriately
-    STA dest_x           ; then write back
-
-    AND #$1F             ; then mask with $1F.  If result is zero, it means we're crossing an NT boundary
-    BNE @Loop            ;  if not zero, just continue looping
-        CALL SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
-        JUMP @Loop             ;  then jump back to loop
-
-
-    @DTE:                 ; if byte fetched was a DTE code ($1A-79)
-    SEC
-    SBC #$1A           ; subtract $1A to make the DTE code zero based
-    TAX                ; put in X for indexing
-    PHA                ; and push it to back it up (will need it again later)
-
-    LDA lut_DTE1, X    ; get the first byte in the DTE pair
-    STA PPUDATA          ; and draw it
-    CALL @IncDest       ; update PPU dest address
-
-    PLA                ; restore DTE code
-    TAX                ; and put it in X again (X was corrupted by @IncDest call)
-    LDA lut_DTE2, X    ; get second byte in DTE pair
-    STA PPUDATA          ; draw it
-    CALL @IncDest       ; and update PPU address again
-
-    DEC tmp+7            ; decrement cautionary counter
-    BNE @Loop            ; if it hasn't expired yet, keep drawing.  Otherwise...
-
-    CALL SetSMScroll      ; we could be running out of VBlank time.  So set the scroll
-    FARCALL MusicPlay    ; keep music playing
-    CALL WaitForVBlank  ; then wait another frame before continuing drawing
-
-    LDA #10
-    STA tmp+7            ; reload precautionary counter
-    CALL SetPPUAddrToDest ; and set PPU address appropriately
-    JUMP @Loop            ; then resume drawing
-
-    @ControlCode:          ; if the byte fetched was a control code ($01-19)
-    CMP #$03             ; was the code $03?
-    BNE @Code_Not03      ; if not jump ahead
-
-    @PrintName:            ; Control Code $03 = prints the name of the lead character
-    LDA ch_name          ; copy lead character's name to format buffer
-    STA format_buf+3
-    LDA ch_name+1        ; note that this does not back up the original string, which means
-    STA format_buf+4     ; after this name is drawn, dialogue printing stops!  I don't know if
-    LDA ch_name+2        ; that was intentional or not -- I don't see why it would be.  Therefore
-    STA format_buf+5     ; I would say this is BUGGED, even though I don't think
-    LDA ch_name+3        ; it's ever used in the game
-    STA format_buf+6
-
-    LDA #<(format_buf+3) ; make text_ptr point to the format buffer
-    STA text_ptr
-    LDA #>(format_buf+3)
-    STA text_ptr+1
-
-    JUMP @Loop            ; and continue printing (to print the name, then quit)
-
-    @Code_Not03:           ; Control codes other than $03
-    CMP #$02             ; was code $02
-    BNE @Code_Not02_03   ; if not, jump ahead
-
-    @PrintItemName:        ; Control Code $02 = prints the ID of the item stored in dlg_itemid (used for treasure chests)
-    LDA text_ptr         ; push the text pointer to the stack to back it up
-    PHA
-    LDA text_ptr+1
-    PHA
-
-    LDA dlg_itemid       ; get the item ID whose name we're to print
-
-    FARCALL SeekItemStringPtr
-
-    STA text_ptr+1
-    CALL @Loop            ; once pointer is loaded, CALL to the @Loop to draw the item name
-
-    PLA                  ; then restore the original string pointer by pulling it from the stack
-    STA text_ptr+1
-    PLA
-    STA text_ptr
-
-    JUMP @Loop            ; and continue drawing the rest of the string
-
-    @Code_Not02_03:          ; all other control codes besides 02 and 03
-    CALL @LineBreak         ; just do a line break
-    JUMP @Loop              ; then continue
-
-
-    @IncDest:                  ; called by DTE bytes to increment the dest address by 1 column
-    LDA dest_x             ; add 1 to the X coord
-    CLC
-    ADC #1
-    AND #$3F               ; AND with $3F to wrap around NT boundaries properly
-    STA dest_x
-
-    AND #$1F               ; then check the low 5 bits.  If they're zero, we just crossed an NT boundary
-    BNE :+
-        JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
-    :   
-    RTS                    ; then return
-
-    @LineBreak:                ; wait a frame between each line break to help ensure we stay in VBlank
-    CALL SetSMScroll        ; set the scroll
-    FARCALL MusicPlay      ; and keep music playing
-
-    LDA #8
-    STA tmp+7              ; reload precautionary counter (but with only 8 instead of 10?)
-
-    CALL WaitForVBlank    ; then wait for VBlank
-
-    LDA box_x              ; reset dest X coord to given placement coord
-    STA dest_x
-
-    LDA dest_y             ; then add 1 to the dest Y coord to move it a line down
-    CLC
-    ADC #1
-    CMP #30                ; but wrap from 29->0  because there are only 30 rows on the nametable
-    BCC :+
-        SBC #30
-    :   
-    STA dest_y
-
-    NOJUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2213,31 +2013,6 @@ lut_EquipStringPositions:
   
   .byte $0A, $19,       $14, $19        ; character 3
   .byte $0A, $1B,       $14, $1B
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DTE table   [$F050 :: 0x3F060]
-;;
-;;  first table is the 2nd character in a DTE pair
-;;  second table is the 1st character in a DTE pair
-;;
-;;  don't ask me why it's reversed
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lut_DTE2:
-  .byte $FF,$B7,$AB,$A8,  $FF,$B1,$A4,$FF,  $B1,$A8,$B6,$B5,  $B8,$FF,$B2,$FF
-  .byte $AA,$A4,$B6,$AC,  $FF,$B5,$B6,$A5,  $A8,$BA,$A8,$B5,  $B2,$B7,$A6,$B7
-  .byte $B1,$A7,$B1,$AC,  $A8,$B6,$A7,$A4,  $B0,$A9,$FF,$A8,  $BA,$FF,$A8,$B0
-  .byte $92,$FF,$A9,$B2,  $AF,$B3,$BC,$A4,  $8A,$A8,$FF,$B5,  $B2,$AC,$FF,$AB
-  .byte $A8,$B7,$AC,$A4,  $A6,$AF,$A8,$AF,  $A8,$B6,$FF,$AF,  $A8,$A7,$AC,$C3
-
-lut_DTE1:
-  .byte $A8,$FF,$B7,$AB,  $B6,$AC,$FF,$B7,  $A4,$B5,$FF,$A8,  $B2,$A7,$B7,$B1
-  .byte $B1,$A8,$A8,$FF,  $B2,$A4,$AC,$FF,  $B9,$FF,$B0,$B2,  $FF,$B6,$FF,$A4
-  .byte $A8,$B1,$B2,$AB,  $B6,$A4,$A8,$AB,  $FF,$FF,$B5,$AF,  $B2,$AA,$A6,$B2
-  .byte $90,$BC,$B2,$B5,  $AF,$FF,$FF,$A6,  $96,$B7,$A9,$B8,  $BC,$B7,$AF,$FF
-  .byte $B1,$AC,$B5,$BA,  $A4,$A4,$BA,$AC,  $A5,$B5,$B8,$FF,  $AA,$FF,$AF,$C3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

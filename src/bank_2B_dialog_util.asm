@@ -113,7 +113,7 @@ DrawDialogueBox:
     STA menustall       ;  doesn't check it
 
     PLA                      ; then pull the dialogue text ID that was pushed at the start of the routine
-    JUMP DrawDialogueString   ; draw it, then exit!
+    FARJUMP DrawDialogueString   ; draw it, then exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
