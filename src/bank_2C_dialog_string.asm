@@ -149,7 +149,7 @@ DrawDialogueString:
     STA dest_x
     LDA box_y
     STA dest_y
-    FARCALL SetPPUAddrToDest  ; then set the PPU address appropriately
+    CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
     @Loop:
     LDY #0
@@ -178,7 +178,7 @@ DrawDialogueString:
 
     AND #$1F             ; then mask with $1F.  If result is zero, it means we're crossing an NT boundary
     BNE @Loop            ;  if not zero, just continue looping
-        FARCALL SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
+        CALL SetPPUAddrToDest  ;  otherwise if zero, PPU address needs to be reset (NT boundary crossed)
         JUMP @Loop             ;  then jump back to loop
 
 
@@ -207,7 +207,7 @@ DrawDialogueString:
 
     LDA #10
     STA tmp+7            ; reload precautionary counter
-    FARCALL SetPPUAddrToDest ; and set PPU address appropriately
+    CALL SetPPUAddrToDest ; and set PPU address appropriately
     JUMP @Loop            ; then resume drawing
 
     @ControlCode:          ; if the byte fetched was a control code ($01-19)
@@ -269,7 +269,7 @@ DrawDialogueString:
 
     AND #$1F               ; then check the low 5 bits.  If they're zero, we just crossed an NT boundary
     BNE :+
-        FARJUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
+        JUMP SetPPUAddrToDest ; if crossed an NT boundary, the PPU address needs to be changed
     :   
     RTS                    ; then return
 
@@ -294,4 +294,4 @@ DrawDialogueString:
     :   
     STA dest_y
 
-    FARJUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing
+    JUMP SetPPUAddrToDest   ; then set the PPU address and continue string drawing

@@ -432,7 +432,7 @@ EraseBox:
     SEC
     SBC #$01           ;  and write that to dest_y
     STA dest_y         ;  this puts dest_y to the last row
-    FARCALL CoordToNTAddr  ; fill ppu_dest appropriately
+    CALL CoordToNTAddr  ; fill ppu_dest appropriately
     LDA box_ht         ; get the box height
     STA tmp+11         ; and put it in temp RAM (will be down counter for loop)
 
