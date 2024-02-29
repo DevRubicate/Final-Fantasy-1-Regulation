@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import PrepRowCol, WaitForVBlank, DrawMapRowCol, SetSMScroll, MusicPlay, PrepAttributePos, PrepDialogueBoxAttr, DrawMapAttributes
+.import PrepRowCol, WaitForVBlank, DrawMapRowCol, SetSMScroll, MusicPlay, PrepAttributePos, DrawMapAttributes
 .import DrawDialogueString, UpdateJoy, DialogueBox_Sfx, CoordToNTAddr, WaitScanline, Dialogue_CoverSprites_VBl
 
 .export DrawDialogueBox, PrepDialogueBoxRow, ShowDialogueBox, EraseBox, DialogueBox_Frame
@@ -538,3 +538,23 @@ DialogueBox_Frame:
     LDA soft2000                   ; so get the normal "onscreen" NT
     STA PPUCTRL                      ; and set it
     FARJUMP MusicPlay       ; then call the Music Play routine and exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Prep Dialogue Box Attributes  [$D53E :: 0x3D54E]
+;;
+;;    Prepares the draw_buf_attr for the dialogue box.  Note that
+;;  the map row must've been prepped before this -- as this is drawn
+;;  over it, and it doesn't change all bytes in the buffer (+0 and +$F
+;;  remain unchanged)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PrepDialogueBoxAttr:
+    LDX #$0E               ; Loop from $E to 1
+    LDA #$FF               ; and set attributes to use palette set 3
+  @Loop:
+      STA draw_buf_attr, X
+      DEX
+      BNE @Loop            ; loop until X=0 (do not change draw_buf_attr+0!)
+    RTS                    ; then exit

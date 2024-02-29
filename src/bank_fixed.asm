@@ -25,7 +25,7 @@
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr
 
 ; bank_10_overworld_object
-.import MapObjectMove, AimMapObjDown
+.import MapObjectMove, AimMapObjDown, LoadMapObjects
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
 ; bank_18_screen_wipe
@@ -84,13 +84,11 @@
 .export CoordToNTAddr
 .export DrawMapPalette
 .export WaitVBlank_NoSprites
-.export LoadStandardMap, LoadMapObjects
 .export DrawMapObjectsNoUpdate
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawMapRowCol, PrepDialogueBoxAttr
+.export DrawMapRowCol
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
-.export LoadOWMapRow, ScrollUpOneRow
-.export SetPPUAddrToDest
+.export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -801,25 +799,7 @@ DrawMapRowCol:
     BCC @ColLoop_R   ;  once we have... 
     RTS              ;  RTS out!  (full column drawn)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Prep Dialogue Box Attributes  [$D53E :: 0x3D54E]
-;;
-;;    Prepares the draw_buf_attr for the dialogue box.  Note that
-;;  the map row must've been prepped before this -- as this is drawn
-;;  over it, and it doesn't change all bytes in the buffer (+0 and +$F
-;;  remain unchanged)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrepDialogueBoxAttr:
-    LDX #$0E               ; Loop from $E to 1
-    LDA #$FF               ; and set attributes to use palette set 3
-  @Loop:
-      STA draw_buf_attr, X
-      DEX
-      BNE @Loop            ; loop until X=0 (do not change draw_buf_attr+0!)
-    RTS                    ; then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1078,151 +1058,6 @@ DrawMapObjectsNoUpdate:
     CMP #$F0              ; loop until all 15 objects checked
     BCC @Loop
     RTS                    ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Map Objects  [$E7EB :: 0x3E7FB]
-;;
-;;    This loads all objects for the current standard map.
-;;
-;;    Each map has $30 bytes of object information.  $0F objects per map, 3 bytes
-;;  per object (last 3 bytes are padding and go unused):
-;;   byte 0 = object ID
-;;   byte 1 = object X coord and behavior flags
-;;   byte 2 = object Y coord
-;;
-;;    Objects get loaded to the 'mapobj' buffer.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadMapObjects:
-    LDA #<mapobj
-    STA tmp+14
-    LDA #>mapobj
-    STA tmp+15      ; set dest pointer to point to 'mapobj'
-
-    LDA #$0F        ; set loop counter to $0F ($0F objects to load per map)
-    STA tmp+11
-
-    LDA #0
-    STA tmp+13      ; zero high byte of source pointer
-    LDA cur_map     ; get current map
-    ASL A           ;  all this shifting and mathmatics is to multiply by $30
-    ROL tmp+13      ;    ($30 bytes per map)
-    ASL A           ;  This is done by shifting to get *$20 and *$10, then adding them together
-    ROL tmp+13
-    ASL A
-    ROL tmp+13
-    ASL A
-    ROL tmp+13
-    LDY tmp+13
-    STA tmp+12
-    ASL tmp+12
-    ROL tmp+13
-    CLC
-    ADC tmp+12
-    STA tmp+12
-    TYA
-    ADC tmp+13            ;  here, we have "cur_map * $30"
-    ADC #>lut_MapObjects  ;  add the pointer to the LUT to the high byte to get the final source pointer
-    STA tmp+13            ;  tmp+12 now points to "lut_MapObjects + (cur_map * $30)"
-
-    LDA #BANK_OBJINFO     ; swap to the bank containing map object information
-    CALL SwapPRG
-
-  @Loop:
-     LDY #0
-     LDA (tmp+12), Y          ; read the object ID from source buffer
-     CALL LoadSingleMapObject  ; load the object
-
-     LDA tmp+12           ; add 3 to the source pointer to look at the next map object
-     CLC
-     ADC #3
-     STA tmp+12
-     LDA tmp+13
-     ADC #0
-     STA tmp+13
-
-     DEC tmp+11           ; decrement loop counter
-     BNE @Loop            ; and loop until all $F objects have been loaded
-
-    RTS        ; then exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Single Map Object [$E83B :: 0x3E84B]
-;;
-;;    Loads a single map object from given source buffer
-;;
-;;  IN:       A = ID of this map object
-;;       tmp+12 = pointer to source map data
-;;       tmp+14 = pointer to dest buffer (to load object data to).  Typically points somewhere in 'mapobj'
-;;
-;;    tmp+14 is incremented after this routine is called so that the next object will be
-;;  loaded into the next spot in RAM.  Source pointer is not incremented, however.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadSingleMapObject:
-    LDY #<mapobj_rawid
-    STA (tmp+14), Y         ; record this object's raw ID
-
-    LDY #0                  ; reset Y to zero so we can start copying the rest of the object info
-    TAX                     ; put object ID in X for indexing
-    LDA game_flags, X       ; get the object's visibility flag
-    AND #$01                ; isolate it
-    BEQ :+                  ;   if the object is invisible, replace the ID with zero (no object)
-      TXA                   ;   otherwise, restore the raw ID into A (unchanged)
-    :   
-    STA (tmp+14), Y         ; record raw ID (or 0 if sprite is invisible) as the 'to-use' object ID
-
-    INY                     ; inc Y to look at next source byte
-    LDA (tmp+12), Y         ; get next source byte (X coord and behavior flags)
-    STA tmp+6               ; back it up
-    AND #$C0                ; isolate the behavior flags
-    STA (tmp+14), Y         ; record them
-
-    INY                     ; inc Y to look at next source byte
-    LDA (tmp+12), Y         ; get next source byte (Y coord)
-    STA tmp+7               ; back it up
-    LDA tmp+6               ; reload backed up X coord
-    AND #$3F                ; mask out the low bits (remove behavior flags, wrap to 64 tiles)
-    STA (tmp+14), Y         ; and record it as this object's physical X position
-    LDY #<mapobj_gfxX
-    STA (tmp+14), Y         ;  and as the object's graphical X position
-
-    LDA tmp+7               ; restore backed up Y coord
-    AND #$3F                ; isolate low bits (wrap to 64 tiles)
-    LDY #<mapobj_physY
-    STA (tmp+14), Y         ; record as physical Y coord
-    LDY #<mapobj_gfxY
-    STA (tmp+14), Y         ; and graphical Y coord
-
-    LDY #<mapobj_ctrX       ; zero movement counters and speed vars
-    LDA #0
-    STA (tmp+14), Y
-    INY
-    STA (tmp+14), Y
-    INY
-    STA (tmp+14), Y
-    INY
-    STA (tmp+14), Y
-
-    LDY #<mapobj_movectr    ; zero some other stuff
-    STA (tmp+14), Y
-    INY
-    STA (tmp+14), Y
-    INY
-    STA (tmp+14), Y
-
-    FARCALL AimMapObjDown
-
-    LDA tmp+14              ; increment the dest pointer to point to the next object's space in RAM
-    CLC
-    ADC #$10
-    STA tmp+14
-
-    RTS                     ; and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
