@@ -3167,8 +3167,7 @@ ReadAttributesFromPPU:
     LDA #$40                ; read $40 bytes
     STA btltmp+8
     
-    JUMP Battle_ReadPPUData    ; do the reading, and exit
-    
+    FARJUMP Battle_ReadPPUData    ; do the reading, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

@@ -2,11 +2,11 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, DrawPalette, MusicPlay
+.import WaitForVBlank, DrawPalette, MusicPlay, SetBattlePPUAddr
 
 .export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
-.export PlaySFX_Error, UpdateJoy, PrepAttributePos
+.export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData
 
 
 
@@ -658,4 +658,34 @@ PrepAttributePos:
        BCS @Exit
        JUMP @Loop
     @Exit: 
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Battle_ReadPPUData  [$F268 :: 0x3F278]
+;;
+;;    Reads a given number of bytes from PPU memory.
+;;
+;;  input:
+;;     btltmp+4,5 = pointer to write data to
+;;     btltmp+6,7 = the PPU address to read from
+;;     btltmp+8   = the number of bytes to read
+;;
+;;  This routine will swap back to the battle_bank prior to exiting
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+Battle_ReadPPUData:
+    CALL WaitForVBlank         ; Wait for VBlank
+    CALL SetBattlePPUAddr        ; Set given PPU Address to read from
+    LDA PPUDATA                   ; Throw away buffered byte
+    LDY #$00
+    LDX btltmp+8                ; btltmp+8 is number of bytes to read
+    @Loop:
+        LDA PPUDATA
+        STA (btltmp+4), Y           ; write to (btltmp+4)
+        INY
+        DEX
+        BNE @Loop
+      
     RTS

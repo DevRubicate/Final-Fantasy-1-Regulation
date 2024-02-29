@@ -73,7 +73,7 @@
 .export DrawPalette
 .export WaitForVBlank
 .export SwapBtlTmpBytes, FormatBattleString, DrawBattleMagicBox
-.export BattleWaitForVBlank, Battle_WritePPUData, Battle_ReadPPUData
+.export BattleWaitForVBlank, Battle_WritePPUData
 .export DrawBattleItemBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump
 .export Impl_FARCALL, Impl_FARJUMP,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
@@ -85,7 +85,7 @@
 .export DrawMapPalette
 .export WaitVBlank_NoSprites
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawMapRowCol
+.export DrawMapRowCol, SetBattlePPUAddr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 
@@ -1032,9 +1032,6 @@ lut_NTRowStartHi:
   .byte $22,$22,$22,$22,$22,$22,$22,$22
   .byte $23,$23,$23,$23,$23,$23,$23,$23
 
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  CHR Row Loading To Given Address 'A'  [$E95A :: 0x3E96A]
@@ -1091,7 +1088,6 @@ CHRLoad_Cont:
     DEX               ; and decrement our row counter (256 bytes = a full row of tiles)
     BNE CHRLoad_Cont  ; if we've loaded all requested rows, exit.  Otherwise continue loading
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1152,36 +1148,7 @@ Battle_WritePPUData:
     STA PPUSCROLL
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_ReadPPUData  [$F268 :: 0x3F278]
-;;
-;;    Reads a given number of bytes from PPU memory.
-;;
-;;  input:
-;;     btltmp+4,5 = pointer to write data to
-;;     btltmp+6,7 = the PPU address to read from
-;;     btltmp+8   = the number of bytes to read
-;;
-;;  This routine will swap back to the battle_bank prior to exiting
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-Battle_ReadPPUData:
-    CALL WaitForVBlank         ; Wait for VBlank
-    CALL SetBattlePPUAddr        ; Set given PPU Address to read from
-    LDA PPUDATA                   ; Throw away buffered byte
-    LDY #$00
-    LDX btltmp+8                ; btltmp+8 is number of bytes to read
-    @Loop:
-        LDA PPUDATA
-        STA (btltmp+4), Y           ; write to (btltmp+4)
-        INY
-        DEX
-        BNE @Loop
-      
-    LDA battle_bank             ; swap back to desired battle bank, then exit
-    JUMP SwapPRG
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
