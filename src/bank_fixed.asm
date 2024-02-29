@@ -88,7 +88,7 @@
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
 .export DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
-.export DialogueBox_Frame, LoadOWMapRow, PrepRowCol, ScrollUpOneRow
+.export LoadOWMapRow, PrepRowCol, ScrollUpOneRow
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -131,63 +131,6 @@ WaitScanline:
     LDA #0           ; +2
     LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
     RTS              ; +6
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DialogueBox_Frame  [$D6A1 :: 0x3D6B1]
-;;
-;;    Does frame work related to drawing the dialogue box.  This mainly involves timing the screen
-;;  splits required to make the dialogue box visible.
-;;
-;;  IN:  tmp+10 = "offscreen" NT (soft2000 XOR #$01) -- NT containing dialogue box
-;;       tmp+11 = number of scanlines (-8) the dialogue box is to be visible.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DialogueBox_Frame:
-    FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
-    LDA #>oam          ; do sprite DMA
-    STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
-
-    LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
-    STA PPUCTRL
-
-        ; now the game loops to burn VBlank time, so that it can start doing raster effects to split the screen
-
-    LDY #$FC           ; count Y down from $FC
-  @BurnVBlankLoop:     ; On entry to this loop, game is about 565 cycles into VBlank)
-    DEY                    ; 2 cycles
-    NOP                    ; +2=4
-    NOP                    ; +2=6
-    NOP                    ; +2=8
-    BNE @BurnVBlankLoop    ; +3=11   (11*$FC)-1 = 2771 cycles burned in loop.
-                           ;         2771 + 565 = 3336 cycles since VBl start
-                           ; First visible rendered scanline starts 2387 cycles into VBlank
-                           ; 3336 - 2387 = 949 cycles into rendering
-                           ; 949 / 113.6667 = currently on scanline ~8.3
-       PAGECHECK @BurnVBlankLoop
-
-        ; here, thanks to above loop, the game is ~8.3 scanlines into rendering.  Since scroll changes
-        ;  are not visible until the end of the scanline, you can round up and say that we're on scanline 9
-        ;  since that'll be when scroll changes are first visible.
-
-    LDX tmp+11             ; get the height of the box
-    DEX                    ; decrement it BEFORE burning scanlines (since we're on scanline 9, this would
-                           ;   mean the last visible dialogue box line is 8+N  -- where N is tmp+11)
-
-  @ScanlineLoop:
-    CALL WaitScanline       ; burn the desired number of scanlines
-    DEX
-    BNE @ScanlineLoop
-
-       PAGECHECK @ScanlineLoop
-
-      ; now... the dialogue box has been visible for 8+N scanlines, and we're to its bottom line
-      ; so we don't want it to be visible any more for the rest of this frame
-
-    LDA soft2000                   ; so get the normal "onscreen" NT
-    STA PPUCTRL                      ; and set it
-    FARJUMP MusicPlay       ; then call the Music Play routine and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
