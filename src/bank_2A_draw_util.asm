@@ -34,7 +34,7 @@ DrawBox:
     STA dest_x
     LDA box_y
     STA dest_y
-    CALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
+    FARCALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
     LDA box_wd        ; Get width of box
     SEC
     SBC #$02          ; subtract 2 to get width of "innards" (minus left and right borders)

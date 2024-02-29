@@ -15,7 +15,7 @@ DrawComplexString_Exit:
 
 
 DrawComplexString_New:
-    CALL CoordToNTAddr
+    FARCALL CoordToNTAddr
 
     @StallAndDraw:
 
