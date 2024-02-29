@@ -1188,17 +1188,17 @@ SetPPUAddr_XA:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PlayerBox:
-    STA a:box_x        ; record A as X coord
-    STX a:box_y        ; record X as Y coord
+    STA box_x        ; record A as X coord
+    STX box_y        ; record X as Y coord
 
     PHA                ; then back up A and X
     TXA
     PHA
 
     LDX #6
-    STX a:box_wd       ; set width to 6
+    STX box_wd       ; set width to 6
     INX
-    STX a:box_ht       ; and height to 7
+    STX box_ht       ; and height to 7
 
     CALL Battle_PPUOff  ; turn off the PPU
     FARCALL DrawBox        ; draw the box
@@ -1218,9 +1218,9 @@ Battle_PlayerBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleBox_vAXY:
-    STA a:box_y         ; just dump A,X,Y to box_y, box_wd, and box_ht
-    STX a:box_wd
-    STY a:box_ht
+    STA box_y         ; just dump A,X,Y to box_y, box_wd, and box_ht
+    STX box_wd
+    STY box_ht
     CALL Battle_PPUOff   ; turn the PPU off
     FARJUMP DrawBox         ; then draw the box
 
@@ -1234,7 +1234,7 @@ BattleBox_vAXY:
 
 Battle_PPUOff:
     LDA #0
-    STA a:soft2000     ; clear soft2000
+    STA soft2000     ; clear soft2000
     STA PPUCTRL          ; disable NMIs
     STA PPUMASK          ; and turn off PPU
     RTS
@@ -1249,7 +1249,7 @@ Battle_PPUOff:
 
 BattleWaitForVBlank:
     LDA btl_soft2000
-    STA a:soft2000
+    STA soft2000
     JUMP WaitForVBlank
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
