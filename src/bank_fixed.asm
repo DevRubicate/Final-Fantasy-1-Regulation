@@ -63,7 +63,8 @@
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawBattle_Division, DrawCombatBox
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
+.import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -75,7 +76,7 @@
 .export DrawPalette
 .export WaitForVBlank
 .export SwapBtlTmpBytes, FormatBattleString, DrawBattleMagicBox
-.export BattleWaitForVBlank, Battle_WritePPUData
+.export Battle_WritePPUData
 .export DrawBattleItemBox, UndrawNBattleBlocks, DrawCommandBox, DrawRosterBox
 .export BattleCrossPageJump
 .export Impl_FARCALL, Impl_FARJUMP,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
@@ -86,8 +87,8 @@
 .export CoordToNTAddr
 .export DrawMapPalette
 .export WaitVBlank_NoSprites
-.export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawMapRowCol, SetBattlePPUAddr
+.export Battle_PlayerBox, SetPPUAddr_XA
+.export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 
@@ -1200,7 +1201,7 @@ Battle_PlayerBox:
     INX
     STX box_ht       ; and height to 7
 
-    CALL Battle_PPUOff  ; turn off the PPU
+    FARCALL Battle_PPUOff  ; turn off the PPU
     FARCALL DrawBox        ; draw the box
 
     PLA                ; restore backed up A, X
@@ -1208,97 +1209,6 @@ Battle_PlayerBox:
     PLA
 
     RTS                ; and exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_Box_vAXY   [$F3E2 :: 0x3F3F2]
-;;
-;;     Draws a box at coords v,A (where 'v' is box_x) and with dims X,Y
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleBox_vAXY:
-    STA box_y         ; just dump A,X,Y to box_y, box_wd, and box_ht
-    STX box_wd
-    STY box_ht
-    CALL Battle_PPUOff   ; turn the PPU off
-    FARJUMP DrawBox         ; then draw the box
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_PPUOff  [$F3F1 :: 0x3F401]
-;;
-;;    Used to turn the PPU off for Battles.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Battle_PPUOff:
-    LDA #0
-    STA soft2000     ; clear soft2000
-    STA PPUCTRL          ; disable NMIs
-    STA PPUMASK          ; and turn off PPU
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleWaitForVBlank  [$F4A1 :: 0x3F4B1]
-;;
-;;  Identical to WaitForVBlank, but uses btl_soft2000 instead of the regular soft2000
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleWaitForVBlank:
-    LDA btl_soft2000
-    STA soft2000
-    JUMP WaitForVBlank
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleDrawMessageBuffer  [$F4AA :: 0x3F4BA]
-;;
-;;  Takes 'btl_msgbuffer' and actually draws it to the PPU.
-;;
-;;  This process takes 12 frames, as it draws 1 row for each frame.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleDrawMessageBuffer:
-    LDA #<$2240     ; set target PPU address to $2240
-    STA btl_tmpvar3         ; This has the start of the bottom row of the bounding box for 
-    LDA #>$2240     ;  enemies
-    STA btl_tmpvar4
-    
-    LDA #<btl_msgbuffer     ; set source pointer to point to message data buffer
-    STA btl_varI
-    LDA #>btl_msgbuffer
-    STA btl_varJ
-    
-    LDA #$0C
-    STA tmp_68b9               ; loop down-counter ($0C rows)
-  @Loop:
-      CALL Battle_DrawMessageRow_VBlank  ; draw a row
-      
-      LDA btl_tmpvar1           ; add $20 to the source pointer to draw next row
-      CLC
-      ADC #$20
-      STA btl_varI
-      LDA btl_varJ
-      ADC #$00
-      STA btl_varJ
-      
-      LDA btl_tmpvar3           ; add $20 to the target PPU address
-      CLC
-      ADC #$20
-      STA btl_tmpvar3
-      LDA btl_tmpvar4
-      ADC #$00
-      STA btl_tmpvar4
-      
-      FARCALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio (since we did a frame), and reset scroll
-      
-      DEC tmp_68b9         ; loop for each row
-      BNE @Loop
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1314,7 +1224,7 @@ BattleDrawMessageBuffer:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_DrawMessageRow_VBlank:
-    CALL BattleWaitForVBlank
+    FARCALL BattleWaitForVBlank
     
 Battle_DrawMessageRow:
     LDA btl_tmpvar4
@@ -1627,7 +1537,7 @@ DrawBattleBoxAndText:
 
 DrawBlockBuffer:
     CALL DrawBattleBoxAndText        ; Render blocks to the msg buffer
-    CALL BattleDrawMessageBuffer     ; Draw message buffer to the PPU
+    FARCALL BattleDrawMessageBuffer     ; Draw message buffer to the PPU
     
     INC btl_msgdraw_blockcount      ; Count the number of blocks we've drawn
     

@@ -1107,7 +1107,7 @@ BattleUpdatePPU:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleFrame:
-    CALL BattleWaitForVBlank   ; Wait for VBlank 
+    FARCALL BattleWaitForVBlank   ; Wait for VBlank 
     LDA PPUSTATUS
     LDA #>oam
     STA OAMDMA                   ; Do OAM DMA
@@ -5070,7 +5070,7 @@ UpdateVariablePalette:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoFrame_UpdatePalette:
-    CALL BattleWaitForVBlank       ; wait for VBlank
+    FARCALL BattleWaitForVBlank       ; wait for VBlank
     
     LDA #$3F            ; set PPU addr to point to palettes
     STA PPUADDR
