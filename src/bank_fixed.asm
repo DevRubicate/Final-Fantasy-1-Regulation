@@ -35,7 +35,7 @@
 ; bank_19_menu
 .import MenuCondStall
 ; bank_1A_string
-.import DrawComplexString_New, DrawItemBox, SeekItemStringAddress, SeekItemStringPtr
+.import DrawComplexString_New, DrawItemBox, SeekItemStringAddress, SeekItemStringPtr, SeekItemStringPtrForEquip
 ; bank_1B_map_chr
 .import LoadOWBGCHR
 ; bank_1C_mapman_chr
@@ -1928,9 +1928,6 @@ DrawEquipMenuStrings:
     LDA lut_EquipStringPositions+1, Y
     STA dest_y
 
-    LDA #BANK_ITEMS
-    CALL SwapPRG                ; swap to the bank containing the item strings
-
     LDA #$FF                     ; fill first 2 bytes of the string with blank spaces (tile FF)
     STA str_buf+$10              ; later, these spaces will be replaced with "E-" if the item
     STA str_buf+$11              ;  is currently equipped.
@@ -1955,16 +1952,12 @@ DrawEquipMenuStrings:
     CLC                          ; add the weapon/armor offset to the equipment ID.
     ADC draweq_stradd            ;  now A is the proper item ID
 
-    ASL A                        ; double it
-    TAX                          ; and stuff it in X to load up the pointer
-    LDA lut_ItemNamePtrTbl, X    ; fetch the pointer and store it to (tmp)
-    STA tmp
-    LDA lut_ItemNamePtrTbl+1, X
-    STA tmp+1
+    FARCALL SeekItemStringPtrForEquip
 
     LDY #$06                     ; copy 7 characters from the item name (doesn't look for null termination)
     @LoadNameLoop:
-        LDA (tmp), Y               ; load a character in the string
+        LDA #(BANK_ITEMS * 2) | %10000000 ; #BANK_ITEMS
+        JSR Impl_FARBYTE2          ; load a character in the string        
         STA str_buf+$12, Y         ; and write it to our string buffer.  +2 because the first 2 bytes are the equip state
         DEY                        ; (that "E-" if equipped).  Then decrement Y
         BPL @LoadNameLoop          ; and loop until it wraps (7 iterations)
@@ -1980,6 +1973,7 @@ DrawEquipMenuStrings:
     @NotEquipped:
     LDA #<(str_buf+$10)          ; finally load the low byte of our text pointer
     STA text_ptr                 ;  why this isn't done above with the high byte is beyond me
+
     FARCALL DrawComplexString_New; then draw the complex string
 
     PLA                          ; pull the main loop counter
@@ -1988,10 +1982,6 @@ DrawEquipMenuStrings:
     CMP #16                      ; and loop until it reaches 16 (16 equipment names to draw)
     BCC @MainLoop
 
-    LDA #BANK_MENUS              ; once all names are drawn
-    STA cur_bank                 ; set cur and ret banks (not necessary?) to the MENUS bank
-    STA ret_bank
-    CALL SwapPRG                ; then swap back to that bank
     RTS                          ; and return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

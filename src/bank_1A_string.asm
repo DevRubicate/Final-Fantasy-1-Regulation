@@ -4,7 +4,7 @@
 
 .import Impl_FARBYTE, Impl_FARBYTE2, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
 
-.export DrawComplexString_New, DrawItemBox, SeekItemStringPtr
+.export DrawComplexString_New, DrawItemBox, SeekItemStringPtr, SeekItemStringPtrForEquip
 
 
 DrawComplexString_Exit:
@@ -1762,4 +1762,13 @@ SeekItemStringPtr:
     LDA LUT_ItemNamePtrTbl+$101, X
 
     @ItemPtrLoaded:
+    RTS
+
+SeekItemStringPtrForEquip:
+    ASL A                ; double it (2 bytes per pointer)
+    TAX                  ; and put in X for indexing
+    LDA LUT_ItemNamePtrTbl, X    ; fetch the pointer and store it to (tmp)
+    STA tmp
+    LDA LUT_ItemNamePtrTbl+1, X
+    STA tmp+1
     RTS
