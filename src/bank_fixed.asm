@@ -25,7 +25,7 @@
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr
 
 ; bank_10_overworld_object
-.import MapObjectMove, AimMapObjDown, LoadMapObjects
+.import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
 ; bank_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
 ; bank_18_screen_wipe
@@ -84,7 +84,6 @@
 .export CoordToNTAddr
 .export DrawMapPalette
 .export WaitVBlank_NoSprites
-.export DrawMapObjectsNoUpdate
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
 .export DrawMapRowCol
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
@@ -1034,30 +1033,7 @@ lut_NTRowStartHi:
   .byte $23,$23,$23,$23,$23,$23,$23,$23
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Map Objects No Update  [$E4F6 :: 0x3E506]
-;;
-;;    A shortened version of above UpdateAndDrawMapObjects routine.  It
-;;  draws all map objects, but without OAM cycling, and does not update
-;;  or animate any of them.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawMapObjectsNoUpdate:
-    LDX #0
-  @Loop:                   ; loop through all 15 objects
-    LDA mapobj_id, X
-    BEQ :+                ; check their ID, and only draw them if they actually exist
-       FARCALL DrawMapObject   ;  (id is nonzero)
-    :    
-    TXA
-    CLC
-    ADC #$10              ; add $10 to index to point to next object
-    TAX
-    CMP #$F0              ; loop until all 15 objects checked
-    BCC @Loop
-    RTS                    ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

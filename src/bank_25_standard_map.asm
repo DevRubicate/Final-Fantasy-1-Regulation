@@ -434,7 +434,7 @@ ProcessSMInput:
 
       LDA #4*4                    ; redraw all map objects starting at the 4th sprite
       STA sprindex                ;  this will cause the object we're talking to (if any) to face the player
-      CALL DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
+      FARCALL DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
 
       PLP                ; restore C flag
       LDX talkobj        ; and index of object to talk to
@@ -446,7 +446,7 @@ ProcessSMInput:
     JUMP @DialogueBox
 
 
-      @TalkToTile:          ; if there was no object to talk to....
+    @TalkToTile:          ; if there was no object to talk to....
         FARCALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
         LDX #0              ; clear tile properties (prevent unwanted teleport/battle)
         STX tileprop

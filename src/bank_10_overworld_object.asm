@@ -11,7 +11,7 @@
 .export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 .export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward, GetSMTileProperties
-.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject, DrawCursor, MapObjectMove, AimMapObjDown, LoadMapObjects
+.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject, DrawCursor, MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -773,6 +773,31 @@ UpdateAndDrawMapObjects:
     JUMP MapObjectMove     ; then move a map object and exit
 
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Map Objects No Update  [$E4F6 :: 0x3E506]
+;;
+;;    A shortened version of above UpdateAndDrawMapObjects routine.  It
+;;  draws all map objects, but without OAM cycling, and does not update
+;;  or animate any of them.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawMapObjectsNoUpdate:
+    LDX #0
+  @Loop:                   ; loop through all 15 objects
+    LDA mapobj_id, X
+    BEQ :+                ; check their ID, and only draw them if they actually exist
+        CALL DrawMapObject   ;  (id is nonzero)
+    :    
+    TXA
+    CLC
+    ADC #$10              ; add $10 to index to point to next object
+    TAX
+    CMP #$F0              ; loop until all 15 objects checked
+    BCC @Loop
+    RTS                    ; then exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
