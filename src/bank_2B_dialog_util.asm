@@ -213,7 +213,7 @@ DrawDialogueBox:
         CALL PrepDialogueBoxAttr  ; ... then skip over dialogue box attribute prepping (dialogue box isn't visible top row)
     :   
     CALL WaitForVBlank        ; then wait for VBl again
-    CALL DrawMapAttributes      ; and draw the attributes for this row
+    FARCALL DrawMapAttributes      ; and draw the attributes for this row
     CALL SetSMScroll            ; then set the scroll to keep rendering looking good
     FARCALL MusicPlay   ; and keep the music playing
 

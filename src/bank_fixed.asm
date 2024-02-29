@@ -57,7 +57,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
-.import LoadMapPalettes, BattleTransition, StartMapMove
+.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
@@ -88,7 +88,7 @@
 .export LoadStandardMap, LoadMapObjects
 .export DrawMapObjectsNoUpdate
 .export BattleBox_vAXY, Battle_PlayerBox, Battle_PPUOff, SetPPUAddr_XA
-.export DrawMapAttributes, DrawMapRowCol, PrepDialogueBoxAttr
+.export DrawMapRowCol, PrepDialogueBoxAttr
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export DialogueBox_Frame, LoadOWMapRow, PrepRowCol
 
@@ -281,7 +281,7 @@ DrawFullMap:
       FARCALL StartMapMove       ; start a fake move upwards (to prep the next row for drawing)
       CALL DrawMapRowCol      ; then draw the row that just got prepped
       FARCALL PrepAttributePos   ; prep attributes for that row
-      CALL DrawMapAttributes  ; and draw them
+      FARCALL DrawMapAttributes  ; and draw them
       CALL ScrollUpOneRow     ; then force a scroll upward one row
 
       LDA scroll_y           ; check scroll_y
@@ -337,7 +337,7 @@ DoMapDrawJob:
     RTS                     ;  and exit
 
   @Attributes:
-    CALL DrawMapAttributes   ; draw attributes
+    FARCALL DrawMapAttributes   ; draw attributes
     RTS                     ;  and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -958,79 +958,6 @@ DrawMapRowCol:
     CPY #$0F         ; loop until we've drawn 15 tiles
     BCC @ColLoop_R   ;  once we have... 
     RTS              ;  RTS out!  (full column drawn)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Map Attributes   [$D46F :: 0x3D47F]
-;;
-;;    This uses a little EOR magic to set the appropriate bits in the attribute table.
-;;   The general idea is... each map tile has an attribute byte assigned to it.  This byte
-;;   is always the same 2 bits repeated 4 times:  $00, $55, $AA, or $FF.  This byte is copied
-;;   to the intermediate drawing buffer in full... along with a mask ($03, $0C, $30, or $C0)
-;;   to indicate which bits of the attribute byte we are to replace (since each map tile only
-;;   represents 2 bits of the attribute byte).
-;;
-;;    The EOR magic works on the following 2 rules about EOR:
-;;      1)  a EOR b = c.  and c EOR b = a.  IE:  EORing with the same value twice gets you the original value
-;;      2)  0 EOR b = b.  IE:  EOR works just as OR does if the original source is 0
-;;
-;;    The code applies this in 3 parts.  To illustrate, I'll use diagrams.  Each letter represents a
-;;     bit in the attribute byte.  For this example, let's say the code is to replace bits 2-3 of the attribute byte:
-;;
-;;      [aaaa aaaa]    <---  'a' = original attribute bits
-;;   Step 1 = EOR by the tile's attribute bits
-;;      [iiii iiii]    <---  'i' = original attribute bits EOR'd with desired attribute bits
-;;   Step 2 = Mask out desired attribute bits
-;;      [0000 ii00]    <---  The mask isolates the bits we're interested in
-;;   Step 3 = EOR by original attribute byte
-;;      [aaaa ddaa]    <---  'a' = original attribute bits, 'd' = desired attribute bits
-;;
-;;   This works because 0 EOR a = a
-;;                  and i EOR a = d  (because a EOR d = i, as per step 1)
-;;
-;;   This code is timing critical, as it's done every time the player takes a step on the map
-;;
-;;   The intermediate drawing buffer is used as follows:
-;;    draw_buf_attr:    desired attribute byte for tile 'x'
-;;    draw_buf_at_hi:   high byte of PPU address in attribute tables for tile 'x'
-;;    draw_buf_at_lo:   low byte of PPU address
-;;    draw_buf_at_msk:  mask indicating which attribute bits are to be changed in given byte.
-;;
-;;   TMP:  tmp and tmp+1 are used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawMapAttributes:
-    LDA mapflags
-    LDX #$10        ; set X to $10 (if row)
-    AND #$02        ; check if we're drawing a row or column
-    BEQ :+ 
-      LDX #$0F      ; set X to $0F (if column)
-    :
-    STX tmp+1       ; dump X to tmp+1.  This is our upper-bound
-    LDX #$00        ; clear X (source index)
-    LDA PPUSTATUS       ; reset PPU toggle
-
-    @Loop:
-    LDA draw_buf_at_hi, X  ; set our PPU addr to desired value
-    STA PPUADDR
-    LDA draw_buf_at_lo, X
-    STA PPUADDR
-    LDA PPUDATA              ; dummy PPU read to fill read buffer
-    LDA PPUDATA              ; read the attribute byte at the desired address
-    STA tmp                ; back it up in temp ram
-    EOR draw_buf_attr, X   ; EOR with attribute byte to make attribute bits inversed (so that the next EOR will correct them)
-    AND draw_buf_at_msk, X ; mask out desired attribute bits
-    EOR tmp                ; EOR again with original byte, correcting desired attribute bits, and restoring other bits
-    LDY draw_buf_at_hi, X  ; reload desired PPU address with Y (so not to disrupt A)
-    STY PPUADDR
-    LDY draw_buf_at_lo, X
-    STY PPUADDR
-    STA PPUDATA              ; write new attribute byte back to attribute tables
-    INX                    ; inc our source index
-    CPX tmp+1              ; and loop until it reaches our upper-bound
-    BCC @Loop
-    RTS             ; exit once we've done them all
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
