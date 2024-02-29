@@ -65,6 +65,7 @@
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
+.import BattleDrawMessageBuffer_Reverse
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -91,6 +92,7 @@
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
+.export Battle_DrawMessageRow
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -801,9 +803,6 @@ DrawMapRowCol:
     BCC @ColLoop_R   ;  once we have... 
     RTS              ;  RTS out!  (full column drawn)
 
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  [$D5E2 :: 0x3D5F2]
@@ -1148,8 +1147,6 @@ Battle_WritePPUData:
     STA PPUSCROLL
     RTS
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleCrossPageJump  [$F284 :: 0x3F294]
@@ -1240,60 +1237,6 @@ Battle_DrawMessageRow:
       BNE @Loop
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleDrawMessageBuffer_Reverse  [$F4FF :: 0x3F50F]
-;;
-;;  Takes 'btl_msgbuffer' and actually draws it to the PPU, but draws
-;;     the rows in reverse order (bottom up)
-;;
-;;  Takes 6 frames worth of time, as it draws 2 rows per frame.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleDrawMessageBuffer_Reverse:
-    LDA #<$23A0         ; start drawing at the bottom row
-    STA btl_tmpvar3
-    LDA #>$23A0
-    STA btl_tmpvar4
-    
-    LDA #<(btl_msgbuffer + $B*$20)  ; start with the last row of source data
-    STA btl_varI
-    LDA #>(btl_msgbuffer + $B*$20)
-    STA btl_varJ
-    
-    LDA #$06                ; loop down counter.  6 iterations, 2 rows per iterations
-    STA tmp_68b9               ;    = $C rows
-    
-  @Loop:
-      CALL Battle_DrawMessageRow_VBlank  ; draw a row
-      CALL @AdjustPointers               ; move ptrs to prev row
-      CALL Battle_DrawMessageRow         ; draw another one
-      CALL @AdjustPointers               ; move ptrs again
-      FARCALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
-      
-      DEC tmp_68b9
-      BNE @Loop         ; loop until all rows drawn
-    RTS
-
-  @AdjustPointers:
-    LDA btl_tmpvar1     ; subtract $20 from the source pointer
-    SEC
-    SBC #$20
-    STA btl_varI
-    LDA btl_varJ
-    SBC #$00
-    STA btl_varJ
-    
-    LDA btl_tmpvar3     ; and from the dest pointer
-    SEC
-    SBC #$20
-    STA btl_tmpvar3
-    LDA btl_tmpvar4
-    SBC #$00
-    STA btl_tmpvar4
-    
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1531,7 +1474,7 @@ UndrawBattleBlock:
         INC btl_msgdraw_blockcount
         JUMP @Loop                     ; and repeat
     : 
-    CALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
+    FARCALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
     LDA btldraw_blockptrstart           ; move the end pointer to this position, so
     STA btldraw_blockptrend             ; the block we dropped will be actually removed
     LDA btldraw_blockptrstart+1

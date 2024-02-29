@@ -5,10 +5,11 @@
 .import BattleRNG, WaitForVBlank, MusicPlay
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, Battle_PlayerBox, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
-.import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox
+.import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
+.export BattleDrawMessageBuffer_Reverse
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -600,6 +601,61 @@ BattleDrawMessageBuffer:
       
       DEC tmp_68b9         ; loop for each row
       BNE @Loop
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  BattleDrawMessageBuffer_Reverse  [$F4FF :: 0x3F50F]
+;;
+;;  Takes 'btl_msgbuffer' and actually draws it to the PPU, but draws
+;;     the rows in reverse order (bottom up)
+;;
+;;  Takes 6 frames worth of time, as it draws 2 rows per frame.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BattleDrawMessageBuffer_Reverse:
+    LDA #<$23A0         ; start drawing at the bottom row
+    STA btl_tmpvar3
+    LDA #>$23A0
+    STA btl_tmpvar4
+    
+    LDA #<(btl_msgbuffer + $B*$20)  ; start with the last row of source data
+    STA btl_varI
+    LDA #>(btl_msgbuffer + $B*$20)
+    STA btl_varJ
+    
+    LDA #$06                ; loop down counter.  6 iterations, 2 rows per iterations
+    STA tmp_68b9               ;    = $C rows
+    
+  @Loop:
+      CALL Battle_DrawMessageRow_VBlank  ; draw a row
+      CALL @AdjustPointers               ; move ptrs to prev row
+      CALL Battle_DrawMessageRow         ; draw another one
+      CALL @AdjustPointers               ; move ptrs again
+      CALL Battle_UpdatePPU_UpdateAudio_FixedBank    ; update audio and stuffs
+      
+      DEC tmp_68b9
+      BNE @Loop         ; loop until all rows drawn
+    RTS
+
+  @AdjustPointers:
+    LDA btl_tmpvar1     ; subtract $20 from the source pointer
+    SEC
+    SBC #$20
+    STA btl_varI
+    LDA btl_varJ
+    SBC #$00
+    STA btl_varJ
+    
+    LDA btl_tmpvar3     ; and from the dest pointer
+    SEC
+    SBC #$20
+    STA btl_tmpvar3
+    LDA btl_tmpvar4
+    SBC #$00
+    STA btl_tmpvar4
+    
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
