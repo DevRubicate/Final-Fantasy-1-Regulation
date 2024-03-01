@@ -6,11 +6,20 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
-.import DrawBattleBoxAndText, DrawBattleBox_Row
+.import DrawBattleBoxAndText, DrawBattleBox_Row, GetPointerToRosterString
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
-.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox
+.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  small lut for the enemy roster box  [$F9E4 :: 0x3F9F4]
+;;  This is the box drawn around the enemy names in the battle screen.
+
+lut_EnemyRosterBox:
+;       hdr   X    Y  width  height
+  .byte $00, $01, $00, $0B, $0A
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -833,3 +842,49 @@ DrawBattleBox:
     CALL DrawBattleBox_Row
     
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawRosterBox  [$F6C3 :: 0x3F6D3]
+;;
+;;    Draws the enemy roster box, containing the names of all the enemies
+;;  you're fighting.
+;;
+;;  in:  btldraw_blockptrstart/end = pointer to a block of memory used for drawing
+;;         blocks.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawRosterBox:
+    LDY #$05                        ; copy 5 bytes from the roster
+    : 
+    LDA lut_EnemyRosterBox-1, Y   ;   box to msgdraw
+    STA btl_msgdraw_hdr-1, Y      ; (-1 because Y is 1-based in this loop)
+    DEY
+    BNE :-
+      
+    CALL BattleDraw_AddBlockToBuffer ; add msgdraw to our block buffer
+    INC btl_msgdraw_hdr         ; inc the header so its nonzero
+    INC btl_msgdraw_x           ; move right 2 columns
+    INC btl_msgdraw_x
+    DEC btl_msgdraw_y           ; move up 1 row because we move down 2 rows later,
+                                ;  and we really only want to move down 1.
+    
+    LDY #$00
+    @RosterLoop:
+    INC btl_msgdraw_y               ; after each row, move down 2 rows
+    INC btl_msgdraw_y
+    
+    TYA
+    CALL GetPointerToRosterString    ; put the pointer in tmp_68b3
+    LDA tmp_68b3                       ; ... just to move it to btl_msgdraw_srcptr
+    STA btl_msgdraw_srcptr          ; (why doesn't GetPointerToRosterString just
+    LDA tmp_68b4                       ;  put it in btl_msgdraw_srcptr directly?)
+    STA btl_msgdraw_srcptr+1
+    
+    CALL BattleDraw_AddBlockToBuffer ; Add this block to the draw buffer
+    INY
+    CPY #$04
+    BNE @RosterLoop                 ; loop 4 times (to print each enemy in the roster
+      
+    JUMP DrawBlockBuffer            ; Then actually draw it!
