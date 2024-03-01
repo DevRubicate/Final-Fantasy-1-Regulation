@@ -66,17 +66,11 @@
 
 .macro FARJUMP _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
-    JSR Impl_FARJUMP
+    JSR Impl_FARCALL
     .byte >(_address)
     .byte <(_address)
     .byte ((<.bank(_address)) * 2) | %10000000
-.endmacro
-
-.macro FORCEDFARJUMP _address
-    JSR Impl_FARJUMP
-    .byte >(_address)
-    .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
+    RTS
 .endmacro
 
 .macro NOJUMP _address
