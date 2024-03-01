@@ -59,7 +59,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
-.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob
+.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob, PrepSMRowCol
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
@@ -369,88 +369,6 @@ DecompressMap:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  Prep Standard Map Row or Column [$D1E4 :: 0x3D1F4]
-;;
-;;   Preps the TSA and Attribute bytes of the given row of a Standard map for drawing
-;;    Standard maps mainly.  Overworld does not always use this routine.  See PrepRowCol
-;;
-;;   Data loaded is put in the intermediate drawing buffer to be later drawn
-;;    via DrawMapAttributes and DrawMapRowCol
-;;
-;;   Note while this loads the attribute byte, it does not load other information
-;;    necessary to DrawMapAttributes.  For that.. see PrepAttributePos
-;;
-;;  IN:  X     = Assumed to be set to 0.  This routine does not explicitly set it
-;;       (tmp) = pointer to start of map data to prep
-;;       tmp+2 = low byte of pointer to the start of the ROW indicated by (tmp).
-;;                 basically is (tmp) minus column information
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PrepSMRowCol:
-    LDA mapflags      ; see if we're drawing a row/column
-    AND #$02
-    BNE @ColumnLoop
-
-  @RowLoop:
-    LDY #$00          ; zero Y for following index
-    LDA (tmp), Y      ; read a tile from source
-    TAY               ; put the tile in Y for a source index
-
-    LDA tsa_ul,      Y  ;  copy TSA and attribute bytes to drawing buffer
-    STA draw_buf_ul, X
-    LDA tsa_ur,      Y
-    STA draw_buf_ur, X
-    LDA tsa_dl,      Y
-    STA draw_buf_dl, X
-    LDA tsa_dr,      Y
-    STA draw_buf_dr, X
-    LDA tsa_attr,    Y
-    STA draw_buf_attr, X
-
-    LDA tmp           ; increment source pointer by 1
-    CLC
-    ADC #1
-    AND #$3F          ; but wrap from $3F->00 (standard maps are only 64 tiles wide)
-    ORA tmp+2         ; ORA with original address to retain bits 6,7
-    STA tmp           ; write incremented+wrapped address back to pointer
-    INX               ; increment our dest index
-    CPX #$10          ; and loop until it reaches 16 (full row)
-    BCC @RowLoop
-    RTS
-
-  @ColumnLoop:
-    LDY #$00          ; More of the same, as above.  Only we draw a column instead of a row
-    LDA (tmp), Y      ; get the tile
-    TAY               ; and put it in Y to index
-
-    LDA tsa_ul,      Y  ;  copy TSA and attribute bytes to drawing buffer
-    STA draw_buf_ul, X
-    LDA tsa_ur,      Y
-    STA draw_buf_ur, X
-    LDA tsa_dl,      Y
-    STA draw_buf_dl, X
-    LDA tsa_dr,      Y
-    STA draw_buf_dr, X
-    LDA tsa_attr,    Y
-    STA draw_buf_attr, X
-
-    LDA tmp           ; Add 64 ($40) to our source pointer (since maps are 64 tiles wide)
-    CLC
-    ADC #$40
-    STA tmp
-    LDA tmp+1
-    ADC #$00          ; Add any carry from the low byte addition
-    AND #$0F          ; wrap at $0F
-    ORA #>mapdata     ; and ORA with high byte of map data to keep the pointer looking at map data at in RAM $7xxx
-    STA tmp+1
-    INX               ; increment dest pointer
-    CPX #$10          ; and loop until it reaches 16 (more than a full column -- probably could only go to 15)
-    BCC @ColumnLoop
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;  Prep Map Row or Column [$D258 :: 0x3D268]
 ;;
 ;;    Same job as PrepSMRowCol, (see that description for details)
@@ -484,7 +402,7 @@ PrepRowCol:
        STA tmp+2         ;  and write back
        ORA mapdraw_x     ; OR with current column number
        STA tmp           ; write low byte with column to
-       JUMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
+       FARJUMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
 
     @DoOverworld:
 
@@ -1726,10 +1644,10 @@ Impl_NAKEDJUMP:
     STA current_bank1
     STA MMC5_PRG_BANK1
 
-        PLA
-        STA trampoline_low
-        PLA
-        STA trampoline_high
+    PLA
+    STA trampoline_low
+    PLA
+    STA trampoline_high
 
     ; Load flags
     LDA safecall_reg_flags
@@ -1742,11 +1660,7 @@ Impl_NAKEDJUMP:
     ; Load Y
     LDY safecall_reg_y
         
-        JMP (trampoline_low)
-
-    ; Activate the trampoline
-    RTS
-
+    JMP (trampoline_low)
 
 Impl_FARJUMP:
 
