@@ -232,7 +232,7 @@ DrawBoxRow_Top:
 
 CyclePalettes:
     STA palcyc_mode             ; record the mode
-    CALL WaitVBlank_NoSprites   ; wait for VBlank, and kill all sprites
+    FARCALL WaitVBlank_NoSprites   ; wait for VBlank, and kill all sprites
     CALL PalCyc_SetScroll       ; set the scroll
     CALL PalCyc_GetInitialPal   ; load up the initial palette
     LDA #$01                    ; A will be a make-shift frame counter

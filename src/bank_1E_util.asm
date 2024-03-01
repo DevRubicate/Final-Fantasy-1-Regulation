@@ -7,6 +7,7 @@
 .export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
 .export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData, WriteAttributesToPPU
+.export WaitVBlank_NoSprites
 
 
 
@@ -716,3 +717,17 @@ WriteAttributesToPPU:
     
     FORCEDFARCALL Battle_WritePPUData   ; actually do the write, then exit
     RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  WaitVBlank_NoSprites  [$D89F :: 0x3D8AF]
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitVBlank_NoSprites:
+    CALL ClearOAM              ; clear OAM
+    CALL WaitForVBlank       ; wait for VBlank
+    LDA #>oam
+    STA OAMDMA                 ; then do sprite DMA (hide all sprites)
+    RTS                       ; exit

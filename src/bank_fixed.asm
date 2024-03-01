@@ -87,7 +87,6 @@
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
 .export DrawMapPalette
-.export WaitVBlank_NoSprites
 .export SetPPUAddr_XA
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
@@ -872,21 +871,6 @@ DrawMapPalette:
     STA PPUADDR
     STA PPUADDR
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  WaitVBlank_NoSprites  [$D89F :: 0x3D8AF]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitVBlank_NoSprites:
-    FARCALL ClearOAM              ; clear OAM
-    CALL WaitForVBlank       ; wait for VBlank
-    LDA #>oam
-    STA OAMDMA                 ; then do sprite DMA (hide all sprites)
-    RTS                       ; exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

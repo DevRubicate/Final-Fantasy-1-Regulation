@@ -114,7 +114,7 @@ BattleTransition:
     STA PPUMASK        ; turn off the PPU
     STA PAPU_EN        ;  and APU
 
-    JUMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
+    FARJUMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
 
 
 
