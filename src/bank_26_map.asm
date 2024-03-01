@@ -3,13 +3,28 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
-.import LoadOWMapRow, PrepRowCol, DrawMapRowCol, PrepAttributePos
+.import LoadOWMapRow, PrepRowCol, PrepAttributePos
 
 .export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob, DrawFullMap
+.export DrawMapRowCol
 
 LUT_MapmanPalettes:
     .byte $16, $16, $12, $17, $27, $12, $16, $16, $30, $30, $27, $12, $16, $16, $16, $16
     .byte $27, $12, $16, $16, $16, $30, $27, $13, $00, $00, $00, $00, $00, $00, $00, $00
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  [$D5E2 :: 0x3D5F2]
+;;
+;;  These LUTs are used by routines to find the NT address of the start of each row of map tiles
+;;    Really, they just shortcut a multiplication by $40
+;;
+;;  "2x" because they're really 2 rows (each row is $20, these increment by $40).  This is because
+;;  map tiles are 2 ppu tiles tall
+
+lut_2xNTRowStartLo:    .byte  $00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0,$00,$40,$80,$C0
+lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$23,$23,$23,$23
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -492,3 +507,223 @@ ScrollUpOneRow:
     :   
     STA scroll_y
     RTS                 ; then exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Map Row or Column  [$D2E9 :: 0x3D2F9]
+;;
+;;   This will draw all the tiles in 1 row OR 1 column to the nametable
+;;   This is done every time the player takes a step on the map to keep the nametables
+;;    updated so that the map appears to be drawn correctly as the player scrolls around
+;;
+;;   Tiles' TSA have been pre-rendered to an intermediate buffer ($0780-07BF)
+;;     draw_buf_ul = UL portion of the tiles
+;;     draw_buf_ur = UR portion
+;;     draw_buf_dl = DL portion
+;;     draw_buf_dr = DR portion
+;;
+;;   This routine simply copies that pre-rendered data to the NT, so that it becomes
+;;    visible on-screen
+;;
+;;   This routine does not update attributes (see DrawMapAttributes)
+;;
+;;   16 tiles are drawn if it is to draw a full row.  15 if it is to draw a full column.
+;;
+;;   Code seems verbose here, like it could've been coded to be smaller, however this is
+;;    time critical drawing code (must all be completed in VBlank), so it being more verbose
+;;    and lengthy probably keeps it faster than it would be otherwise.. which is very important
+;;    for this kind of thing.
+;;
+;;   mapdraw_nty and mapdraw_ntx the Y,X coords on the NT to start drawing to.  Columns
+;;    will draw downward from this point, and rows will draw rightward.
+;;
+;;  TMP:  tmp through tmp+2 used
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawMapRowCol:
+    LDX mapdraw_nty           ; get target row draw to
+    LDA lut_2xNTRowStartLo, X ; use it to index LUT to find NT address of that row
+    STA tmp
+    LDA lut_2xNTRowStartHi, X
+    STA tmp+1                 ; (tmp) now dest address
+    LDA mapdraw_ntx           ; get target column to draw to
+    CMP #$10
+    BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at PPUCTRL
+
+              ; if column < $10 (use NT PPUCTRL)
+    TAX                 ; back up column to X
+    ASL A               ; double column number
+    ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
+    STA tmp
+    JUMP @DetermineRowOrCol
+
+    @UseNT2400:     ; if column >= $10 (use NT $2400)
+
+    AND #$0F            ; mask low bits
+    TAX                 ; put column in X
+    ASL A               ; double column number
+    ORA tmp             ; OR with low byte of dest pointer.
+    STA tmp
+    LDA tmp+1           ; add 4 to high byte (changing NT from PPUCTRL to $2400)
+    CLC
+    ADC #$04            ; Dest pointer is now prepped
+    STA tmp+1
+
+       ; no matter which NT (PPUCTRL/$2400) is being drawn to, both forks reconnect here
+    @DetermineRowOrCol:
+
+    LDA mapflags          ; find out if we're moving drawing a row or column
+    AND #$02
+    BEQ @DoRow
+    JUMP @DoColumn
+
+
+   ;;
+   ;;  Draw a row of tiles
+   ;;
+
+    @DoRow:
+
+    TXA              ; put column number in A
+    EOR #$0F         ; invert it
+    TAX              ; put it back in X, increment it, then create a back-up of it in tmp+2
+    INX              ; This creates a down-counter:  it is '16 - column_number', indicating the number of
+    STX tmp+2        ;   columns that must be drawn until we reach the NT boundary
+    LDY #$00         ; zero Y -- our source index
+    LDA PPUSTATUS        ; reset PPU toggle
+    LDA tmp+1
+    STA PPUADDR        ; set PPU addr to previously calculated dest addr
+    LDA tmp
+    STA PPUADDR
+
+    @RowLoop_U:
+
+    LDA draw_buf_ul, Y ; load 2 tiles from drawing buffer and draw them
+    STA PPUDATA          ;   first UL
+    LDA draw_buf_ur, Y ;   then UR
+    STA PPUDATA
+    INY              ; inc source index (to look at next tile)
+    DEX              ; dec down counter
+    BNE :+           ; if it expired, we've reached NT boundary
+
+      LDA tmp+1      ; at NT boundary... so load high byte
+      EOR #$04       ;  toggle NT bit
+      STA PPUADDR      ;  and write back as the new high byte
+      LDA tmp        ; then get low byte
+      AND #$E0       ;  snap it to start of the row
+      STA PPUADDR      ;  and write back as the new low byte
+
+    :   
+    CPY #$10         ; see if we've drawn 16 tiles yet (one full row)
+    BCC @RowLoop_U   ; if not, continue looping
+
+    LDA tmp
+    CLC              ; add #$20 to low byte of dest pointer so that
+    ADC #$20         ;  it points it to the next row of NT tiles
+    STA tmp
+    LDA tmp+1
+    STA PPUADDR        ; then re-copy the dest addr to set the PPU address
+    LDA tmp
+    STA PPUADDR
+    LDY #$00         ; zero our source index again
+    LDX tmp+2        ; restore X to our down counter
+
+    @RowLoop_D:
+
+    LDA draw_buf_dl, Y ; repeat same tile copying work done above,
+    STA PPUDATA          ;   but this time we're drawing the bottom half of the tiles
+    LDA draw_buf_dr, Y ;   first DL
+    STA PPUDATA          ;   then DR
+    INY                ; inc source index (next tile)
+    DEX                ; dec down counter (for NT boundary)
+    BNE :+
+    
+      LDA tmp+1      ; at NT boundary again.. same deal.  load high byte of dest
+      EOR #$04       ;   toggle NT bit
+      STA PPUADDR      ;   and write back
+      LDA tmp        ; load low byte
+      AND #$E0       ;   snap to start of row
+      STA PPUADDR      ;   write back
+
+    :   
+    CPY #$10
+    BCC @RowLoop_D   ; loop until all 16 tiles drawn
+    RTS              ; and RTS out (full rown drawn)
+
+
+   ;;
+   ;;  Draw a row of tiles
+   ;;
+
+    @DoColumn:
+
+    LDA #$0F         ; prep down counter so that it
+    SEC              ;  is 15 - target_row
+    SBC mapdraw_nty  ;  This is the number of rows to draw until we reach NT boundary (to be used as down counter)
+    TAX              ; put downcounter in X for immediate use
+    STX tmp+2        ; and back it up in tmp+2 for future use
+    LDY #$00         ; zero Y -- our source index
+    LDA PPUSTATUS        ; clear PPU toggle
+    LDA tmp+1
+    STA PPUADDR        ; set PPU addr to previously calculated dest address
+    LDA tmp
+    STA PPUADDR
+    LDA #$04
+    STA PPUCTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
+
+    @ColLoop_L:
+
+    LDA draw_buf_ul, Y ; draw the left two tiles that form this map tile
+    STA PPUDATA          ;   first UL
+    LDA draw_buf_dl, Y ;   then DL
+    STA PPUDATA
+    DEX              ; dec our down counter.
+    BNE :+           ;   once it expires, we've reach the NT boundary
+
+      LDA tmp+1      ; at NT boundary.. get high byte of dest
+      AND #$24       ;   snap to top of NT
+      STA PPUADDR      ;   and write back
+      LDA tmp        ; get low byte
+      AND #$1F       ;   snap to top, while retaining current column
+      STA PPUADDR      ;   and write back
+
+    :   
+    INY              ; inc our source index
+    CPY #$0F
+    BCC @ColLoop_L   ; and loop until we've drawn 15 tiles (one full column)
+
+
+                     ; now that the left-hand tiles are drawn, draw the right-hand tiles
+    LDY #$00         ; clear our source index
+    LDA tmp+1        ; restore dest address
+    STA PPUADDR
+    LDA tmp          ; but add 1 to the low byte (to move to right-hand column)
+    CLC              ;   note:  the game does not write back to tmp -- why not?!!
+    ADC #$01
+    STA PPUADDR
+    LDX tmp+2        ; restore down counter into X
+
+    @ColLoop_R:
+
+    LDA draw_buf_ur, Y ; load right-hand tiles and draw...
+    STA PPUDATA          ;   first UR
+    LDA draw_buf_dr, Y ;   then DR
+    STA PPUDATA
+    DEX                ; dec down counter
+    BNE :+             ; if it expired, we're at the NT boundary
+
+      LDA tmp+1      ; at NT boundary, get high byte of dest
+      AND #$24       ;   snap to top of NT
+      STA PPUADDR      ;   and write back
+      LDA tmp        ; get low byte of dest
+      CLC            ;   and add 1 (this could've been avoided if it wrote back to tmp above)
+      ADC #$01       ;   anyway -- adding 1 move to right-hand column (again)
+      AND #$1F       ;   snap to top of NT, while retaining current column
+      STA PPUADDR      ;   and write to low byte of PPU address
+
+    :   
+    INY              ; inc our source index
+    CPY #$0F         ; loop until we've drawn 15 tiles
+    BCC @ColLoop_R   ;  once we have... 
+    RTS              ;  RTS out!  (full column drawn)

@@ -203,7 +203,7 @@ DrawDialogueBox:
     CALL PrepRowCol             ; prep map row/column graphics
     CALL PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
     CALL WaitForVBlank        ; then wait for VBl
-    CALL DrawMapRowCol          ; and draw what we just prepped
+    FARCALL DrawMapRowCol          ; and draw what we just prepped
     CALL SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
     FARCALL MusicPlay                ; and update the music
     FARCALL PrepAttributePos       ; then prep attribute position data
