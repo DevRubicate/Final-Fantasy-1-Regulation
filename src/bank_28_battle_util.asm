@@ -5,7 +5,7 @@
 .import BattleRNG, WaitForVBlank, MusicPlay
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
-.import ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
+.import DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 .import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
@@ -1338,4 +1338,22 @@ DrawBattleBox_NextBlock:
     LDA btldraw_blockptrstart+1
     ADC #$00
     STA btldraw_blockptrstart+1
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ClearUnformattedCombatBoxBuffer  [$F757 :: 0x3F767]
+;;
+;;  Clears it with *spaces*, not with null.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearUnformattedCombatBoxBuffer:
+    LDY #$00                ; pretty self explanitory routine
+    LDA #$FF
+    : 
+    STA btl_unfmtcbtbox_buffer, Y    ; fill buffer ($80 bytes) with $FF
+    INY
+    CPY #$80
+    BNE :-  
     RTS

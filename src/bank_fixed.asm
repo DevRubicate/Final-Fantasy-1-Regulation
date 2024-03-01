@@ -89,7 +89,7 @@
 .export DrawMapPalette, lut_CombatItemMagicBox
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
-.export PrepRowCol, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
+.export PrepRowCol, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, BattleMenu_DrawMagicNames
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
@@ -1286,28 +1286,6 @@ UndrawNBattleBlocks:
     @Exit:
     RTS
     
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ClearUnformattedCombatBoxBuffer  [$F757 :: 0x3F767]
-;;
-;;  Clears it with *spaces*, not with null.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearUnformattedCombatBoxBuffer:
-    LDY #$00                ; pretty self explanitory routine
-    LDA #$FF
-    : 
-    STA btl_unfmtcbtbox_buffer, Y    ; fill buffer ($80 bytes) with $FF
-    INY
-    CPY #$80
-    BNE :-  
-    RTS
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleMenu_DrawMagicNames  [$F844 :: 0x3F854]
