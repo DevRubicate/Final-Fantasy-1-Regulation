@@ -86,7 +86,7 @@
 .export EnterOW_PalCyc
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
-.export DrawMapPalette, lut_CombatItemMagicBox, ShiftLeft5, ShiftLeft6
+.export DrawMapPalette, lut_CombatItemMagicBox
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
@@ -1506,24 +1506,6 @@ BattleMenu_DrawMagicNames:
     STA btl_unfmtcbtbox_buffer + 10, X
     
     @Done:
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ShiftLeft routines  [$F897 :: 0x3F8A7]
-;;
-;;  Convenience routines to shift left a few times.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShiftLeft6:
-    ASL A
-ShiftLeft5:
-    ASL A
-    ASL A
-    ASL A
-    ASL A
-    ASL A
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

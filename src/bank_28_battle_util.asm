@@ -7,7 +7,7 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
-.import lut_CombatItemMagicBox, ShiftLeft5, ShiftLeft6, BattleMenu_DrawMagicNames
+.import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
@@ -1157,3 +1157,21 @@ DrawBattleMagicBox:
 
     @Done:
     JUMP DrawBlockBuffer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ShiftLeft routines  [$F897 :: 0x3F8A7]
+;;
+;;  Convenience routines to shift left a few times.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShiftLeft6:
+    ASL A
+ShiftLeft5:
+    ASL A
+    ASL A
+    ASL A
+    ASL A
+    ASL A
+    RTS
