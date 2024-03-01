@@ -91,7 +91,7 @@
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, DrawBlockBuffer
-.export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
+.export LoadOWMapRow, PrepRowCol, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
@@ -187,44 +187,7 @@ SetSMScroll:
 
     RTS                 ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ScrollUpOneRow  [$D102 :: 0x3D112]
-;;
-;;    This is used by DrawFullMap to "scroll" up one row so that
-;;  the next row can be drawn.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ScrollUpOneRow:
-    LDA mapflags        ; see if this is OW or SM by checking map flags
-    LSR A
-    BCC @OW             ; if OW, jump ahead to OW
-
-  @SM:
-    LDA sm_scroll_y     ; otherwise (SM), subtract 1 from the sm_scroll
-    SEC
-    SBC #$01
-    AND #$3F            ; and wrap where needed
-    STA sm_scroll_y
-
-    JUMP @Finalize
-
-  @OW:
-    LDA ow_scroll_y     ; if OW, subtract 1 from ow_scroll
-    SEC
-    SBC #$01
-    STA ow_scroll_y
-
-  @Finalize:
-    LDA scroll_y        ; then subtract 1 from scroll_y
-    SEC
-    SBC #$01
-    BCS :+
-      ADC #$0F          ; and wrap 0->E
-    :   
-    STA scroll_y
-    RTS                 ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1827,8 +1790,6 @@ DrawBattleString_IncDstPtr:
       INC btldraw_dst+1
   : RTS
 
-
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Copy 256  [$CC74 :: 0x3CC84]

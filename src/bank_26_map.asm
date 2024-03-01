@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
-.import LoadOWMapRow, PrepRowCol, DrawMapRowCol, PrepAttributePos, ScrollUpOneRow
+.import LoadOWMapRow, PrepRowCol, DrawMapRowCol, PrepAttributePos
 
 .export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob, DrawFullMap
 
@@ -453,3 +453,42 @@ DrawFullMap:
        ;   performed to draw the map.
 
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  ScrollUpOneRow  [$D102 :: 0x3D112]
+;;
+;;    This is used by DrawFullMap to "scroll" up one row so that
+;;  the next row can be drawn.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ScrollUpOneRow:
+    LDA mapflags        ; see if this is OW or SM by checking map flags
+    LSR A
+    BCC @OW             ; if OW, jump ahead to OW
+
+  @SM:
+    LDA sm_scroll_y     ; otherwise (SM), subtract 1 from the sm_scroll
+    SEC
+    SBC #$01
+    AND #$3F            ; and wrap where needed
+    STA sm_scroll_y
+
+    JUMP @Finalize
+
+  @OW:
+    LDA ow_scroll_y     ; if OW, subtract 1 from ow_scroll
+    SEC
+    SBC #$01
+    STA ow_scroll_y
+
+  @Finalize:
+    LDA scroll_y        ; then subtract 1 from scroll_y
+    SEC
+    SBC #$01
+    BCS :+
+      ADC #$0F          ; and wrap 0->E
+    :   
+    STA scroll_y
+    RTS                 ; then exit
