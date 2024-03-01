@@ -6,7 +6,7 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
-.import DrawBattleBoxAndText, DrawBattleBox_Row, GetPointerToRosterString
+.import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
@@ -888,3 +888,23 @@ DrawRosterBox:
     BNE @RosterLoop                 ; loop 4 times (to print each enemy in the roster
       
     JUMP DrawBlockBuffer            ; Then actually draw it!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  GetPointerToRosterString  [$F99C :: 0x3F9AC]
+;;
+;;  A is the roster entry to get (0-3)
+;;
+;;  A pointer to that roster string is put in tmp_68b3 (temp memory)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPointerToRosterString:
+    ASL A                           ; *2 (2 bytes per string)
+    CLC
+    ADC #<lut_EnemyRosterStrings    ; add to the lut address
+    STA tmp_68b3
+    LDA #$00
+    ADC #>lut_EnemyRosterStrings
+    STA tmp_68b4
+    RTS

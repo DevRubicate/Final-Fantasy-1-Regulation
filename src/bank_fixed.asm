@@ -87,11 +87,11 @@
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
 .export DrawMapPalette
-.export SetPPUAddr_XA
+.export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
-.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, GetPointerToRosterString
+.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1771,26 +1771,6 @@ DrawBattleItemBox:
     ; Finally, after all rows added, Actually draw the block buffer and exit
     JUMP DrawBlockBuffer
  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  GetPointerToRosterString  [$F99C :: 0x3F9AC]
-;;
-;;  A is the roster entry to get (0-3)
-;;
-;;  A pointer to that roster string is put in tmp_68b3 (temp memory)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetPointerToRosterString:
-    ASL A                           ; *2 (2 bytes per string)
-    CLC
-    ADC #<lut_EnemyRosterStrings    ; add to the lut address
-    STA tmp_68b3
-    LDA #$00
-    ADC #>lut_EnemyRosterStrings
-    STA tmp_68b4
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleString  [$F9AB :: 0x3F9BB]
