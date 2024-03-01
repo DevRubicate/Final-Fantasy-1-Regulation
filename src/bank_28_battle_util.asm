@@ -6,11 +6,11 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
-.import DrawBattleBoxAndText
+.import DrawBattleBoxAndText, DrawBattleBox_Row
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
-.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox
+.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -778,3 +778,58 @@ Battle_PlayerBox:
     PLA
 
     RTS                ; and exit!
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattleBox  [$F59B :: 0x3F5AB]
+;;
+;;  Draws a box!
+;;
+;;  input:
+;;      btl_msgdraw_x
+;;      btl_msgdraw_y
+;;      btl_msgdraw_width
+;;      btl_msgdraw_height
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+DrawBattleBox:
+    LDX btl_msgdraw_x           ; get X,Y coords of box
+    LDY btl_msgdraw_y
+    CALL GetBattleMessagePtr
+    STX btl_varI                     ; put in btl_varI,btl_varJ, this is our destination pointer
+    STY btl_varJ
+    
+    LDA #$F7                    ; draw the top row of the box
+    STA btltmp_boxleft
+    LDA #$F8
+    STA btltmp_boxcenter
+    LDA #$F9
+    STA btltmp_boxright
+    CALL DrawBattleBox_Row
+    
+    LDA btl_msgdraw_height      ; get the height of the box
+    SEC
+    SBC #$02                    ; subtract 2 to make this the number of center rows to draw
+    STA temp_68b6                   ; store in temp
+    
+    LDA #$FA                    ; Draw all the center rows
+    STA btltmp_boxleft
+    LDA #$FF
+    STA btltmp_boxcenter
+    LDA #$FB
+    STA btltmp_boxright
+  @Loop:
+      CALL DrawBattleBox_Row
+      DEC temp_68b6
+      BNE @Loop
+      
+    LDA #$FC                    ; draw the bottom row
+    STA btltmp_boxleft
+    LDA #$FD
+    STA btltmp_boxcenter
+    LDA #$FE
+    STA btltmp_boxright
+    CALL DrawBattleBox_Row
+    
+    RTS

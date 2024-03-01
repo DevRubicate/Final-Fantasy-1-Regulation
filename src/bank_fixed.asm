@@ -65,7 +65,7 @@
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
-.import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock
+.import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -92,7 +92,7 @@
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
-.export Battle_DrawMessageRow, DrawBattleBoxAndText
+.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1174,8 +1174,6 @@ SetPPUAddr_XA:
     STA PPUADDR   ; A as low byte
     RTS
 
-
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Battle_DrawMessageRow_VBlank  [$F4E5 :: 0x3F4F5]
@@ -1205,7 +1203,6 @@ Battle_DrawMessageRow:
       CPY #$19
       BNE @Loop
     RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1249,61 +1246,6 @@ DrawBattleBox_Row:
     LDA btl_varJ
     ADC #$00
     STA btl_varJ
-    
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleBox  [$F59B :: 0x3F5AB]
-;;
-;;  Draws a box!
-;;
-;;  input:
-;;      btl_msgdraw_x
-;;      btl_msgdraw_y
-;;      btl_msgdraw_width
-;;      btl_msgdraw_height
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-DrawBattleBox:
-    LDX btl_msgdraw_x           ; get X,Y coords of box
-    LDY btl_msgdraw_y
-    FARCALL GetBattleMessagePtr
-    STX btl_varI                     ; put in btl_varI,btl_varJ, this is our destination pointer
-    STY btl_varJ
-    
-    LDA #$F7                    ; draw the top row of the box
-    STA btltmp_boxleft
-    LDA #$F8
-    STA btltmp_boxcenter
-    LDA #$F9
-    STA btltmp_boxright
-    CALL DrawBattleBox_Row
-    
-    LDA btl_msgdraw_height      ; get the height of the box
-    SEC
-    SBC #$02                    ; subtract 2 to make this the number of center rows to draw
-    STA temp_68b6                   ; store in temp
-    
-    LDA #$FA                    ; Draw all the center rows
-    STA btltmp_boxleft
-    LDA #$FF
-    STA btltmp_boxcenter
-    LDA #$FB
-    STA btltmp_boxright
-  @Loop:
-      CALL DrawBattleBox_Row
-      DEC temp_68b6
-      BNE @Loop
-      
-    LDA #$FC                    ; draw the bottom row
-    STA btltmp_boxleft
-    LDA #$FD
-    STA btltmp_boxcenter
-    LDA #$FE
-    STA btltmp_boxright
-    CALL DrawBattleBox_Row
     
     RTS
 
@@ -1380,7 +1322,7 @@ DrawBattleBox_Exit:
 
 DrawBattleBoxAndText:
     CALL DrawBattleBox_FetchBlock        ; get the first box block
-    CALL DrawBattleBox                   ; use it to draw the box
+    FARCALL DrawBattleBox                   ; use it to draw the box
   @Loop:
       CALL DrawBattleBox_NextBlock       ; move to next block (text block)
       LDY #$00
