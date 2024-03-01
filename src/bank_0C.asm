@@ -9089,7 +9089,7 @@ DoExplosionEffect:
 DrawEnemyEffect:
     LDA btl_defender
     PHA
-    CALL SwapBtlTmpBytes
+    FARCALL SwapBtlTmpBytes
     LDX btl_battletype
     BNE :+
       JUMP DrawEnemyEffect_9Small          ; 9small formation
@@ -9156,7 +9156,7 @@ DrawEnemyEffect:
       BNE @EraseLoop
       
   @Exit:
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9263,7 +9263,7 @@ EraseSmallEnemy:
       DEC btltmp
       BNE :-                        ; dec loop counter and loop
       
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
     
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9274,7 +9274,7 @@ EraseSmallEnemy:
 
 __DrawEnemyEffect_9Small_Exit:
     PLA
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -9383,11 +9383,11 @@ DrawEnemyEffect_4Large:
       CALL MoveDown1Row_UpdateAudio
       DEC btltmp
       BNE :-
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
 
   @Exit:
     PLA
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
 
   ; [$BD7A :: 0x33D8A]
   @lut_ExplosionCoords_4Large:
@@ -9446,7 +9446,7 @@ DrawEnemyEffect_Mix:
     
     LDA btl_enemyeffect
     BNE @noJump   ; exit unless the enemyeffect is set to erase the enemy
-    JUMP SwapBtlTmpBytes
+    FARJUMP SwapBtlTmpBytes
     @noJump:
     
     LDA lut_EraseEnemyPPUAddress_Mix_Small, X

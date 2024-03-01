@@ -13,7 +13,7 @@
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
+.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1356,4 +1356,33 @@ ClearUnformattedCombatBoxBuffer:
     INY
     CPY #$80
     BNE :-  
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  SwapBtlTmpBytes  [$FCCF :: 0x3FCDF]
+;;
+;;  Backs up the btltmp bytes by swapping them into another place in memory
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SwapBtlTmpBytes:
+    PHA         ; backup A,X
+    TXA
+    PHA
+    
+    LDX #$0F
+  @Loop:
+      LDA btltmp, X             ; swap data from btltmp with btltmp_backseat
+      PHA
+      LDA btltmp_backseat, X
+      STA btltmp, X
+      PLA
+      STA btltmp_backseat, X
+      DEX
+      BPL @Loop
+      
+    PLA         ; restory A,X
+    TAX
+    PLA
     RTS

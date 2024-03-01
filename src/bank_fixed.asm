@@ -19,7 +19,7 @@
 .import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
 .import OpenTreasureChest, AddGPToParty, LoadPrice, LoadBattleBackdropPalette
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
+.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes, SwapBtlTmpBytes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
@@ -76,7 +76,7 @@
 
 .export DrawPalette
 .export WaitForVBlank
-.export SwapBtlTmpBytes, FormatBattleString
+.export FormatBattleString
 .export Battle_WritePPUData
 .export UndrawNBattleBlocks
 .export BattleCrossPageJump
@@ -1468,7 +1468,7 @@ lut_EnemyRosterStrings:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FormatBattleString:
-    CALL SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
+    FARCALL SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
     
     STX btldraw_src         ; store source pointer
     STY btldraw_src+1
@@ -1512,7 +1512,7 @@ FormatBattleString:
     STA (btldraw_dst), Y            ; add null terminator
     INY
     STA (btldraw_dst), Y
-    JUMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
+    FARJUMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1908,34 +1908,7 @@ DrawBattleString_IncDstPtr:
       INC btldraw_dst+1
   : RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  SwapBtlTmpBytes  [$FCCF :: 0x3FCDF]
-;;
-;;  Backs up the btltmp bytes by swapping them into another place in memory
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SwapBtlTmpBytes:
-    PHA         ; backup A,X
-    TXA
-    PHA
-    
-    LDX #$0F
-  @Loop:
-      LDA btltmp, X             ; swap data from btltmp with btltmp_backseat
-      PHA
-      LDA btltmp_backseat, X
-      STA btltmp, X
-      PLA
-      STA btltmp_backseat, X
-      DEX
-      BPL @Loop
-      
-    PLA         ; restory A,X
-    TAX
-    PLA
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
