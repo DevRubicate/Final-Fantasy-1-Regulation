@@ -5,14 +5,14 @@
 .import BattleRNG, WaitForVBlank, MusicPlay
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
-.import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
+.import ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 .import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-.export DrawBattleMagicBox, DrawBattle_Number
+.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1242,3 +1242,39 @@ DrawBattle_Number:
 
     @Divide:
     JUMP DrawBattle_Division
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  BattleDraw_AddBlockToBuffer  [$F690 :: 0x3F6A0]
+;;
+;;  Adds the block stored in 'msgdraw' to the end of the block buffer
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BattleDraw_AddBlockToBuffer:
+    TYA                 ; backup Y
+    PHA
+    
+    LDY #$00
+    @Loop:
+        LDA btl_msgdraw_hdr, Y        ; copy 5 bytes from the msgdraw buffer
+        STA (btldraw_blockptrend), Y  ; to the end of our block data
+        INY
+        CPY #$05
+        BNE @Loop
+      
+    LDA btldraw_blockptrend         ; then add 5 bytes to the end pointer
+    CLC                             ; to move it up
+    ADC #$05
+    STA btldraw_blockptrend
+    LDA btldraw_blockptrend+1
+    ADC #$00
+    STA btldraw_blockptrend+1
+    
+    LDA #$00                        ; add a null terminator to the end of the
+    TAY                             ; block data
+    STA (btldraw_blockptrend), Y
+    
+    PLA                             ; retore Y, and exit
+    TAY
+    RTS

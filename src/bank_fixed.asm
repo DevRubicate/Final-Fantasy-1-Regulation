@@ -66,6 +66,7 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
+.import BattleDraw_AddBlockToBuffer
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -88,7 +89,7 @@
 .export DrawMapPalette, lut_CombatItemMagicBox
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
-.export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
+.export PrepRowCol, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, BattleMenu_DrawMagicNames
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
@@ -1276,42 +1277,6 @@ DrawBlockBuffer:
     STA btldraw_blockptrend+1
     
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleDraw_AddBlockToBuffer  [$F690 :: 0x3F6A0]
-;;
-;;  Adds the block stored in 'msgdraw' to the end of the block buffer
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleDraw_AddBlockToBuffer:
-    TYA                 ; backup Y
-    PHA
-    
-    LDY #$00
-    @Loop:
-        LDA btl_msgdraw_hdr, Y        ; copy 5 bytes from the msgdraw buffer
-        STA (btldraw_blockptrend), Y  ; to the end of our block data
-        INY
-        CPY #$05
-        BNE @Loop
-      
-    LDA btldraw_blockptrend         ; then add 5 bytes to the end pointer
-    CLC                             ; to move it up
-    ADC #$05
-    STA btldraw_blockptrend
-    LDA btldraw_blockptrend+1
-    ADC #$00
-    STA btldraw_blockptrend+1
-    
-    LDA #$00                        ; add a null terminator to the end of the
-    TAY                             ; block data
-    STA (btldraw_blockptrend), Y
-    
-    PLA                             ; retore Y, and exit
-    TAY
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1355,7 +1320,7 @@ DrawCommandBox:
     INX
     CPX #$05
     BNE :+                                    ; every 5 bytes, add the block to the
-        CALL BattleDraw_AddBlockToBuffer         ;  output buffer
+        FARCALL BattleDraw_AddBlockToBuffer         ;  output buffer
         LDX #$00
     : 
     INY
