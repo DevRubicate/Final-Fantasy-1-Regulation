@@ -1530,62 +1530,12 @@ FormatBattleString:
 
 DrawBattleString_ExpandChar:
     STA btltemppointer         ; char code
-    PHA             ; backup A/X/Y
-    TXA
-    PHA
     TYA
     PHA
     LDA btltemppointer         ; get the char code
-    CMP #$7A
-    BCS :+
-      BCC @c01_79
-      
-  : LDX #$FF        ; if the character is >= $7A (normal character), no decoration
-    BNE @Output     ;   use $FF (blank space) as decoration
-
-  @c01_79:          ; code 01-79
-    LDX #$C0        ; use $C0 as default decoration
-    CMP #$57
-    BCS @c57_79
-    ADC #$47
-    BNE @Output
-    
-  @c57_79:
-    CMP #$5C
-    BCS @c5C_79
-    ADC #$4C
-    BNE @Output
-    
-  @c5C_79:
-    CMP #$6B
-    BCS @c6B_79
-    ADC #$73
-    BNE @Output
-  
-  @c6B_79:
-    CMP #$70
-    BCS @c70_79
-    ADC #$78
-    BNE @Output
-    
-  @c70_79:
-    LDX #$C1
-    CMP #$75
-    BCS @c75_79
-    ADC #$33
-    BNE @Output
-    
-  @c75_79:
-    CLC
-    ADC #$6E
-  
-  @Output:
     CALL DrawBattleString_DrawChar
     PLA
     TAY
-    PLA
-    TAX
-    PLA             ; restore backup
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1605,7 +1555,7 @@ DrawBattleString_DrawChar:
     LDY #$01
     STA (btldraw_dst), Y        ; put bottom part is position [1]
     DEY
-    TXA
+    LDA #$FF
     STA (btldraw_dst), Y        ; and top part in position [0]
     JUMP DrawBattleString_IncDstPtr
 
