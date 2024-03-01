@@ -433,7 +433,7 @@ Battle_AfterFadeIn:
 BattleLogicLoop:
     CALL RebuildEnemyRoster          ; Rebuild the roster in case some enemies died
     FARCALL DrawRosterBox             ; Draw the roster box
-    CALL DrawCommandBox            ; and the command box
+    FARCALL DrawCommandBox            ; and the command box
     CALL UpdateSprites_BattleFrame   ; then do a frame with updated battle sprites
     
     LDY #$1C

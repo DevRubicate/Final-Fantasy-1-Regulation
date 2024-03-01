@@ -6,13 +6,14 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
-.import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
+.import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings, lua_BattleCommandBoxInfo
 .import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
+.import lua_BattleCommandBoxInfo
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer
+.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1278,3 +1279,33 @@ BattleDraw_AddBlockToBuffer:
     PLA                             ; retore Y, and exit
     TAY
     RTS
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawCommandBox  [$F700 :: 0x3F710]
+;;
+;;    Draws the command box ("Fight", "Magic", "Drink", etc)
+;;
+;;  in:  btldraw_blockptrstart/end = pointer to a block of memory used for drawing
+;;         blocks.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawCommandBox:
+    LDY #$00
+    LDX #$00
+    @Loop:
+    LDA lua_BattleCommandBoxInfo, Y           ; copy 6*5 bytes (6 blocks)
+    STA btl_msgdraw_hdr, X
+    INX
+    CPX #$05
+    BNE :+                                    ; every 5 bytes, add the block to the
+        CALL BattleDraw_AddBlockToBuffer         ;  output buffer
+        LDX #$00
+    : 
+    INY
+    CPY #6*5              ; 6 blocks * 5 bytes per block
+    BNE @Loop
+    JUMP DrawBlockBuffer            ; then finally draw it
