@@ -80,10 +80,10 @@
 
 .macro NAKEDJUMP _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "NAKEDJUMP: Address reachable without a bankswitch, use JUMP instead"
+    LDA #((<.bank(_address)) * 2) | %10000000
+    LDX #>(_address)
+    LDY #<(_address)
     JSR Impl_NAKEDJUMP
-    .byte >(_address)
-    .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
 .endmacro
 
 

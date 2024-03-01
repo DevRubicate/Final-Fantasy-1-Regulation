@@ -1415,63 +1415,10 @@ Impl_FARPPUCOPY:
     RTS
 
 Impl_NAKEDJUMP:
-    ; Save A
-    STA safecall_reg_a
-
-    ; Save flags
-    PHP
-    PLA
-    STA safecall_reg_flags
-
-    ; Save Y
-    STY safecall_reg_y
-
-    ; Increment our depth counter
-    INC far_depth
-
-    ; Pull then push the stack to find the low address of our caller
-    PLA
-    STA trampoline_low
-    CLC
-    ADC #3 ; When we return we want to return right after the extra 3 byte data after the CALL instruction
-
-    ; Pull then push the stack to find the high address of our caller
-    PLA
-    STA trampoline_high
-    ADC #0 ; If the previous ADC caused a carry we add it here
-
-    ; Read the low address we want to jump to and push it to the stack
-    LDY #1
-    LDA (trampoline_low), Y
-    PHA
-
-    ; Read the high address we want to jump to and push it to the stack
-    INY
-    LDA (trampoline_low), Y
-    PHA
-
-    ; Read what bank we are going to and switch to it
-    INY
-    LDA (trampoline_low), Y
     STA current_bank1
     STA MMC5_PRG_BANK1
-
-    PLA
-    STA trampoline_low
-    PLA
-    STA trampoline_high
-
-    ; Load flags
-    LDA safecall_reg_flags
-    PHA
-    PLP
-
-    ; Load A
-    LDA safecall_reg_a
-
-    ; Load Y
-    LDY safecall_reg_y
-        
+    STY trampoline_low
+    STX trampoline_high
     JMP (trampoline_low)
 
 Impl_FARCALL:
