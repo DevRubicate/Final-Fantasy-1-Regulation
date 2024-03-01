@@ -66,7 +66,7 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
-.import BattleDraw_AddBlockToBuffer, DrawCommandBox
+.import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -1174,22 +1174,6 @@ DrawBattleBox_Row:
     STA btl_varJ
     
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleBox_NextBlock  [$F5ED :: 0x3F5FD]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-DrawBattleBox_NextBlock:
-    LDA btldraw_blockptrstart   ; just add 5 to the block pointer
-    CLC
-    ADC #$05
-    STA btldraw_blockptrstart
-    LDA btldraw_blockptrstart+1
-    ADC #$00
-    STA btldraw_blockptrstart+1
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1249,14 +1233,14 @@ DrawBattleBox_Exit:
 DrawBattleBoxAndText:
     CALL DrawBattleBox_FetchBlock        ; get the first box block
     FARCALL DrawBattleBox                   ; use it to draw the box
-  @Loop:
-      CALL DrawBattleBox_NextBlock       ; move to next block (text block)
-      LDY #$00
-      LDA (btldraw_blockptrstart), Y    ; if the header byte is zero
-      BEQ DrawBattleBox_Exit            ; exit
-      CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
-      CALL DrawBattleString              ; and use it to draw text
-      JUMP @Loop                         ; keep going until null terminator is found
+    @Loop:
+        FARCALL DrawBattleBox_NextBlock       ; move to next block (text block)
+        LDY #$00
+        LDA (btldraw_blockptrstart), Y    ; if the header byte is zero
+        BEQ DrawBattleBox_Exit            ; exit
+        CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
+        CALL DrawBattleString              ; and use it to draw text
+        JUMP @Loop                         ; keep going until null terminator is found
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

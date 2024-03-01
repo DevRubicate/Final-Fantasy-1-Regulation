@@ -13,7 +13,7 @@
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox
+.export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1323,3 +1323,19 @@ DrawCommandBox:
     CPY #6*5              ; 6 blocks * 5 bytes per block
     BNE @Loop
     JUMP DrawBlockBuffer            ; then finally draw it
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattleBox_NextBlock  [$F5ED :: 0x3F5FD]
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+DrawBattleBox_NextBlock:
+    LDA btldraw_blockptrstart   ; just add 5 to the block pointer
+    CLC
+    ADC #$05
+    STA btldraw_blockptrstart
+    LDA btldraw_blockptrstart+1
+    ADC #$00
+    STA btldraw_blockptrstart+1
+    RTS
