@@ -59,7 +59,7 @@
 ; bank_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
 ; bank_26_map
-.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob, PrepSMRowCol
+.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob, PrepSMRowCol, PrepRowCol
 ; bank_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; bank_28_battle_util
@@ -90,8 +90,8 @@
 .export DrawMapPalette, lut_CombatItemMagicBox
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
-.export PrepRowCol, DrawBlockBuffer
-.export LoadOWMapRow, PrepRowCol, LoadStandardMap, SetPPUAddrToDest
+.export DrawBlockBuffer
+.export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
@@ -367,103 +367,7 @@ DecompressMap:
     JUMP SwapPRG ; swap that new bank in and exit
     RTS           ; useless RTS (impossible to reach)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Prep Map Row or Column [$D258 :: 0x3D268]
-;;
-;;    Same job as PrepSMRowCol, (see that description for details)
-;;   The difference is that PrepSMRowCol is specifically geared for Standard Maps,
-;;   whereas this routine is built to cater to both Standard and overworld maps (this routine
-;;   will jump to PrepSMRowCol where appropriate)
-;;
-;;   Again note that this does not load other information
-;;    necessary to DrawMapAttributes.  For that.. see PrepAttributePos
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-PrepRowCol:
-    LDX #$00          ; zero X (our dest index)
-    LDA mapflags      ; see if we're on the overworld, or in a standard map
-    LSR A
-    BCC @DoOverworld  ; if we're on the overworld, jump ahead to overworld routine
-
-       ; otherwise (we're in a standard map) -- do some pointer prepwork
-       ; then call PrepSMRowCol
-
-       LDA mapdraw_y     ; load the row number we're prepping
-       LSR A             ; right shift by 2, rotating bits into tmp+2
-       ROR tmp+2         ;  this is effectively the same as rotating left by 6 (multiply by 64)
-       LSR A             ;  only much shorter in code
-       ROR tmp+2         ; tmp+2 is now *almost* the low byte of the src pointer for the start of this row (still has garbage bits)
-       ORA #>mapdata     ; after ORing, A is now the high byte of the src pointer
-       STA tmp+1         ; write the src pointer to tmp
-       LDA tmp+2         ; get low byte
-       AND #$C0          ;  kill garbage bits
-       STA tmp+2         ;  and write back
-       ORA mapdraw_x     ; OR with current column number
-       STA tmp           ; write low byte with column to
-       FARJUMP PrepSMRowCol  ; tmp, tmp+1, and tmp+2 are all prepped to what PrepSMRowCol needs -- so call it
-
-    @DoOverworld:
-
-   LDA mapdraw_y ; get the row number
-   AND #$0F      ; mask out the low 4 bits (only 16 rows of the OW map are loaded at a time)
-   ORA #>mapdata
-   STA tmp+1     ; tmp+1 is now the high byte of the src pointer
-   LDA mapdraw_x
-   STA tmp       ; and the low byte ($10) is just the column number
-   LDA mapflags
-   AND #$02      ; see if we are to load a row or a column
-   BNE @DoColumn ; jump ahead to column routine if doing a column
-
-  @DoRow:
-     LDY #$00      ; zero Y for upcoming index
-     LDA (tmp), Y  ; get desired tile from the map
-     TAY           ; put that tile in Y to act as src index
-
-     LDA tsa_ul,      Y  ;  copy TSA and attribute bytes to drawing buffer
-     STA draw_buf_ul, X
-     LDA tsa_ur,      Y
-     STA draw_buf_ur, X
-     LDA tsa_dl,      Y
-     STA draw_buf_dl, X
-     LDA tsa_dr,      Y
-     STA draw_buf_dr, X
-     LDA tsa_attr,    Y
-     STA draw_buf_attr, X
-
-     INC tmp       ; increment low byte of src pointer.  no need to catch wrapping, as the map wraps at 256 tiles
-     INX           ; increment our dest counter
-     CPX #$10      ; and loop until we do 16 tiles (a full row)
-     BCC @DoRow
-     RTS
-
-  @DoColumn:
-     LDY #$00      ; zero Y for upcoming index
-     LDA (tmp), Y  ; get tile from the map
-     TAY           ; and use it as src index
-
-     LDA tsa_ul,      Y  ;  copy TSA and attribute bytes to drawing buffer
-     STA draw_buf_ul, X
-     LDA tsa_ur,      Y
-     STA draw_buf_ur, X
-     LDA tsa_dl,      Y
-     STA draw_buf_dl, X
-     LDA tsa_dr,      Y
-     STA draw_buf_dr, X
-     LDA tsa_attr,    Y
-     STA draw_buf_attr, X
-
-     LDA tmp+1     ; load high byte of src pointer
-     CLC
-     ADC #$01      ;  increment it by 1 (next row in the column)
-     AND #$0F      ;  but wrap as to not go outside of map data in RAM
-     ORA #>mapdata
-     STA tmp+1     ; write incremented and wrapped high byte back
-     INX           ; increment dest counter
-     CPX #$10      ; and loop until we do 16 tiles (a full column)
-     BCC @DoColumn
-     RTS
 
 
 

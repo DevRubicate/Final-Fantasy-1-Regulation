@@ -200,7 +200,7 @@ DrawDialogueBox:
     EOR #$10           ; toggle the NT bit so it draws "offscreen"
     STA mapdraw_ntx    ; and that is our target NT address
 
-    CALL PrepRowCol             ; prep map row/column graphics
+    FARCALL PrepRowCol             ; prep map row/column graphics
     CALL PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
     CALL WaitForVBlank        ; then wait for VBl
     FARCALL DrawMapRowCol          ; and draw what we just prepped
