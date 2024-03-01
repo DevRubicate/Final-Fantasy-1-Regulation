@@ -23,6 +23,7 @@
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
+.import DrawBattleString_ControlCode
 
 ; bank_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -95,7 +96,8 @@
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
-
+.export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawBattleString_Code11_Short, DrawString_SpaceRun
+.export DrawBattleMessage, DrawBattleString_Code0C
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -972,7 +974,7 @@ FormatBattleString:
     BEQ @Done           ; stop at the null terminator
     CMP #$48
     BCS :+
-        CALL DrawBattleString_ControlCode    ; if <  #$48
+        FARCALL DrawBattleString_ControlCode    ; if <  #$48
         JUMP :++
     :     
     CALL DrawBattleString_ExpandChar    ; if >= #$48
@@ -1061,84 +1063,6 @@ DrawBattleString_Code0C:            ; print a number (indirect)
 DrawBattleString_Code11_Short:
     JUMP DrawBattleString_Code11
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleString_ControlCode  [$FB96 :: 0x3FBA6]
-;;
-;;    Print a control code.  See FormatBattleString for details
-;;  A = the control code
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleString_ControlCode:
-    CMP #$02
-    BEQ @PrintAttacker          ; code:  02
-    CMP #$03
-    BEQ @PrintDefender          ; code:  03
-    CMP #$08
-    BCC @PrintCharacterName     ; codes: 04-07
-    CMP #$0C
-    BCC @PrintRoster            ; codes: 08-0B
-    BEQ DrawBattleString_Code0C ; code:  0C
-    CMP #$0E
-    BEQ @PrintAttackName        ; code:  0E
-    CMP #$0F
-    BEQ DrawBattleMessage       ; code:  0F
-    CMP #$10
-    BNE :+
-      JUMP DrawString_SpaceRun   ; code:  10
-  : CMP #$11
-    BEQ DrawBattleString_Code11_Short   ; code:  11
-    
-  @Exit:
-    RTS
-
-  @PrintAttacker:       ; code: 02
-    LDA btl_attacker
-    JUMP DrawEntityName
-  @PrintDefender:       ; code: 03
-    LDA btl_defender
-    JUMP DrawEntityName
-  
-  @PrintCharacterName:  ; codes:  04-07
-    SEC
-    SBC #$04            ; subtract 4 to make it zero based
-    ORA #$80            ; OR with $80 to make it a character entity ID
-    JUMP DrawEntityName  ; then print it as an entity
-    
-    ; Print an entry on the enemy roster
-  @PrintRoster:             ; codes: 08-0B
-    SEC                     ; subtract 8 to make it zero based
-    SBC #$08
-    TAX
-    LDA btl_enemyroster, X  ; get the roster entry
-    CMP #$FF
-    BEQ @Exit               ; if 'FF', that signals an empty slot, so don't print anything.
-    JUMP DrawEnemyName       ; then draw that enemy's name
-    
-    
-  @PrintAttackName:     ; code:  0E
-    LDA #BANK_ITEMS
-    CALL SwapPRG
-    LDA btl_attacker                ; check the attacker.  If the high bit is set (it's a player).
-    BMI @PrintAttackName_AsItem     ; Player special attacks are always items (or spells, which are stored with items)
-    
-    LDA btl_attackid                ; otherwise, this is an enemy, so get his attack
-    CMP #$42                        ; if it's >= 42, then it's a special enemy attack
-    BCC @PrintAttackName_AsItem     ; but less than 42, print it as an item (magic spell)
-    
-    LDA #>(lut_EnemyAttack - $42*2) ; subtract $42*2 from the start of the lookup table because the enemy attack
-    LDX #<(lut_EnemyAttack - $42*2) ;   index starts at $42
-    JUMP :+
-    
-    @PrintAttackName_AsItem: ; attack is less than $42
-    LDA #>lut_ItemNamePtrTbl
-    LDX #<lut_ItemNamePtrTbl
-    
-    : 
-    CALL BattleDrawLoadSubSrcPtr
-    JUMP DrawBattleSubString_Max8
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  BattleDrawLoadSubSrcPtr  [$FC00 :: 0x3FC10]
