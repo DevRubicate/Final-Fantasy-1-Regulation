@@ -897,12 +897,11 @@ BattleSubMenu_Item:
       
     AND #$FF                        ; update Z flag to see if all slots were zero
     BNE :+                          ; if all slots were 0 (no items), flow into @NothingBox, otherwise skip ahead
-    
-  @NothingBox:
-      CALL DoNothingMessageBox       ; Show the "nothing" box
-      JUMP CancelBattleAction        ; And cancel this battle action
-      
-  : CALL DrawBattleItemBox         ; Draw the item box
+    @NothingBox:
+    CALL DoNothingMessageBox       ; Show the "nothing" box
+    JUMP CancelBattleAction        ; And cancel this battle action
+    : 
+    FARCALL DrawBattleItemBox         ; Draw the item box
     CALL MenuSelection_Item          ; and run the logic for selecting an item
     
     PHA                             ; backup A/B state

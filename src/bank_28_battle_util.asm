@@ -7,10 +7,12 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
+.import lut_CombatItemMagicBox, ShiftLeft5, ShiftLeft6
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
-.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox
+.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -908,3 +910,98 @@ GetPointerToRosterString:
     ADC #>lut_EnemyRosterStrings
     STA tmp_68b4
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattleItemBox  [$F89E :: 0x3F8AE]
+;;
+;;    Draws the "Item box" that appears in the battle menu when the player
+;;  selects the ITEM option in the battle menu
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBattleItemBox:
+    LDY #$05                                ; 5 bytes of block data
+    : LDA lut_CombatItemMagicBox-1, Y       ; copy over the block data for the Item box
+      STA btl_msgdraw_hdr-1, Y
+      DEY
+      BNE :-
+    CALL BattleDraw_AddBlockToBuffer         ; Add the block to the buffer to be drawn
+    CALL ClearUnformattedCombatBoxBuffer     ; Chear the unformatted buffer (we'll be drawing to it shortly)
+    
+    INC btl_msgdraw_hdr     ; hdr=1 for contained text
+    INC btl_msgdraw_x       ; move draw coords right+down 1 tile
+    INC btl_msgdraw_y
+    
+    LDA #$00
+    STA temp_68b5               ; loop counter and equip slot to print (0-3)
+    
+    LDA btlcmd_curchar
+    CALL ShiftLeft6          ; Get the char stat index in X (00,40,80,C0)
+    TAX                     ;  This will be the source index
+    
+    ; Loop 4 times, once for each row.
+    ; 
+    ; Each row consists of 8 bytes of unformatted data:
+    ;    FF 0E xx FF FF 0E xx 00        where:
+    ; FF    = space
+    ; 0E xx = code to draw item 'xx's name
+    ; 00    = null terminator
+    ;
+    ; Alternatively, instead of '0E xx', it will output '10 07' if the weapon slot is empty
+    ;   which will draw 07 spaces.
+    ; If the armor slot is empty, then it'll null terminate the string with 00 instead of
+    ;   having the 2nd '0E xx'.
+    ;
+    ; Strangely, even though only 8 bytes are used, the game spaces rows $20 bytes apart
+  @MainLoop:
+    LDA temp_68b5               ; Row number * $20 in Y
+    CALL ShiftLeft5          ; This is the offset in the unformatted buffer to print to
+    TAY
+    
+    LDA #$0E
+    STA btl_unfmtcbtbox_buffer + 1, Y   ; put in the 0E control codes
+    STA btl_unfmtcbtbox_buffer + 5, Y
+    
+    LDA ch_weapons, X                   ; check the weapon slot
+    BEQ @NoWeapon                       ; if it's not empty...
+      AND #$7F                          ; mask off the 'equipped' bit
+      CLC
+      ADC #TCITYPE_WEPSTART-1           ; convert from 1-based weapon index, to 0-based item index
+      JUMP :+
+  @NoWeapon:                            ; if it IS empty
+      LDA #$10
+      STA btl_unfmtcbtbox_buffer + 1, Y ; replace the 0E control code with 10 control code
+      LDA #$07                          ; 7 spaces
+  : STA btl_unfmtcbtbox_buffer + 2, Y
+    
+    LDA ch_armor, X                     ; check armor slot
+    BEQ :+                              ; if zero, jump ahead to print the 0 as a null terminator.
+      AND #$7F                          ; if nonzero, turn off the equipped bit
+      CLC
+      ADC #TCITYPE_ARMSTART-1           ; convert from 1-based armor index to 0-based item index
+  : STA btl_unfmtcbtbox_buffer + 6, Y
+  
+    LDA #$00
+    STA btl_unfmtcbtbox_buffer + 7, Y   ; null terminate the string
+    
+    TYA                                 ; set the source pointer to the unformatted
+    CLC                                 ;  buffer + the offset
+    ADC #<btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr
+    LDA #$00
+    ADC #>btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr+1
+    
+    CALL BattleDraw_AddBlockToBuffer     ; then draw this row
+    
+    INX                                 ; inc source index
+    INC btl_msgdraw_y                   ; move drawing down 2 rows
+    INC btl_msgdraw_y
+    INC temp_68b5                           ; inc the row counter
+    LDA temp_68b5
+    CMP #$04                            ; loop until 4 rows are drawn
+    BNE @MainLoop
+    
+    ; Finally, after all rows added, Actually draw the block buffer and exit
+    JUMP DrawBlockBuffer
