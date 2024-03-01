@@ -3,14 +3,14 @@
 .include "src/global-import.inc"
 
 .import BattleRNG, WaitForVBlank, MusicPlay
-.import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, Battle_PlayerBox, LoadBattleAttributeTable
+.import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
-.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock
+.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -745,3 +745,36 @@ UndrawBattleBlock:
     STA btldraw_blockptrend+1
     
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Battle_PlayerBox  [$F3C6 :: 0x3F3D6]
+;;
+;;    Draws a box with width=6 and height=7, at coords A,X  (X=Y coord).
+;;  This box is used to house the player name and HP in battle.
+;;
+;;  This routine takes care to not change A,X or Y
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Battle_PlayerBox:
+    STA box_x        ; record A as X coord
+    STX box_y        ; record X as Y coord
+
+    PHA                ; then back up A and X
+    TXA
+    PHA
+
+    LDX #6
+    STX box_wd       ; set width to 6
+    INX
+    STX box_ht       ; and height to 7
+
+    CALL Battle_PPUOff  ; turn off the PPU
+    FARCALL DrawBox        ; draw the box
+
+    PLA                ; restore backed up A, X
+    TAX
+    PLA
+
+    RTS                ; and exit!

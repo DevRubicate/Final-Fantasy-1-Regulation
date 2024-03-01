@@ -88,7 +88,7 @@
 .export CoordToNTAddr
 .export DrawMapPalette
 .export WaitVBlank_NoSprites
-.export Battle_PlayerBox, SetPPUAddr_XA
+.export SetPPUAddr_XA
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
@@ -1174,38 +1174,7 @@ SetPPUAddr_XA:
     STA PPUADDR   ; A as low byte
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_PlayerBox  [$F3C6 :: 0x3F3D6]
-;;
-;;    Draws a box with width=6 and height=7, at coords A,X  (X=Y coord).
-;;  This box is used to house the player name and HP in battle.
-;;
-;;  This routine takes care to not change A,X or Y
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Battle_PlayerBox:
-    STA box_x        ; record A as X coord
-    STX box_y        ; record X as Y coord
-
-    PHA                ; then back up A and X
-    TXA
-    PHA
-
-    LDX #6
-    STX box_wd       ; set width to 6
-    INX
-    STX box_ht       ; and height to 7
-
-    FARCALL Battle_PPUOff  ; turn off the PPU
-    FARCALL DrawBox        ; draw the box
-
-    PLA                ; restore backed up A, X
-    TAX
-    PLA
-
-    RTS                ; and exit!
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
