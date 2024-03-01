@@ -67,6 +67,7 @@
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
+.import BattleMenu_DrawMagicNames
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -91,7 +92,7 @@
 .export DrawMapRowCol, SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export PrepRowCol, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
-.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, BattleMenu_DrawMagicNames
+.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 
@@ -1284,70 +1285,6 @@ UndrawNBattleBlocks:
         DEC tmp_6aa5             ; dec
         BNE @Loop             ; loop until no more to undraw
     @Exit:
-    RTS
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  BattleMenu_DrawMagicNames  [$F844 :: 0x3F854]
-;;
-;;  Prints a row of spell names to the unformatted combat box buffer.  The below string is printed:
-;;    __ __ __ xx xx FF xx xx FF xx xx
-;;
-;;  '__' bytes are skipped.  These are filled with the "L# " text in another routine
-;;  'xx xx' bytes are either '0E id' to print the spell name, or '10 04' to print 4 spaces if the slot is empty
-;;
-;;  input:   btl_varI,89 + Y = source pointer + index to the player's spells to print
-;;                    X = dest index to print to in the unformatted buffer
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BattleMenu_DrawMagicNames:
-    LDA #$0E
-    STA btl_unfmtcbtbox_buffer + 3, X   ; set the 3 '0E' control codes to print item names
-    STA btl_unfmtcbtbox_buffer + 6, X
-    STA btl_unfmtcbtbox_buffer + 9, X
-    
-    LDA (btl_varI), Y                        ; check slot 0
-    BNE :+                              ; if it's empty (no spell)
-        LDA #$10
-        STA btl_unfmtcbtbox_buffer + 3, X ; replace 0E code with 10 code to print spaces
-        LDA #$04
-        STA btl_unfmtcbtbox_buffer + 4, X ; 04 to print 4 spaces
-        JUMP @Column1
-    : 
-    CLC                                 ; otherwise (not empty), onvert from a 1-based magic index
-    ADC #MG_START-1                     ; to a 0-based item index, and put the index after the '0E' code
-    STA btl_unfmtcbtbox_buffer + 4, X
-
-    @Column1:                             ; Then repeat the above process for each of the 3 columns
-    INY
-    LDA (btl_varI), Y
-    BNE :+
-        LDA #$10
-        STA btl_unfmtcbtbox_buffer + 6, X
-        LDA #$04
-        STA btl_unfmtcbtbox_buffer + 7, X
-        JUMP @Column2
-    : 
-    CLC
-    ADC #MG_START-1
-    STA btl_unfmtcbtbox_buffer + 7, X
-    
-    @Column2:
-    INY
-    LDA (btl_varI), Y
-    BNE :+
-        LDA #$10
-        STA btl_unfmtcbtbox_buffer + 9, X
-        LDA #$04
-        STA btl_unfmtcbtbox_buffer + 10, X
-        JUMP @Done
-    : 
-    CLC
-    ADC #MG_START-1
-    STA btl_unfmtcbtbox_buffer + 10, X
-    
-    @Done:
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
