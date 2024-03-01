@@ -7,12 +7,12 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
-.import lut_CombatItemMagicBox, ShiftLeft5, ShiftLeft6
+.import lut_CombatItemMagicBox, ShiftLeft5, ShiftLeft6, BattleMenu_DrawMagicNames
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-
+.export DrawBattleMagicBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1004,4 +1004,156 @@ DrawBattleItemBox:
     BNE @MainLoop
     
     ; Finally, after all rows added, Actually draw the block buffer and exit
+    JUMP DrawBlockBuffer
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattleMagicBox  [$F764 :: 0x3F774]
+;;
+;;    Draws the "Magic box" that appears in the battle menu when the player
+;;  selects the MAGIC option in the battle menu.
+;;
+;;  input:     tmp_6af8 = The page to draw.  0 will draw L1-4 spell page, 1 will draw L5-8 spell page
+;;    btlcmd_curchar = the character whose spells we're drawing
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBattleMagicBox:
+    LDY #$05                                ; prep the block for the magic/item box
+    : 
+    LDA lut_CombatItemMagicBox-1, Y
+    STA btl_msgdraw_hdr-1, Y
+    DEY
+    BNE :-
+    CALL BattleDraw_AddBlockToBuffer         ; add it to the block buffer
+    
+    CALL ClearUnformattedCombatBoxBuffer     ; clear the unformatted buffer (so we can draw to it)
+    
+    INC btl_msgdraw_hdr     ; inc hdr (should be 1 for text blocks)
+    INC btl_msgdraw_x       ; move down+right 1 tile for text
+    INC btl_msgdraw_y
+    
+    LDA #$00
+    STA temp_68b5               ; loop counter / row index
+    
+    LDA btlcmd_curchar
+    CALL ShiftLeft6          ; get current character*$40
+    CLC
+    ADC #<ch_magicdata      ; and add with ch_magic dat
+    STA btl_tmpvar1                 ; to get a pointer to this character's magic list
+    LDA #$00                ;   and put it in btl_varI,89
+    ADC #>ch_magicdata
+    STA btl_varJ
+    
+    LDA tmp_6af8               ; See if we're drawing the top or bottom page
+    BNE @BottomPage
+    
+    @TopPage:
+    LDA temp_68b5               ; row index
+    ASL A
+    ASL A                   ; row index * 4 in Y
+    TAY                     ; used as source index to get the magic
+    
+    ASL A
+    ASL A
+    ASL A                   ; row index * $20 in X
+    TAX                     ; used as dest index to the unformatted buffer
+    
+    ; Print the 'L#' text on the left side of the box
+    LDA #$95                        ; 'L'
+    STA btl_unfmtcbtbox_buffer, X
+    LDA temp_68b5
+    CLC
+    ADC #$81                        ; '1' + row (level)
+    STA btl_unfmtcbtbox_buffer+1, X
+    
+    ; Print the names of the spells
+    CALL BattleMenu_DrawMagicNames
+    
+    ; Print the MP amount
+    LDA #ch0_curmp - ch_magicdata    ; since btl_varI,89 points to magic list, and the
+    CLC                             ;  MP is right after that, just change the Y index
+    ADC temp_68b5                       ;  to access the MP.
+    TAY                             ; Add the row counter to get this level's MP count
+    
+    LDA (btl_varI), Y                    ; get the MP count
+    CLC
+    ADC #$80                        ; + $80 to convert to the tile
+    STA btl_unfmtcbtbox_buffer + 12, X  ; print that tile
+    LDA #$00
+    STA btl_unfmtcbtbox_buffer + 13, X  ; null terminate the string
+    
+    
+    TXA                             ; get the dest index, and add to the pointer
+    CLC                             ;  to the unformatted buffer.
+    ADC #<btl_unfmtcbtbox_buffer    ; set the source pointer
+    STA btl_msgdraw_srcptr
+    LDA #$00
+    ADC #>btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr+1
+    
+    CALL BattleDraw_AddBlockToBuffer ; Add that block to the block buffer
+    
+    INC btl_msgdraw_y               ; then move down 2 rows
+    INC btl_msgdraw_y
+    INC temp_68b5                       ; inc the row counter
+    LDA temp_68b5
+    CMP #$04
+    BNE @TopPage                    ; and loop until all 4 rows drawn
+    JUMP @Done
+
+    @BottomPage:                      ; This is identical to @TopPage, only it changes
+    LDA temp_68b5                       ;  a few constants to print the bottom page instead.
+    ASL A                           ; Comments here will be sparse.
+    ASL A
+    TAY
+    
+    ASL A
+    ASL A
+    ASL A
+    TAX
+    
+    TYA                             ; Add 4*4 to move to L4 spells
+    CLC
+    ADC #4*4
+    TAY
+    
+    LDA #$95                        ; 'L'
+    STA btl_unfmtcbtbox_buffer, X
+    LDA temp_68b5
+    CLC
+    ADC #$85                        ; '5' + row
+    STA btl_unfmtcbtbox_buffer+1, X
+    CALL BattleMenu_DrawMagicNames
+    
+    LDA #ch0_curmp - ch_magicdata + 4
+    CLC
+    ADC temp_68b5
+    TAY
+    
+    LDA (btl_varI), Y
+    CLC
+    ADC #$80
+    STA btl_unfmtcbtbox_buffer + 12, X
+    LDA #$00
+    STA btl_unfmtcbtbox_buffer + 13, X
+    
+    TXA
+    CLC
+    ADC #<btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr
+    LDA #$00
+    ADC #>btl_unfmtcbtbox_buffer
+    STA btl_msgdraw_srcptr+1
+    
+    CALL BattleDraw_AddBlockToBuffer
+    
+    INC btl_msgdraw_y
+    INC btl_msgdraw_y
+    INC temp_68b5
+    LDA temp_68b5
+    CMP #$04
+    BNE @BottomPage
+
+    @Done:
     JUMP DrawBlockBuffer

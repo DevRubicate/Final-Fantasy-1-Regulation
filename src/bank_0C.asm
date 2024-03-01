@@ -2004,7 +2004,7 @@ MenuSelection_Magic:
     LDA #$00
     STA tmp_6af8                   ; set page number to 0 (draw top page of magic box)
     
-    CALL DrawBattleMagicBox    ; draw it!
+    FARCALL DrawBattleMagicBox    ; draw it!
     NOJUMP @MenuSelection          ; pointless jump, as this code immediately follws
     
 @MenuSelection:
@@ -2098,7 +2098,7 @@ MenuSelection_Magic:
   : INC tmp_6af8                   ; page 0 = inc to page 1
     LDA #$01
     CALL UndrawNBattleBlocks   ; undraw the page 0 magic box
-    CALL DrawBattleMagicBox    ; draw the page 1 magic box
+    FARCALL DrawBattleMagicBox    ; draw the page 1 magic box
   @NormalMove_Down:
     INC btlcurs_y
     RTS
@@ -2114,7 +2114,7 @@ MenuSelection_Magic:
   : DEC tmp_6af8                   ; page 1?  move to page 0, and redraw it
     LDA #$01
     CALL UndrawNBattleBlocks
-    CALL DrawBattleMagicBox
+    FARCALL DrawBattleMagicBox
   @NormalMove_Up:
     DEC btlcurs_y
     RTS
