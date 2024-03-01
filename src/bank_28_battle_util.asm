@@ -6,14 +6,28 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
-.import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings, lua_BattleCommandBoxInfo
+.import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 .import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
-.import lua_BattleCommandBoxInfo
+.import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Lut for the battle command box  [$FA1B :: 0x3FA2B]
+
+lua_BattleCommandBoxInfo:
+;       hdr,  X    Y    W    H
+  .byte $00, $0C, $00, $0D, $0A         ; box
+;       hdr,  X    Y    ptr
+  .byte $01, $0E, $01, <lua_BattleCommandBoxInfo_txt0, >lua_BattleCommandBoxInfo_txt0   ; text
+  .byte $01, $0E, $03, <lua_BattleCommandBoxInfo_txt1, >lua_BattleCommandBoxInfo_txt1
+  .byte $01, $0E, $05, <lua_BattleCommandBoxInfo_txt2, >lua_BattleCommandBoxInfo_txt2
+  .byte $01, $0E, $07, <lua_BattleCommandBoxInfo_txt3, >lua_BattleCommandBoxInfo_txt3
+  .byte $01, $14, $01, <lua_BattleCommandBoxInfo_txt4, >lua_BattleCommandBoxInfo_txt4
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

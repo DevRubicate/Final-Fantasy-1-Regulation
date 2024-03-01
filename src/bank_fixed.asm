@@ -92,7 +92,9 @@
 .export PrepRowCol, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, BattleMenu_DrawMagicNames
-.export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi, lua_BattleCommandBoxInfo
+.export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
+.export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1444,26 +1446,11 @@ lut_CombatItemMagicBox:
 ;       hdr    X    Y   wd   ht 
   .byte $00, $02, $01, $16, $0A
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Lut for the battle command box  [$FA1B :: 0x3FA2B]
-
-lua_BattleCommandBoxInfo:
-;       hdr,  X    Y    W    H
-  .byte $00, $0C, $00, $0D, $0A         ; box
-;       hdr,  X    Y    ptr
-  .byte $01, $0E, $01, <@txt0, >@txt0   ; text
-  .byte $01, $0E, $03, <@txt1, >@txt1
-  .byte $01, $0E, $05, <@txt2, >@txt2
-  .byte $01, $0E, $07, <@txt3, >@txt3
-  .byte $01, $14, $01, <@txt4, >@txt4
-  
-  
-  @txt0:  .byte $EF, $F0, $F1, $F2, $00     ; "FIGHT"
-  @txt1:  .byte $EB, $EC, $ED, $EE, $00     ; "MAGIC"
-  @txt2:  .byte $F3, $F4, $F5, $F6, $00     ; "DRINK"
-  @txt3:  .byte $92, $9D, $8E, $96, $00     ; "ITEM"
-  @txt4:  .byte $9B, $9E, $97, $00          ; "RUN"
+lua_BattleCommandBoxInfo_txt0:  .byte $EF, $F0, $F1, $F2, $00     ; "FIGHT"
+lua_BattleCommandBoxInfo_txt1:  .byte $EB, $EC, $ED, $EE, $00     ; "MAGIC"
+lua_BattleCommandBoxInfo_txt2:  .byte $F3, $F4, $F5, $F6, $00     ; "DRINK"
+lua_BattleCommandBoxInfo_txt3:  .byte $92, $9D, $8E, $96, $00     ; "ITEM"
+lua_BattleCommandBoxInfo_txt4:  .byte $9B, $9E, $97, $00          ; "RUN"
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
