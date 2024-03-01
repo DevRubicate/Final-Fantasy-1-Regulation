@@ -4,12 +4,12 @@
 
 .import GameStart
 .import lut_IntroStoryText
-.import DoOverworld, PlaySFX_Error, DrawImageRect, AddGPToParty, DrawComplexString_New
+.import DoOverworld, PlaySFX_Error, AddGPToParty, DrawComplexString_New
 .import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy, HideMapObject
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
-.import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor
+.import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -4715,6 +4715,67 @@ DrawShop:
     STA menustall                ; now that the screen is on, turn on menu stalling as well
 
     RTS                          ; and exit
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Draw Image Rectangle  [$DCBC :: 0x3DCCC]
+;;
+;;    Draws a rectangle of given dimensions with tiles supplies by a buffer.
+;;  This allows for simple drawing of a rectangular image.
+;;
+;;    Note that the image can not cross page boundaries.  Also, no stalling
+;;  is performed, so the PPU must be off during a draw.  Also note this routine does not
+;;  do any attribute updating.  Image buffer cannot consist of more than 256 tiles.
+;;
+;;  IN:   dest_x,  dest_y = Coords at which to draw the rectangle
+;;       dest_wd, dest_ht = dims of rectangle
+;;            (image_ptr) = points to a buffer containing the image to draw
+;;                  tmp+2 = tile additive.  This value is added to every non-zero tile in the image
+;;
+;;    Such a shame this seems to only be used for drawing the shopkeeper.  Really seems like
+;;  it would be a more widely used routine.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawImageRect:
+    CALL CoordToNTAddr    ; convert the given destination to a usable PPU address
+    LDY #0               ; zero our source index, Y
+
+    LDA dest_ht          ; get our height
+    STA tmp              ;  and store it in tmp (this will be our row loop down counter)
+
+  @RowLoop:
+    LDA PPUSTATUS            ; reset PPU toggle
+    LDA ppu_dest+1       ; load up desired PPU address
+    STA PPUADDR
+    LDA ppu_dest
+    STA PPUADDR
+
+    LDX dest_wd          ; load width into X (column down counter)
+   @ColLoop:
+    LDA (image_ptr), Y  ; get a tile from the image
+    BEQ :+              ; if it's nonzero....
+        CLC
+        ADC tmp+2         ; ...add our modifier to it
+    :     
+    STA PPUDATA           ; draw it
+    INY                 ; inc source index
+    DEX                 ; dec our col loop counter
+    BNE @ColLoop        ; continue looping until X expires
+
+    LDA ppu_dest          ; increment the PPU dest by $20 (one row)
+    CLC
+    ADC #$20
+    STA ppu_dest
+
+    LDA ppu_dest+1        ; include carry in the high byte
+    ADC #0
+    STA ppu_dest+1
+
+    DEC tmp               ; decrement tmp, our row counter
+    BNE @RowLoop          ; and loop until it expires
+
+    RTS                   ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
