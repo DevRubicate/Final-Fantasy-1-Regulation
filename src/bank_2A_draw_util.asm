@@ -5,7 +5,7 @@
 .import MenuCondStall, CoordToNTAddr
 .import WaitVBlank_NoSprites, WaitForVBlank, MusicPlay, SetOWScroll_PPUOn, SetSMScroll
 
-.export DrawBox, CyclePalettes
+.export DrawBox, CyclePalettes, GetCharacterNamePtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -494,3 +494,25 @@ PalCyc_DrawPalette:
     STA PPUADDR
 
     RTS                ; and exit
+
+GetCharacterNamePtr:
+    ; otherwise, it's a player
+    AND #$03                    ; mask out the low bits to get the player ID
+    ASL A                       ; @2 for pointer table
+    TAX
+    LDA lut_CharacterNamePtr, X ; run it though a lut to get the pointer to the player's name
+    STA btldraw_subsrc
+    INX
+    LDA lut_CharacterNamePtr, X
+    STA btldraw_subsrc+1
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Lut to get a character's name by their index  [$FCAA :: 0x3FCBA]
+
+lut_CharacterNamePtr:
+  .WORD ch_name
+  .WORD ch_name+$40
+  .WORD ch_name+$80
+  .WORD ch_name+$C0

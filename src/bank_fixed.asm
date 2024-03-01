@@ -69,7 +69,7 @@
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
 .import BattleMenu_DrawMagicNames
 ; bank_2A_draw_util
-.import DrawBox, CyclePalettes
+.import DrawBox, CyclePalettes, GetCharacterNamePtr
 ; bank_2B_dialog_util
 .import ShowDialogueBox, EraseBox
 ; bank_2C_dialog_string
@@ -1698,15 +1698,7 @@ DrawString_SpaceRun:
 DrawEntityName:
     BPL @Enemy                  ; if high bit is clear, it's an enemy
     
-    ; otherwise, it's a player
-    AND #$03                    ; mask out the low bits to get the player ID
-    ASL A                       ; @2 for pointer table
-    TAX
-    LDA lut_CharacterNamePtr, X ; run it though a lut to get the pointer to the player's name
-    STA btldraw_subsrc
-    INX
-    LDA lut_CharacterNamePtr, X
-    STA btldraw_subsrc+1
+    FARCALL GetCharacterNamePtr
     
     LDY #$00
     : LDA (btldraw_subsrc), Y           ; draw each character in the character's name
@@ -1800,16 +1792,6 @@ DrawBattleSubString:
   @Exit:
     LDA battle_bank                 ; swap back to battle bank
     JUMP SwapPRG                   ;   and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Lut to get a character's name by their index  [$FCAA :: 0x3FCBA]
-
-lut_CharacterNamePtr:
-  .WORD ch_name
-  .WORD ch_name+$40
-  .WORD ch_name+$80
-  .WORD ch_name+$C0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
