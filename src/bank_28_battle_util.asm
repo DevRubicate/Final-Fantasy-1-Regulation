@@ -6,10 +6,11 @@
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, Battle_PlayerBox, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
+.import DrawBattleBoxAndText
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
-.export BattleDrawMessageBuffer_Reverse
+.export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -704,4 +705,43 @@ GetBattleMessagePtr:
     LDA #>btl_msgbuffer
     ADC btl_varJ
     TAY                 ; high byte in Y
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  UndrawBattleBlock  [$F65A :: 0x3F66A]
+;;
+;;  This erases or "undraws" a battle block.  It does this by wiping the message buffer,
+;;  then redrawing all blocks (except for the last one).
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UndrawBattleBlock:
+    LDA btl_msgdraw_blockcount
+    STA tmp_6aa4                       ; backup the block count
+    DEC tmp_6aa4                       ; reduce the count by 1 so we draw one less
+    CALL ClearBattleMessageBuffer    ; erase everything in the buffer
+    
+    LDA #<btlbox_blockdata          ; reset the blockptr
+    STA btldraw_blockptrstart
+    LDA #>btlbox_blockdata
+    STA btldraw_blockptrstart+1
+    
+    LDA #$00
+    STA btl_msgdraw_blockcount      ; clear the block count
+    
+    @Loop:
+        LDA btl_msgdraw_blockcount    ; compare block count
+        CMP tmp_6aa4                     ;   to 1-less-than original block count
+        BEQ :+                        ; if we've reached that, we're done
+        FORCEDFARCALL DrawBattleBoxAndText      ; otherwise, draw another block
+        INC btl_msgdraw_blockcount
+        JUMP @Loop                     ; and repeat
+    : 
+    CALL BattleDrawMessageBuffer_Reverse ; reverse-draw to erase the block from the screen
+    LDA btldraw_blockptrstart           ; move the end pointer to this position, so
+    STA btldraw_blockptrend             ; the block we dropped will be actually removed
+    LDA btldraw_blockptrstart+1
+    STA btldraw_blockptrend+1
+    
     RTS
