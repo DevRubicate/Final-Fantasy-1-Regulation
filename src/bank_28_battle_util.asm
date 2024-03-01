@@ -7,7 +7,7 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
-.import lut_CombatItemMagicBox, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
+.import DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 
 
@@ -15,6 +15,16 @@
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Combat Item/Magic Box lut    [$FA11 :: 0x3FA21]
+;;
+;;      The box that pops up for the ITEM and MAGIC menus
+
+lut_CombatItemMagicBox:
+;       hdr    X    Y   wd   ht 
+  .byte $00, $02, $01, $16, $0A
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

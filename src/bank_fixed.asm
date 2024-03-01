@@ -87,7 +87,7 @@
 .export EnterOW_PalCyc
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
-.export DrawMapPalette, lut_CombatItemMagicBox
+.export DrawMapPalette
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export DrawBlockBuffer
@@ -366,12 +366,6 @@ DecompressMap:
     ADC #$01      ; increment it by 1
     JUMP SwapPRG ; swap that new bank in and exit
     RTS           ; useless RTS (impossible to reach)
-
-
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -887,16 +881,6 @@ DrawBattleString:
     
   @Exit:
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Combat Item/Magic Box lut    [$FA11 :: 0x3FA21]
-;;
-;;      The box that pops up for the ITEM and MAGIC menus
-
-lut_CombatItemMagicBox:
-;       hdr    X    Y   wd   ht 
-  .byte $00, $02, $01, $16, $0A
 
 lua_BattleCommandBoxInfo_txt0:  .byte $EF, $F0, $F1, $F2, $00     ; "FIGHT"
 lua_BattleCommandBoxInfo_txt1:  .byte $EB, $EC, $ED, $EE, $00     ; "MAGIC"
