@@ -65,7 +65,7 @@
 ; bank_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
-.import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox
+.import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes
 ; bank_2B_dialog_util
@@ -92,6 +92,7 @@
 .export PrepRowCol, BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer
 .export LoadOWMapRow, PrepRowCol, ScrollUpOneRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row, BattleMenu_DrawMagicNames
+.export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1792,7 +1793,7 @@ DrawBattleString_Code11:            ; print a number
     LDA btldraw_src+1               ; the pointer to the source string as the pointer to the number
     STA btldraw_subsrc+1
     CALL DrawBattle_IncSrcPtr
-    JUMP DrawBattle_Number
+    FARJUMP DrawBattle_Number
 
 ;;  DrawBattleString_Code0C  [$FB2F :: 0x3FB3F]
 DrawBattleString_Code0C:            ; print a number (indirect)
@@ -1802,74 +1803,7 @@ DrawBattleString_Code0C:            ; print a number (indirect)
     CALL DrawBattle_IncSrcPtr
     LDA (btldraw_src), Y
     STA btldraw_subsrc+1
-    NOJUMP DrawBattle_Number
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattle_Number  [$FB3D :: 0x3FB4D]
-;;
-;;  Converts a number to text and prints it (for FormatBattleString)
-;;
-;;  input:
-;;    btldraw_subsrc = pointer to the 2-byte number to draw.
-;;    Y should be 0 upon entry
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattle_Number:
-    LDA (btldraw_subsrc), Y     ; get the number to print, stuff it in tmp_96,tmp_97
-    STA tmp_96
-    INY
-    LDA (btldraw_subsrc), Y
-    STA tmp_97
-    
-    LDX #<10000
-    LDY #>10000
-    CALL @Divide
-    STA tmp_9a                     ; start pulling digits out and stuff them in tmp_9a
-    LDX #<1000
-    LDY #>1000
-    CALL @Divide
-    STA tmp_9b
-    LDX #<100
-    LDY #>100
-    CALL @Divide
-    STA tmp_9c
-    LDX #<10
-    CALL @Divide
-    STA tmp_9d
-    
-    LDX #$00
-  @FindFirstDigit:
-    LDA tmp_9a, X          ; keep getting individual digits  (note that INX is done before 
-    INX                 ;    this digit is printed, so we have to read from tmp_9a-1 when printing)
-    CPX #$05            ; skip ahead to printing the 1's digit 
-    BEQ @OnesDigit      ;  if we've exhausted all 5 digits.
-    ORA #$00            ; Otherwise, check this digit (OR to update Z flag)
-    BEQ @FindFirstDigit ;  if it's zero, don't print anything, and move to next digit
-    
-  @PrintDigits:
-    LDY #$01                ; Y=1 to print the bottom part first
-    LDA tmp_9a-1, X            ; get the digit
-    ORA #$80                ; OR with #$80 to get the tile
-    STA (btldraw_dst), Y    ; print the numerical tile
-    LDA #$FF
-    DEY
-    STA (btldraw_dst), Y    ; print the empty space for the top part
-    
-    CALL DrawBattleString_IncDstPtr
-    INX
-    CPX #$05
-    BNE @PrintDigits            ; loop until only the 1s digit is left
-    
-  @OnesDigit:
-    LDA btltmp+6                    ; fetch the 1s digit
-    ORA #$80
-    LDX #$FF
-    JUMP DrawBattleString_DrawChar   ; and print it
-
-    @Divide:
-    FARJUMP DrawBattle_Division
+    FARJUMP DrawBattle_Number
 
 ;;  DrawBattleString_Code11_Short  [$FB93 :: 0x3FBA3]
 ;;    Just jumps to the actual routine.  Only exists here because the routine is too

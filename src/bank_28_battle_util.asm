@@ -7,12 +7,12 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import BattleDraw_AddBlockToBuffer, ClearUnformattedCombatBoxBuffer, DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
-.import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames
+.import lut_CombatItemMagicBox, BattleMenu_DrawMagicNames, DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
-.export DrawBattleMagicBox
+.export DrawBattleMagicBox, DrawBattle_Number
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1175,3 +1175,70 @@ ShiftLeft5:
     ASL A
     ASL A
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattle_Number  [$FB3D :: 0x3FB4D]
+;;
+;;  Converts a number to text and prints it (for FormatBattleString)
+;;
+;;  input:
+;;    btldraw_subsrc = pointer to the 2-byte number to draw.
+;;    Y should be 0 upon entry
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBattle_Number:
+    LDA (btldraw_subsrc), Y     ; get the number to print, stuff it in tmp_96,tmp_97
+    STA tmp_96
+    INY
+    LDA (btldraw_subsrc), Y
+    STA tmp_97
+    
+    LDX #<10000
+    LDY #>10000
+    CALL @Divide
+    STA tmp_9a                     ; start pulling digits out and stuff them in tmp_9a
+    LDX #<1000
+    LDY #>1000
+    CALL @Divide
+    STA tmp_9b
+    LDX #<100
+    LDY #>100
+    CALL @Divide
+    STA tmp_9c
+    LDX #<10
+    CALL @Divide
+    STA tmp_9d
+    
+    LDX #$00
+  @FindFirstDigit:
+    LDA tmp_9a, X          ; keep getting individual digits  (note that INX is done before 
+    INX                 ;    this digit is printed, so we have to read from tmp_9a-1 when printing)
+    CPX #$05            ; skip ahead to printing the 1's digit 
+    BEQ @OnesDigit      ;  if we've exhausted all 5 digits.
+    ORA #$00            ; Otherwise, check this digit (OR to update Z flag)
+    BEQ @FindFirstDigit ;  if it's zero, don't print anything, and move to next digit
+    
+  @PrintDigits:
+    LDY #$01                ; Y=1 to print the bottom part first
+    LDA tmp_9a-1, X            ; get the digit
+    ORA #$80                ; OR with #$80 to get the tile
+    STA (btldraw_dst), Y    ; print the numerical tile
+    LDA #$FF
+    DEY
+    STA (btldraw_dst), Y    ; print the empty space for the top part
+    
+    CALL DrawBattleString_IncDstPtr
+    INX
+    CPX #$05
+    BNE @PrintDigits            ; loop until only the 1s digit is left
+    
+  @OnesDigit:
+    LDA btltmp+6                    ; fetch the 1s digit
+    ORA #$80
+    LDX #$FF
+    JUMP DrawBattleString_DrawChar   ; and print it
+
+    @Divide:
+    JUMP DrawBattle_Division
