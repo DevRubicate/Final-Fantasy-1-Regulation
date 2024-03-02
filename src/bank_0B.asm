@@ -657,7 +657,13 @@ EndOfBattleWrapUp:
     CALL WaitForAnyInput                         ; wait for input
     ; TODO: This produces giberish as it undraws boxes because the undrawing process also includes redrawing boxes
     ; and the right bank (this one) won't be loaded in when the redrawing happens
-    ;CALL RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
+
+    LDA #($28 * 2) | %10000000
+    STA btl_msgdraw_srcptr_bank
+    CALL RespondDelay_UndrawAllCombatBoxes       ; then delay, and undraw
+    LDA #0
+    STA btl_msgdraw_srcptr_bank
+    
     LDA #$00                    ; award XP to all 4 party members
     CALL LvlUp_AwardAndUpdateExp
     LDA #$01
@@ -1091,9 +1097,13 @@ LvlUp_LevelUp:
       CALL RespondDelay              ; wait a bit for them to read it
       CALL WaitForAnyInput           ; wait a bit more for the user to press something
       
+      LDA #($28 * 2) | %10000000
+      STA btl_msgdraw_srcptr_bank
       LDA #$01
       FARCALL UndrawNBattleBlocks     ; then undraw the box we just drew
-      
+      LDA #0
+      STA btl_msgdraw_srcptr_bank
+
   @DisplayLoop_Next:
     INC displaymsgcode             ; inc msg code to refer to next stat name
     INC displayloopctr
@@ -1102,7 +1112,12 @@ LvlUp_LevelUp:
     BNE @DisplayLoop
     
     ; The delay, undraw all boxes, and exit!
-    JUMP RespondDelay_UndrawAllCombatBoxes
+    LDA #($28 * 2) | %10000000
+    STA btl_msgdraw_srcptr_bank
+    CALL RespondDelay_UndrawAllCombatBoxes
+    LDA #0
+    STA btl_msgdraw_srcptr_bank
+    RTS
     
     ;; BUGGED - If the character gains so much EXP that they should level up more than once,
     ;;   This code will only level them up the first time, and they'll have to complete another battle

@@ -944,13 +944,14 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             safecall_reg_y,         1
     RES             safecall_reg_flags,     1
     RES             rng_seed,               2
-    RES             framecounter,           2 ; 2 bytes      ; $F0
-    RES             npcdir_seed,            1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
-    RES             battlestep,             1 ; 1 bytes      ; $F5
-    RES             battlestep_sign,        1 ; 1 bytes      ; $F6
-    RES             battlecounter,          1 ; 1 bytes      ; $F7
-    RES             battlerate,             1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
-    RES             startintrocheck,        1 ; 1 bytes      ; $F9
-    RES             respondrate,            1 ; 1 bytes      ; $FA
-    RES             NTsoft2000,             1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
-    RES             soft2000,               0 ; 1 bytes      ; $FF
+    RES             framecounter,           2 ; 2 byte
+    RES             npcdir_seed,            1 ; 1 byte  ; RNG seed for determining direction for NPCs to walk
+    RES             battlestep,             1 ; 1 byte
+    RES             battlestep_sign,        1 ; 1 byte
+    RES             battlecounter,          1 ; 1 byte
+    RES             battlerate,             1 ; 1 byte  ; X/256 chance of a random encounter occuring (SM only apparently)
+    RES             startintrocheck,        1 ; 1 byte
+    RES             respondrate,            1 ; 1 byte
+    RES             NTsoft2000,             1 ; 1 byte  ; same as soft2000, but used to track coarse NT scroll
+    RES             soft2000,               1 ; 1 byte
+    RES             btl_msgdraw_srcptr_bank,1 ; 1 byte

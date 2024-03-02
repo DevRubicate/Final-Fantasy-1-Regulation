@@ -739,6 +739,11 @@ DrawBattleString:
     STX btl_tmpvar3                 ; store target pointer in temp ram
     STY btl_tmpvar4
     
+    LDA btl_msgdraw_srcptr_bank
+    BEQ @noBank
+    STA current_bank1
+    STA MMC5_PRG_BANK1
+    @noBank:
     LDX btl_msgdraw_srcptr
     LDY btl_msgdraw_srcptr+1
     CALL FormatBattleString  ; draw the battle string to the output buffer
