@@ -16,7 +16,7 @@
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
-.export DrawBattleString_ControlCode, DrawBattleString_Code11
+.export DrawBattleString_ControlCode, DrawBattleString_Code11, UndrawNBattleBlocks
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1579,3 +1579,27 @@ DrawBlockBuffer:
     STA btldraw_blockptrend+1
     
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  UndrawNBattleBlocks  [$F6B3 :: 0x3F6C3]
+;;
+;;  This progressively erases 'N' battle blocks.
+;;
+;;  A = 'N', the number of blocks to undraw
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UndrawNBattleBlocks:
+    AND #$FF            ; see if A==0
+    BEQ @Exit           ; if zero, just exit
+    
+    STA tmp_6aa5           ; otherwise, store in temp to use as a downcounter
+    @Loop:
+        CALL UndrawBattleBlock ; undraw one
+        DEC tmp_6aa5             ; dec
+        BNE @Loop             ; loop until no more to undraw
+    @Exit:
+    RTS
+
+

@@ -468,7 +468,7 @@ BattleLogicLoop:
     ;;  Once all commands are input
     
     LDA #$02                    ; undraw the Roster and Battle menu battle blocks.
-    CALL UndrawNBattleBlocks
+    CALL GotoUndrawNBattleBlocks
     
     ; And then do the actual combat!
   BattleLogicLoop_DoCombat:     ; alternative entry point for when the party is surprised
@@ -660,7 +660,7 @@ BattleSubMenu_Magic:
     
     PHA                             ; backup A/B button press
     LDA #$01
-    CALL UndrawNBattleBlocks       ; undraw the magic box
+    CALL GotoUndrawNBattleBlocks       ; undraw the magic box
     PLA                             ; restore A/B state
     
     CMP #$02
@@ -822,7 +822,7 @@ BattleSubMenu_Drink:
     CALL MenuSelection_Drink     ; get menu selection from the player  
     PHA                         ; backup the A/B button press
     LDA #$01
-    CALL UndrawNBattleBlocks   ; undraw the drink menu
+    CALL GotoUndrawNBattleBlocks   ; undraw the drink menu
     PLA
     CMP #$02
     BNE :+                      ; was B pressed to get out of the drink menu?
@@ -906,7 +906,7 @@ BattleSubMenu_Item:
     
     PHA                             ; backup A/B state
     LDA #$01
-    CALL UndrawNBattleBlocks       ; undraw the item box
+    CALL GotoUndrawNBattleBlocks       ; undraw the item box
     PLA                             ; restore A/B state
     
     CMP #$02
@@ -988,7 +988,7 @@ DoNothingMessageBox:
     BEQ @InputLoop
     
     LDA #$01                    ; then undraw the "Nothing" box and exit
-    JUMP UndrawNBattleBlocks
+    JUMP GotoUndrawNBattleBlocks
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2097,7 +2097,7 @@ MenuSelection_Magic:
       RTS                       ; page 1 = do nothing
   : INC tmp_6af8                   ; page 0 = inc to page 1
     LDA #$01
-    CALL UndrawNBattleBlocks   ; undraw the page 0 magic box
+    CALL GotoUndrawNBattleBlocks   ; undraw the page 0 magic box
     FARCALL DrawBattleMagicBox    ; draw the page 1 magic box
   @NormalMove_Down:
     INC btlcurs_y
@@ -2113,7 +2113,7 @@ MenuSelection_Magic:
       RTS                       ; page 0?  exit
   : DEC tmp_6af8                   ; page 1?  move to page 0, and redraw it
     LDA #$01
-    CALL UndrawNBattleBlocks
+    CALL GotoUndrawNBattleBlocks
     FARCALL DrawBattleMagicBox
   @NormalMove_Up:
     DEC btlcurs_y
@@ -3022,7 +3022,7 @@ lut_UnformattedCombatBoxBuffer:
 RespondDelay_ClearCombatBoxes:
     CALL RespondDelay            ; respond rate wait
     LDA btl_combatboxcount
-    CALL UndrawNBattleBlocks   ; clear all combat boxes
+    CALL GotoUndrawNBattleBlocks   ; clear all combat boxes
     LDA #$00
     STA btl_combatboxcount      ; zero combat box count
     RTS
@@ -4762,7 +4762,7 @@ DrawBtlMsg_ClearIt:
     CALL RespondDelay                ; Wait
     DEC btl_combatboxcount          ; Then dec the combat box count to erase the battle message
     LDA #$01
-    JUMP UndrawNBattleBlocks       ; and undraw the battle message
+    JUMP GotoUndrawNBattleBlocks       ; and undraw the battle message
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6246,7 +6246,7 @@ ClearAllCombatBoxes:
     LDA btl_combatboxcount_alt  ; undraw all counted combat boxes
     BEQ :+
     BMI :+
-      CALL UndrawNBattleBlocks
+      CALL GotoUndrawNBattleBlocks
   : LDA #$00
     STA btl_combatboxcount_alt  ; zero the counter
     
@@ -6295,7 +6295,7 @@ RespondDelay_UndrawAllBut2Boxes:
       CMP #$03
       BCC @Done                     ; if there are < 3 blocks, we're done
       LDA #$01
-      CALL UndrawNBattleBlocks     ; otherwise, undraw one
+      CALL GotoUndrawNBattleBlocks     ; otherwise, undraw one
       DEC btl_combatboxcount_alt    ; and loop (always branches)
       BNE @Loop
       
@@ -6504,7 +6504,7 @@ ShowAltBattleMessage:
     FARCALL DrawCombatBox         ; show the box
     CALL RespondDelay            ; wait
     LDA #$01
-    CALL UndrawNBattleBlocks   ; hide the box
+    CALL GotoUndrawNBattleBlocks   ; hide the box
     
     JUMP RestoreAXY              ; restore & exit
     
@@ -6588,7 +6588,7 @@ BtlMag_PrintMagicMessage:
     CALL RespondDelay                ; Wait a bit so they can read it
     
     LDA #$01
-    CALL UndrawNBattleBlocks       ; Undraw it!
+    CALL GotoUndrawNBattleBlocks       ; Undraw it!
     JUMP RestoreAXY                  ; Then restore and exit!
     
   @DelayAndExit:
@@ -9863,6 +9863,9 @@ SwapBattleSFXBytes:
       BNE @Loop
     RTS
     
+GotoUndrawNBattleBlocks:
+    FARJUMP UndrawNBattleBlocks
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  data_BattleSoundEffects  [$BFA4 :: 0x33FB4]

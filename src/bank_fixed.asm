@@ -67,7 +67,7 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
-.import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
+.import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks
 .import BattleMenu_DrawMagicNames, DrawBattleString_Code11
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes, GetCharacterNamePtr
@@ -80,7 +80,6 @@
 .export WaitForVBlank
 .export FormatBattleString
 .export Battle_WritePPUData
-.export UndrawNBattleBlocks
 .export BattleCrossPageJump
 .export Impl_FARCALL,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export CHRLoadToA
@@ -791,28 +790,6 @@ DrawBattleBoxAndText:
         CALL DrawBattleString              ; and use it to draw text
         JUMP @Loop                         ; keep going until null terminator is found
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  UndrawNBattleBlocks  [$F6B3 :: 0x3F6C3]
-;;
-;;  This progressively erases 'N' battle blocks.
-;;
-;;  A = 'N', the number of blocks to undraw
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UndrawNBattleBlocks:
-    AND #$FF            ; see if A==0
-    BEQ @Exit           ; if zero, just exit
-    
-    STA tmp_6aa5           ; otherwise, store in temp to use as a downcounter
-    @Loop:
-        FARCALL UndrawBattleBlock ; undraw one
-        DEC tmp_6aa5             ; dec
-        BNE @Loop             ; loop until no more to undraw
-    @Exit:
-    RTS
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  DrawBattleString  [$F9AB :: 0x3F9BB]

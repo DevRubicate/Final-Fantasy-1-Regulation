@@ -1092,7 +1092,7 @@ LvlUp_LevelUp:
       CALL WaitForAnyInput           ; wait a bit more for the user to press something
       
       LDA #$01
-      CALL UndrawNBattleBlocks     ; then undraw the box we just drew
+      FARCALL UndrawNBattleBlocks     ; then undraw the box we just drew
       
   @DisplayLoop_Next:
     INC displaymsgcode             ; inc msg code to refer to next stat name
@@ -1543,7 +1543,7 @@ RandAX:
 RespondDelay_UndrawAllCombatBoxes:
     CALL RespondDelay                ; this is all self explanitory...
     LDA btl_combatboxcount
-    CALL UndrawNBattleBlocks
+    FARCALL UndrawNBattleBlocks
     LDA #$00
     STA btl_combatboxcount
     RTS
