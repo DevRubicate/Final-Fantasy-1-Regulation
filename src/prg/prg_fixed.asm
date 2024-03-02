@@ -1,4 +1,4 @@
-.segment "BANK_FIXED"
+.segment "PRG_FIXED"
 
 .include "src/registers.inc"
 .include "src/constants.inc"
