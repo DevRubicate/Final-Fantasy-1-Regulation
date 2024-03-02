@@ -23,7 +23,7 @@
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
-.import DrawBattleString_ControlCode
+.import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 
 ; bank_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -92,7 +92,7 @@
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
-.export DrawBattleString_DrawChar, lut_NTRowStartHi
+.export DrawBattleString_DrawChar
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
 .export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
@@ -423,90 +423,21 @@ DrawMapPalette:
     STA PPUADDR
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  SetPPUAddrToDest  [$DC80 :: 0x3DC90]
-;;
-;;    Sets the PPU address to have it start drawing at the coords
-;;  given by dest_x, dest_y.  The difference between this and the below
-;;  CoordToNTAddr routine is that this one actually sets the PPU address
-;;  (whereas the below simply does the conversion without setting PPU
-;;  address) -- AND this one works when dest_x is between 00-3F (both nametables)
-;;  whereas CoordToNTAddr only works when dest_x is between 00-1F (one nametable)
-;;
-;;  IN:  dest_x, dest_y
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 SetPPUAddrToDest:
-    LDA PPUSTATUS          ; reset PPU toggle
-    LDX dest_x         ; get dest_x in X
-    LDY dest_y         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
-
- @NTA:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    STA PPUADDR                ; write it
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    STA PPUADDR                ; and write as low byte
+    LDA #($1E * 2) | %10000000
+    STA MMC5_PRG_BANK1
+    JSR SetPPUAddrToDest_Bank
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
     RTS
-
- @NTB:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    STA PPUADDR                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    STA PPUADDR                ;  for our low byte of PPU address
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Convert Coords to NT Addr   [$DCAB :: 0x3DCBB]
-;;
-;;   Converts a X,Y coord pair to a Nametable address
-;;
-;;   Y remains unchanged
-;;
-;;   IN:    dest_x
-;;          dest_y
-;;
-;;   OUT:   ppu_dest, ppu_dest+1
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CoordToNTAddr:
-    LDX dest_y                ; put the Y coord (row) in X.  We'll use it to index the NT lut
-    LDA dest_x                ; put X coord (col) in A
-    AND #$1F                  ; wrap X coord
-    ORA lut_NTRowStartLo, X   ; OR X coord with low byte of row start
-    STA ppu_dest              ;  this is the low byte of the addres -- record it
-    LDA lut_NTRowStartHi, X   ; fetch high byte based on row
-    STA ppu_dest+1            ;  and record it
+    LDA #($1E * 2) | %10000000
+    STA MMC5_PRG_BANK1
+    JSR CoordToNTAddr_Bank
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  [$DCF4 :: 0x3DD04]
-;;
-;;  These LUTs are used by routines to find the NT address of the start of each row
-;;    Really, they just shortcut a multiplication by $20 ($20 tiles per row)
-;;
-
-lut_NTRowStartLo:
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-
-lut_NTRowStartHi:
-  .byte $20,$20,$20,$20,$20,$20,$20,$20
-  .byte $21,$21,$21,$21,$21,$21,$21,$21
-  .byte $22,$22,$22,$22,$22,$22,$22,$22
-  .byte $23,$23,$23,$23,$23,$23,$23,$23
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
