@@ -260,20 +260,7 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
     GAP                                     3
     RESZP actual_bank,                      1 ; 1 bytes      ; $A1
-    GAP                                     78
-    RESZP framecounter,                     2 ; 2 bytes      ; $F0
-    GAP                                     2
-    RESZP npcdir_seed,                      1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
-    RESZP battlestep,                       1 ; 1 bytes      ; $F5
-    RESZP battlestep_sign,                  1 ; 1 bytes      ; $F6
-    RESZP battlecounter,                    1 ; 1 bytes      ; $F7
-    RESZP battlerate,                       1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
-    RESZP startintrocheck,                  1 ; 1 bytes      ; $F9
-    RESZP respondrate,                      1 ; 1 bytes      ; $FA
-    GAP                                     2
-    RESZP NTsoft2000,                       1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
-    GAP                                     1
-    RESZP soft2000,                         0 ; 1 bytes      ; $FF
+
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
     GAP                                     128
@@ -957,4 +944,13 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             safecall_reg_y,         1
     RES             safecall_reg_flags,     1
     RES             rng_seed,               2
-
+    RES             framecounter,           2 ; 2 bytes      ; $F0
+    RES             npcdir_seed,            1 ; 1 bytes      ; $F4  ; RNG seed for determining direction for NPCs to walk
+    RES             battlestep,             1 ; 1 bytes      ; $F5
+    RES             battlestep_sign,        1 ; 1 bytes      ; $F6
+    RES             battlecounter,          1 ; 1 bytes      ; $F7
+    RES             battlerate,             1 ; 1 bytes      ; $F8  ; X/256 chance of a random encounter occuring (SM only apparently)
+    RES             startintrocheck,        1 ; 1 bytes      ; $F9
+    RES             respondrate,            1 ; 1 bytes      ; $FA
+    RES             NTsoft2000,             1 ; 1 bytes      ; $FD  ; same as soft2000, but used to track coarse NT scroll
+    RES             soft2000,               0 ; 1 bytes      ; $FF

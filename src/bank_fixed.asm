@@ -1039,7 +1039,7 @@ DrawEntityName:
         BNE @Loop
     RTS
     
-  @Enemy:
+    @Enemy:
     ASL A           ; mulitply A by $14  ($14 bytes per entry in btl_enemystats)
     ASL A           ; first, multiply by 4
     STA temp_94     ;    store it in temp
@@ -1110,17 +1110,15 @@ DrawBattleSubString_Max8:
 
 DrawBattleSubString:
     LDY #$00
-  @Loop:
-    LDA (btldraw_subsrc), Y         ; get a byte of text
-    BEQ @Exit                       ; if null terminator, exit
-    CALL DrawBattleString_ExpandChar ; Draw it
-    
-    INY                             ; keep looping until null terminator is found
-    CPY btldraw_max                 ;  or until we reach the given maximum
-    BEQ @Exit
-    BNE @Loop
-    
-  @Exit:
+    @Loop:
+        LDA (btldraw_subsrc), Y         ; get a byte of text
+        BEQ @Exit                       ; if null terminator, exit
+        CALL DrawBattleString_ExpandChar ; Draw it
+        INY                             ; keep looping until null terminator is found
+        CPY btldraw_max                 ;  or until we reach the given maximum
+        BEQ @Exit
+        BNE @Loop
+    @Exit:
     LDA battle_bank                 ; swap back to battle bank
     JUMP SwapPRG                   ;   and exit
 
@@ -1138,8 +1136,9 @@ DrawBattle_IncSrcPtr:
     LDY #$00
     INC btldraw_src
     BNE :+
-      INC btldraw_src+1
-  : RTS
+        INC btldraw_src+1
+    : 
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1152,13 +1151,11 @@ DrawBattle_IncSrcPtr:
 
 Copy256:
     LDY #0             ; start Y at zero
-  
     @Loop:
         LDA (tmp), Y     ; copy a byte
         STA (tmp+2), Y
         INY
         BNE @Loop        ; loop until Y wraps (256 iterations)
-
     INC tmp+3          ; inc dest pointer
     RTS                ; and exit
 
