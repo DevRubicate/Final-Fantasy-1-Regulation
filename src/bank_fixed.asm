@@ -1326,6 +1326,8 @@ Impl_FARCALL:
     ; Activate the trampoline
     ;RTS
 
+.segment "UNUSED"
+
 .segment "RESET_VECTOR"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1350,11 +1352,11 @@ OnReset:
     STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
     STX MMC5_CHR_BANK7      ; Swap in first CHR Page
     INX                     ; 01
-    STX MMC5_PRG_MODE       ; set MMC5 to 16k PRG mode
     STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
     INX                     ; 02
     STX MMC5_RAM_PROTECT_1  ; Allow writing to PRG-RAM A
     STX MMC5_EXRAM_MODE     ; ExRAM mode Ex2   
+    STX MMC5_PRG_MODE       ; set MMC5 to PRG mode 2
     LDX #$44
     STX MMC5_MIRROR         ; Vertical mirroring
     LDX #$FF        
