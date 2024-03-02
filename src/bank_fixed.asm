@@ -68,7 +68,7 @@
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock
-.import BattleMenu_DrawMagicNames
+.import BattleMenu_DrawMagicNames, DrawBattleString_Code11
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes, GetCharacterNamePtr
 ; bank_2B_dialog_util
@@ -96,8 +96,8 @@
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
-.export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawBattleString_Code11_Short, DrawString_SpaceRun
-.export DrawBattleMessage, DrawBattleString_Code0C
+.export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
+.export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1036,17 +1036,6 @@ DrawBattleString_DrawChar:
     JUMP DrawBattleString_IncDstPtr
 
 
-
-;;  DrawBattleString_Code11  [$FB1E :: 0x3FB2E]
-DrawBattleString_Code11:            ; print a number 
-    CALL DrawBattle_IncSrcPtr        ;   pointer to the number to print is in the source string
-    LDA btldraw_src
-    STA btldraw_subsrc              ; since the number is embedded in the source string, just use
-    LDA btldraw_src+1               ; the pointer to the source string as the pointer to the number
-    STA btldraw_subsrc+1
-    CALL DrawBattle_IncSrcPtr
-    FARJUMP DrawBattle_Number
-
 ;;  DrawBattleString_Code0C  [$FB2F :: 0x3FB3F]
 DrawBattleString_Code0C:            ; print a number (indirect)
     CALL DrawBattle_IncSrcPtr
@@ -1056,12 +1045,6 @@ DrawBattleString_Code0C:            ; print a number (indirect)
     LDA (btldraw_src), Y
     STA btldraw_subsrc+1
     FARJUMP DrawBattle_Number
-
-;;  DrawBattleString_Code11_Short  [$FB93 :: 0x3FBA3]
-;;    Just jumps to the actual routine.  Only exists here because the routine is too
-;;  far away to branch to.
-DrawBattleString_Code11_Short:
-    JUMP DrawBattleString_Code11
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

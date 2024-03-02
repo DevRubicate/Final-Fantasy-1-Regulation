@@ -9,14 +9,14 @@
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 .import DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
-.import DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawBattleString_Code11_Short, DrawString_SpaceRun
-.import DrawBattleMessage, DrawBattleString_Code0C
+.import DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
+.import DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
-.export DrawBattleString_ControlCode
+.export DrawBattleString_ControlCode, DrawBattleString_Code11
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1496,7 +1496,7 @@ DrawBattleString_ControlCode:
       JUMP DrawString_SpaceRun   ; code:  10
   : CMP #$11
     BNE @noDrawBattleString_Code11_Short   ; code:  11
-    JUMP DrawBattleString_Code11_Short
+    JUMP DrawBattleString_Code11
     @noDrawBattleString_Code11_Short:
     
   @Exit:
@@ -1546,3 +1546,13 @@ DrawBattleString_ControlCode:
     FIXEDCALL BattleDrawLoadSubSrcPtr, BANK_ITEMS
     FIXEDCALL DrawBattleSubString_Max8, BANK_ITEMS
     RTS
+
+;;  DrawBattleString_Code11  [$FB1E :: 0x3FB2E]
+DrawBattleString_Code11:            ; print a number 
+    CALL DrawBattle_IncSrcPtr        ;   pointer to the number to print is in the source string
+    LDA btldraw_src
+    STA btldraw_subsrc              ; since the number is embedded in the source string, just use
+    LDA btldraw_src+1               ; the pointer to the source string as the pointer to the number
+    STA btldraw_subsrc+1
+    CALL DrawBattle_IncSrcPtr
+    JUMP DrawBattle_Number
