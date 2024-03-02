@@ -835,12 +835,12 @@ FormatBattleString:
     STY btldraw_src+1
     
     LDY #$00                ; copy the actual string data to a buffer in RAM
-    :
-    LDA (btldraw_src), Y  ;   (presumably so we can swap out banks without fear
-    STA btl_stringbuf, Y  ;    of swapping out our source data)
-    INY
-    CPY #$20              ; no strings can be longer than $20 characters.
-    BNE :-
+    @Loop:
+        LDA (btldraw_src), Y  ;   (presumably so we can swap out banks without fear
+        STA btl_stringbuf, Y  ;    of swapping out our source data)
+        INY
+        CPY #$20              ; no strings can be longer than $20 characters.
+        BNE @Loop
       
     LDA #<btl_stringbuf     ; Change source pointer to point to our buffered
     STA btldraw_src         ;   string data
@@ -853,7 +853,7 @@ FormatBattleString:
     STA btldraw_dst+1
     
     ; Iterate the string and draw each character
-    @Loop:
+    @Loop2:
     LDX #$00
     LDA (tmp_90, X)        ; get the first char
     BEQ @Done           ; stop at the null terminator
@@ -865,7 +865,7 @@ FormatBattleString:
     CALL DrawBattleString_ExpandChar    ; if >= #$48
     :   
     CALL DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
-    JUMP @Loop
+    JUMP @Loop2
     
     @Done:
     LDA #$00
@@ -1002,14 +1002,14 @@ DrawString_SpaceRun:
     LDA (btldraw_src), Y        ; get the run length
     TAX
     LDA #$FF                    ; blank space tile
-    : 
+    @Loop:
         LDY #$00
         STA (btldraw_dst), Y      ; print top/bottom portions as empty space
         INY
         STA (btldraw_dst), Y
         FARCALL DrawBattleString_IncDstPtr
         DEX
-        BNE :-
+        BNE @Loop
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1031,11 +1031,12 @@ DrawEntityName:
     FARCALL GetCharacterNamePtr
     
     LDY #$00
-    : LDA (btldraw_subsrc), Y           ; draw each character in the character's name
-      CALL DrawBattleString_ExpandChar
-      INY
-      CPY #$04                          ; draw 4 characters
-      BNE :-
+    @Loop: 
+        LDA (btldraw_subsrc), Y           ; draw each character in the character's name
+        CALL DrawBattleString_ExpandChar
+        INY
+        CPY #$04                          ; draw 4 characters
+        BNE @Loop
     RTS
     
   @Enemy:
