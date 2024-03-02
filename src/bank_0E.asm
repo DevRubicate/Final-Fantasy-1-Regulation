@@ -323,7 +323,7 @@ PrintGold:
 ;;    These routines print a number of a desired number of digits to format_buf.
 ;;  The number is right-aligned with zeros trimmed off the front
 ;;  (ie:  "  67" instead of "0067").  A pointer to the start of the buffer
-;;  is then stored at text_ptr.
+;;  is then stored at Var0.
 ;;
 ;;   The printed number is not null terminated... therefore the end of format_buf
 ;;  must always contain 0 so that this string is null terminated when it is attempted
@@ -334,7 +334,7 @@ PrintGold:
 ;;            and the highest byte is only used for 5,6 digit printing
 ;;
 ;;  OUT: format_buf = buffer receiving the printed string
-;;       text_ptr   = pointer to start of buffer
+;;       Var0   = pointer to start of buffer
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -377,9 +377,9 @@ PrintNumber_6Digit:
     NOJUMP PrintNumber_Exit
 
 PrintNumber_Exit:         ; on exit, each of the above routines put the low byte
-    STA text_ptr          ; of the pointer in A -- store that to text_ptr, our output pointer
+    STA Var0          ; of the pointer in A -- store that to Var0, our output pointer
     LDA #>(format_buf+7)      ;  high byte
-    STA text_ptr+1
+    STA Var1
     RTS                   ; and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2459,10 +2459,10 @@ DrawCharacterName:
     LDA ch_name+3, X
     STA format_buf+6
 
-    LDA #<(format_buf+3)   ; set text_ptr to point to it
-    STA text_ptr
+    LDA #<(format_buf+3)   ; set Var0 to point to it
+    STA Var0
     LDA #>(format_buf+3)
-    STA text_ptr+1
+    STA Var1
 
     LDA #BANK_THIS         ; set banks required for DrawComplexString
     STA cur_bank
@@ -3002,9 +3002,9 @@ PtyGen_DrawOneText:
     STA format_buf+5        ;  print an item name
 
     LDA #<(format_buf+5)    ; set the text pointer to point to the start of the 2-byte
-    STA text_ptr            ;  string we just constructed
+    STA Var0            ;  string we just constructed
     LDA #>(format_buf+5)
-    STA text_ptr+1
+    STA Var1
 
     LDA #BANK_THIS          ; set cur and ret banks (see DrawComplexString for why)
     STA cur_bank
@@ -3031,9 +3031,9 @@ PtyGen_DrawOneText:
     STA dest_y
 
     LDA #<(format_buf+3)    ; set pointer to start of 4-byte string
-    STA text_ptr
+    STA Var0
     LDA #>(format_buf+3)
-    STA text_ptr+1
+    STA Var1
 
     LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
     STA cur_bank            ;   but oh well)
@@ -3114,9 +3114,9 @@ NameInput_DrawName:
     STA name_input_draw_buf+3              ; The code assumes name_input_draw_buf+4 is 0
     
     LDA #>name_input_draw_buf              ; Set the text pointer
-    STA text_ptr+1
+    STA Var1
     LDA #<name_input_draw_buf
-    STA text_ptr
+    STA Var0
     
     LDA #BANK_THIS          ; set cur/ret banks
     STA cur_bank
@@ -3180,9 +3180,9 @@ DrawNameInputScreen:
     FARCALL DrawBox
     
     LDA #<lut_NameInput     ; Print the NameInput lut as a string.  This will fill
-    STA text_ptr            ;  the bottom box with the characters the user can select.
+    STA Var0            ;  the bottom box with the characters the user can select.
     LDA #>lut_NameInput
-    STA text_ptr+1
+    STA Var1
     LDA #$06
     STA dest_x
     LDA #$0A
@@ -3285,9 +3285,9 @@ EnterIntroStory:
     ;  Complex String
 
     LDA #<lut_IntroStoryText  ; load up the pointer to the intro story text
-    STA text_ptr
+    STA Var0
     LDA #>lut_IntroStoryText
-    STA text_ptr+1
+    STA Var1
 
     LDA #0               ; disable menu stalling (PPU is off)
     STA menustall
@@ -3348,9 +3348,9 @@ EnterTitleScreen:
     STA box_wd
     FARCALL DrawBox
     LDA #<lut_TitleText_Continue
-    STA text_ptr
+    STA Var0
     LDA #>lut_TitleText_Continue
-    STA text_ptr+1
+    STA Var1
     LDA #0
     STA menustall    ; disable menu stalling (PPU is off)
     FARCALL DrawComplexString_New
@@ -3359,9 +3359,9 @@ EnterTitleScreen:
     STA box_y        ;  and contains text "New Game"
     FARCALL DrawBox
     LDA #<lut_TitleText_NewGame
-    STA text_ptr
+    STA Var0
     LDA #>lut_TitleText_NewGame
-    STA text_ptr+1
+    STA Var1
     FARCALL DrawComplexString_New
 
     LDA #20          ; last box is moved left and down a bit (8,20)
@@ -3372,9 +3372,9 @@ EnterTitleScreen:
     STA box_wd
     FARCALL DrawBox
     LDA #<lut_TitleText_RespondRate
-    STA text_ptr
+    STA Var0
     LDA #>lut_TitleText_RespondRate
-    STA text_ptr+1
+    STA Var1
     FARCALL DrawComplexString_New
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
@@ -4497,9 +4497,9 @@ Clinic_SelectTarget:
                                ;  just done in the clinic code prior to calling this routine.  Oh well.
 
     LDA #<(str_buf+$10)        ; set our text pointer to point to the generated string
-    STA text_ptr
+    STA Var0
     LDA #>(str_buf+$10)
-    STA text_ptr+1
+    STA Var1
     CALL DrawShopComplexString  ; and draw it
 
     JUMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
@@ -4978,9 +4978,9 @@ ShopSelectBuyItem:
     CALL DrawShopBox        ; draw shop box #2 (inv list box)
 
     LDA #<(str_buf+$10)    ; load up the pointer to our string
-    STA text_ptr
+    STA Var0
     LDA #>(str_buf+$10)
-    STA text_ptr+1
+    STA Var1
     CALL DrawShopComplexString  ; and draw it
 
     LDA #$03
@@ -5072,9 +5072,9 @@ ShopLoop_CharNames:
     CALL DrawShopBox            ; draw shop box 3 (command box)
 
     LDA #<@NamesString         ; set our pointer to the string containing char names
-    STA text_ptr
+    STA Var0
     LDA #>@NamesString
-    STA text_ptr+1
+    STA Var1
     CALL DrawShopComplexString  ; and draw it
 
     LDA #4
@@ -5117,18 +5117,18 @@ ShopLoop_CharNames:
 
 CommonShopLoop_Cmd:
     LDA #<lut_ShopCurs_Cmd     ; get the pointer to the desired cursor position LUT
-    STA text_ptr               ;  put the pointer in (text_ptr).  Yes, I know... 
+    STA Var0               ;  put the pointer in (Var0).  Yes, I know... 
     LDA #>lut_ShopCurs_Cmd     ;  it's not really text.
-    STA text_ptr+1
+    STA Var1
     JUMP _CommonShopLoop_Main   ; then jump ahead to the main entry for these routines
 
 CommonShopLoop_List:
     LDA #<lut_ShopCurs_List    ; exactly the same as _Cmd version of the routine
-    STA text_ptr               ; only have (text_ptr) point to a different LUT
+    STA Var0               ; only have (Var0) point to a different LUT
     LDA #>lut_ShopCurs_List
-    STA text_ptr+1
+    STA Var1
 
-      ; both flavors of this routine meet up here, after filling (text_ptr)
+      ; both flavors of this routine meet up here, after filling (Var0)
       ;   with a pointer to a LUT containing the cursor positions.
 
  _CommonShopLoop_Main:
@@ -5145,10 +5145,10 @@ CommonShopLoop_List:
     ASL A                ; multiply by 2 (2 bytes per position)
     TAY                  ; put in Y for indexing
 
-    LDA (text_ptr), Y    ; fetch the cursor X coord from out LUT
+    LDA (Var0), Y    ; fetch the cursor X coord from out LUT
     STA shopcurs_x       ; and record it
     INY                  ; inc Y to get Y coord
-    LDA (text_ptr), Y    ; read it
+    LDA (Var0), Y    ; read it
     STA shopcurs_y       ; and record it
 
     CALL ShopFrame        ; now that cursor position has been recorded... do a frame
@@ -5304,9 +5304,9 @@ ShopSelectBuyMagic:
     CALL DrawShopBox    ; draw shop box 2 (inventory list box)
 
     LDA #<(str_buf+$10)         ; set the text pointer to our string
-    STA text_ptr
+    STA Var0
     LDA #>(str_buf+$10)
-    STA text_ptr+1
+    STA Var1
     CALL DrawShopComplexString   ; and draw it
 
     LDA #$03
@@ -5375,9 +5375,9 @@ DrawShopString:
     TAX                ; put it in X
 
     LDA lut_ShopStrings, X  ; load the pointer from the shop string LUT
-    STA text_ptr
+    STA Var0
     LDA lut_ShopStrings+1, X
-    STA text_ptr+1     ;  ... then draw it....
+    STA Var1     ;  ... then draw it....
                        ; no JUMP or RTS -- code seamlessly flows into DrawShopComplexString
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5504,7 +5504,7 @@ DrawShopBuyItemConfirm:
     ASL A                 ; multiply by 8
     CLC
     ADC #<(str_buf+$15)   ; add str_buf+$15
-    STA text_ptr          ; use as low byte of pointer.  See routine description
+    STA Var0          ; use as low byte of pointer.  See routine description
                           ; for details of why its doing this
 
     CLC                   ; add 2 and put in X.  X will now be
@@ -5519,7 +5519,7 @@ DrawShopBuyItemConfirm:
     STA shop_curitem      ;  store in the current item
 
     LDA #>(str_buf+$15)   ; record high byte of our string pointer
-    STA text_ptr+1
+    STA Var1
 
     LDA shop_curitem      ; get the current item
     FARCALL LoadPrice         ; load its price (gets put in tmp, tmp+1)
@@ -7352,9 +7352,9 @@ DrawItemTargetMenu:
 
  @DrawString:
     LDA @lut_str_pointertable, X      ; load up the pointer from our pointer table
-    STA text_ptr                      ; put it in text_ptr
+    STA Var0                      ; put it in Var0
     LDA @lut_str_pointertable+1, X
-    STA text_ptr+1
+    STA Var1
     JUMP DrawMenuComplexString        ; then draw it as a local complex string, and exit
 
 
@@ -8424,9 +8424,9 @@ DrawMenuString:
     ASL A                   ; double A (pointers are 2 bytes)
     TAX                     ; put in X to index menu string pointer table
     LDA lut_MenuText, X
-    STA text_ptr
-    LDA lut_MenuText+1, X   ; load pointer from table, store to text_ptr  (source pointer for DrawComplexString)
-    STA text_ptr+1
+    STA Var0
+    LDA lut_MenuText+1, X   ; load pointer from table, store to Var0  (source pointer for DrawComplexString)
+    STA Var1
          ;;  code seamlessly flows into DrawMenuComplexString
 
 
@@ -8497,9 +8497,9 @@ DrawCharMenuString_Len:
     STA tmp+1
 
     LDA #<bigstr_buf        ; set the text pointer to our bigstring buffer
-    STA text_ptr
+    STA Var0
     LDA #>bigstr_buf
-    STA text_ptr+1
+    STA Var1
 
   @Loop:                    ; now step through each byte of the string....
     LDA (tmp), Y            ; get the byte
@@ -8532,7 +8532,7 @@ DrawMainMenuCharBoxBody:
     TAX               ; also put index in X
 
     LDA #>str_buf     ; the strings we will be drawing here will be from a RAM buffer
-    STA text_ptr+1    ;  so set the high byte of the string pointer
+    STA Var1    ;  so set the high byte of the string pointer
 
     LDA ch0_maxmp, X   ; check all of this character's Max MP
     ORA ch0_maxmp+1, X ;  if any level of spells is nonzero, we'll need to draw the MP
@@ -8572,11 +8572,11 @@ DrawMainMenuCharBoxBody:
     STA str_buf+$F
 
     LDA #<str_buf + $08  ; start drawing from 8 characters into the string
-    STA text_ptr         ;  this will draw MP for levels 4-7 only (the second row)
+    STA Var0         ;  this will draw MP for levels 4-7 only (the second row)
     CALL DrawMenuComplexString    ; draw it
 
     LDA #<str_buf     ; set low byte of pointer to start of the string buf
-    STA text_ptr      ;  this is MP levels 0-3 (the first row)
+    STA Var0      ;  this is MP levels 0-3 (the first row)
     LDA #0            ; write a null terminator to the start of the second row, so we don't draw that row again
     STA str_buf + $08
     DEC dest_y        ; decrement the Y coord so we draw this row one row above the previous draw
@@ -8592,7 +8592,7 @@ DrawMainMenuCharBoxBody:
     STA str_buf+3
 
     LDA #<str_buf
-    STA text_ptr      ; draw "MAGIC" string as loaded above
+    STA Var0      ; draw "MAGIC" string as loaded above
     DEC dest_y        ; dec row to print 1 above last
     CALL Invoke_DrawComplexString    ; draw it!
 
@@ -8626,7 +8626,7 @@ DrawMainMenuCharBoxBody:
     ADC #5         ; add 5 to the Y coord (draw this 5 rows down)
     STA dest_y
     LDA #<str_buf  ; set low byte of string pointer (start drawing the string from $0300)
-    STA text_ptr
+    STA Var0
     CALL DrawMenuComplexString    ; Draw it!
     LDA dest_y
     SEC
@@ -8653,7 +8653,7 @@ DrawMainMenuCharBoxBody:
     LDA #$00       ; null terminator
     STA str_buf+9
     LDA #<str_buf  ; start drawing from start of string
-    STA text_ptr
+    STA Var0
     JUMP Invoke_DrawComplexString    ; Draw it, then exit!
 
 

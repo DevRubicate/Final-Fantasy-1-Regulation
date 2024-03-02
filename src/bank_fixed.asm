@@ -1198,7 +1198,7 @@ Impl_FARBYTE:
     ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
     ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
     STA MMC5_PRG_BANK1
-    LDA (text_ptr), Y
+    LDA (Var0), Y
     PHA
     LDA current_bank1
     STA MMC5_PRG_BANK1
@@ -1206,6 +1206,7 @@ Impl_FARBYTE:
     RTS
 
 ReadFarByte:
+    LDA Var2
     STA MMC5_PRG_BANK1
     LDA (Var0), Y
     PHA

@@ -24,12 +24,12 @@ DrawComplexString_New:
     @Draw_NoStall:
 
     LDY #0            ; zero Y -- we don't want to use it as an index.  Rather, the pointer is updated
-    JSR Impl_FARBYTE
+    CALL Impl_FARBYTE
     BEQ DrawComplexString_Exit   ; if the character is 0  (null terminator), exit the routine
 
-    INC text_ptr      ; otherwise, inc source pointer
+    INC Var0      ; otherwise, inc source pointer
     BNE :+
-        INC text_ptr+1  ;   inc high byte if low byte wrapped
+        INC Var1  ;   inc high byte if low byte wrapped
     :
 
     CMP #$1A          ; values below $1A are control codes.  See if this is a control code
@@ -129,9 +129,9 @@ DrawComplexString_New:
     STA char_index ; store index
 
     JSR Impl_FARBYTE
-    INC text_ptr        ; inc our string pointer
+    INC Var0        ; inc our string pointer
     BNE :+
-        INC text_ptr+1    ; inc high byte if low byte wrapped
+        INC Var1    ; inc high byte if low byte wrapped
     :
 
     CMP #0
@@ -150,9 +150,9 @@ DrawComplexString_New:
 
     CALL @Save              ; need to draw a substring, so save current string
     LDA #<(format_buf+3)   ; set string source pointer to temp buffer
-    STA text_ptr
+    STA Var0
     LDA #>(format_buf+3)
-    STA text_ptr+1
+    STA Var1
     CALL @Draw_NoStall      ; recursively draw it
     JUMP @Restore           ; then restore original string and continue
 
@@ -335,10 +335,10 @@ DrawComplexString_New:
 
     ;;; Control Code $02 -- draws an item name
     @Code_02:
-    JSR Impl_FARBYTE
-    INC text_ptr          ; inc source pointer
+    JSR ReadFarByte
+    INC Var0          ; inc source pointer
     BNE @DrawItem
-    INC text_ptr+1      ;   and inc high byte if low byte wrapped
+    INC Var1      ;   and inc high byte if low byte wrapped
 
     @DrawItem:
     CALL @Save             ; drawing an item requires a substring.  Save current string
@@ -347,20 +347,20 @@ DrawComplexString_New:
 
     BCS @itemHigh                 ; if doubling A caused a carry (item ID >= $80)... jump ahead
       LDA LUT_ItemNamePtrTbl, X   ;  if item ID was < $80... read pointer from first half of pointer table
-      STA text_ptr                ;  low byte of pointer
+      STA Var0                ;  low byte of pointer
       LDA LUT_ItemNamePtrTbl+1, X ;  high byte of pointer (will be written after jump)
       JUMP @itemGo
 
   @itemHigh:                         ; item high -- if item ID was >= $80
       LDA LUT_ItemNamePtrTbl+$100, X ;  load pointer from second half of pointer table
-      STA text_ptr                   ;  write low byte of pointer
+      STA Var0                   ;  write low byte of pointer
       LDA LUT_ItemNamePtrTbl+$101, X ;  high byte (written next inst)
 
   @itemGo:
-    STA text_ptr+1        ; finally write high byte of pointer
+    STA Var1        ; finally write high byte of pointer
 
     LDA #BANK_ITEMS
-    STA cur_bank
+    STA Var2
 
     CALL @Draw_NoStall     ; recursively draw the substring
     JUMP @Restore          ; then restore original string and continue
@@ -368,9 +368,9 @@ DrawComplexString_New:
     ;;;; Control Code $03 -- prints an item price
   @Code_03:
     JSR Impl_FARBYTE
-    INC text_ptr         ; inc string pointer
+    INC Var0         ; inc string pointer
     BNE :+
-        INC text_ptr+1     ; inc high byte if low byte wrapped
+        INC Var1     ; inc high byte if low byte wrapped
     :   
     CALL @Save            ; Save string info (item price is a substring)
     TAX                  ; put item ID in X temporarily
@@ -396,22 +396,22 @@ DrawComplexString_New:
 
     @Save:
 
-    LDY text_ptr    ; back up the text pointer
+    LDY Var0    ; back up the text pointer
     STY tmp_hi      ;  and the data bank
-    LDY text_ptr+1  ;  to temporary RAM space
+    LDY Var1  ;  to temporary RAM space
     STY tmp_hi+1
-    LDY cur_bank    ; use Y, so as not to dirty A
+    LDY Var2    ; use Y, so as not to dirty A
     STY tmp_hi+2
     RTS
 
     @Restore:
 
     LDA tmp_hi     ; restore text pointer and data bank
-    STA text_ptr
+    STA Var0
     LDA tmp_hi+1
-    STA text_ptr+1
+    STA Var1
     LDA tmp_hi+2
-    STA cur_bank
+    STA Var2
     JUMP @Draw_NoStall  ;  and continue with text processing
 
 
@@ -499,15 +499,17 @@ DrawItemBox:
     LDA LUT_ItemNamePtrTbl+1, X
     STA tmp+1
 
-                       ; copy 7 characters verbatim (do not look for null terminators!)
-    LDY #$06           ;   this means that shorter item names must be padded with spaces to 7 characters.  DUMB
-    @CopyLoop:
 
     LDA tmp
     STA Var0
     LDA tmp+1
     STA Var1
     LDA #(BANK_ITEMS * 2) | %10000000
+    STA Var2
+
+                       ; copy 7 characters verbatim (do not look for null terminators!)
+    LDY #$06           ;   this means that shorter item names must be padded with spaces to 7 characters.  DUMB
+    @CopyLoop:
     CALL ReadFarByte
     STA str_buf+$20, Y   ; and put in str_buf+$20.  Cannot use str_buf as it is,
     DEY                  ;   because it shares RAM with item_box, which we can't overwrite
@@ -533,10 +535,10 @@ DrawItemBox:
 
 
   @SkipQty:
-    LDA #<(str_buf+$20)    ; fill text_ptr with the pointer to our item name in the string buffer
-    STA text_ptr
+    LDA #<(str_buf+$20)    ; fill Var0 with the pointer to our item name in the string buffer
+    STA Var0
     LDA #>(str_buf+$20)
-    STA text_ptr+1
+    STA Var1
 
     LDA cursor             ; get current loop counter again
     ASL A                  ; double it, and stuff it in X
@@ -1756,13 +1758,13 @@ SeekItemStringPtr:
 
     @ItemLoTbl:
     LDA LUT_ItemNamePtrTbl, X    ; load pointer from first half if ID <= $7F
-    STA text_ptr
+    STA Var0
     LDA LUT_ItemNamePtrTbl+1, X
     JUMP @ItemPtrLoaded
 
     @ItemHiTbl:
     LDA LUT_ItemNamePtrTbl+$100, X   ; or from 2nd half if ID >= $80
-    STA text_ptr
+    STA Var0
     LDA LUT_ItemNamePtrTbl+$101, X
 
     @ItemPtrLoaded:
@@ -1810,8 +1812,7 @@ DrawEquipMenuStrings:
                                  ; the proper string ID.  For now, just stuff it in RAM
                                  ; minus 1 because 0 is an empty slot
 
-    LDA #>(str_buf+$10)          ; set high byte of text pointer
-    STA text_ptr+1               ; low byte is set later (why not here?)
+
     LDA #$00                     ; Set A to zero.  This is our loop counter
   @MainLoop:
     PHA                          ; push the loop counter to the stack
@@ -1850,13 +1851,14 @@ DrawEquipMenuStrings:
 
     CALL SeekItemStringPtrForEquip
 
+    LDA tmp
+    STA Var0
+    LDA tmp+1
+    STA Var1
+    LDA #(BANK_ITEMS * 2) | %10000000
+    STA Var2
     LDY #$06                     ; copy 7 characters from the item name (doesn't look for null termination)
     @LoadNameLoop:
-        LDA tmp
-        STA Var0
-        LDA tmp+1
-        STA Var1
-        LDA #(BANK_ITEMS * 2) | %10000000
         CALL ReadFarByte          ; load a character in the string  
         STA str_buf+$12, Y         ; and write it to our string buffer.  +2 because the first 2 bytes are the equip state
         DEY                        ; (that "E-" if equipped).  Then decrement Y
@@ -1871,8 +1873,11 @@ DrawEquipMenuStrings:
     STA str_buf+$11            ; draw them to indicate item is equipped
 
     @NotEquipped:
+
+    LDA #>(str_buf+$10)          ; set high byte of text pointer
+    STA Var1               ; low byte is set later (why not here?)
     LDA #<(str_buf+$10)          ; finally load the low byte of our text pointer
-    STA text_ptr                 ;  why this isn't done above with the high byte is beyond me
+    STA Var0                 ;  why this isn't done above with the high byte is beyond me
 
     CALL DrawComplexString_New; then draw the complex string
 

@@ -2704,37 +2704,37 @@ Story_DrawText:
 
         @NasirCRCHighByte:       ; label unimportant to this routine -- has to do with CRC check -- see above
     LDA lut_CreditsText, X     ; load up the pointer to credits text
-    STA text_ptr
+    STA Var0
     LDA lut_CreditsText+1, X
-    STA text_ptr+1
+    STA Var1
 
   @StartSimpleString:
     CALL Story_EndFrame   ; end the frame (keeps music playing, and ensures we're in VBlank)
     LDA PPUSTATUS            ; reset PPU toggle
 
     LDY #1               ; Y=1 because we're to load the high byte of the address first
-    LDA (text_ptr), Y
+    LDA (Var0), Y
     STA PPUADDR            ; set high byte of PPU address
     DEY                  ; then load and set low byte
-    LDA (text_ptr), Y    ;  This is funky because the address is stored low-byte first, but
+    LDA (Var0), Y    ;  This is funky because the address is stored low-byte first, but
     STA PPUADDR            ;  PPUADDR must be written to high-byte first.
 
-    LDA text_ptr         ; add 2 to our text pointer
+    LDA Var0         ; add 2 to our text pointer
     CLC
     ADC #2
-    STA text_ptr
-    LDA text_ptr+1       ;  catch carry
+    STA Var0
+    LDA Var1       ;  catch carry
     ADC #0
-    STA text_ptr+1
+    STA Var1
 
   @SimpleStringLoop:
     LDY #0               ; zero Y, our index (pointless here, Y is already zero)
-    LDA (text_ptr), Y    ; fetch next byte in string
+    LDA (Var0), Y    ; fetch next byte in string
     BEQ @EndCreditsPage  ; if zero (null terminator), this page is complete
 
-    INC text_ptr         ;  otherwise, increment our pointer to look at next byte in string
+    INC Var0         ;  otherwise, increment our pointer to look at next byte in string
     BNE :+
-      INC text_ptr+1     ;  inc high byte of pointer if low byte wrapped
+      INC Var1     ;  inc high byte of pointer if low byte wrapped
 
 :   CMP #$01
     BEQ @StartSimpleString   ; if this byte was $01, start a new simple string
@@ -2758,9 +2758,9 @@ Story_DrawText:
     TAX                     ; and throw it in X
 
     LDA lut_StoryText, X    ; load up the pointer to this page of story text
-    STA text_ptr
+    STA Var0
     LDA lut_StoryText+1, X
-    STA text_ptr+1
+    STA Var1
 
     FARJUMP DrawComplexString_New ; and draw it at a complex string.  Then exit
 

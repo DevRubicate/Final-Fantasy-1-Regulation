@@ -74,7 +74,8 @@
 SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var0,                             1
     RESZP Var1,                             1
-    GAP                                     5
+    RESZP Var2,                             1
+    GAP                                     4
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
@@ -124,7 +125,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP dest_ht,                          1 ; 1 bytes     ; $3D
     RESZP theend_fillppu,                   0 ; 2 bytes     ; $3E ; ppu addr for filling
     RESZP image_ptr,                        0 ; 1 bytes     ; $3E ; shared
-    RESZP text_ptr,                         2 ; 2 bytes     ; $3E ; 2 bytes
+    GAP                                     2 ; 2 bytes     ; $3E ; 2 bytes
     RESZP spr_x,                            1 ; 1 bytes     ; $40
     RESZP mm_maprow,                        0 ; 1 bytes     ; $41 ; shared
     RESZP spr_y,                            1 ; 1 bytes     ; $41

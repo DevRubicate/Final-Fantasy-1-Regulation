@@ -3818,6 +3818,7 @@ LoadMapObjects:
     LDA tmp+1
     STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
+    STA Var2
     CALL ReadFarByte
     CALL LoadSingleMapObject  ; load the object
 
@@ -3869,6 +3870,7 @@ LoadSingleMapObject:
     LDA tmp+1
     STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
+    STA Var2
     CALL ReadFarByte
     STA tmp+6               ; back it up
     AND #$C0                ; isolate the behavior flags
@@ -3881,6 +3883,7 @@ LoadSingleMapObject:
     LDA tmp+1
     STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
+    STA Var2
     CALL ReadFarByte
     STA tmp+7               ; back it up
     LDA tmp+6               ; reload backed up X coord

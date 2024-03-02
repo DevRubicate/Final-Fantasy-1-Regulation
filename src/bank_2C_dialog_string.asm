@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import SetSMScroll, WaitForVBlank, SetPPUAddrToDest, Impl_FARBYTE, MusicPlay, SeekItemStringPtr
+.import SetSMScroll, WaitForVBlank, SetPPUAddrToDest, ReadFarByte, MusicPlay, SeekItemStringPtr
 
 .export SeekDialogStringPtr, DrawDialogueString
 
@@ -75,20 +75,20 @@ SeekDialogStringPtr:
 
     @LoTbl:
 
-    LDA LUT_DialoguePtrTbl, X        ; load up the pointer into text_ptr
-    STA text_ptr
+    LDA LUT_DialoguePtrTbl, X        ; load up the pointer into Var0
+    STA Var0
     LDA LUT_DialoguePtrTbl+1, X
-    STA text_ptr+1
+    STA Var1
     JUMP @PtrLoaded                   ; then jump ahead
 
     @HiTbl:
 
     LDA LUT_DialoguePtrTbl_Secondary, X   ; same, but read from 2nd half of pointer table
-    STA text_ptr
+    STA Var0
     LDA LUT_DialoguePtrTbl_Secondary+1, X
-    STA text_ptr+1
+    STA Var1
 
-    @PtrLoaded:             ; here, text_ptr points to the desired string
+    @PtrLoaded:             ; here, Var0 points to the desired string
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -137,8 +137,8 @@ DrawDialogueString:
 
     CALL SeekDialogStringPtr
 
-    LDA #BANK_DIALOGUE
-    STA cur_bank          ; set cur_bank to bank containing dialogue text (for Music_Play)
+    LDA #(BANK_DIALOGUE*2) | %10000000
+    STA Var2          ; set Var2 to bank containing dialogue text (for Music_Play)
 
     LDA #10
     STA tmp+7             ;  set precautionary counter to 10
@@ -153,12 +153,12 @@ DrawDialogueString:
 
     @Loop:
     LDY #0
-    JSR Impl_FARBYTE
+    CALL ReadFarByte
     BEQ DrawDialogueString_Done  ; if it's zero (null terminator), exit
 
-    INC text_ptr                 ; otherwise increment the pointer
+    INC Var0                 ; otherwise increment the pointer
     BNE :+
-        INC text_ptr+1             ;   inc high byte if low byte wrapped
+        INC Var1             ;   inc high byte if low byte wrapped
     :   
     CMP #$1A
     BCC @ControlCode     ; if the byte is < $1A, it's a control code
@@ -224,10 +224,10 @@ DrawDialogueString:
     LDA ch_name+3        ; it's ever used in the game
     STA format_buf+6
 
-    LDA #<(format_buf+3) ; make text_ptr point to the format buffer
-    STA text_ptr
+    LDA #<(format_buf+3) ; make Var0 point to the format buffer
+    STA Var0
     LDA #>(format_buf+3)
-    STA text_ptr+1
+    STA Var1
 
     JUMP @Loop            ; and continue printing (to print the name, then quit)
 
@@ -236,22 +236,22 @@ DrawDialogueString:
     BNE @Code_Not02_03   ; if not, jump ahead
 
     @PrintItemName:        ; Control Code $02 = prints the ID of the item stored in dlg_itemid (used for treasure chests)
-    LDA text_ptr         ; push the text pointer to the stack to back it up
+    LDA Var0         ; push the text pointer to the stack to back it up
     PHA
-    LDA text_ptr+1
+    LDA Var1
     PHA
 
     LDA dlg_itemid       ; get the item ID whose name we're to print
 
     FARCALL SeekItemStringPtr
 
-    STA text_ptr+1
+    STA Var1
     CALL @Loop            ; once pointer is loaded, CALL to the @Loop to draw the item name
 
     PLA                  ; then restore the original string pointer by pulling it from the stack
-    STA text_ptr+1
+    STA Var1
     PLA
-    STA text_ptr
+    STA Var0
 
     JUMP @Loop            ; and continue drawing the rest of the string
 

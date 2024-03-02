@@ -1657,6 +1657,7 @@ Battle_WritePPUData:
         LDA btltmp+9
         ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
         ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
+        STA Var2
         CALL ReadFarByte
         STA PPUDATA
         INY
