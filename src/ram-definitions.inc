@@ -71,23 +71,7 @@
     .endif
 .endmacro
 
-
-
-SECTIONZP "SOUND" ; $00 - $0E
-    ; for sound channels (between Bx-Dx) see constants.inc
-    RESZP ch_scoreptr,                      2 ; 2 bytes   ; $00
-    RESZP ch_envptr,                        2 ; 2 bytes   ; $02 ptr to start of env data
-    RESZP ch_envpos,                        1 ; 1 bytes   ; $04 pos in env data (00-1F)
-    RESZP ch_lenctr,                        1 ; 1 bytes   ; $05 counter for score data (note length)
-    RESZP ch_frqtblptr,                     2 ; 2 bytes   ; $06 pointer to freq table (changes per octave)
-    RESZP ch_lentblptr,                     2 ; 1 bytes   ; $08 pointer to length table (changes per tempo)
-    RESZP ch_envrate,                       1 ; 1 bytes   ; $0A rate/speed of env table traversal
-    RESZP ch_envrem,                        1 ; 1 bytes   ; $0B remaining "fraction" of env data (3 bits of fraction)
-    RESZP ch_vol,                           1 ; 1 bytes   ; $0C output volume
-    RESZP ch_loopctr,                       1 ; 1 bytes   ; $0D remaining loop counter
-    RESZP ch_freq,                          1 ; 1 bytes   ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
-
-SECTIONZP "ZEROPAGE" ; $07 - $FF
+SECTIONZP "ZEROPAGE" ; $00 - $FF
     GAP                                     7
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
@@ -258,12 +242,12 @@ SECTIONZP "ZEROPAGE" ; $07 - $FF
     RESZP tmp_9c,                           0 ; 1 bytes      ; $9D
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
     RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
-    GAP                                     3
-    RESZP actual_bank,                      1 ; 1 bytes      ; $A1
+
+
 
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
-    GAP                                     128
+    GAP                                     $80
     RESZP btl_varA,                         0 ; $80
     RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
     RESZP btlptr,                           0 ; 2 bytes      ; $80
@@ -317,7 +301,7 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
-    RESZP btlformation,                     1 ; 1 bytes      ; $A0
+
 
 
 
@@ -425,7 +409,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     GAP                                                 5
     RES             gold,                               3 ; $601C   ; 3 bytes
     GAP                                                 1
-    RES             items,                              1 ; 
+    RES             items,                              1 ;
     RES             item_lute,                          1 ; $6020
     RES             item_crown,                         1 ; $6020
     RES             item_crystal,                       1 ; $6021
@@ -669,14 +653,14 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             battle_defender_index,              0 ; $6885 ; same... but this is necessary for output!  See Battle_DoTurn in bank C!!
     RES             btlmag_defender_evade,              1 ; $6885  ; shared with battle_defender_index?  Is that not used for btlmag ?
     RES             btlmag_defender_category,           1 ; $6886
-    RES             battle_defenderisplayer,            1 ; $6887 ; nonzero if player is defending, zero if enemy is defending 
+    RES             battle_defenderisplayer,            1 ; $6887 ; nonzero if player is defending, zero if enemy is defending
     RES             btl_attacker_ailments,              1 ; $6888 ;   important for output!  See Battle_DoTurn in bank C
     RES             btl_defender_ailments,              1 ; $6889 ; important for output!
     RES             btl_rngstate,                       1 ; $688A    ; State of RNG used for in-battle
     RES             btltmp_divLo,                       1 ; $688B
     RES             btltmp_divHi,                       1 ; $688C
     RES             btltmp_divV,                        1 ; $688D
-    RES             statbyte,                           0 ; $688E 
+    RES             statbyte,                           0 ; $688E
     RES             levelup_classid,                    0 ; $688E ; local, stores class ID
     RES             btl_curturn,                        1 ; $688E         ; current turn (index for btl_turnorder)
     RES             btl_charcmdbuf,                     16 ; $688F
@@ -769,7 +753,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             tmp_6af9,                           1 ; $6AF9
     RES             displaybuffer,                      0 ; $6AFA ; 5 bytes
     RES             btl_unfmtcbtbox_buffer,             100 ; $6AFA  ; $80 bytes total, $10 bytes for each combat box. houses the unformatted text for each combat box. Additional bytes are used for other areas
-    
+
     RES             tmp_6b5e,                           1
     RES             tmp_6b5f,                           1
     RES             tmp_6b60,                           1 ; $6B60
@@ -817,7 +801,7 @@ SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 1
     RES             tmp_6c8e,                           1 ; $6C8E
     RES             btlmag_magicsource,                 1 ; $6C8F ; 0=magic, 1=drink, 2=item
-    RES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of 
+    RES             btlmag_ailment_orig,                1 ; $6C90 ; A backup of
     RES             temp_6c91,                          1 ; $6C91
     RES             btl_battletype,                     1 ; $6C92     ; 0=9 small, 1=4 large, 2=mix, 3=fiend, 4=chaos
     RES             btl_enemycount,                     1 ; $6C93     ; count of the number of enemies being generated for a battle
@@ -914,7 +898,7 @@ SECTION "MINIMAP2" ; $7000 - $7580
     ;    10 = use item
     ;    20 = run   ('target' would be the actual character running)
     ;    40 = magic
-    ;    
+    ;
     ;
     ;  btl_charcmditem contains 1 byte per character:  the ID of the item they're using.
     ;    This is only used when the command is '10'
@@ -944,14 +928,28 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             safecall_reg_y,         1
     RES             safecall_reg_flags,     1
     RES             rng_seed,               2
-    RES             framecounter,           2 ; 2 byte
-    RES             npcdir_seed,            1 ; 1 byte  ; RNG seed for determining direction for NPCs to walk
-    RES             battlestep,             1 ; 1 byte
-    RES             battlestep_sign,        1 ; 1 byte
-    RES             battlecounter,          1 ; 1 byte
-    RES             battlerate,             1 ; 1 byte  ; X/256 chance of a random encounter occuring (SM only apparently)
-    RES             startintrocheck,        1 ; 1 byte
-    RES             respondrate,            1 ; 1 byte
-    RES             NTsoft2000,             1 ; 1 byte  ; same as soft2000, but used to track coarse NT scroll
-    RES             soft2000,               1 ; 1 byte
-    RES             btl_msgdraw_srcptr_bank,1 ; 1 byte
+    RES             framecounter,           2
+    RES             npcdir_seed,            1 ; RNG seed for determining direction for NPCs to walk
+    RES             battlestep,             1
+    RES             battlestep_sign,        1
+    RES             battlecounter,          1
+    RES             battlerate,             1 ; X/256 chance of a random encounter occuring (SM only apparently)
+    RES             startintrocheck,        1
+    RES             respondrate,            1
+    RES             NTsoft2000,             1 ; same as soft2000, but used to track coarse NT scroll
+    RES             soft2000,               1
+    RES             btl_msgdraw_srcptr_bank,1
+    RES             btlformation,           1
+    RES             actual_bank,            1
+    ; for sound channels (between Bx-Dx) see constants.inc
+    RES             ch_scoreptr,            2 ; $00
+    RES             ch_envptr,              2 ; $02 ptr to start of env data
+    RES             ch_envpos,              1 ; $04 pos in env data (00-1F)
+    RES             ch_lenctr,              1 ; $05 counter for score data (note length)
+    RES             ch_frqtblptr,           2 ; $06 pointer to freq table (changes per octave)
+    RES             ch_lentblptr,           2 ; $08 pointer to length table (changes per tempo)
+    RES             ch_envrate,             1 ; $0A rate/speed of env table traversal
+    RES             ch_envrem,              1 ; $0B remaining "fraction" of env data (3 bits of fraction)
+    RES             ch_vol,                 1 ; $0C output volume
+    RES             ch_loopctr,             1 ; $0D remaining loop counter
+    RES             ch_freq,                1 ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)

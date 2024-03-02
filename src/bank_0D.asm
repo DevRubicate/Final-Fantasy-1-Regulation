@@ -44,6 +44,130 @@ BANK_THIS = $0D
 lut_ScoreData:
   .incbin "bin/0D_8000_scoredata.bin"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Story - Open Shutters  [$B98D :: 0x3799D]
+;;
+;;    This routine animates the shutter opening effect done by the story screens.
+;;  This is done with screen splitting and timing tricks.  See the big paragraphs
+;;  in the routine for further details
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Story_OpenShutters:
+    LDA #16           ; set the counter for the closed shutter portion of the effect.
+    STA shutter_a     ;  16 to approximate 16 scanlines of closed shutters
+
+    LDA #1            ; set the counter for the open shutter portion of the effect
+    STA shutter_b     ;  1 to approximate 1 scanline of opened shutters
+                  ; this may look like it would actually be 17 scanlines (16+1, right?)
+                  ;  but because the loops are a little shorter than 1 scanline.. this
+                  ;  works out to closer to 16 scanlines (a little less, actually, see notes below)
+
+            ; once counters are prepped -- start doing frames of animation
+
+  @Frame:
+    LDA #$01             ; set soft2000 to use the closed NT ($2400 -- the one with closed shutter
+    STA soft2000         ;  graphics).  This leaves the shutter closed for the remainder of the previous
+                         ;  frame.
+
+    CALL WaitForVBlank          ; wait for VBlank
+    CALL WaitForShutterStart      ; then wait for the PPU to reach approx. shutter start time
+
+    LDA #$07             ; A is our down counter, that counts how many different shutters
+                         ;  we are going to animate.  There are 7 animations performed, but because
+                         ; the first two are off the top of the text box, only 5 are visible
+
+  ;;
+  ;;  This is the loop which animates the shutters.  This animation is performed by having two
+  ;;   NTs which are identical except for the text box:  The PPUCTRL NT has the text and a black BG,
+  ;;   so it's the "open" NT.  The $2400 NT has no text and a blue BG, so it's the "closed" BG.
+  ;;  The game will split the screen multiple times during the frame to have the PPU switch between
+  ;;   these nametables at different scanlines -- thus appearing to make the shutters gradually
+  ;;   open, even though no NT or CHR changes are taking place (as complicated as this sounds, it
+  ;;   really is the simplest way to do this effect -- the effect itself is quite advanced, even though
+  ;;   it may not seem it).
+  ;;
+  ;;  1 scanline is 113.6667 (341/3) CPU cycles.  This loop will use shutter_a and shutter_b as
+  ;;   down counters to approximate the number of scanlines to have the shutters opened (b) and closed
+  ;;   (a).  However the loop that uses these down counters is 105 CPU cycles per iteration (less than
+  ;;   1 scanline) -- so these are "not quite scanlines".  This results in the entire loop being a
+  ;;   little shorter than you'd expect.. and means the timing isn't quite as tight as it could be.
+  ;;
+  ;;  I have counted the cycles for this loop, and given that shutter_a and shutter_b will always
+  ;;   collectively sum 17, @ShutterLoop takes exactly 1814 cycles every iteration
+  ;;   (1814*3/341 = 15.95 -- a little less than 16 scanlines).  This means that *eventually*
+  ;;   this routine would desync and the shutters would become oblong -- but since there's only 7
+  ;;   iterations, and since the scroll isn't REALLY changed until the PPU reloads the temp address
+  ;;   (which doesn't occur until the end of the scanline), this timing is "good enough".  It
+  ;;   will draw correctly without distortion.
+  ;;
+  ;;  Having called WaitForShutterStart above, the PPU is now ~8 scanlines into frame rendering.
+  ;;   The story box appears at scanline 40, which means there are 32 scanlines until the shutters
+  ;;   start becoming visible.  This is why the first two shutters are invisible and why there's
+  ;;   7 shutters drawn instead of 5 (since only 5 are visible in the story box).
+  ;;
+  ;;  Also note that the length of these loops could be changed if the branch crosses a page boundary
+  ;;   but that would only make the loops longer (and they're already short) -- so even if that
+  ;;   happens, there wouldn't be any visible glitches.  If anything it would help tighten up the
+  ;;   timing.
+  ;;
+
+  @ShutterLoop:
+    PHA              ; push shutter counter to stack to back it up
+
+    LDX shutter_a       ; load number of not-quite-scanlines shutters are to be closed
+   @ClosedLoop:         ; and wait that long
+      CALL Wait100Cycs
+      DEX
+      BNE @ClosedLoop   ; (each loop iteration = 105 cycles)
+
+    LDA #$00         ; then switch the PPU over to the "open" NT
+    STA PPUCTRL
+
+    LDX shutter_b       ; load number of not-quite-scanlines shutters are to be opened
+   @OpenLoop:           ; and wait that long
+      CALL Wait100Cycs
+      DEX
+      BNE @OpenLoop
+
+    LDA #$01         ; then close the shutters again by switching
+    STA PPUCTRL        ;  the PPU over to the "closed" NT
+
+    PLA              ; pull the loop counter from the stack
+    SEC
+    SBC #1           ; and count it down
+    BNE @ShutterLoop ; keep repeating this loop (draw another shutter) until it expires
+                     ;  7 iterations -- so 7 shutters are drawn (but only 5 visible)
+
+  PAGECHECK @ShutterLoop   ; assert that loop doesn't cross a page boundary (would mess with timing)
+
+  ;;
+  ;; Once code reaches here... timing critical stuff has ended, and PPU changes for the frame
+  ;;   are complete
+  ;;
+
+    CALL MusicPlay    ; keep the music playing
+
+    INC framecounter   ; increment the fame counter
+    LDA framecounter   ; and check the low bit
+    AND #$01
+    BNE @Frame         ; if the low bit is set, repeat the same frame we just did
+                       ;  this means the shutters move 1 scanline every other frame
+
+    INC shutter_b      ; increment the number of open scanlines to do
+    DEC shutter_a      ; and decrement the number of closed scanline
+    BNE @Frame         ; and keep looping until there are no more closed scanlines
+
+  ;; once the number of closed scanlines reaches zero... shutter animation is complete,
+  ;;  and shutters are fully opened.
+
+    LDA #0             ; set the PPU to use the "open" NT
+    STA PPUCTRL
+    STA soft2000
+
+    RTS                ; and exit!
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2424,130 +2548,6 @@ Story_CloseShutters:
     STA soft2000
 
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Story - Open Shutters  [$B98D :: 0x3799D]
-;;
-;;    This routine animates the shutter opening effect done by the story screens.
-;;  This is done with screen splitting and timing tricks.  See the big paragraphs
-;;  in the routine for further details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Story_OpenShutters:
-    LDA #16           ; set the counter for the closed shutter portion of the effect.
-    STA shutter_a     ;  16 to approximate 16 scanlines of closed shutters
-
-    LDA #1            ; set the counter for the open shutter portion of the effect
-    STA shutter_b     ;  1 to approximate 1 scanline of opened shutters
-                  ; this may look like it would actually be 17 scanlines (16+1, right?)
-                  ;  but because the loops are a little shorter than 1 scanline.. this
-                  ;  works out to closer to 16 scanlines (a little less, actually, see notes below)
-
-            ; once counters are prepped -- start doing frames of animation
-
-  @Frame:
-    LDA #$01             ; set soft2000 to use the closed NT ($2400 -- the one with closed shutter
-    STA soft2000         ;  graphics).  This leaves the shutter closed for the remainder of the previous
-                         ;  frame.
-
-    CALL WaitForVBlank          ; wait for VBlank
-    CALL WaitForShutterStart      ; then wait for the PPU to reach approx. shutter start time
-
-    LDA #$07             ; A is our down counter, that counts how many different shutters
-                         ;  we are going to animate.  There are 7 animations performed, but because
-                         ; the first two are off the top of the text box, only 5 are visible
-
-  ;;
-  ;;  This is the loop which animates the shutters.  This animation is performed by having two
-  ;;   NTs which are identical except for the text box:  The PPUCTRL NT has the text and a black BG,
-  ;;   so it's the "open" NT.  The $2400 NT has no text and a blue BG, so it's the "closed" BG.
-  ;;  The game will split the screen multiple times during the frame to have the PPU switch between
-  ;;   these nametables at different scanlines -- thus appearing to make the shutters gradually
-  ;;   open, even though no NT or CHR changes are taking place (as complicated as this sounds, it
-  ;;   really is the simplest way to do this effect -- the effect itself is quite advanced, even though
-  ;;   it may not seem it).
-  ;;
-  ;;  1 scanline is 113.6667 (341/3) CPU cycles.  This loop will use shutter_a and shutter_b as
-  ;;   down counters to approximate the number of scanlines to have the shutters opened (b) and closed
-  ;;   (a).  However the loop that uses these down counters is 105 CPU cycles per iteration (less than
-  ;;   1 scanline) -- so these are "not quite scanlines".  This results in the entire loop being a
-  ;;   little shorter than you'd expect.. and means the timing isn't quite as tight as it could be.
-  ;;
-  ;;  I have counted the cycles for this loop, and given that shutter_a and shutter_b will always
-  ;;   collectively sum 17, @ShutterLoop takes exactly 1814 cycles every iteration
-  ;;   (1814*3/341 = 15.95 -- a little less than 16 scanlines).  This means that *eventually*
-  ;;   this routine would desync and the shutters would become oblong -- but since there's only 7
-  ;;   iterations, and since the scroll isn't REALLY changed until the PPU reloads the temp address
-  ;;   (which doesn't occur until the end of the scanline), this timing is "good enough".  It
-  ;;   will draw correctly without distortion.
-  ;;
-  ;;  Having called WaitForShutterStart above, the PPU is now ~8 scanlines into frame rendering.
-  ;;   The story box appears at scanline 40, which means there are 32 scanlines until the shutters
-  ;;   start becoming visible.  This is why the first two shutters are invisible and why there's
-  ;;   7 shutters drawn instead of 5 (since only 5 are visible in the story box).
-  ;;
-  ;;  Also note that the length of these loops could be changed if the branch crosses a page boundary
-  ;;   but that would only make the loops longer (and they're already short) -- so even if that
-  ;;   happens, there wouldn't be any visible glitches.  If anything it would help tighten up the
-  ;;   timing.
-  ;;
-
-  @ShutterLoop:
-    PHA              ; push shutter counter to stack to back it up
-
-    LDX shutter_a       ; load number of not-quite-scanlines shutters are to be closed
-   @ClosedLoop:         ; and wait that long
-      CALL Wait100Cycs
-      DEX
-      BNE @ClosedLoop   ; (each loop iteration = 105 cycles)
-
-    LDA #$00         ; then switch the PPU over to the "open" NT
-    STA PPUCTRL
-
-    LDX shutter_b       ; load number of not-quite-scanlines shutters are to be opened
-   @OpenLoop:           ; and wait that long
-      CALL Wait100Cycs
-      DEX
-      BNE @OpenLoop
-
-    LDA #$01         ; then close the shutters again by switching
-    STA PPUCTRL        ;  the PPU over to the "closed" NT
-
-    PLA              ; pull the loop counter from the stack
-    SEC
-    SBC #1           ; and count it down
-    BNE @ShutterLoop ; keep repeating this loop (draw another shutter) until it expires
-                     ;  7 iterations -- so 7 shutters are drawn (but only 5 visible)
-
-  PAGECHECK @ShutterLoop   ; assert that loop doesn't cross a page boundary (would mess with timing)
-
-  ;;
-  ;; Once code reaches here... timing critical stuff has ended, and PPU changes for the frame
-  ;;   are complete
-  ;;
-
-    CALL MusicPlay    ; keep the music playing
-
-    INC framecounter   ; increment the fame counter
-    LDA framecounter   ; and check the low bit
-    AND #$01
-    BNE @Frame         ; if the low bit is set, repeat the same frame we just did
-                       ;  this means the shutters move 1 scanline every other frame
-
-    INC shutter_b      ; increment the number of open scanlines to do
-    DEC shutter_a      ; and decrement the number of closed scanline
-    BNE @Frame         ; and keep looping until there are no more closed scanlines
-
-  ;; once the number of closed scanlines reaches zero... shutter animation is complete,
-  ;;  and shutters are fully opened.
-
-    LDA #0             ; set the PPU to use the "open" NT
-    STA PPUCTRL
-    STA soft2000
-
-    RTS                ; and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
