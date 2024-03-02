@@ -38,6 +38,11 @@
     PLA
 .endmacro
 
+.macro SWITCHDATA _address
+    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF && .bank(*) = $FF, warning, "SWITCH: Invalid use of bank switch"
+    STA MMC5_PRG_BANK2   ; Swap to the desired page
+.endmacro
+
 .macro CALL _address
     .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "CALL: Address on different bank, use FARCALL instead"
     JSR _address

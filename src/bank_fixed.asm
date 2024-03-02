@@ -1326,8 +1326,6 @@ Impl_FARCALL:
     ; Activate the trampoline
     ;RTS
 
-.segment "UNUSED"
-
 .segment "RESET_VECTOR"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -1,5 +1,5 @@
-build/*.o
-build/*.nes
-build/*.dbg
-build/*.lst
-build/*.map
+*.o
+*.o.lst
+*.dbg
+*.map
+*.nes
