@@ -72,7 +72,9 @@
 .endmacro
 
 SECTIONZP "ZEROPAGE" ; $00 - $FF
-    GAP                                     7
+    RESZP Var0,                             1
+    RESZP Var1,                             1
+    GAP                                     5
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room

@@ -79,7 +79,6 @@
 .export DrawPalette
 .export WaitForVBlank
 .export FormatBattleString
-.export Battle_WritePPUData
 .export BattleCrossPageJump
 .export Impl_FARCALL,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
 .export CHRLoadToA
@@ -95,7 +94,7 @@
 .export DrawBattleString_DrawChar
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
-.export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
+.export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr, ReadFarByte, SetBattlePPUAddr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -365,7 +364,6 @@ DecompressMap:
     CLC
     ADC #$01      ; increment it by 1
     JUMP SwapPRG ; swap that new bank in and exit
-    RTS           ; useless RTS (impossible to reach)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -511,46 +509,7 @@ SetBattlePPUAddr:
     STA PPUADDR
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_WritePPUData  [$F23E :: 0x3F24E]
-;;
-;;    Copies a block of data to PPU memory.  Note that no more than 256 bytes can be copied at a time
-;;  with this routine
-;;
-;;  input:
-;;     btltmp+4,5 = pointer to get data from
-;;     btltmp+6,7 = the PPU address to write to
-;;     btltmp+8   = the number of bytes to write
-;;     btltmp+9   = the bank to swap in
-;;
-;;  This routine will swap back to the battle_bank prior to exiting
-;;  It will also reset the scroll.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Battle_WritePPUData:
-    LDA btltmp+9                ; swap in the desired bank
-    CALL SwapPRG
-    
-    CALL WaitForVBlank
-    CALL SetBattlePPUAddr        ; use btltmp+6,7 to set PPU addr
-    
-    LDY #$00                    ; Y is loop up-counter
-    LDX btltmp+8                ; X is loop down-counter
-    
-    @Loop:
-        LDA (btltmp+4), Y         ; copy source data to PPU
-        STA PPUDATA
-        INY
-        DEX
-        BNE @Loop
-          
-    LDA #$00                    ; reset scroll before exiting
-    STA PPUMASK
-    STA PPUSCROLL
-    STA PPUSCROLL
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1249,6 +1208,15 @@ Impl_FARBYTE:
 Impl_FARBYTE2:
     STA MMC5_PRG_BANK1
     LDA (tmp), Y
+    PHA
+    LDA current_bank1
+    STA MMC5_PRG_BANK1
+    PLA
+    RTS
+
+ReadFarByte:
+    STA MMC5_PRG_BANK1
+    LDA (Var0), Y
     PHA
     LDA current_bank1
     STA MMC5_PRG_BANK1

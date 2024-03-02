@@ -10,13 +10,13 @@
 .import DrawBattleString_DrawChar
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .import DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
-.import DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
+.import DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr, ReadFarByte, SetBattlePPUAddr
 
 .export BattleScreenShake, BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle, DrawDrinkBox
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
-.export DrawBattleString_ControlCode, DrawBattleString_Code11, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
+.export DrawBattleString_ControlCode, DrawBattleString_Code11, UndrawNBattleBlocks, DrawBattleString_IncDstPtr, Battle_WritePPUData
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1620,4 +1620,51 @@ DrawBattleString_IncDstPtr:
     BNE :+
         INC btldraw_dst+1
     : 
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Battle_WritePPUData  [$F23E :: 0x3F24E]
+;;
+;;    Copies a block of data to PPU memory.  Note that no more than 256 bytes can be copied at a time
+;;  with this routine
+;;
+;;  input:
+;;     btltmp+4,5 = pointer to get data from
+;;     btltmp+6,7 = the PPU address to write to
+;;     btltmp+8   = the number of bytes to write
+;;     btltmp+9   = the bank to swap in
+;;
+;;  This routine will swap back to the battle_bank prior to exiting
+;;  It will also reset the scroll.
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Battle_WritePPUData:
+
+    CALL WaitForVBlank
+    CALL SetBattlePPUAddr        ; use btltmp+6,7 to set PPU addr
+    
+    LDA btltmp+4
+    STA Var0
+    LDA btltmp+5
+    STA Var1
+
+    LDY #$00                    ; Y is loop up-counter
+    LDX btltmp+8                ; X is loop down-counter
+    
+    @Loop:
+        LDA btltmp+9
+        ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
+        ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
+        CALL ReadFarByte
+        STA PPUDATA
+        INY
+        DEX
+        BNE @Loop
+          
+    LDA #$00                    ; reset scroll before exiting
+    STA PPUMASK
+    STA PPUSCROLL
+    STA PPUSCROLL
     RTS
