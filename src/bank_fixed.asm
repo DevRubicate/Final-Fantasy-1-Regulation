@@ -80,7 +80,7 @@
 .export WaitForVBlank
 .export FormatBattleString
 .export BattleCrossPageJump
-.export Impl_FARCALL,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARPPUCOPY
+.export Impl_FARCALL, Impl_NAKEDJUMP, Impl_FARPPUCOPY
 .export CHRLoadToA
 .export WaitScanline, SetSMScroll
 .export EnterOW_PalCyc
@@ -1191,18 +1191,6 @@ SwapPRG:
     ;DEBUG
     @noDebugger:
     LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
-    RTS
-
-Impl_FARBYTE:
-    LDA cur_bank
-    ASL A       ; Double the page number (MMC5 uses 8K pages, but FF1 uses 16K pages)
-    ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
-    STA MMC5_PRG_BANK1
-    LDA (Var0), Y
-    PHA
-    LDA current_bank1
-    STA MMC5_PRG_BANK1
-    PLA
     RTS
 
 ReadFarByte:

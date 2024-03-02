@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import Impl_FARBYTE, ReadFarByte, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
+.import ReadFarByte, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
 
 .export DrawComplexString_New, DrawItemBox, SeekItemStringPtr, SeekItemStringPtrForEquip, DrawEquipMenuStrings
 
