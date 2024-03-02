@@ -25,55 +25,55 @@
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 
-; bank_10_overworld_object
+; prg_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
-; bank_1E_util
+; prg_1E_util
 .import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
-; bank_18_screen_wipe
+; prg_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
-; bank_16_overworld_tileset
+; prg_16_overworld_tileset
 .import LoadSMTilesetData
-; bank_19_menu
+; prg_19_menu
 .import MenuCondStall
-; bank_1A_string
+; prg_1A_string
 .import DrawComplexString_New, DrawItemBox, SeekItemStringAddress, SeekItemStringPtr, SeekItemStringPtrForEquip, DrawEquipMenuStrings
-; bank_1B_map_chr
+; prg_1B_map_chr
 .import LoadOWBGCHR
-; bank_1C_mapman_chr
+; prg_1C_mapman_chr
 .import LoadPlayerMapmanCHR
-; bank_1D_world_map_obj_chr
+; prg_1D_world_map_obj_chr
 .import LoadOWObjectCHR
-; bank_1E_util
+; prg_1E_util
 
-; bank_1F_standard_map_obj_chr
+; prg_1F_standard_map_obj_chr
 .import LoadMapObjCHR
-; bank_20_battle_bg_chr
+; prg_20_battle_bg_chr
 .import LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable, LoadBattleFormationInto_btl_formdata
-; bank_21_altar
+; prg_21_altar
 .import DoAltarEffect
-; bank_22_bridge
+; prg_22_bridge
 .import LoadBridgeSceneGFX
-; bank_23_epilogue
+; prg_23_epilogue
 .import LoadEpilogueSceneGFX
-; bank_24_sound_util
+; prg_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
-; bank_25_standard_map
+; prg_25_standard_map
 .import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
-; bank_26_map
+; prg_26_map
 .import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob, PrepSMRowCol, PrepRowCol
-; bank_27_overworld_map
+; prg_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
-; bank_28_battle_util
+; prg_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
 .import BattleMenu_DrawMagicNames, DrawBattleString_Code11
-; bank_2A_draw_util
+; prg_2A_draw_util
 .import DrawBox, CyclePalettes, GetCharacterNamePtr
-; bank_2B_dialog_util
+; prg_2B_dialog_util
 .import ShowDialogueBox, EraseBox
-; bank_2C_dialog_string
+; prg_2C_dialog_string
 .import DrawDialogueString
 
 .export DrawPalette

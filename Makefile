@@ -1,6 +1,6 @@
 #!/usr/bin/env -S make -f
 
-src ::= $(wildcard src/*.asm src/data/*.asm)
+src ::= $(wildcard src/*.asm src/prg/*.asm src/data/*.asm)
 obj ::= $(patsubst src/%.asm,build/%.o,${src})
 out ::= build/final_fantasy_1_regulation.nes
 
