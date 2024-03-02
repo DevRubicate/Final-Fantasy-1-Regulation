@@ -80,7 +80,7 @@
 .export WaitForVBlank
 .export FormatBattleString
 .export BattleCrossPageJump
-.export Impl_FARCALL,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARBYTE2, Impl_FARPPUCOPY
+.export Impl_FARCALL,Impl_NAKEDJUMP, Impl_FARBYTE, Impl_FARPPUCOPY
 .export CHRLoadToA
 .export WaitScanline, SetSMScroll
 .export EnterOW_PalCyc
@@ -1199,15 +1199,6 @@ Impl_FARBYTE:
     ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
     STA MMC5_PRG_BANK1
     LDA (text_ptr), Y
-    PHA
-    LDA current_bank1
-    STA MMC5_PRG_BANK1
-    PLA
-    RTS
-
-Impl_FARBYTE2:
-    STA MMC5_PRG_BANK1
-    LDA (tmp), Y
     PHA
     LDA current_bank1
     STA MMC5_PRG_BANK1

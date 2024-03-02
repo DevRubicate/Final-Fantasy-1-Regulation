@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import Impl_FARBYTE, Impl_FARBYTE2, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
+.import Impl_FARBYTE, ReadFarByte, CoordToNTAddr, MenuCondStall, PrintGold, PrintCharStat, PrintPrice, PrintNumber_2Digit, DrawBox
 
 .export DrawComplexString_New, DrawItemBox, SeekItemStringPtr, SeekItemStringPtrForEquip, DrawEquipMenuStrings
 
@@ -503,8 +503,12 @@ DrawItemBox:
     LDY #$06           ;   this means that shorter item names must be padded with spaces to 7 characters.  DUMB
     @CopyLoop:
 
+    LDA tmp
+    STA Var0
+    LDA tmp+1
+    STA Var1
     LDA #(BANK_ITEMS * 2) | %10000000
-    JSR Impl_FARBYTE2
+    CALL ReadFarByte
     STA str_buf+$20, Y   ; and put in str_buf+$20.  Cannot use str_buf as it is,
     DEY                  ;   because it shares RAM with item_box, which we can't overwrite
     BPL @CopyLoop        ; loop until Y wraps (copies 7 characters)
@@ -1848,8 +1852,12 @@ DrawEquipMenuStrings:
 
     LDY #$06                     ; copy 7 characters from the item name (doesn't look for null termination)
     @LoadNameLoop:
-        LDA #(BANK_ITEMS * 2) | %10000000 ; #BANK_ITEMS
-        JSR Impl_FARBYTE2          ; load a character in the string        
+        LDA tmp
+        STA Var0
+        LDA tmp+1
+        STA Var1
+        LDA #(BANK_ITEMS * 2) | %10000000
+        CALL ReadFarByte          ; load a character in the string  
         STA str_buf+$12, Y         ; and write it to our string buffer.  +2 because the first 2 bytes are the equip state
         DEY                        ; (that "E-" if equipped).  Then decrement Y
         BPL @LoadNameLoop          ; and loop until it wraps (7 iterations)

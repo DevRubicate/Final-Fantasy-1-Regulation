@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, ClearOAM, MusicPlay_NoSwap, Impl_FARBYTE2
+.import WaitForVBlank, ClearOAM, MusicPlay_NoSwap, ReadFarByte
 .import DoMapDrawJob, BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
 .import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy, OpenTreasureChest
 
@@ -3809,13 +3809,16 @@ LoadMapObjects:
     ADC #>lut_MapObjects  ;  add the pointer to the LUT to the high byte to get the final source pointer
     STA tmp+1            ;  tmp+12 now points to "lut_MapObjects + (cur_map * $30)"
 
-    ;LDA #BANK_OBJINFO     ; swap to the bank containing map object information
-    ;CALL SwapPRG
 
   @Loop:
     LDY #0
+
+    LDA tmp
+    STA Var0
+    LDA tmp+1
+    STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
-    CALL Impl_FARBYTE2
+    CALL ReadFarByte
     CALL LoadSingleMapObject  ; load the object
 
     LDA tmp           ; add 3 to the source pointer to look at the next map object
@@ -3860,15 +3863,25 @@ LoadSingleMapObject:
     STA (tmp+14), Y         ; record raw ID (or 0 if sprite is invisible) as the 'to-use' object ID
 
     INY                     ; inc Y to look at next source byte
+
+    LDA tmp
+    STA Var0
+    LDA tmp+1
+    STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
-    CALL Impl_FARBYTE2
+    CALL ReadFarByte
     STA tmp+6               ; back it up
     AND #$C0                ; isolate the behavior flags
     STA (tmp+14), Y         ; record them
 
     INY                     ; inc Y to look at next source byte
+
+    LDA tmp
+    STA Var0
+    LDA tmp+1
+    STA Var1
     LDA #(BANK_OBJINFO * 2) | %10000000
-    CALL Impl_FARBYTE2
+    CALL ReadFarByte
     STA tmp+7               ; back it up
     LDA tmp+6               ; reload backed up X coord
     AND #$3F                ; mask out the low bits (remove behavior flags, wrap to 64 tiles)
