@@ -1,3 +1,3 @@
 .segment "PRG_004"
 
-.incbin "bin/bank_04.dat"
+.incbin "bin/bank_02.dat"

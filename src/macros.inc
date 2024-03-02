@@ -32,14 +32,15 @@
 .macro SWITCH _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF && .bank(*) = $FF, warning, "SWITCH: Invalid use of bank switch"
     PHA
-    LDA #((<.bank(_address)) * 2) | %10000000
+    LDA #(<.bank(_address)) | %10000000
     STA current_bank1
     STA MMC5_PRG_BANK1
     PLA
 .endmacro
 
 .macro SWITCHDATA _address
-    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF && .bank(*) = $FF, warning, "SWITCH: Invalid use of bank switch"
+    .assert .bank(_address) > 125, warning, "SWITCHDATA: This address is not on a data bank"
+    LDA # .bank(_address) | %10000000
     STA MMC5_PRG_BANK2   ; Swap to the desired page
 .endmacro
 
@@ -53,14 +54,14 @@
     JSR Impl_FARCALL
     .byte >(_address)
     .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
+    .byte (<.bank(_address)) | %10000000
 .endmacro
 
 .macro FORCEDFARCALL _address
     JSR Impl_FARCALL
     .byte >(_address)
     .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
+    .byte (<.bank(_address)) | %10000000
 .endmacro
 
 .macro JUMP _address
@@ -74,7 +75,7 @@
     JSR Impl_FARCALL
     .byte >(_address)
     .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
+    .byte (<.bank(_address)) | %10000000
     RTS
 .endmacro
 
@@ -85,7 +86,7 @@
 
 .macro NAKEDJUMP _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "NAKEDJUMP: Address reachable without a bankswitch, use JUMP instead"
-    LDA #((<.bank(_address)) * 2) | %10000000
+    LDA #(<.bank(_address)) | %10000000
     LDX #>(_address)
     LDY #<(_address)
     JSR Impl_NAKEDJUMP
@@ -97,22 +98,6 @@
     JSR Impl_FARCALL
     .byte >(_address)
     .byte <(_address)
-    .byte (_bank * 2) | %10000000
-.endmacro
-
-.macro FARBYTE _address
-    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
-    JSR Impl_FARJUMP
-    .byte >(_address)
-    .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
-.endmacro
-
-.macro FARPPUCOPY _address
-    .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF, warning, "FARJUMP: Address reachable without a bankswitch, use JUMP instead"
-    JSR Impl_FARJUMP
-    .byte >(_address)
-    .byte <(_address)
-    .byte ((<.bank(_address)) * 2) | %10000000
+    .byte _bank | %10000000
 .endmacro
 
