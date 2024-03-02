@@ -3296,6 +3296,8 @@ EnterIntroStory:
     STA Var0
     LDA #>lut_IntroStoryText
     STA Var1
+    LDA #(BANK_INTROTEXT * 2) | %10000000
+    STA Var2
 
     LDA #0               ; disable menu stalling (PPU is off)
     STA menustall
@@ -5418,6 +5420,8 @@ DrawShopComplexString:
     LDX #BANK_THIS
     STX cur_bank
     STX ret_bank
+    LDX #($0E * 2) | %10000000
+    STX Var2
     JUMP Invoke_DrawComplexString
 
 
@@ -8461,6 +8465,8 @@ DrawMenuComplexString:
     LDA #BANK_THIS
     STA cur_bank          ; set data bank (string to draw is on this bank -- or is in RAM)
     STA ret_bank          ; set return bank (we want it to RTS to this bank when complete)
+    LDA #(BANK_THIS * 2) | %10000000
+    STA Var2
     JUMP Invoke_DrawComplexString ;  Draw Complex String, then exit!
 
 

@@ -24,7 +24,7 @@ DrawComplexString_New:
     @Draw_NoStall:
 
     LDY #0            ; zero Y -- we don't want to use it as an index.  Rather, the pointer is updated
-    CALL Impl_FARBYTE
+    CALL ReadFarByte
     BEQ DrawComplexString_Exit   ; if the character is 0  (null terminator), exit the routine
 
     INC Var0      ; otherwise, inc source pointer
@@ -128,7 +128,7 @@ DrawComplexString_New:
     AND #$C0
     STA char_index ; store index
 
-    JSR Impl_FARBYTE
+    CALL ReadFarByte
     INC Var0        ; inc our string pointer
     BNE :+
         INC Var1    ; inc high byte if low byte wrapped
@@ -335,46 +335,39 @@ DrawComplexString_New:
 
     ;;; Control Code $02 -- draws an item name
     @Code_02:
-    JSR ReadFarByte
+    CALL ReadFarByte
     INC Var0          ; inc source pointer
     BNE @DrawItem
-    INC Var1      ;   and inc high byte if low byte wrapped
-
+        INC Var1      ;   and inc high byte if low byte wrapped
     @DrawItem:
     CALL @Save             ; drawing an item requires a substring.  Save current string
     ASL A                 ; double it (for pointer table lookup)
     TAX                   ; put low byte in X for indexing
 
     BCS @itemHigh                 ; if doubling A caused a carry (item ID >= $80)... jump ahead
-      LDA LUT_ItemNamePtrTbl, X   ;  if item ID was < $80... read pointer from first half of pointer table
-      STA Var0                ;  low byte of pointer
-      LDA LUT_ItemNamePtrTbl+1, X ;  high byte of pointer (will be written after jump)
-      JUMP @itemGo
-
-  @itemHigh:                         ; item high -- if item ID was >= $80
-      LDA LUT_ItemNamePtrTbl+$100, X ;  load pointer from second half of pointer table
-      STA Var0                   ;  write low byte of pointer
-      LDA LUT_ItemNamePtrTbl+$101, X ;  high byte (written next inst)
-
-  @itemGo:
+    LDA LUT_ItemNamePtrTbl, X   ;  if item ID was < $80... read pointer from first half of pointer table
+    STA Var0                ;  low byte of pointer
+    LDA LUT_ItemNamePtrTbl+1, X ;  high byte of pointer (will be written after jump)
+    JUMP @itemGo
+    @itemHigh:                         ; item high -- if item ID was >= $80
+    LDA LUT_ItemNamePtrTbl+$100, X ;  load pointer from second half of pointer table
+    STA Var0                   ;  write low byte of pointer
+    LDA LUT_ItemNamePtrTbl+$101, X ;  high byte (written next inst)
+    @itemGo:
     STA Var1        ; finally write high byte of pointer
-
-    LDA #BANK_ITEMS
+    LDA #(BANK_ITEMS * 2) | %10000000
     STA Var2
-
     CALL @Draw_NoStall     ; recursively draw the substring
     JUMP @Restore          ; then restore original string and continue
 
     ;;;; Control Code $03 -- prints an item price
   @Code_03:
-    JSR Impl_FARBYTE
+    CALL ReadFarByte
     INC Var0         ; inc string pointer
     BNE :+
         INC Var1     ; inc high byte if low byte wrapped
-    :   
+    :
     CALL @Save            ; Save string info (item price is a substring)
-    TAX                  ; put item ID in X temporarily
-    TXA                  ; get back the item ID
     FARCALL PrintPrice       ; print the price to temp string buffer
     CALL @StallAndDraw    ; recursivly draw it
     JUMP @Restore         ; then restore original string state and continue
@@ -539,6 +532,8 @@ DrawItemBox:
     STA Var0
     LDA #>(str_buf+$20)
     STA Var1
+    LDA #(BANK_ITEMS * 2) | %10000000
+    STA Var2
 
     LDA cursor             ; get current loop counter again
     ASL A                  ; double it, and stuff it in X
