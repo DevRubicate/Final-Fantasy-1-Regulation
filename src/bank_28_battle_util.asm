@@ -7,7 +7,7 @@
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
 .import DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
-.import DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
+.import DrawBattleString_DrawChar
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .import DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
 .import DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
@@ -16,7 +16,7 @@
 .export DrawBattle_Division, DrawCombatBox, DrawEOBCombatBox, BattleBox_vAXY, Battle_PPUOff, BattleWaitForVBlank, BattleDrawMessageBuffer, GetBattleMessagePtr
 .export BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, Battle_PlayerBox, DrawBattleBox, DrawRosterBox, DrawBattleItemBox
 .export DrawBattleMagicBox, DrawBattle_Number, BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, SwapBtlTmpBytes
-.export DrawBattleString_ControlCode, DrawBattleString_Code11, UndrawNBattleBlocks
+.export DrawBattleString_ControlCode, DrawBattleString_Code11, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1603,3 +1603,21 @@ UndrawNBattleBlocks:
     RTS
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBattleString_IncDstPtr  [$FCC2 :: 0x3FCD2]
+;;
+;;  Incremenets the destination pointer by 2 for the DrawBattleSubString routine(s)
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBattleString_IncDstPtr:
+    INC btldraw_dst
+    BNE :+
+        INC btldraw_dst+1
+    : 
+    INC btldraw_dst
+    BNE :+
+        INC btldraw_dst+1
+    : 
+    RTS

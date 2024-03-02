@@ -67,7 +67,7 @@
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
-.import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks
+.import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
 .import BattleMenu_DrawMagicNames, DrawBattleString_Code11
 ; bank_2A_draw_util
 .import DrawBox, CyclePalettes, GetCharacterNamePtr
@@ -92,7 +92,7 @@
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
-.export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
+.export DrawBattleString_DrawChar, lut_NTRowStartHi
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
 .export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr
@@ -987,7 +987,7 @@ DrawBattleString_DrawChar:
     DEY
     LDA #$FF
     STA (btldraw_dst), Y        ; and top part in position [0]
-    JUMP DrawBattleString_IncDstPtr
+    FARJUMP DrawBattleString_IncDstPtr
 
 
 ;;  DrawBattleString_Code0C  [$FB2F :: 0x3FB3F]
@@ -1071,13 +1071,14 @@ DrawString_SpaceRun:
     LDA (btldraw_src), Y        ; get the run length
     TAX
     LDA #$FF                    ; blank space tile
-    : LDY #$00
-      STA (btldraw_dst), Y      ; print top/bottom portions as empty space
-      INY
-      STA (btldraw_dst), Y
-      CALL DrawBattleString_IncDstPtr
-      DEX
-      BNE :-
+    : 
+        LDY #$00
+        STA (btldraw_dst), Y      ; print top/bottom portions as empty space
+        INY
+        STA (btldraw_dst), Y
+        FARCALL DrawBattleString_IncDstPtr
+        DEX
+        BNE :-
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1206,23 +1207,6 @@ DrawBattle_IncSrcPtr:
     INC btldraw_src
     BNE :+
       INC btldraw_src+1
-  : RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleString_IncDstPtr  [$FCC2 :: 0x3FCD2]
-;;
-;;  Incremenets the destination pointer by 2 for the DrawBattleSubString routine(s)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleString_IncDstPtr:
-    INC btldraw_dst
-    BNE :+
-      INC btldraw_dst+1
-  : INC btldraw_dst
-    BNE :+
-      INC btldraw_dst+1
   : RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
