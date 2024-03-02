@@ -2463,6 +2463,8 @@ DrawCharacterName:
     STA Var0
     LDA #>(format_buf+3)
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
 
     LDA #BANK_THIS         ; set banks required for DrawComplexString
     STA cur_bank
@@ -3005,6 +3007,8 @@ PtyGen_DrawOneText:
     STA Var0            ;  string we just constructed
     LDA #>(format_buf+5)
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
 
     LDA #BANK_THIS          ; set cur and ret banks (see DrawComplexString for why)
     STA cur_bank
@@ -3034,6 +3038,8 @@ PtyGen_DrawOneText:
     STA Var0
     LDA #>(format_buf+3)
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
 
     LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
     STA cur_bank            ;   but oh well)
@@ -3117,6 +3123,8 @@ NameInput_DrawName:
     STA Var1
     LDA #<name_input_draw_buf
     STA Var0
+    LDA #($0E * 2) | %10000000
+    STA Var2
     
     LDA #BANK_THIS          ; set cur/ret banks
     STA cur_bank
@@ -3351,6 +3359,9 @@ EnterTitleScreen:
     STA Var0
     LDA #>lut_TitleText_Continue
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
+
     LDA #0
     STA menustall    ; disable menu stalling (PPU is off)
     FARCALL DrawComplexString_New
@@ -3362,6 +3373,9 @@ EnterTitleScreen:
     STA Var0
     LDA #>lut_TitleText_NewGame
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
+
     FARCALL DrawComplexString_New
 
     LDA #20          ; last box is moved left and down a bit (8,20)
@@ -3375,6 +3389,9 @@ EnterTitleScreen:
     STA Var0
     LDA #>lut_TitleText_RespondRate
     STA Var1
+    LDA #($0E * 2) | %10000000
+    STA Var2
+
     FARCALL DrawComplexString_New
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver

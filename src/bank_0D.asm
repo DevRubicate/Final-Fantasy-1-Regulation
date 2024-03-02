@@ -2761,7 +2761,8 @@ Story_DrawText:
     STA Var0
     LDA lut_StoryText+1, X
     STA Var1
-
+    LDA #($0D * 2) | %10000000
+    STA Var2
     FARJUMP DrawComplexString_New ; and draw it at a complex string.  Then exit
 
 
