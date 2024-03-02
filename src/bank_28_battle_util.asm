@@ -5,7 +5,7 @@
 .import BattleRNG, WaitForVBlank, MusicPlay
 .import LoadBattleFormationInto_btl_formdata, SetPPUAddr_XA, LoadBattleAttributeTable
 .import LoadBattlePalette, DrawBattleBackdropRow, PrepBattleVarsAndEnterBattle, Battle_DrawMessageRow_VBlank
-.import DrawBlockBuffer, DrawBox, Battle_DrawMessageRow
+.import DrawBox, Battle_DrawMessageRow
 .import DrawBattleBoxAndText, DrawBattleBox_Row, lut_EnemyRosterStrings
 .import DrawBattleString_DrawChar, DrawBattleString_IncDstPtr
 .import lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
@@ -1556,3 +1556,26 @@ DrawBattleString_Code11:            ; print a number
     STA btldraw_subsrc+1
     CALL DrawBattle_IncSrcPtr
     JUMP DrawBattle_Number
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  DrawBlockBuffer  [$F648 :: 0x3F658]
+;;
+;;  Draw the added blocks to the btl_msgbuffer, then draw the message buffer
+;;  to the PPU, and reset the block pointer to the beginning of the buffer
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawBlockBuffer:
+    CALL DrawBattleBoxAndText        ; Render blocks to the msg buffer
+    CALL BattleDrawMessageBuffer     ; Draw message buffer to the PPU
+    
+    INC btl_msgdraw_blockcount      ; Count the number of blocks we've drawn
+    
+    LDA btldraw_blockptrstart       ; reset the end pointer to point
+    STA btldraw_blockptrend         ;   to the start of the buffer
+    LDA btldraw_blockptrstart+1
+    STA btldraw_blockptrend+1
+    
+    RTS

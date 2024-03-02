@@ -91,7 +91,6 @@
 .export DrawMapPalette
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
-.export DrawBlockBuffer
 .export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
 .export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
 .export DrawBattleString_DrawChar, DrawBattleString_IncDstPtr, lut_NTRowStartHi
@@ -791,28 +790,6 @@ DrawBattleBoxAndText:
         CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
         CALL DrawBattleString              ; and use it to draw text
         JUMP @Loop                         ; keep going until null terminator is found
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBlockBuffer  [$F648 :: 0x3F658]
-;;
-;;  Draw the added blocks to the btl_msgbuffer, then draw the message buffer
-;;  to the PPU, and reset the block pointer to the beginning of the buffer
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBlockBuffer:
-    CALL DrawBattleBoxAndText        ; Render blocks to the msg buffer
-    FARCALL BattleDrawMessageBuffer     ; Draw message buffer to the PPU
-    
-    INC btl_msgdraw_blockcount      ; Count the number of blocks we've drawn
-    
-    LDA btldraw_blockptrstart       ; reset the end pointer to point
-    STA btldraw_blockptrend         ;   to the start of the buffer
-    LDA btldraw_blockptrstart+1
-    STA btldraw_blockptrend+1
-    
-    RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
