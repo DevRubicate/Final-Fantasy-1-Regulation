@@ -75,7 +75,10 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var0,                             1
     RESZP Var1,                             1
     RESZP Var2,                             1
-    GAP                                     4
+    RESZP Var3,                             1
+    RESZP Var4,                             1
+    RESZP Var5,                             1
+    RESZP Var6,                             1
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
@@ -246,9 +249,6 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
     RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
 
-
-
-
 SECTIONZP "BATTLEZP" ; $80 - $9F
     GAP                                     $80
     RESZP btl_varA,                         0 ; $80
@@ -304,14 +304,6 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
     RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
-
-
-
-
-
-
-
-
 
 SECTION "STACK"
     tmp_hi          = $0110  ; 3? bytes
@@ -926,6 +918,8 @@ SECTION "THEEND" ; $6800 - $6F00
 
 
 SECTION "EXTRA" ; $5C00 - $5FFF
+    RES             scrollX,                1
+    RES             scrollY,                1
     RES             far_depth,              1
     RES             safecall_reg_a,         1
     RES             safecall_reg_y,         1
@@ -956,3 +950,12 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             ch_vol,                 1 ; $0C output volume
     RES             ch_loopctr,             1 ; $0D remaining loop counter
     RES             ch_freq,                1 ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
+    ; String writer
+    RES             stringwriterDestX,          1
+    RES             stringwriterDestY,          1
+    RES             stringwriterNewlineOrigin,  1
+    RES             stringwriterSetHero,        1
+
+    ; temp
+    RES             slotIndex,              1
+    RES             partyGenerationClass,   4

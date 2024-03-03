@@ -2,23 +2,13 @@ const fs = require('fs');
 
 // Function to read JSON file
 function readJSONFile(filePath) {
-    try {
-        const jsonData = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(jsonData);
-    } catch (error) {
-        console.error("Error reading JSON file:", error);
-        return null;
-    }
+    const jsonData = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(jsonData);
 }
 
 // Function to write binary file
 function writeFile(filePath, data) {
-    try {
-        fs.writeFileSync(filePath, data, 'binary');
-        console.log("File created successfully:", filePath);
-    } catch (error) {
-        console.error("Error writing file:", error);
-    }
+    fs.writeFileSync(filePath, data, 'binary');
 }
 
 function processJson(jsonData) {
@@ -106,20 +96,65 @@ function translateText(input) {
         '.': 96,
         ' ': 97,
         '-': 98,
-        '!': 99,
-        '?': 100,
+        '"': 99,
+        '!': 100,
+        '?': 101,
+        '\n': 255,
     };
 
+    let mode = 'FREE';
+    let commandString = '';
     let output = '';
     for(let i=0; i<input.length; ++i) {
         const char = input[i]
-        const val = dict[char];
-        if(typeof val === 'undefined') {
-            throw new Error(`Invalid character "${char}" in text: "${input}"`);
+
+        if(mode === 'FREE') {
+            if(char === '{') {
+                mode = 'COMMAND';
+            } else {
+                const val = dict[char];
+                if(typeof val === 'undefined') {
+                    throw new Error(`Invalid character "${char}" in text: "${input}"`);
+                }
+                output += String.fromCharCode(val);
+            }
+        } else if(mode === 'COMMAND') {
+            if(char === '}') {
+                output += translateCommand(commandString);
+                commandString = '';
+                mode = 'FREE';
+            } else {
+                commandString += char;
+            }
         }
-        output += String.fromCharCode(val);
     }
     return output + String.fromCharCode(0);
+}
+
+function translateCommand(commandString) {
+    const segment = commandString.split(' ');
+    switch(segment[0]) {
+        case 'SET_HERO':
+            const index = getPositiveInteger(segment[1]);
+            return String.fromCharCode(254) + String.fromCharCode(String(index));
+        case 'HERO':
+            switch(segment[1]) {
+                case 'NAME':
+                    return String.fromCharCode(253) + String.fromCharCode(0);
+                default:
+                    throw new Error('Invalid HERO command');
+            }
+        default:
+            throw new Error('Invalid command');
+    }
+}
+
+function getPositiveInteger(n) {
+    if(n >>> 0 === parseFloat(n)) {
+        return parseFloat(n);
+    } else {
+        throw new Error('Invalid input, must be positive integer');
+    }
 }
 
 function translateLabel(input) {

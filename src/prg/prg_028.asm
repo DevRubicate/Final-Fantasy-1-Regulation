@@ -9,7 +9,8 @@
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
-.import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr, StringWriter
+.import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
+.import StringWriter, WhitespaceWriter, PlotBox
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -2461,27 +2462,50 @@ NewGamePartyGeneration:
       DEX
       BPL :-
       
+    LDA #4
+    STA partyGenerationClass
+    LDA #4
+    STA partyGenerationClass+1
+    LDA #4
+    STA partyGenerationClass+2
+    LDA #4
+    STA partyGenerationClass+3
+
     LDA #$00        ; This null-terminates the draw buffer for when the character's
     STA format_buf+7         ;   name is drawn on the name input screen.  Why this is done here
                     ;   and not with the actual drawing makes no sense to me.
     
-    
-  @Char_0:                      ; To Character generation for each of the 4 characters
+
+
+  @Char_0:
+    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
+                        ; To Character generation for each of the 4 characters
+    LDA #0
+    STA slotIndex
     LDA #$00                    ;   branching back to the previous char if the user
     STA char_index              ;   cancelled by pressing B
     CALL DoPartyGen_OnCharacter
     BCS @Char_0
   @Char_1:
+    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
+    LDA #1
+    STA slotIndex
     LDA #$10
     STA char_index
     CALL DoPartyGen_OnCharacter
     BCS @Char_0
   @Char_2:
+    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
+    LDA #2
+    STA slotIndex
     LDA #$20
     STA char_index
     CALL DoPartyGen_OnCharacter
     BCS @Char_1
   @Char_3:
+    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
+    LDA #3
+    STA slotIndex
     LDA #$30
     STA char_index
     CALL DoPartyGen_OnCharacter
@@ -2512,7 +2536,7 @@ NewGamePartyGeneration:
     LDX #$20
     CALL @RecordClassAndName
     LDX #$30
-  ; JUMP @RecordClassAndName
+    NOJUMP @RecordClassAndName
     
   @RecordClassAndName:
     TXA                     ; X is the ptygen source index  ($10 bytes per character)
@@ -2553,7 +2577,7 @@ PtyGen_DrawScreen:
     STA joy_prevdir
 
     CALL ClearNT             ; wipe the screen clean
-    CALL PtyGen_DrawBoxes    ;  draw the boxes
+    ;CALL PtyGen_DrawBoxes    ;  draw the boxes
     CALL PtyGen_DrawText     ;  and the text in those boxes
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
@@ -2573,7 +2597,6 @@ PtyGen_DrawScreen:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoPartyGen_OnCharacter:
-    CALL PtyGen_DrawScreen           ; Draw the Party generation screen
     
     ; Then enter the main logic loop
   @MainLoop:
@@ -2597,20 +2620,34 @@ DoPartyGen_OnCharacter:
       BEQ @MainLoop             ;   loop to another frame.
     
      ; Otherwise, if any direction was pressed:
-      LDX char_index
-      CLC
-      LDA ptygen_class, X       ; Add 1 to the class ID of the current character.
-      ADC #1
-      CMP #6
-      BCC :+
+    LDX char_index
+    CLC
+    LDA ptygen_class, X       ; Add 1 to the class ID of the current character.
+    ADC #1
+    CMP #6
+    BCC :+
         LDA #0                  ; wrap 5->0
-    : STA ptygen_class, X
+    : 
+    STA ptygen_class, X
+
+    ; Wrap class selection around
+    LDX slotIndex
+    LDA partyGenerationClass, X
+    CLC
+    ADC #1
+    CMP #6
+    BNE @noWraparound
+    LDA #0
+    @noWraparound:
+    STA partyGenerationClass, X
+
+
+
   
-      LDA #$01                  ; set menustall (drawing while PPU is on)
-      STA menustall
-      LDX char_index            ; then update the on-screen class name
-      CALL PtyGen_DrawOneText
-      JUMP @MainLoop
+    LDA #$01                  ; set menustall (drawing while PPU is on)
+    STA menustall
+    CALL PtyGen_DrawOneText
+    JUMP @MainLoop
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2912,21 +2949,22 @@ PtyGen_DrawBoxes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_DrawText:
+    LDA #0
+    STA slotIndex
     LDA #0             ; start loop counter at zero
-  @MainLoop:
-     PHA                ; push loop counter to back it up
-     CALL @DrawOne       ; draw one character's strings
-     PLA                ;  pull loop counter
-     CLC                ; and increase it to point to next character's data
-     ADC #$10           ;  ($10 bytes per char in 'ptygen')
-     CMP #$40
-     BCC @MainLoop      ;  loop until all 4 chars drawn
+    @MainLoop:
+    PHA                ; push loop counter to back it up
+    CALL @DrawOne       ; draw one character's strings
+    INC slotIndex
+    PLA                ;  pull loop counter
+    CLC                ; and increase it to point to next character's data
+    ADC #$10           ;  ($10 bytes per char in 'ptygen')
+    CMP #$40
+    BCC @MainLoop      ;  loop until all 4 chars drawn
     RTS
+    @DrawOne:
+    NOJUMP PtyGen_DrawOneText
 
-  @DrawOne:
-    TAX                 ; put the ptygen index in X for upcoming routine
-
-      ; no JUMP or RTS -- code flows seamlessly into PtyGen_DrawOneText
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2950,61 +2988,81 @@ PtyGen_DrawText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_DrawOneText:
-    LDA ptygen_class_x, X   ; get X,Y coords where we're going to place
-    STA dest_x              ;  the class name
-    LDA ptygen_class_y, X
-    STA dest_y
+    LDX slotIndex
+    LDA SlotCoordX, X
+    STA stringwriterDestX
+    LDA SlotCoordY, X
+    STA stringwriterDestY
+    LDA #10
+    STA box_wd
+    LDA #10
+    STA box_ht
+    FARCALL PlotBox
 
-    LDA ptygen_class, X     ; get the selected class
+    LDX slotIndex
+    LDA SlotCoordX, X
     CLC
-    ADC #$F0                ; add $F0 to select the class' "item name"
-    STA format_buf+6        ;  store that as 2nd byte in format string
-    LDA #$02                ; first byte in string is $02 -- the control code to
-    STA format_buf+5        ;  print an item name
+    ADC #2
+    STA stringwriterDestX
+    LDA SlotCoordY, X
+    CLC
+    ADC #2
+    STA stringwriterDestY
 
-    LDA #<(format_buf+5)    ; set the text pointer to point to the start of the 2-byte
-    STA Var0            ;  string we just constructed
-    LDA #>(format_buf+5)
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
 
-    LDA #BANK_THIS          ; set cur and ret banks (see DrawComplexString for why)
-    STA cur_bank
-    STA ret_bank
+    LDA partyGenerationClass, X
+    TAX
+    LDA ClassStringPtrLo, X
+    STA Var5
+    LDA ClassStringPtrHi, X
+    STA Var6
+    LDA ClassStringPtrBank, X
+    STA MMC5_PRG_BANK2
+    FARCALL StringWriter
 
-    TXA                     ; back up our index (DrawComplexString will corrupt it)
-    PHA
-    FARCALL DrawComplexString_New   ; draw the string
-    PLA
-    TAX                     ; and restore our index
 
-    LDA ptygen_name, X      ; next, copy over the 4-byte name of the character
-    STA format_buf+3        ;  over to the format buffer
-    LDA ptygen_name+1, X
-    STA format_buf+4
-    LDA ptygen_name+2, X
-    STA format_buf+5
-    LDA ptygen_name+3, X
-    STA format_buf+6
 
-    LDA ptygen_name_x, X    ; set destination coords appropriately
-    STA dest_x
-    LDA ptygen_name_y, X
-    STA dest_y
 
-    LDA #<(format_buf+3)    ; set pointer to start of 4-byte string
-    STA Var0
-    LDA #>(format_buf+3)
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
 
-    LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
-    STA cur_bank            ;   but oh well)
-    STA ret_bank
+;    LDA ptygen_name, X      ; next, copy over the 4-byte name of the character
+;    STA format_buf+3        ;  over to the format buffer
+;    LDA ptygen_name+1, X
+;    STA format_buf+4
+;    LDA ptygen_name+2, X
+;    STA format_buf+5
+;    LDA ptygen_name+3, X
+;    STA format_buf+6
+;
+;    LDA ptygen_name_x, X    ; set destination coords appropriately
+;    STA dest_x
+;    LDA ptygen_name_y, X
+;    STA dest_y
+;
+;    LDA #<(format_buf+3)    ; set pointer to start of 4-byte string
+;    STA Var0
+;    LDA #>(format_buf+3)
+;    STA Var1
+;    LDA #($0E * 2) | %10000000
+;    STA Var2
+;
+;    LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
+;    STA cur_bank            ;   but oh well)
+;    STA ret_bank
 
-    FARJUMP DrawComplexString_New   ; then draw another complex string -- and exit!
+
+    RTS
+
+SlotCoordX:
+    .byte 4, 18, 4, 18
+SlotCoordY:
+    .byte 4, 4, 16, 16
+
+ClassStringPtrLo:
+    .lobytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrHi:
+    .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrBank:
+    .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3126,39 +3184,11 @@ DrawNameInputScreen:
     LDA #0
     STA menustall           ; no menustall (PPU is off at this point)
     
-    LDA #$04                ; Draw the big box containing input
-    STA box_x
-    LDA #$08
-    STA box_y
-    LDA #$17
-    STA box_wd
-    LDA #$14
-    STA box_ht
-    FARCALL DrawBox
-    
-    LDA #$0D                ; Draw the small top box containing the player's name
-    STA box_x
-    LDA #$02
-    STA box_y
-    LDA #$06
-    STA box_wd
-    LDA #$04
-    STA box_ht
-    FARCALL DrawBox
-    
-    LDA #<lut_NameInput     ; Print the NameInput lut as a string.  This will fill
-    STA Var0            ;  the bottom box with the characters the user can select.
-    LDA #>lut_NameInput
-    STA Var1
-    LDA #$06
-    STA dest_x
-    LDA #$0A
-    STA dest_y
-    LDA #BANK_THIS
-    STA cur_bank
-    STA ret_bank
-    JUMP Invoke_DrawComplexString
-    
+    BOX 13, 2, 6, 4
+    BOX 4, 8, 23, 20
+    TEXT TEXT_ALPHABET, 6, 10
+    TEXT TEXT_TITLE_SELECT_NAME, 9, 26
+RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

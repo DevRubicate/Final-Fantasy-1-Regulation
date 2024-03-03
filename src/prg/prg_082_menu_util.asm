@@ -218,25 +218,42 @@ DrawSimple2x3Sprite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_DrawChars:
-    LDX #$00         ; Simply call @DrawOne four times, each time
-    CALL @DrawOne     ;  having the index of the char to draw in X
-    LDX #$10
-    CALL @DrawOne
-    LDX #$20
-    CALL @DrawOne
-    LDX #$30
-
-  @DrawOne:
+    LDX #0         ; Simply call @DrawOne four times, each time
     LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
     STA spr_x
     LDA ptygen_spr_y, X
     STA spr_y
+    LDX #0
+    CALL @DrawOne     ;  having the index of the char to draw in X
 
-    LDA ptygen_class, X   ; get the class
+    LDX #$10
+    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
+    STA spr_x
+    LDA ptygen_spr_y, X
+    STA spr_y
+    LDX #1
+    CALL @DrawOne
+
+    LDX #$20
+    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
+    STA spr_x
+    LDA ptygen_spr_y, X
+    STA spr_y
+    LDX #2
+    CALL @DrawOne
+
+    LDX #$30
+    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
+    STA spr_x
+    LDA ptygen_spr_y, X
+    STA spr_y
+    LDX #3
+  @DrawOne:
+
+    LDA partyGenerationClass, X   ; get the class
     TAX
     LDA lutClassBatSprPalette, X   ; get the palette that class uses
     STA tmp+1             ; write the palette to tmp+1  (used by DrawSimple2x3Sprite)
-
     TXA               ; multiply the class index by $20
     ASL A             ;  this gets the tiles in the pattern tables which have this
     ASL A             ;  sprite's CHR ($20 tiles is 2 rows, there are 2 rows of tiles

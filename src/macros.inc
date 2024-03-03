@@ -45,28 +45,30 @@
 
 .macro TEXT _address, _x, _y
     LDA #<_address
-    STA Var0
+    STA Var5
     LDA #>_address
-    STA Var1
+    STA Var6
     LDA #(_x)
-    STA dest_x
+    STA stringwriterDestX
     LDA #(_y)
-    STA dest_y
+    STA stringwriterDestY
     LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
     STA MMC5_PRG_BANK2   ; Swap to the desired page
     FARCALL StringWriter
 .endmacro
 
+.define TextBank(_address) (124 + <((_address - $C000) / $2000) ) | %10000000
+
 .macro BOX _x, _y, _w, _h
     LDA #(_x)
-    STA box_x
+    STA stringwriterDestX
     LDA #(_y)
-    STA box_y
+    STA stringwriterDestY
     LDA #(_w)
     STA box_wd
     LDA #(_h)
     STA box_ht
-    FARCALL DrawBox
+    FARCALL PlotBox
 .endmacro
 
 .macro CALL _address
