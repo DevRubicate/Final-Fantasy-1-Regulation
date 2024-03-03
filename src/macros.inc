@@ -39,8 +39,7 @@
 .endmacro
 
 .macro SWITCHDATA _address
-    .assert .bank(_address) > 125, warning, "SWITCHDATA: This address is not on a data bank"
-    LDA # .bank(_address) | %10000000
+    LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
     STA MMC5_PRG_BANK2   ; Swap to the desired page
 .endmacro
 

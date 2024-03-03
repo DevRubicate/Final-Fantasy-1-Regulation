@@ -1,6 +1,4 @@
 .segment "DATA_126"
 
-.export TestData
+.include "src/global-import.inc"
 
-TestData:
-.byte $01, $02, $03, $04, $05
