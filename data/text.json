@@ -1,3 +1,7 @@
 [
-    {"label": "HELLO", "text": "Hello World from text.json"}
+    {"label": "TEXT_TITLE_CONTINUE", "text": "CONTINUE"},
+    {"label": "TEXT_TITLE_NEW_GAME", "text": "NEW GAME"},
+    {"label": "TEXT_TITLE_RESPOND_RATE", "text": "RESPOND RATE"},
+    {"label": "TEXT_TITLE_COPYRIGHT_SQUARE", "text": "C 1987 SQUARE  "},
+    {"label": "TEXT_TITLE_COPYRIGHT_NINTENDO", "text": "C 1990 NINTENDO"}
 ]

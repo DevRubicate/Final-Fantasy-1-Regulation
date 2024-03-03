@@ -43,6 +43,32 @@
     STA MMC5_PRG_BANK2   ; Swap to the desired page
 .endmacro
 
+.macro TEXT _address, _x, _y
+    LDA #<_address
+    STA Var0
+    LDA #>_address
+    STA Var1
+    LDA #(_x)
+    STA dest_x
+    LDA #(_y)
+    STA dest_y
+    LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
+    STA MMC5_PRG_BANK2   ; Swap to the desired page
+    FARCALL StringWriter
+.endmacro
+
+.macro BOX _x, _y, _w, _h
+    LDA #(_x)
+    STA box_x
+    LDA #(_y)
+    STA box_y
+    LDA #(_w)
+    STA box_wd
+    LDA #(_h)
+    STA box_ht
+    FARCALL DrawBox
+.endmacro
+
 .macro CALL _address
     .assert .bank(_address) = .bank(*) || .bank(_address) = $FF, warning, "CALL: Address on different bank, use FARCALL instead"
     JSR _address

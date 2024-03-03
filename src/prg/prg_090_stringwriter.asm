@@ -8,25 +8,8 @@
 
 StringWriter:
     CALL WaitForVBlank   ; wait for VBlank
-
-
-
-    SWITCHDATA TEXT_HELLO
-
-    LDA #5             ; copy placement coords (box_*) to dest coords (dest_*)
-    STA dest_x
-    LDA #5
-    STA dest_y
     CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-
-    LDA #<TEXT_HELLO
-    STA Var0
-    LDA #>TEXT_HELLO
-    STA Var1
-
     CALL Print
-
-
     RTS
 
 
@@ -37,7 +20,7 @@ Print:
     LDA (Var0), Y
     BEQ @Done
     CLC
-    ADC #137
+    ADC #$60
     STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
 
 

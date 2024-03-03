@@ -33,50 +33,9 @@ lut_ShopStrings:
 lut_ShopData:
   .incbin "bin/0E_8300_shopdata.bin"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  TitleScreen_Copyright  [$8480 :: 0x38490]
-;;
-;;    Prepares the screen and draws the little copyright message
-;;  at the bottom of the screen.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TitleScreen_Copyright:
-    CALL IntroTitlePrepare    ; clear NT, start music, etc
-    BIT PPUSTATUS                ;  reset PPU toggle
-
-    LDX #0
-    CALL @DrawString         ; CALL to the @DrawString to draw the first one
-                            ;  then just let code flow into it to draw a second one (2 strings total)
-
-  @DrawString:
-    LDA @lut_Copyright+1, X ; get the Target PPU address from the LUT
-    STA PPUADDR
-    LDA @lut_Copyright, X
-    STA PPUADDR
-    INX                     ; move X past the address we just read
-    INX
-
-  @Loop:
-    LDA @lut_Copyright, X   ; get the next character in the string
-    BEQ @Exit               ;  if it's zero, exit (null terminator
-    STA PPUDATA               ; otherwise, draw the character
-    INX                     ; INX to move to next character
-    BNE @Loop               ; and keep looping (always branches)
-
-  @Exit:
-    INX                     ; INX to move X past the null terminator we just read
-    RTS
-
  ;; LUT for the copyright text.  Simply a 2-byte target PPU address, followed by a
  ;;  null terminated string.  Two strings total.
 
-@lut_Copyright:
-  .WORD $2328
-  .byte $8C,$FF,$81,$89,$88,$87,$FF,$9C,$9A,$9E,$8A,$9B,$8E,$FF,$FF,$00  ; "C 1987 SQUARE  "
-  .WORD $2348
-  .byte $8C,$FF,$81,$89,$89,$80,$FF,$97,$92,$97,$9D,$8E,$97,$8D,$98,$00  ; "C 1990 NINTENDO"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3338,66 +3297,20 @@ EnterIntroStory:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterTitleScreen:
-    CALL TitleScreen_Copyright     ; Do prepwork, and draw the copyright text
+    CALL IntroTitlePrepare    ; clear NT, start music, etc
+    BIT PPUSTATUS                ;  reset PPU toggle
 
+    BOX     11, 10, 10, 4
+    TEXT    TEXT_TITLE_CONTINUE, 12, 12
 
-    FARCALL StringWriter
+    BOX     11, 15, 10, 4
+    TEXT    TEXT_TITLE_NEW_GAME, 12, 17
 
-   ;; The rest of the title screen consists of 3 boxes, each containing a single
-   ;;  complex string.  The game here simply draws each of those boxes and 
-   ;;  the contained string in order.
+    BOX     8, 20, 16, 4
+    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
 
-    LDA #BANK_THIS   ; set current bank (containing text)
-    STA cur_bank     ;  and ret bank (to return to) to this bank
-    STA ret_bank     ;  see DrawComplexString for why this is needed
-
-    LDA #11          ; first box is at 11,10  with dims 10x4
-    STA box_x        ;  and contains "Continue" text
-    LDA #10
-    STA box_y
-    LDA #4
-    STA box_ht
-    LDA #10
-    STA box_wd
-    FARCALL DrawBox
-    LDA #<lut_TitleText_Continue
-    STA Var0
-    LDA #>lut_TitleText_Continue
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
-
-    LDA #0
-    STA menustall    ; disable menu stalling (PPU is off)
-    FARCALL DrawComplexString_New
-
-    LDA #15          ; next box is same X pos and same dims, but at Y=15
-    STA box_y        ;  and contains text "New Game"
-    FARCALL DrawBox
-    LDA #<lut_TitleText_NewGame
-    STA Var0
-    LDA #>lut_TitleText_NewGame
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
-
-    FARCALL DrawComplexString_New
-
-    LDA #20          ; last box is moved left and down a bit (8,20)
-    STA box_y        ;  and is a little fatter (wd=16)
-    LDA #8           ; this box contains "Respond Rate"
-    STA box_x
-    LDA #16
-    STA box_wd
-    FARCALL DrawBox
-    LDA #<lut_TitleText_RespondRate
-    STA Var0
-    LDA #>lut_TitleText_RespondRate
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
-
-    FARCALL DrawComplexString_New
+    TEXT    TEXT_TITLE_COPYRIGHT_SQUARE, 8, 25
+    TEXT    TEXT_TITLE_COPYRIGHT_NINTENDO, 8, 26
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
     STA PAPU_EN               ;   will do this automatically)
@@ -3522,24 +3435,6 @@ TitleScreen_DrawRespondRate:
     STA PPUSCROLL
     STA PPUSCROLL
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Pointerless strings for the title screen  [$A253 :: 0x3A263]
-;;
-;;    These are complex strings drawn onto the title screen.  They
-;;  have no pointer table -- instead the drawing code points to the
-;;  strings directly (hence why each string is labelled)
-
-lut_TitleText_Continue:
-  .byte $8C,$98,$97,$9D,$92,$97,$9E,$8E,$00
-
-lut_TitleText_NewGame:
-  .byte $97,$8E,$A0,$FF,$90,$8A,$96,$8E,$00
-
-lut_TitleText_RespondRate:
-  .byte $9B,$8E,$9C,$99,$98,$97,$8D,$FF,$9B,$8A,$9D,$8E,$00
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

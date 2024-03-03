@@ -516,3 +516,4 @@ lut_CharacterNamePtr:
   .WORD ch_name+$40
   .WORD ch_name+$80
   .WORD ch_name+$C0
+
