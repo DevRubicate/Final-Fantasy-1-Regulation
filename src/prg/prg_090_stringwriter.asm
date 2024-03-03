@@ -1,10 +1,31 @@
 .segment "PRG_090"
 
 .include "src/global-import.inc"
+.include "src/lib/yxa2dec.asm"
 
 .import WaitForVBlank, MenuCondStall
 
-.export StringWriter, PlotBox
+.export StringWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex
+
+
+
+ClassStringPtrLo:
+    .lobytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrHi:
+    .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrBank:
+    .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
+
+HeroStringPtrLo:
+    .lobytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrHi:
+    .hibytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrBank:
+    .byte TextBank(HERO_0_NAME), TextBank(HERO_1_NAME), TextBank(HERO_2_NAME), TextBank(HERO_3_NAME)
+
+
+
+
 
 
 StringWriter:
@@ -13,11 +34,38 @@ StringWriter:
     PHA
     CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
+
+
     LDA stringwriterDestX
     STA stringwriterNewlineOrigin
 
-    CALL Print
 
+
+    CALL Print
+    JMP @SkipCall
+    @Loop:
+        CALL PrintAdvance
+        @SkipCall:
+        BEQ @Done
+        CMP #223 ; $7F + $60
+        BEQ @Newline
+            STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
+            ; Char
+            LDA stringwriterDestX           ; increment the dest address by 1
+            CLC
+            ADC #1
+            AND #$3F                        ; and mask it with $3F so it wraps around both NTs appropriately
+            STA stringwriterDestX           ; then write back
+            JUMP @Loop
+
+        @Newline:
+            LDA stringwriterNewlineOrigin
+            STA stringwriterDestX
+            INC stringwriterDestY
+            CALL SetPPUAddrToDest  ; then set the PPU address appropriately
+            JUMP @Loop
+
+    @Done:
     LDA scrollX
     STA PPUSCROLL
     LDA scrollY
@@ -28,44 +76,43 @@ StringWriter:
     RTS
 
 
-
 PrintAdvance:
     INC Var5
-    BNE Print
-    INC Var6
+    BNE :+
+        INC Var6
+    :
 Print:
+    LDA Var7
+    STA MMC5_PRG_BANK2
 
-    @Loop:
     LDY #0
     LDA (Var5), Y
     BMI @Control
-    BEQ @Done
+    BNE :++
+        LDX stringwriterStackIndex
+        BEQ :+
+            DEC stringwriterStackIndex
+            LDA stringwriterStackLo-1, X
+            STA Var5
+            LDA stringwriterStackHi-1, X
+            STA Var6
+            LDA stringwriterStackBank-1, X
+            STA Var7
+            JUMP PrintAdvance
+        :
+        RTS
+    :
+    ; Add CHR offset so this becomes a valid character
     CLC
     ADC #$60
-    STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
+    RTS
 
-    ; Char
-    LDA stringwriterDestX           ; increment the dest address by 1
-    CLC
-    ADC #1
-    AND #$3F                        ; and mask it with $3F so it wraps around both NTs appropriately
-    STA stringwriterDestX           ; then write back
-    JUMP PrintAdvance
 
     @Control:
-    CMP #255
-    BEQ @Newline
-    CMP #254
-    BEQ @SetHero
-    CMP #253
-    BEQ @Hero
-    JUMP PrintAdvance
-
-    @Newline:
-        LDA stringwriterNewlineOrigin
-        STA stringwriterDestX
-        INC stringwriterDestY
-        CALL SetPPUAddrToDest  ; then set the PPU address appropriately
+        CMP #254
+        BEQ @SetHero
+        CMP #253
+        BEQ @Hero
         JUMP PrintAdvance
 
     @SetHero:
@@ -75,7 +122,6 @@ Print:
         :
         LDA (Var5), Y
         STA stringwriterSetHero
-        CALL SetPPUAddrToDest  ; then set the PPU address appropriately
         JUMP PrintAdvance
 
     @Hero:
@@ -83,36 +129,167 @@ Print:
         BNE :+
             INC Var6
         :
-        LDA Var5
-        PHA
-        LDA Var6
-        PHA
-
-            LDA stringwriterSetHero
-            STA MMC5_MULTI_1
-            LDA #(heroName1 - heroName0)
-            STA MMC5_MULTI_2
-            LDA MMC5_MULTI_1
-            CLC
-            ADC #<heroName0
-            STA Var5
-            LDA #>heroName0
-            ADC #0
-            STA Var6
-            CALL Print
-
-        PLA
-        STA Var6
-        PLA
-        STA Var5
-        CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-        JUMP PrintAdvance
-
+        CALL SaveStringWriterStack
+        JUMP PrintHeroData
+    @Digit:
+        INC Var5
+        BNE :+
+            INC Var6
+        :
+        CALL SaveStringWriterStack
+        JUMP PrintNumber
     @Done:
+    RTS
+
+SaveStringWriterStack:
+    LDX stringwriterStackIndex
+    INC stringwriterStackIndex
+    LDA Var5
+    STA stringwriterStackLo, X
+    LDA Var6
+    STA stringwriterStackHi, X
+    LDA Var7
+    STA stringwriterStackBank, X
+    RTS
+
+
+PrintHeroData:
+    LDA (Var5), Y
+    BEQ @PrintHeroName
+    CMP #1
+    BEQ @PrintHeroClass
+    CMP #2
+    BEQ @PrintHeroLevel
+    LDA #0
+    RTS
+
+    @PrintHeroName:
+        LDA stringwriterSetHero
+        STA MMC5_MULTI_1
+        LDA #(heroName1 - heroName0)
+        STA MMC5_MULTI_2
+        LDA MMC5_MULTI_1
+        CLC
+        ADC #<heroName0
+        STA Var5
+        LDA #>heroName0
+        ADC #0
+        STA Var6
+        JUMP Print
+ 
+
+    @PrintHeroClass:
+        LDX stringwriterSetHero
+        LDA partyGenerationClass, X
+        TAX
+        LDA ClassStringPtrLo, X
+        STA Var5
+        LDA ClassStringPtrHi, X
+        STA Var6
+        LDA ClassStringPtrBank, X
+        STA Var7
+        JUMP Print
+
+    @PrintHeroLevel:
+        LDX stringwriterSetHero
+        LDA heroLevel,X
+        CLC
+        ADC #2
+        RTS
+        ;STA stringwriterBinary
+        ;LDA #0
+        ;STA stringwriterBinary
+        ;CALL BinToDec
+        ;CALL PrintNumber
+        ;RTS
+
+PrintNumber:
+    LDA (Var5), Y
+    PHA
+    AND #%00000111
+    TAX
+    LDA yxa2decJumpTableHi, X
+    PHA
+    LDA yxa2decJumpTableLo, X
+    PHA
+
+    
+    RTS
+
+yxa2decJumpTableHi:
+    .hibytes a_to_1_digit, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
+yxa2decJumpTableLo:
+    .lobytes a_to_1_digit, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
+
+
+a_to_1_digit:
+    DEBUG
     RTS
 
 
 
+WriteHeroNameByIndex:
+    LDA HeroStringPtrLo, X
+    STA Var5
+    LDA HeroStringPtrHi, X
+    STA Var6
+    LDA HeroStringPtrBank, X
+    STA Var7
+    CALL StringWriter
+    RTS
+
+WriteClassNameByIndex:
+    LDA ClassStringPtrLo, X
+    STA Var5
+    LDA ClassStringPtrHi, X
+    STA Var6
+    LDA ClassStringPtrBank, X
+    STA Var7
+    CALL StringWriter
+    RTS
+
+
+BinToDec:
+    LDA #0
+    STA stringwriterDecimal+0
+    STA stringwriterDecimal+1
+    STA stringwriterDecimal+2
+    STA stringwriterDecimal+3
+    STA stringwriterDecimal+4
+    STA stringwriterDecimal+5
+    LDX #16
+    @Loop:
+    ASL stringwriterBinary+0
+    ROL stringwriterBinary+1
+
+    LDY stringwriterDecimal+0
+    LDA BinToDecTable, y
+    ROL
+    STA stringwriterDecimal+0
+
+    LDY stringwriterDecimal+1
+    LDA BinToDecTable, y
+    ROL
+    STA stringwriterDecimal+1
+
+    LDY stringwriterDecimal+2
+    LDA BinToDecTable, y
+    ROL
+    STA stringwriterDecimal+2
+
+    LDY stringwriterDecimal+3
+    LDA BinToDecTable, y
+    ROL
+    STA stringwriterDecimal+3
+
+    ROL stringwriterDecimal+4
+
+    DEX
+    BNE @Loop
+    RTS
+
+BinToDecTable:
+    .byte $00, $01, $02, $03, $04, $80, $81, $82, $83, $84
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -369,3 +546,6 @@ PlotBoxRow_Top:
     STA ppu_dest+1
 
     RTS
+
+
+

@@ -10,7 +10,7 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import StringWriter, WhitespaceWriter, PlotBox
+.import StringWriter, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -2270,26 +2270,33 @@ lut_LineupSlots:
 
 DrawLineupMenuNames:
     LDA #$0D
-    STA dest_x
+    STA stringwriterDestX
     LDA #$08
-    STA dest_y              ; dest = $0D,$08
-    LDA str_buf+1           ; get the char index of slot 0
-    CALL DrawCharacterName   ; draw his name
+    STA stringwriterDestY
+    LDX #0
+    FARCALL WriteHeroNameByIndex
 
+    LDA #$0D
+    STA stringwriterDestX
     LDA #$0C
-    STA dest_y              ; dest = $0D,$0C
-    LDA str_buf+1+(1*8)     ; char index of slot 1
-    CALL DrawCharacterName   ; draw name
+    STA stringwriterDestY
+    LDX #1
+    FARCALL WriteHeroNameByIndex
 
+    LDA #$0D
+    STA stringwriterDestX
     LDA #$10
-    STA dest_y
-    LDA str_buf+1+(2*8)
-    CALL DrawCharacterName   ; draw slot 2's name
+    STA stringwriterDestY
+    LDX #2
+    FARCALL WriteHeroNameByIndex
 
+    LDA #$0D
+    STA stringwriterDestX
     LDA #$14
-    STA dest_y
-    LDA str_buf+1+(3*8)
-    JUMP DrawCharacterName   ; and slot 3's.. then exit
+    STA stringwriterDestY
+    LDX #3
+    FARCALL WriteHeroNameByIndex
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2393,46 +2400,6 @@ ClearNT:
       BNE @Loop3
 
     RTS
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Character Name  [$9C2E :: 0x39C3E]
-;;
-;;     Draws a given character name at given coords
-;;
-;;  IN:             A = char index (00,40,80,C0)
-;;      dest_x,dest_y = coords to draw at
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-DrawCharacterName:
-    TAX                    ; put char index in X
-
-    LDA ch_name, X         ; copy the character name to the format_buf
-    STA format_buf+3
-    LDA ch_name+1, X
-    STA format_buf+4
-    LDA ch_name+2, X
-    STA format_buf+5
-    LDA ch_name+3, X
-    STA format_buf+6
-
-    LDA #<(format_buf+3)   ; set Var0 to point to it
-    STA Var0
-    LDA #>(format_buf+3)
-    STA Var1
-    LDA #($0E * 2) | %10000000
-    STA Var2
-
-    LDA #BANK_THIS         ; set banks required for DrawComplexString
-    STA cur_bank
-    STA ret_bank
-
-    FARJUMP DrawComplexString_New  ; Draw it!  Then return
-
-
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2815,13 +2782,7 @@ DoNameInput:
     LDA #4
     STA stringwriterDestY
     LDX slotIndex
-    LDA HeroStringPtrLo, X
-    STA Var5
-    LDA HeroStringPtrHi, X
-    STA Var6
-    LDA HeroStringPtrBank, X
-    STA MMC5_PRG_BANK2
-    FARCALL StringWriter
+    FARCALL WriteHeroNameByIndex
     
     LDA cursor                  ; Then add to our cursor
     CLC
@@ -3033,14 +2994,7 @@ PtyGen_DrawOneText:
 
     LDA partyGenerationClass, X
     TAX
-    LDA ClassStringPtrLo, X
-    STA Var5
-    LDA ClassStringPtrHi, X
-    STA Var6
-    LDA ClassStringPtrBank, X
-    STA MMC5_PRG_BANK2
-    FARCALL StringWriter
-
+    FARCALL WriteClassNameByIndex
 
     LDX slotIndex
     LDA SlotCoordX, X
@@ -3053,13 +3007,7 @@ PtyGen_DrawOneText:
     STA stringwriterDestY
 
     LDX slotIndex
-    LDA HeroStringPtrLo, X
-    STA Var5
-    LDA HeroStringPtrHi, X
-    STA Var6
-    LDA HeroStringPtrBank, X
-    STA MMC5_PRG_BANK2
-    FARCALL StringWriter
+    FARCALL WriteHeroNameByIndex
 
 
 
@@ -3098,22 +3046,6 @@ SlotCoordX:
     .byte 4, 18, 4, 18
 SlotCoordY:
     .byte 4, 4, 16, 16
-
-ClassStringPtrLo:
-    .lobytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
-ClassStringPtrHi:
-    .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
-ClassStringPtrBank:
-    .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
-
-HeroStringPtrLo:
-    .lobytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
-HeroStringPtrHi:
-    .hibytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
-HeroStringPtrBank:
-    .byte TextBank(HERO_0_NAME), TextBank(HERO_1_NAME), TextBank(HERO_2_NAME), TextBank(HERO_3_NAME)
-
-
 
 
 
@@ -8657,7 +8589,24 @@ DrawMainMenuCharBoxBody:
     STA str_buf+9
     LDA #<str_buf  ; start drawing from start of string
     STA Var0
-    JUMP Invoke_DrawComplexString    ; Draw it, then exit!
+    CALL Invoke_DrawComplexString    ; Draw it, then exit!
+
+
+    LDA #12
+    STA stringwriterDestX
+    LDA #3
+    STA stringwriterDestY
+    LDA #<TEMPLATE_HERO_MENU
+    STA Var5
+    LDA #>TEMPLATE_HERO_MENU
+    STA Var6
+    LDA #<TextBank(TEMPLATE_HERO_MENU)
+    STA Var7
+
+    FARCALL StringWriter
+
+
+    RTS
 
 
 

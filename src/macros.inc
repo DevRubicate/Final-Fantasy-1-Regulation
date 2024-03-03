@@ -53,7 +53,7 @@
     LDA #(_y)
     STA stringwriterDestY
     LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
-    STA MMC5_PRG_BANK2   ; Swap to the desired page
+    STA Var7
     FARCALL StringWriter
 .endmacro
 

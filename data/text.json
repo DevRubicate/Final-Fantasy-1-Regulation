@@ -21,5 +21,8 @@
     {"label": "HERO_0_NAME",                    "text": "{SET_HERO 0}{HERO NAME}"},
     {"label": "HERO_1_NAME",                    "text": "{SET_HERO 1}{HERO NAME}"},
     {"label": "HERO_2_NAME",                    "text": "{SET_HERO 2}{HERO NAME}"},
-    {"label": "HERO_3_NAME",                    "text": "{SET_HERO 3}{HERO NAME}"}
+    {"label": "HERO_3_NAME",                    "text": "{SET_HERO 3}{HERO NAME}"},
+
+    {"label": "TEMPLATE_HERO_MENU",                    "text": "{SET_HERO 0}{HERO NAME}\n\nL {DIGIT 1 2}{HERO LEVEL}\n\nHP\n99/99"}
+
 ]

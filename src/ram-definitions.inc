@@ -956,10 +956,25 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterNewlineOrigin,  1
     RES             stringwriterSetHero,        1
 
+
+    RES             stringwriterDigitLength,    2
+    RES             stringwriterDigitSize,      2
+    RES             stringwriterBinary,         2
+    RES             stringwriterDecimal,        6
+
+    RES             stringwriterStackIndex,     1
+    RES             stringwriterStackLo,        16
+    RES             stringwriterStackHi,        16
+    RES             stringwriterStackBank,      16
+
+    RES             yxa2decOutput,              5
+
     ; temp
     RES             slotIndex,              1
+    RES             heroLevel,              4
     RES             partyGenerationClass,   4
     RES             heroName0,              5
     RES             heroName1,              5
     RES             heroName2,              5
     RES             heroName3,              5
+    RES             Var7,                   1

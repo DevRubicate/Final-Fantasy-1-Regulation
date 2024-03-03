@@ -29,6 +29,7 @@ function processJson(jsonData) {
 
 function translateText(input) {
     const dict = {
+        '/': 26,
         '0': 32,
         '1': 33,
         '2': 34,
@@ -99,7 +100,7 @@ function translateText(input) {
         '"': 99,
         '!': 100,
         '?': 101,
-        '\n': 255,
+        '\n': 127,
     };
 
     let mode = 'FREE';
@@ -141,9 +142,18 @@ function translateCommand(commandString) {
             switch(segment[1]) {
                 case 'NAME':
                     return String.fromCharCode(253) + String.fromCharCode(0);
+                case 'CLASS':
+                    return String.fromCharCode(253) + String.fromCharCode(1);
+                case 'LEVEL':
+                    return String.fromCharCode(253) + String.fromCharCode(2);
                 default:
                     throw new Error('Invalid HERO command');
             }
+        case 'DIGIT':
+            const length = getPositiveInteger(segment[1]) - 1;
+            const size = getPositiveInteger(segment[1]) - 1;
+            const packed = ((length & 0b1111) << 4) | (size & 0b1111)
+            return String.fromCharCode(252) + String.fromCharCode(String(packed));
         default:
             throw new Error('Invalid command');
     }
