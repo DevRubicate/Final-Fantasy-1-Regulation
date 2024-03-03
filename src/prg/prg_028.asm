@@ -2462,13 +2462,13 @@ NewGamePartyGeneration:
       DEX
       BPL :-
       
-    LDA #4
+    LDA #0
     STA partyGenerationClass
-    LDA #4
+    LDA #1
     STA partyGenerationClass+1
-    LDA #4
+    LDA #2
     STA partyGenerationClass+2
-    LDA #4
+    LDA #3
     STA partyGenerationClass+3
 
     LDA #$00        ; This null-terminates the draw buffer for when the character's
@@ -2547,14 +2547,14 @@ NewGamePartyGeneration:
     LDA ptygen_class, X     ; copy class
     STA ch_class, Y
     
-    LDA ptygen_name+0, X    ; and name
-    STA ch_name    +0, Y
-    LDA ptygen_name+1, X
-    STA ch_name    +1, Y
-    LDA ptygen_name+2, X
-    STA ch_name    +2, Y
-    LDA ptygen_name+3, X
-    STA ch_name    +3, Y
+    ;LDA ptygen_name+0, X    ; and name
+    ;STA ch_name    +0, Y
+    ;LDA ptygen_name+1, X
+    ;STA ch_name    +1, Y
+    ;LDA ptygen_name+2, X
+    ;STA ch_name    +2, Y
+    ;LDA ptygen_name+3, X
+    ;STA ch_name    +3, Y
     
     RTS
 
@@ -2680,13 +2680,19 @@ DoNameInput:
     CALL ClearNT
     CALL DrawNameInputScreen
     
-    LDX char_index          ; wipe this character's name
-    LDA #$FF
-    STA ptygen_name, X
-    STA ptygen_name+1, X
-    STA ptygen_name+2, X
-    STA ptygen_name+3, X
-    
+    LDA slotIndex
+    STA MMC5_MULTI_1
+    LDA #5
+    STA MMC5_MULTI_2
+    LDX MMC5_MULTI_1
+    LDA #0
+    STA heroName0+0, X
+    STA heroName0+1, X
+    STA heroName0+2, X
+    STA heroName0+3, X
+    STA heroName0+4, X
+
+
     CALL TurnMenuScreenOn_ClearOAM   ; now that everything is drawn, turn the screen on
     
     LDA #$01                ; Set menustall, as future drawing will
@@ -2777,14 +2783,9 @@ DoNameInput:
     LDA lut_NameInputRowStart, X    ;  running the Y cursor through a row lut
     CLC
     ADC namecurs_x                  ; add X cursor
-    ASL A                           ; and multiply by 2 -- since there are spaces between tiles
     TAX                             ; use that value as an index to the lut_NameInput
-    BCC :+                          ; This will always branch, as C will always be clear
-        LDA lut_NameInput+$100, X       ; I can only guess this was used in the Japanese version, where the NameInput table might have been bigger than 
-        JUMP :++                         ; 256 bytes -- even though that seems very unlikely.
-        
-  : LDA lut_NameInput, X
-  : STA theend_selectedtile               ; record selected tile
+    LDA lut_NameInput, X
+    STA theend_selectedtile               ; record selected tile
     LDA #$01
     STA nameinput_cursoradd                  ; set cursoradd to 1 to indicate we want @SetTile to move the cursor forward
     
@@ -2794,21 +2795,41 @@ DoNameInput:
                                     ; Otherwise, fall through to SetTile
 
   @SetTile:
-    LDA cursor                  ; use cursor and char_index to access the appropriate
-    CLC                         ;   letter in this character's name
-    ADC char_index
+
+
+
+    LDA slotIndex
+    STA MMC5_MULTI_1
+    LDA #5
+    STA MMC5_MULTI_2
+    LDA MMC5_MULTI_1
+    CLC
+    ADC cursor
     TAX
     LDA theend_selectedtile
-    STA ptygen_name, X          ; and write the selected tile
+    STA heroName0, X          ; and write the selected tile
     
-    CALL NameInput_DrawName      ; Redraw the name as it appears on-screen
+
+    LDA #14
+    STA stringwriterDestX
+    LDA #4
+    STA stringwriterDestY
+    LDX slotIndex
+    LDA HeroStringPtrLo, X
+    STA Var5
+    LDA HeroStringPtrHi, X
+    STA Var6
+    LDA HeroStringPtrBank, X
+    STA MMC5_PRG_BANK2
+    FARCALL StringWriter
     
     LDA cursor                  ; Then add to our cursor
     CLC
     ADC nameinput_cursoradd
     BPL :+                      ; clipping at 0 (if subtracting -- although this never happens)
-      LDA #$00
-  : STA cursor
+        LDA #$00
+    : 
+    STA cursor
   
     JUMP @MainLoop               ; And keep going!
     
@@ -3002,7 +3023,7 @@ PtyGen_DrawOneText:
     LDX slotIndex
     LDA SlotCoordX, X
     CLC
-    ADC #2
+    ADC #1
     STA stringwriterDestX
     LDA SlotCoordY, X
     CLC
@@ -3019,6 +3040,27 @@ PtyGen_DrawOneText:
     LDA ClassStringPtrBank, X
     STA MMC5_PRG_BANK2
     FARCALL StringWriter
+
+
+    LDX slotIndex
+    LDA SlotCoordX, X
+    CLC
+    ADC #3
+    STA stringwriterDestX
+    LDA SlotCoordY, X
+    CLC
+    ADC #8
+    STA stringwriterDestY
+
+    LDX slotIndex
+    LDA HeroStringPtrLo, X
+    STA Var5
+    LDA HeroStringPtrHi, X
+    STA Var6
+    LDA HeroStringPtrBank, X
+    STA MMC5_PRG_BANK2
+    FARCALL StringWriter
+
 
 
 
@@ -3063,6 +3105,17 @@ ClassStringPtrHi:
     .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
 ClassStringPtrBank:
     .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
+
+HeroStringPtrLo:
+    .lobytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrHi:
+    .hibytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrBank:
+    .byte TextBank(HERO_0_NAME), TextBank(HERO_1_NAME), TextBank(HERO_2_NAME), TextBank(HERO_3_NAME)
+
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3125,35 +3178,35 @@ CharName_DrawCursor:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NameInput_DrawName:
-    LDX char_index          ; copy the character's name to our temp @buf
-    LDA ptygen_name, X
-    STA name_input_draw_buf
-    LDA ptygen_name+1, X
-    STA name_input_draw_buf+1
-    LDA ptygen_name+2, X
-    STA name_input_draw_buf+2
-    LDA ptygen_name+3, X
-    STA name_input_draw_buf+3              ; The code assumes name_input_draw_buf+4 is 0
-    
-    LDA #>name_input_draw_buf              ; Set the text pointer
-    STA Var1
-    LDA #<name_input_draw_buf
-    STA Var0
-    LDA #($0E * 2) | %10000000
-    STA Var2
-    
-    LDA #BANK_THIS          ; set cur/ret banks
-    STA cur_bank
-    STA ret_bank
-    
-    LDA #$0E                ; set X/Y positions for the name to be printed
-    STA dest_x
-    LDA #$04
-    STA dest_y
-    
-    LDA #$01                ; drawing while PPU is on, so set menustall
-    STA menustall
+;NameInput_DrawName:
+;    LDX char_index          ; copy the character's name to our temp @buf
+;    LDA ptygen_name, X
+;    STA name_input_draw_buf
+;    LDA ptygen_name+1, X
+;    STA name_input_draw_buf+1
+;    LDA ptygen_name+2, X
+;    STA name_input_draw_buf+2
+;    LDA ptygen_name+3, X
+;    STA name_input_draw_buf+3              ; The code assumes name_input_draw_buf+4 is 0
+;    
+;    LDA #>name_input_draw_buf              ; Set the text pointer
+;    STA Var1
+;    LDA #<name_input_draw_buf
+;    STA Var0
+;    LDA #($0E * 2) | %10000000
+;    STA Var2
+;    
+;    LDA #BANK_THIS          ; set cur/ret banks
+;    STA cur_bank
+;    STA ret_bank
+;    
+;    LDA #$0E                ; set X/Y positions for the name to be printed
+;    STA dest_x
+;    LDA #$04
+;    STA dest_y
+;    
+;    LDA #$01                ; drawing while PPU is on, so set menustall
+;    STA menustall
 Invoke_DrawComplexString:
     FARJUMP DrawComplexString_New   ; Then draw the name and exit!
     
@@ -3209,15 +3262,14 @@ lut_NameInputRowStart:
 ;;  with a single call to DrawComplexString.  It's intersperced with $FF (spaces) and $01 (double line breaks)
 
 lut_NameInput:
-  .byte $8A, $FF, $8B, $FF, $8C, $FF, $8D, $FF, $8E, $FF, $8F, $FF, $90, $FF, $91, $FF, $92, $FF, $93, $01  ; A - J
-  .byte $94, $FF, $95, $FF, $96, $FF, $97, $FF, $98, $FF, $99, $FF, $9A, $FF, $9B, $FF, $9C, $FF, $9D, $01  ; K - T
-  .byte $9E, $FF, $9F, $FF, $A0, $FF, $A1, $FF, $A2, $FF, $A3, $FF, $BE, $FF, $BF, $FF, $C0, $FF, $FF, $01  ; U - Z ; , . <space>
-  .byte $80, $FF, $81, $FF, $82, $FF, $83, $FF, $84, $FF, $85, $FF, $86, $FF, $87, $FF, $88, $FF, $89, $01  ; 0 - 9
-  .byte $A4, $FF, $A5, $FF, $A6, $FF, $A7, $FF, $A8, $FF, $A9, $FF, $AA, $FF, $AB, $FF, $AC, $FF, $AD, $01  ; a - j
-  .byte $AE, $FF, $AF, $FF, $B0, $FF, $B1, $FF, $B2, $FF, $B3, $FF, $B4, $FF, $B5, $FF, $B6, $FF, $B7, $01  ; k - t
-  .byte $B8, $FF, $B9, $FF, $BA, $FF, $BB, $FF, $BC, $FF, $BD, $FF, $C2, $FF, $C3, $FF, $C4, $FF, $C5, $01  ; u - z - .. ! ?
-  .byte $01
-  .byte $FF, $FF, $FF, $9C, $8E, $95, $8E, $8C, $9D, $FF, $FF, $97, $8A, $96, $8E, $00                      ;   SELECT  NAME
+  .byte 42, 43, 44, 45, 46, 47, 48, 49, 50, 51  ; A - J
+  .byte 52, 53, 54, 55, 56, 57, 58, 59, 60, 61  ; K - T
+  .byte 62, 63, 64, 65, 66, 67, 94, 95, 96, 97  ; U - Z ' , . <space>
+  .byte 32, 33, 34, 35, 36, 37, 38, 39, 40, 41  ; 0 - 9
+  .byte 68, 69, 70, 71, 72, 73, 74, 75, 76, 77  ; a - j
+  .byte 78, 79, 80, 81, 82, 83, 84, 85, 86, 87  ; k - t
+  .byte 88, 89, 90, 91, 92, 93, 98, 99, 100, 101  ; u - z - .. ! ?
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

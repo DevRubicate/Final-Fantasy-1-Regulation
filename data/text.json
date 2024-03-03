@@ -18,8 +18,8 @@
     {"label": "CLASS_NAME_RED_WIZARD",          "text": "REDWIZ"},
     {"label": "CLASS_NAME_WHITE_WIZARD",        "text": "WHITEWIZ"},
     {"label": "CLASS_NAME_BLACK_WIZARD",        "text": "BLACKWIZ"},
-    {"label": "CHARACTER_NAME_0",               "text": "{SET_HERO 0}{HERO NAME}A"},
-    {"label": "CHARACTER_NAME_1",               "text": "{SET_HERO 1}{HERO NAME}B"},
-    {"label": "CHARACTER_NAME_2",               "text": "{SET_HERO 2}{HERO NAME}C"},
-    {"label": "CHARACTER_NAME_3",               "text": "{SET_HERO 3}{HERO NAME}D"}
+    {"label": "HERO_0_NAME",                    "text": "{SET_HERO 0}{HERO NAME}"},
+    {"label": "HERO_1_NAME",                    "text": "{SET_HERO 1}{HERO NAME}"},
+    {"label": "HERO_2_NAME",                    "text": "{SET_HERO 2}{HERO NAME}"},
+    {"label": "HERO_3_NAME",                    "text": "{SET_HERO 3}{HERO NAME}"}
 ]

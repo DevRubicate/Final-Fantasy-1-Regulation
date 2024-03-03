@@ -59,15 +59,14 @@ Print:
     BEQ @SetHero
     CMP #253
     BEQ @Hero
-
-    JMP PrintAdvance
+    JUMP PrintAdvance
 
     @Newline:
         LDA stringwriterNewlineOrigin
         STA stringwriterDestX
         INC stringwriterDestY
         CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-        JMP PrintAdvance
+        JUMP PrintAdvance
 
     @SetHero:
         INC Var5
@@ -77,18 +76,44 @@ Print:
         LDA (Var5), Y
         STA stringwriterSetHero
         CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-        JMP PrintAdvance
+        JUMP PrintAdvance
 
     @Hero:
         INC Var5
         BNE :+
             INC Var6
         :
+        LDA Var5
+        PHA
+        LDA Var6
+        PHA
+
+            LDA stringwriterSetHero
+            STA MMC5_MULTI_1
+            LDA #(heroName1 - heroName0)
+            STA MMC5_MULTI_2
+            LDA MMC5_MULTI_1
+            CLC
+            ADC #<heroName0
+            STA Var5
+            LDA #>heroName0
+            ADC #0
+            STA Var6
+            CALL Print
+
+        PLA
+        STA Var6
+        PLA
+        STA Var5
         CALL SetPPUAddrToDest  ; then set the PPU address appropriately
-        JMP PrintAdvance
+        JUMP PrintAdvance
 
     @Done:
     RTS
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

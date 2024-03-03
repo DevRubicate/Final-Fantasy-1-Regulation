@@ -959,3 +959,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     ; temp
     RES             slotIndex,              1
     RES             partyGenerationClass,   4
+    RES             heroName0,              5
+    RES             heroName1,              5
+    RES             heroName2,              5
+    RES             heroName3,              5
