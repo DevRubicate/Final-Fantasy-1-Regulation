@@ -3,7 +3,8 @@
     {"label": "TEXT_TITLE_SELECT_NAME",         "text": "SELECT  NAME"},
     {"label": "TEXT_TITLE_CONTINUE",            "text": "CONTINUE"},
     {"label": "TEXT_TITLE_NEW_GAME",            "text": "NEW GAME"},
-    {"label": "TEXT_TITLE_RESPOND_RATE",        "text": "RESPOND RATE"},
+    {"label": "TEXT_TITLE_RESPOND_RATE_",        "text": "RESPOND RATE {DEC 1 1}{ADDRESS 23568 1}"},
+    {"label": "TEXT_TITLE_RESPOND_RATE",        "text": "RESPOND RATE {DEC 1 1}{BYTE 3}"},
     {"label": "TEXT_TITLE_COPYRIGHT_SQUARE",    "text": "C 1987 SQUARE  "},
     {"label": "TEXT_TITLE_COPYRIGHT_NINTENDO",  "text": "C 1990 NINTENDO"},
     {"label": "CLASS_NAME_FIGHTER",             "text": "FIGHTER"},
@@ -18,11 +19,11 @@
     {"label": "CLASS_NAME_RED_WIZARD",          "text": "REDWIZ"},
     {"label": "CLASS_NAME_WHITE_WIZARD",        "text": "WHITEWIZ"},
     {"label": "CLASS_NAME_BLACK_WIZARD",        "text": "BLACKWIZ"},
-    {"label": "HERO_0_NAME",                    "text": "{SET_HERO 0}{HERO NAME}"},
-    {"label": "HERO_1_NAME",                    "text": "{SET_HERO 1}{HERO NAME}"},
-    {"label": "HERO_2_NAME",                    "text": "{SET_HERO 2}{HERO NAME}"},
-    {"label": "HERO_3_NAME",                    "text": "{SET_HERO 3}{HERO NAME}"},
+    {"label": "HERO_0_NAME",                    "text": "{SET_HERO}{BYTE 0}{HERO}{BYTE 0}"},
+    {"label": "HERO_1_NAME",                    "text": "{SET_HERO}{BYTE 1}{HERO}{BYTE 0}"},
+    {"label": "HERO_2_NAME",                    "text": "{SET_HERO}{BYTE 2}{HERO}{BYTE 0}"},
+    {"label": "HERO_3_NAME",                    "text": "{SET_HERO}{BYTE 3}{HERO}{BYTE 0}"},
 
-    {"label": "TEMPLATE_HERO_MENU",                    "text": "{SET_HERO 0}{HERO NAME}\n\nL {DIGIT 1 2}{HERO LEVEL}\n\nHP\n99/99"}
+    {"label": "TEMPLATE_HERO_MENU",             "text": "{SET_HERO}{BYTE 0}{HERO}{BYTE 0}\n\nL 0\n\nHP\n99/99"}
 
 ]

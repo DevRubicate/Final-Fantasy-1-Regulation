@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 .include "src/lib/yxa2dec.asm"
 
-.import WaitForVBlank, MenuCondStall
+.import WaitForVBlank, MenuCondStall, MusicPlay
 
 .export StringWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex
 
@@ -29,17 +29,14 @@ HeroStringPtrBank:
 
 
 StringWriter:
+    FARCALL MusicPlay    ; keep the music playing
     CALL WaitForVBlank   ; wait for VBlank
     TXA
     PHA
     CALL SetPPUAddrToDest  ; then set the PPU address appropriately
 
-
-
     LDA stringwriterDestX
     STA stringwriterNewlineOrigin
-
-
 
     CALL Print
     JMP @SkipCall
@@ -47,8 +44,11 @@ StringWriter:
         CALL PrintAdvance
         @SkipCall:
         BEQ @Done
-        CMP #223 ; $7F + $60
+        CMP #$7F ; $7F + $60
         BEQ @Newline
+            ; Add CHR offset so this becomes a valid character
+            CLC
+            ADC #$60
             STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
             ; Char
             LDA stringwriterDestX           ; increment the dest address by 1
@@ -70,21 +70,24 @@ StringWriter:
     STA PPUSCROLL
     LDA scrollY
     STA PPUSCROLL
-
     PLA
     TAX
     RTS
 
 
 PrintAdvance:
-    INC Var5
-    BNE :+
-        INC Var6
-    :
+    JSR AdvanceReaderHead
 Print:
     LDA Var7
     STA MMC5_PRG_BANK2
 
+    LDA stringwriterTargetSize
+    BEQ :+
+        DEC stringwriterTargetSize
+        BNE :+
+        LDA #0
+        RTS         ; Return terminator
+    :
     LDY #0
     LDA (Var5), Y
     BMI @Control
@@ -102,43 +105,99 @@ Print:
         :
         RTS
     :
-    ; Add CHR offset so this becomes a valid character
-    CLC
-    ADC #$60
     RTS
 
-
     @Control:
+        CMP #255
+        BEQ @Byte
+        CMP #251
+        BEQ @Address
         CMP #254
         BEQ @SetHero
         CMP #253
         BEQ @Hero
-        JUMP PrintAdvance
+        CMP #252
+        BEQ @Dec
+        ERROR ; Invalid control command
+
+    @Byte:
+        JSR AdvanceReaderHead
+        LDY #0
+        LDA (Var5), Y
+        RTS
+    @Address:
+        CALL SaveStringWriterStack
+
+        ; hi
+        JSR PrintAdvance
+        PHA
+
+        ; lo
+        JSR PrintAdvance
+        PHA
+
+        ; len
+        JSR PrintAdvance
+        STA stringwriterTargetSize
+        PLA
+        STA Var6
+        PLA
+        STA Var5
+        JUMP Print
+    @Dec:
+        CALL PrintAdvance           ; Read the digit param
+        PHA
+
+        ; Read how many bytes we want
+        AND #%00000011
+        STA Var9
+        ; Now read that many bytes
+        CALL PrintAdvance           ; Read the digit param
+        STA stringwriterBinary+0
+        DEC Var9
+        BEQ :+
+        CALL PrintAdvance           ; Read the digit param
+        STA stringwriterBinary+1
+        DEC Var9
+        BEQ :+
+        CALL PrintAdvance           ; Read the digit param
+        STA stringwriterBinary+2
+        :
+
+        
+        PLA
+        AND #%00011100
+        LSR A
+        LSR A                       ; OPTIMIZE: We could drop these two LSR A and just have a big jump table with gaps for %00011100
+        TAX
+        LDA yxa2decJumpTableHi, X
+        PHA
+        LDA yxa2decJumpTableLo, X
+        PHA
+        LDA stringwriterBinary+0
+        LDX stringwriterBinary+1
+        LDY stringwriterBinary+2
+        RTS
+
+
 
     @SetHero:
-        INC Var5
-        BNE :+
-            INC Var6
-        :
-        LDA (Var5), Y
+        CALL PrintAdvance           ; Read the hero index param
         STA stringwriterSetHero
-        JUMP PrintAdvance
-
+        JUMP PrintAdvance           ; Resume in PrintNormalMode
     @Hero:
-        INC Var5
-        BNE :+
-            INC Var6
-        :
-        CALL SaveStringWriterStack
         JUMP PrintHeroData
     @Digit:
-        INC Var5
-        BNE :+
-            INC Var6
-        :
         CALL SaveStringWriterStack
         JUMP PrintNumber
     @Done:
+    RTS
+
+AdvanceReaderHead:
+    INC Var5
+    BNE :+
+        INC Var6
+    :
     RTS
 
 SaveStringWriterStack:
@@ -154,7 +213,7 @@ SaveStringWriterStack:
 
 
 PrintHeroData:
-    LDA (Var5), Y
+    CALL PrintAdvance
     BEQ @PrintHeroName
     CMP #1
     BEQ @PrintHeroClass
@@ -164,6 +223,7 @@ PrintHeroData:
     RTS
 
     @PrintHeroName:
+        CALL SaveStringWriterStack
         LDA stringwriterSetHero
         STA MMC5_MULTI_1
         LDA #(heroName1 - heroName0)
@@ -173,12 +233,13 @@ PrintHeroData:
         ADC #<heroName0
         STA Var5
         LDA #>heroName0
-        ADC #0
+        ADC #0              ; OPTIMIZE: This could be removed if we ensure heroNames are on the same page
         STA Var6
         JUMP Print
  
 
     @PrintHeroClass:
+        CALL SaveStringWriterStack
         LDX stringwriterSetHero
         LDA partyGenerationClass, X
         TAX
@@ -191,6 +252,7 @@ PrintHeroData:
         JUMP Print
 
     @PrintHeroLevel:
+        CALL SaveStringWriterStack
         LDX stringwriterSetHero
         LDA heroLevel,X
         CLC
@@ -205,25 +267,35 @@ PrintHeroData:
 
 PrintNumber:
     LDA (Var5), Y
-    PHA
     AND #%00000111
     TAX
     LDA yxa2decJumpTableHi, X
     PHA
     LDA yxa2decJumpTableLo, X
     PHA
+    LDA (Var5), Y
+    LSR A
+    LSR A
+    LSR A
+    AND #%00000011
 
-    
+
+
+
+
+
+
     RTS
 
 yxa2decJumpTableHi:
-    .hibytes a_to_1_digit, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
+    .hibytes a_to_1_digit-1, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
 yxa2decJumpTableLo:
-    .lobytes a_to_1_digit, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
+    .lobytes a_to_1_digit-1, a_to_2_digits-1, a_to_3_digits-1, xa_to_4_digits-1, xa_to_5_digits-1, yxa_to_6_digits-1, yxa_to_7_digits-1, yxa_to_8_digits-1
 
 
 a_to_1_digit:
-    DEBUG
+    CLC
+    ADC #32
     RTS
 
 

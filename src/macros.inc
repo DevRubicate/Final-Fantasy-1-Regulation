@@ -29,6 +29,10 @@
     .byte $1A
 .endmacro
 
+.macro ERROR
+    .byte $1A
+.endmacro
+
 .macro SWITCH _address
     .assert .bank(_address) <> .bank(*) && .bank(_address) <> $FF && .bank(*) = $FF, warning, "SWITCH: Invalid use of bank switch"
     PHA

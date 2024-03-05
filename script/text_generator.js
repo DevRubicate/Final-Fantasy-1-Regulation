@@ -133,37 +133,50 @@ function translateText(input) {
 }
 
 function translateCommand(commandString) {
+    let output = '';
     const segment = commandString.split(' ');
     switch(segment[0]) {
+        case 'BYTE':
+            output += String.fromCharCode(255) + String.fromCharCode(getPositiveInteger(segment[1]));
+            break;
+        case 'ADDRESS': {
+            const address = getPositiveInteger(segment[1]);
+            const lo = address & 0xFF;
+            const hi = (address >> 8) & 0xFF;
+            const length = getPositiveInteger(segment[2]) + 1;
+            output +=   String.fromCharCode(251) +
+                        String.fromCharCode(255) +
+                        String.fromCharCode(hi) +
+                        String.fromCharCode(255) +
+                        String.fromCharCode(lo) +
+                        String.fromCharCode(255) +
+                        String.fromCharCode(length);
+            break;
+        }
+        case 'DEC': {
+            const pack = String.fromCharCode(
+                ((getPositiveInteger(segment[2])) & 0b11) |
+                (((getPositiveInteger(segment[1]) - 1) & 0b111) << 2)
+            );
+            output += String.fromCharCode(252) + pack
+            break;
+        }
         case 'SET_HERO':
-            const index = getPositiveInteger(segment[1]);
-            return String.fromCharCode(254) + String.fromCharCode(String(index));
+            output += String.fromCharCode(254);
+            break;
         case 'HERO':
-            switch(segment[1]) {
-                case 'NAME':
-                    return String.fromCharCode(253) + String.fromCharCode(0);
-                case 'CLASS':
-                    return String.fromCharCode(253) + String.fromCharCode(1);
-                case 'LEVEL':
-                    return String.fromCharCode(253) + String.fromCharCode(2);
-                default:
-                    throw new Error('Invalid HERO command');
-            }
-        case 'DIGIT':
-            const length = getPositiveInteger(segment[1]) - 1;
-            const size = getPositiveInteger(segment[1]) - 1;
-            const packed = ((length & 0b1111) << 4) | (size & 0b1111)
-            return String.fromCharCode(252) + String.fromCharCode(String(packed));
+            output += String.fromCharCode(253);
+            break;
         default:
-            throw new Error('Invalid command');
+            throw new Error(`Invalid command: ${segment[0]}`);
     }
+    return output;
 }
-
 function getPositiveInteger(n) {
     if(n >>> 0 === parseFloat(n)) {
         return parseFloat(n);
     } else {
-        throw new Error('Invalid input, must be positive integer');
+        throw new Error(`Invalid input, must be positive integer, got "${n}" instead`);
     }
 }
 

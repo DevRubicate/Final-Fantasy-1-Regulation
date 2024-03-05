@@ -956,10 +956,11 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterNewlineOrigin,  1
     RES             stringwriterSetHero,        1
 
+    RES             stringwriterTargetSize,     1
 
     RES             stringwriterDigitLength,    2
     RES             stringwriterDigitSize,      2
-    RES             stringwriterBinary,         2
+    RES             stringwriterBinary,         3
     RES             stringwriterDecimal,        6
 
     RES             stringwriterStackIndex,     1
@@ -978,3 +979,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             heroName2,              5
     RES             heroName3,              5
     RES             Var7,                   1
+
+    RES             Var8,                   1
+    RES             Var9,                   1
+    RES             Var10,                  1

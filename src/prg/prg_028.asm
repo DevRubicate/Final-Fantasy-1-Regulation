@@ -3347,7 +3347,9 @@ EnterTitleScreen:
     CALL WaitForVBlank     ; Wait for VBlank
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
-    CALL TitleScreen_DrawRespondRate
+    ;CALL TitleScreen_DrawRespondRate
+    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
+
 
     FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
