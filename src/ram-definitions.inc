@@ -955,9 +955,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterDestY,          1
     RES             stringwriterNewlineOrigin,  1
     RES             stringwriterSetHero,        1
-
     RES             stringwriterTargetSize,     1
-
     RES             stringwriterDigitLength,    2
     RES             stringwriterDigitSize,      2
     RES             stringwriterBinary,         3
@@ -968,18 +966,26 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterStackHi,        16
     RES             stringwriterStackBank,      16
 
-    RES             yxa2decOutput,              5
+    RES             yxa2decOutput,              9
 
     ; temp
     RES             slotIndex,              1
-    RES             heroLevel,              4
     RES             partyGenerationClass,   4
+
+    RES             heroLevel,              1*4
+    RES             heroHP,                 2*4
+    RES             heroMaxHP,              2*4
     RES             heroName0,              5
     RES             heroName1,              5
     RES             heroName2,              5
     RES             heroName3,              5
-    RES             Var7,                   1
+    RES             heroSpellCharges,       8*4
+    RES             heroMaxSpellCharges,    8*4
 
+    RES             Var7,                   1
     RES             Var8,                   1
     RES             Var9,                   1
     RES             Var10,                  1
+    RES             Var11,                  1
+    RES             Var12,                  1
+    RES             Var13,                  1

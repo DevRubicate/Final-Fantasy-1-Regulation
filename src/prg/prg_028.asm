@@ -10,7 +10,9 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import StringWriter, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex
+.import  WhitespaceWriter, PlotBox
+.import Stringify
+.import DrawGameMenu
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -2274,28 +2276,52 @@ DrawLineupMenuNames:
     LDA #$08
     STA stringwriterDestY
     LDX #0
-    FARCALL WriteHeroNameByIndex
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
 
     LDA #$0D
     STA stringwriterDestX
     LDA #$0C
     STA stringwriterDestY
     LDX #1
-    FARCALL WriteHeroNameByIndex
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
 
     LDA #$0D
     STA stringwriterDestX
     LDA #$10
     STA stringwriterDestY
     LDX #2
-    FARCALL WriteHeroNameByIndex
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
 
     LDA #$0D
     STA stringwriterDestX
     LDA #$14
     STA stringwriterDestY
     LDX #3
-    FARCALL WriteHeroNameByIndex
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2782,7 +2808,13 @@ DoNameInput:
     LDA #4
     STA stringwriterDestY
     LDX slotIndex
-    FARCALL WriteHeroNameByIndex
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
     
     LDA cursor                  ; Then add to our cursor
     CLC
@@ -2994,7 +3026,15 @@ PtyGen_DrawOneText:
 
     LDA partyGenerationClass, X
     TAX
-    FARCALL WriteClassNameByIndex
+
+    LDA ClassStringPtrLo, X
+    STA Var0
+    LDA ClassStringPtrHi, X
+    STA Var1
+    LDA ClassStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
+
 
     LDX slotIndex
     LDA SlotCoordX, X
@@ -3007,9 +3047,14 @@ PtyGen_DrawOneText:
     STA stringwriterDestY
 
     LDX slotIndex
-    FARCALL WriteHeroNameByIndex
 
-
+    LDA HeroStringPtrLo, X
+    STA Var0
+    LDA HeroStringPtrHi, X
+    STA Var1
+    LDA HeroStringPtrBank, X
+    STA Var2
+    FARCALL Stringify
 
 
 
@@ -3047,7 +3092,20 @@ SlotCoordX:
 SlotCoordY:
     .byte 4, 4, 16, 16
 
+HeroStringPtrLo:
+    .lobytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrHi:
+    .hibytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+HeroStringPtrBank:
+    .byte TextBank(HERO_0_NAME), TextBank(HERO_1_NAME), TextBank(HERO_2_NAME), TextBank(HERO_3_NAME)
 
+
+ClassStringPtrLo:
+    .lobytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrHi:
+    .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+ClassStringPtrBank:
+    .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3332,6 +3390,7 @@ EnterTitleScreen:
                                    ;  and continue on to the logic loop
 
 
+
   ;; This is the main logic loop for the Title screen.
 
   @Loop:
@@ -3347,9 +3406,8 @@ EnterTitleScreen:
     CALL WaitForVBlank     ; Wait for VBlank
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
-    ;CALL TitleScreen_DrawRespondRate
-    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
 
+    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
 
     FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
@@ -8104,43 +8162,32 @@ DrawMagicMenuCursor:
 DrawMainMenu:
     CALL ClearNT                    ; start by clearing the NT
     CALL DrawOrbBox                 ; draw the orb box
-    CALL DrawMainMenuGoldBox        ; gold box
     CALL DrawMainMenuOptionBox      ; and option box
 
-    LDA #1                         ; then draw the boxes for each character
-    CALL DrawMainItemBox            ;  stats...starting with the first character
-    LDA #$00
-    CALL DrawMainMenuCharBoxBody
 
-    LDA #2                         ; second
-    CALL DrawMainItemBox
-    LDA #$40
-    CALL DrawMainMenuCharBoxBody
+    FARCALL DrawGameMenu
 
-    LDA #3                         ; third
-    CALL DrawMainItemBox
-    LDA #$80
-    CALL DrawMainMenuCharBoxBody
+;    LDA #1                         ; then draw the boxes for each character
+;    CALL DrawMainItemBox            ;  stats...starting with the first character
+;    LDA #$00
+;    CALL DrawMainMenuCharBoxBody
+;
+;    LDA #2                         ; second
+;    CALL DrawMainItemBox
+;    LDA #$40
+;    CALL DrawMainMenuCharBoxBody
+;
+;    LDA #3                         ; third
+;    CALL DrawMainItemBox
+;    LDA #$80
+;    CALL DrawMainMenuCharBoxBody
+;
+;    LDA #4                         ; fourth
+;    CALL DrawMainItemBox
+;    LDA #$C0
+;    CALL DrawMainMenuCharBoxBody    ; and then exit
 
-    LDA #4                         ; fourth
-    CALL DrawMainItemBox
-    LDA #$C0
-    JUMP DrawMainMenuCharBoxBody    ; and then exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Main Menu Gold Box   [$B86E :: 0x3B87E]
-;;
-;;    Self explanitory.  Draws the box on the main menu that shows your current GP
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawMainMenuGoldBox:
-    LDA #5               ; draw main/item box number 5 (the GP box)
-    CALL DrawMainItemBox
-    LDA #$01             ; draw menu string ID=$01  (current GP, followed by " G")
-    JUMP DrawMenuString
+    RTS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -8592,25 +8639,7 @@ DrawMainMenuCharBoxBody:
     LDA #<str_buf  ; start drawing from start of string
     STA Var0
     CALL Invoke_DrawComplexString    ; Draw it, then exit!
-
-
-    LDA #12
-    STA stringwriterDestX
-    LDA #3
-    STA stringwriterDestY
-    LDA #<TEMPLATE_HERO_MENU
-    STA Var5
-    LDA #>TEMPLATE_HERO_MENU
-    STA Var6
-    LDA #<TextBank(TEMPLATE_HERO_MENU)
-    STA Var7
-
-    FARCALL StringWriter
-
-
     RTS
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
