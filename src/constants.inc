@@ -13,12 +13,21 @@ BTN_START         = $10
 
 CHAN_START        = $B0
 CHAN_BYTES        = $10
-
 CHAN_SQ1          = CHAN_START
 CHAN_SQ2          = CHAN_START + CHAN_BYTES
 CHAN_TRI          = CHAN_START + (2 * CHAN_BYTES)
-
 CHAN_STOP         = CHAN_START + (3 * CHAN_BYTES)
+ch_scoreptr       = $00
+ch_envptr         = $02 ; ptr to start of env data
+ch_envpos         = $04 ; pos in env data (00-1F)
+ch_lenctr         = $05 ; counter for score data (note length)
+ch_frqtblptr      = $06 ; pointer to freq table (changes per octave)
+ch_lentblptr      = $08 ; pointer to length table (changes per tempo)
+ch_envrate        = $0A ; rate/speed of env table traversal
+ch_envrem         = $0B ; remaining "fraction" of env data (3 bits of fraction)
+ch_vol            = $0C ; output volume
+ch_loopctr        = $0D ; remaining loop counter
+ch_freq           = $0E ; output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
 
 ;;;;;;;;;;;;;;;;;;
 ;;  enemy categories

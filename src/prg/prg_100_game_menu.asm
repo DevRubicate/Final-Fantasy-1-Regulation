@@ -58,7 +58,6 @@ DrawMainMenuHeroData:
     FARCALL Stringify
     RTS
 
-
 DrawGameMenuGoldBox:
     BOX     1, 10, 10, 5
     TEXT    MENU_GOLD, 2, 12

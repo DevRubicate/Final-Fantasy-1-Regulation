@@ -24,6 +24,43 @@
     {"label": "HERO_3_NAME",                    "text": "{SET_HERO}{BYTE 3}{HERO_NAME}"},
 
     {"label": "TEMPLATE_HERO_MENU",             "text": "{HERO_NAME}\n\nL {DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 1}\n\nHP\n {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\n\nMAGIC\n{DIGIT1}{HERO_SPELLCHARGE1}/{DIGIT1}{HERO_SPELLCHARGE2}/{DIGIT1}{HERO_SPELLCHARGE3}/{DIGIT1}{HERO_SPELLCHARGE4}/\n{DIGIT1}{HERO_SPELLCHARGE5}/{DIGIT1}{HERO_SPELLCHARGE6}/{DIGIT1}{HERO_SPELLCHARGE7}/{DIGIT1}{HERO_SPELLCHARGE8}"},
-    {"label": "MENU_GOLD",                      "text": "{DIGIT6R}{READ24 $601C} G"}
+    {"label": "MENU_GOLD",                      "text": "{DIGIT6R}{READ24 $601C} G"},
 
+
+    {"label": "TEXT_SHOP_WELCOME",              "text": "Welcome"},
+    {"label": "TEXT_SHOP_WELCOMEWOULDYOUSTAY",  "text": "Welcome\n\nStay,\nto save\nyour\ndata."},
+    {"label": "TEXT_SHOP_WHATDOYOUWANT",        "text": "What do\nyou\nwant?"},
+    {"label": "TEXT_SHOP_WHOWILLLEARNSPELL",    "text": "Who\nwill\nlearn\nthe\nspell?"},
+    {"label": "TEXT_SHOP_WHOWILLTAKEIT",        "text": "Who\nwill\ntake\nit?"},
+    {"label": "TEXT_SHOP_THANKYOUWHATELSE",     "text": "Thank\nyou!\nWhat\nelse?"},
+    {"label": "TEXT_SHOP_YOUCANTCARRYANYMORE",  "text": "You\ncan't\ncarry\nanymore"},
+    {"label": "TEXT_SHOP_YOUCANTAFFORDTHAT",    "text": "You\ncan't\nafford\nthat."},
+    {"label": "TEXT_SHOP_YOUCANTLEARNTHAT",     "text": "Sorry,\nYou\ncan't\nlearn\nthat.\nSomeone\nelse?"},
+    {"label": "TEXT_SHOP_THISSPELLFULL",        "text": "This\nlevel\nspell\nis full\n\nSomeone\nelse?"},
+    {"label": "TEXT_SHOP_ALREADYKNOWSPELL",     "text": "You\nalready\nknow\nthat\nspell.\nSomeone\nelse?"},
+    
+
+    {"label": "TEXT_SHOP_WHOSEITEMSELL",        "text": "Whose\nitem\ndo you\nwant to\nsell?"},
+    {"label": "TEXT_SHOP_YOUHAVENOTHING",       "text": "You\nhave\nnothing\nto sell\n\nAny-\nthing\nelse?"},
+    {"label": "TEXT_SHOP_TOOBAD",               "text": "Too bad\n\nSome-\nthing\nelse?"},
+    {"label": "TEXT_SHOP_YOUHAVETOOMANY",       "text": "You\ncan't\ncarry\nanymore"},
+    {"label": "TEXT_SHOP_DONTFORGET",           "text": "Don't\nforget,\nif you\nleave\nyour\ngame,"},
+    {"label": "TEXT_SHOP_HOLDRESET",            "text": "Hold\nRESET\nwhile\nyou\nturn\nPOWER\noff!!"},
+    
+    {"label": "TEXT_SHOP_NOBODYDEAD",           "text": "You do\nnot\nneed my\nhelp\nnow."},
+    {"label": "TEXT_SHOP_WHOREVIVE",            "text": "Who\nshall\nbe\nrevived\n"},
+    {"label": "TEXT_SHOP_RETURNLIFE",           "text": "WARRIOR\n\nReturn\nto\nlife!"},
+    
+    {"label": "TEXT_SHOP_ITEMCOSTOK",           "text": "{DIGIT5L}{READ16 $5CDA}\nGold\nOK?"},
+
+    {"label": "TEXT_SHOP_MENU",                 "text": "Buy\n\nSell\n\nExit"},
+    {"label": "TEXT_SHOP_YESNO",                "text": "Yes\n\nNo"},
+
+    {"label": "TEXT_SHOP_TITLEWEAPON",          "text": "WEAPON"},
+    {"label": "TEXT_SHOP_TITLEARMOR",           "text": "ARMOR"},
+    {"label": "TEXT_SHOP_TITLEWHITEMAGIC",      "text": "WMAGIC"},
+    {"label": "TEXT_SHOP_TITLEBLACKMAGIC",      "text": "BMAGIC"},
+    {"label": "TEXT_SHOP_TITLECLINIC",          "text": "CLINIC"},
+    {"label": "TEXT_SHOP_TITLEITEM",            "text": "ITEM"},
+    {"label": "TEXT_SHOP_TITLEINN",             "text": "INN"}
 ]

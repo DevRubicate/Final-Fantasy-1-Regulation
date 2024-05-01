@@ -1142,13 +1142,13 @@ Copy256:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OnNMI:
-    LDA soft2000
-    STA PPUCTRL      ; set the PPU state
+    SEI
+    PHA
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
+    INC vBlankCounter
     PLA
-    PLA
-    PLA            ; pull the RTI return info off the stack
-    RTS            ; return to the game
+    CLI
+    RTI
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1163,6 +1163,11 @@ WaitForVBlank:
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
     STA PPUCTRL      ; and write it to PPU status reg
+    LDA vBlankCounter
+    @LoopForever:
+    CMP vBlankCounter
+    BEQ @LoopForever     ; then loop forever! (or really until the NMI is triggered)
+    RTS
 
 OnIRQ:                   ; IRQs point here, but the game doesn't use IRQs, so it's moot
     @LoopForever:
@@ -1186,10 +1191,6 @@ SwapPRG:
     ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
     STA current_bank1
     STA MMC5_PRG_BANK1   ; Swap to the desired page
-    LDA far_depth
-    BEQ @noDebugger
-    ;DEBUG
-    @noDebugger:
     LDA #0      ; IIRC Some parts of FF1 expect A to be zero when this routine exits
     RTS
 

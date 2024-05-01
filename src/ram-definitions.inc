@@ -938,18 +938,10 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             btl_msgdraw_srcptr_bank,1
     RES             btlformation,           1
     RES             actual_bank,            1
-    ; for sound channels (between Bx-Dx) see constants.inc
-    RES             ch_scoreptr,            2 ; $00
-    RES             ch_envptr,              2 ; $02 ptr to start of env data
-    RES             ch_envpos,              1 ; $04 pos in env data (00-1F)
-    RES             ch_lenctr,              1 ; $05 counter for score data (note length)
-    RES             ch_frqtblptr,           2 ; $06 pointer to freq table (changes per octave)
-    RES             ch_lentblptr,           2 ; $08 pointer to length table (changes per tempo)
-    RES             ch_envrate,             1 ; $0A rate/speed of env table traversal
-    RES             ch_envrem,              1 ; $0B remaining "fraction" of env data (3 bits of fraction)
-    RES             ch_vol,                 1 ; $0C output volume
-    RES             ch_loopctr,             1 ; $0D remaining loop counter
-    RES             ch_freq,                1 ; $0E output freq.  High bit set marks byte has been written (don't rewrite to reset duty)
+   
+
+
+
     ; String writer
     RES             stringwriterDestX,          1
     RES             stringwriterDestY,          1
@@ -989,3 +981,8 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             Var11,                  1
     RES             Var12,                  1
     RES             Var13,                  1
+
+    RES             vBlankCounter,          1
+    RES             stringifyCounter,       1
+    RES             stringifyActiveItem,    2
+    RES             stringifyVariables,     16

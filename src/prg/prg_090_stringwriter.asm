@@ -10,6 +10,9 @@
 
 
 Stringify:
+    LDA #0
+    STA stringifyCounter
+
     FARCALL MusicPlay    ; keep the music playing
     CALL WaitForVBlank   ; wait for VBlank
 
@@ -18,6 +21,7 @@ Stringify:
 
     CALL SetStringifyPPUAddress
     @Loop:
+
         ; Fetch one character and return it in register A. In a plain string this means simply grabbing
         ; one character and advancing the character pointer by one. However there might be control
         ; characters that change the behavior, such as SUBSTRING and DIGIT. In those cases the control
@@ -32,8 +36,10 @@ Stringify:
         ; Add CHR offset so this becomes a valid character
         CLC
         ADC #$60
+        PHA
+        CALL StringifyLimiter
+        PLA
         STA PPUDATA                     ; Draw it
-        ; Char
         LDA stringwriterDestX           ; Increment the dest address by 1
         CLC
         ADC #1
@@ -57,6 +63,7 @@ Stringify:
         STA PPUSCROLL
         LDA scrollY
         STA PPUSCROLL
+
         RTS
 
 SaveStringifyStack:
@@ -69,6 +76,35 @@ SaveStringifyStack:
     LDA Var2
     STA stringwriterStackBank, X
     RTS
+
+StringifyLimiter:
+    LDA stringifyCounter
+    CLC
+    ADC #1
+    CMP #10
+    BCC @noWait
+    LDA scrollX
+    STA PPUSCROLL
+    LDA scrollY
+    STA PPUSCROLL
+    FARCALL MusicPlay    ; keep the music playing
+    CALL WaitForVBlank   ; wait for VBlank
+    CALL SetStringifyPPUAddress
+    LDA #0
+    @noWait:
+    STA stringifyCounter
+    RTS
+StringifyDelay:
+    LDA scrollX
+    STA PPUSCROLL
+    LDA scrollY
+    STA PPUSCROLL
+    FARCALL MusicPlay    ; keep the music playing
+    CALL WaitForVBlank   ; wait for VBlank
+    CALL SetStringifyPPUAddress
+    RTS
+
+
 
 FetchCharacter:
     LDA Var2                        ; Load the bank this string is located in
@@ -268,6 +304,7 @@ FetchCharacterDigit5L:
     STA Var0
     LDA #>(yxa2decOutput+3)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit5R:
     CALL ClearDigit
@@ -282,6 +319,7 @@ FetchCharacterDigit5R:
     STA Var0
     LDA #>(yxa2decOutput+3)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit6L:
     CALL ClearDigit
@@ -296,6 +334,7 @@ FetchCharacterDigit6L:
     STA Var0
     LDA #>(yxa2decOutput+2)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit6R:
     CALL ClearDigit
@@ -310,6 +349,7 @@ FetchCharacterDigit6R:
     STA Var0
     LDA #>(yxa2decOutput+2)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit7L:
     CALL ClearDigit
@@ -324,6 +364,7 @@ FetchCharacterDigit7L:
     STA Var0
     LDA #>(yxa2decOutput+1)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit7R:
     CALL ClearDigit
@@ -338,6 +379,7 @@ FetchCharacterDigit7R:
     STA Var0
     LDA #>(yxa2decOutput+1)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit8L:
     CALL ClearDigit
@@ -352,6 +394,7 @@ FetchCharacterDigit8L:
     STA Var0
     LDA #>(yxa2decOutput+0)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit8R:
     CALL ClearDigit
@@ -366,6 +409,7 @@ FetchCharacterDigit8R:
     STA Var0
     LDA #>(yxa2decOutput+0)
     STA Var1
+    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterSetHero:
     CALL IncrementStringifyAdvance
@@ -557,6 +601,7 @@ FetchValueJumpTableHi:
     .hibytes FetchValueHeroMaxSpellCharge6 - 1
     .hibytes FetchValueHeroMaxSpellCharge7 - 1
     .hibytes FetchValueHeroMaxSpellCharge8 - 1
+    .hibytes FetchValueItemPrice - 1
 FetchValueJumpTableLo:
     .lobytes FetchValueByte - 1
     .lobytes FetchValueWord - 1
@@ -592,6 +637,7 @@ FetchValueJumpTableLo:
     .lobytes FetchValueHeroMaxSpellCharge6 - 1
     .lobytes FetchValueHeroMaxSpellCharge7 - 1
     .lobytes FetchValueHeroMaxSpellCharge8 - 1
+    .lobytes FetchValueItemPrice - 1
 
 FetchValueByte:
     LDY #0
@@ -939,6 +985,11 @@ FetchValueHeroMaxSpellCharge8:
     TAX
     LDA heroMaxSpellCharges+7,X
     LDX #0
+    RTS
+FetchValueItemPrice:
+    LDA #50
+    LDX #1
+    LDY #0
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

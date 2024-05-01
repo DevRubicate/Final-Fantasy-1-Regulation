@@ -10,9 +10,17 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import  WhitespaceWriter, PlotBox
+.import WhitespaceWriter, PlotBox
 .import Stringify
 .import DrawGameMenu
+.import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
+.import DrawShopYouCantCarryAnymore, DrawShopYouCantAffordThat, DrawShopWhoseItemSell
+.import DrawShopYouHaveNothing, DrawShopWhoWillLearnSpell, DrawShopTooBad, DrawShopYouHaveTooMany
+.import DrawShopWelcomeWouldYouStay, DrawShopYouCantLearnThat, DrawShopDontForget, DrawShopHoldReset
+.import DrawShopThisSpellFull, DrawShopAlreadyKnowSpell, DrawShopItemCostOK
+.import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife
+.import DrawShopBuySellExit, DrawShopYesNo, DrawShopHeroList
+.import DrawShopTitle, DrawShopGoldBox
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -3716,8 +3724,8 @@ IntroStory_Frame:
     CALL IntroStory_WriteAttr   ; then do the attribute updates
     CALL DrawPalette            ; and draw the animating palette
 
-    LDA soft2000
-    STA PPUCTRL
+    ;LDA soft2000
+    ;STA PPUCTRL
     LDA #0
     STA PPUSCROLL
     STA PPUSCROLL                  ; then reset the scroll to zero
@@ -3795,20 +3803,17 @@ EnterShop:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  MagicShop_Exit:
+MagicShop_Exit:
     RTS
 
-  MagicShop_CancelPurchase:
-    LDA #$25
-    CALL DrawShopDialogueBox      ; "too bad... something else?" dialogue
+MagicShop_CancelPurchase:
+    FARCALL DrawShopTooBad
     JUMP MagicShop_Loop           ; jump ahead to loop
 
-
 EnterShop_Magic:
-    LDA #$17
-    CALL DrawShopDialogueBox      ; "Who will learn the spell" dialogue
+    FARCALL DrawShopWhoWillLearnSpell
 
-  MagicShop_Loop:
+MagicShop_Loop:
     CALL ShopLoop_CharNames       ; Have the player select a party member
     BCS MagicShop_Exit           ; if they pressed B, exit the shop
 
@@ -3842,10 +3847,8 @@ EnterShop_Magic:
 
     CALL Shop_CanAfford           ; check to make sure they can afford the purchase
     BCC @FinalizePurchase        ; if yes... finalize the purchase
-
-      LDA #$10                   ; ... otherwise
-      CALL DrawShopDialogueBox    ; "you can't afford it" dialogue
-      JUMP MagicShop_Loop         ; keep looping
+    FARCALL DrawShopYouCantAffordThat
+    JUMP MagicShop_Loop         ; keep looping
 
   @FinalizePurchase:
     CALL ShopPayPrice             ; subtract the item price from party GP
@@ -3862,17 +3865,15 @@ EnterShop_Magic:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  EquipShop_Cancel:
-    LDA #$25
-    CALL DrawShopDialogueBox     ; "Too bad... something else?" dialogue
+EquipShop_Cancel:
+    FARCALL DrawShopTooBad
     JUMP EquipShop_Loop          ; jump ahead to loop
 
-
 EnterShop_Equip:
-    LDA #$09
-    CALL DrawShopDialogueBox     ; "Welcome" dialogue
+    FARCALL DrawShopWelcome
 
-  EquipShop_Loop:
+EquipShop_Loop:
+    FARCALL DrawShopBuySellExit
     CALL ShopLoop_BuySellExit    ; give player Buy/Sell/Exit option
     BCS @Exit                   ; if they pressed B, exit
     LDA cursor
@@ -3890,8 +3891,7 @@ EnterShop_Equip:
                                 ;  because item box can be filled with a character's
                                 ;  equipment instead of shop inventory.
 
-    LDA #$0D
-    CALL DrawShopDialogueBox     ; "what would you like" dialogue
+    FARCALL DrawShopWhatDoYouWant
 
     CALL ShopSelectBuyItem       ; have the player select something
     BCS EquipShop_Loop          ; if they pressed B, return to loop
@@ -3904,28 +3904,21 @@ EnterShop_Equip:
 
     CALL Shop_CanAfford          ; check to see if they can afford it
     BCC @CanAfford              ; if they can, jump ahead... otherwise...
+        FARCALL DrawShopYouCantAffordThat
+        JUMP EquipShop_Loop        ; keep looping
+    @CanAfford:
 
-      LDA #$10
-      CALL DrawShopDialogueBox   ; "You can't afford it" dialogue
-      JUMP EquipShop_Loop        ; keep looping
-
-  @CanAfford:
-    LDA #$11
-    CALL DrawShopDialogueBox      ; "who will you give it to" dialogue"
+    FARCALL DrawShopWhoWillTakeIt
     CALL ShopLoop_CharNames       ; have the player select a character
     BCS EquipShop_Loop           ; if they press B, jump back to loop
 
     CALL EquipShop_GiveItemToChar ; give the item to the character
     BCC @FinalizePurchase        ; if they had room, finalize the purchase
-
-      LDA #$0C                   ; otherwise (no room)
-      CALL DrawShopDialogueBox    ; "You don't have room" dialogue
-      JUMP EquipShop_Loop         ; jump back to loop
-
-  @FinalizePurchase:
+        FARCALL DrawShopYouCantCarryAnymore
+        JUMP EquipShop_Loop         ; jump back to loop
+    @FinalizePurchase:
     CALL ShopPayPrice             ; subtract the GP
-    LDA #$13
-    CALL DrawShopDialogueBox      ; "Thank you, what else?" dialogue
+    FARCALL DrawShopThankYouWhatElse
     JUMP EquipShop_Loop           ; jump back to loop
 
 
@@ -3939,17 +3932,15 @@ EnterShop_Equip:
                                  ;  is that big
 
   @Sell:
-    LDA #$14
-    CALL DrawShopDialogueBox      ; "Whose item do you want to sell" dialogue
+    FARCALL DrawShopWhoseItemSell
+
     CALL ShopLoop_CharNames       ; have the player select a character
     BCS @_Loop                   ; if they pressed B, jump back to loop
 
     CALL EquipMenu_BuildSellBox   ; fill the item box with this character's equipment
     BCC @ItemsForSale            ; if there are items for sale... proceed.  otherwise....
-
-      LDA #$1E
-      CALL DrawShopDialogueBox    ; "you have nothing to sell" dialogue
-      JUMP EquipShop_Loop         ; jump back to loop
+    FARCALL DrawShopYouHaveNothing
+    JUMP EquipShop_Loop         ; jump back to loop
 
   @ItemsForSale:
     CALL ShopSelectBuyItem        ; have the user select an item to sell
@@ -3992,7 +3983,7 @@ EnterShop_Equip:
     STA tmp+2
 
     FARCALL AddGPToParty       ; give that money to the party
-    CALL DrawShopGoldBox    ; redraw the gold box to reflect changes
+    FARCALL DrawShopGoldBox    ; redraw the gold box to reflect changes
     JUMP EquipShop_Loop     ; and jump back to loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4006,31 +3997,26 @@ EnterShop_Equip:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  ItemShop_Exit:
+ItemShop_Exit:
     RTS
 
-  ItemShop_CancelBuy:           ; jumped to for cancelled purchases
-    LDA #$25
-    CALL DrawShopDialogueBox     ; "too bad, something else?" dialogue
+ItemShop_CancelBuy:           ; jumped to for cancelled purchases
+    FARCALL DrawShopTooBad       ; "too bad, something else?" dialogue
     JUMP ItemShop_Loop           ; return to loop
 
 EnterShop_Caravan:
     BNE EnterShop_Item          ; this always branches.. but even if it didn't....
                                 ;  EnterShop_Item is the next instruction.  Pretty silly.
-
-
 EnterShop_Item:
-    LDA #$09
-    CALL DrawShopDialogueBox     ; draw the "welcome" dialogue
+    FARCALL DrawShopWelcome
 
-  ItemShop_Loop:
+ItemShop_Loop:
     CALL ShopLoop_BuyExit        ; give them the option to buy or exit
     BCS ItemShop_Exit           ; if they pressed B, exit
     LDA cursor
     BNE ItemShop_Exit           ; otherwise if they selected 'exit', then exit
 
-    LDA #$0D
-    CALL DrawShopDialogueBox     ; "what would you like" dialogue
+    FARCALL DrawShopWhatDoYouWant
     CALL ShopSelectBuyItem       ; let them choose an item from the shop inventory
     BCS ItemShop_Loop           ; if they pressed B, restart the loop
 
@@ -4042,24 +4028,21 @@ EnterShop_Item:
 
     CALL Shop_CanAfford          ; check to ensure they can afford this item
     BCC @CheckForSpace          ; if they can, jump ahead to check to see if they have room for this item
-      LDA #$10
-      CALL DrawShopDialogueBox   ; if they can't, "you can't afford it" dialogue
-      JUMP ItemShop_Loop         ; and return to loop
+    FARCALL DrawShopYouCantAffordThat
+    JUMP ItemShop_Loop         ; and return to loop
 
   @CheckForSpace:
     LDX shop_curitem            ; get the item ID in X
     LDA items, X                ; use it to get the qty of this item that the player has
     CMP #99                     ; do they have less than 99 of this item?
     BCC @CompletePurchase       ; if yes, jump ahead to complete the purchase.  Otherwise...
-      LDA #$0C
-      CALL DrawShopDialogueBox   ; "you have too many" dialogue
-      JUMP ItemShop_Loop         ; return to loop
+    FARCALL DrawShopYouHaveTooMany
+    JUMP ItemShop_Loop         ; return to loop
 
   @CompletePurchase:
     INC items, X                ; add one of this item to their inventory
     CALL ShopPayPrice            ; subtract the price from your gold amount
-    LDA #$13
-    CALL DrawShopDialogueBox     ; "Thank you, anything else?" dialogue
+    FARCALL DrawShopThankYouWhatElse
     JUMP ItemShop_Loop           ; and continue loop
 
 
@@ -4086,7 +4069,8 @@ ShopPayPrice:
     SBC #0                    ; and get borrow from high byte
     STA gold+2
 
-    JUMP DrawShopGoldBox       ; then redraw the gold box to reflect changes, and return
+    FARCALL DrawShopGoldBox       ; then redraw the gold box to reflect changes, and return
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4132,8 +4116,7 @@ Shop_CanAfford:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterShop_Inn:
-    LDA #$1B
-    CALL DrawShopDialogueBox     ; "Welcome.. would you like to stay?" dialogue
+    FARCALL DrawShopWelcomeWouldYouStay
 
     CALL ShopLoop_YesNo          ; give them the yes/no option
     BCS @Exit                   ; if they pressed B, exit
@@ -4164,8 +4147,7 @@ EnterShop_Inn:
     STA joy_a                   ; clear A and B catchers
     STA joy_b
 
-    LDA #$1C
-    CALL DrawShopDialogueBox     ; "Don't forget when you leave your game" dialogue
+    FARCALL DrawShopDontForget
 
     LDA #$03
     CALL LoadShopBoxDims         ; erase shop box 3 (command box)
@@ -4200,9 +4182,7 @@ EnterShop_Inn:
     FARCALL EraseBox                ; this is redundant if they stayed at the inn, but
                                 ; if the code jumped here because the user wanted to
                                 ; exit the inn, then this has meaning
-
-    LDA #$1D
-    CALL DrawShopDialogueBox     ; "Hold Reset when turning power off" dialogue
+    FARCALL DrawShopHoldReset
 
     LDA #0
     STA joy_a
@@ -4241,8 +4221,7 @@ EnterShop_Clinic:
     CALL ClinicBuildNameString  ; build the name string (also tells us if anyone is dead)
     BCC @NobodysDead           ; if nobody is dead... skip ahead
 
-    LDA #$20
-    CALL DrawShopDialogueBox    ; "Who needs to come back to life" dialogue
+    FARCALL DrawShopWhoRevive
 
     CALL Clinic_SelectTarget    ; Get a user selection
     LDA cursor                 ;   grab their selection
@@ -4280,8 +4259,7 @@ EnterShop_Clinic:
     STA joy_a
     STA joy_b                  ; clear A and B catchers
 
-    LDA #$21
-    CALL DrawShopDialogueBox    ; "Warrior!  Return to life!"  dialogue
+    FARCALL DrawShopReturnLife
 
     LDA #$03
     CALL LoadShopBoxDims        ; erase shop box 3 (command box)
@@ -4295,8 +4273,7 @@ EnterShop_Clinic:
     JUMP EnterShop_Clinic       ; then restart the clinic loop
 
   @NobodysDead:
-    LDA #$23
-    CALL DrawShopDialogueBox    ; if nobody is dead... "You don't need my help" dialogue
+    FARCALL DrawShopNobodyDead
 
     LDA #0
     STA joy_a
@@ -4432,23 +4409,23 @@ InnClinic_CanAfford:
     BCS @CanAfford     ; if greater... can afford
     BCC @CantAfford    ; if less... can't afford
 
-  @CheckLow:
+    @CheckLow:
     LDA gold           ; compare low bytes
     CMP item_box
     BCS @CanAfford     ; if gold >= cost, can afford.  otherwise....
 
-  @CantAfford:
-    LDA #$10
-    CALL DrawShopDialogueBox    ; draw "you can't afford it" dialogue
+    @CantAfford:
+    FARCALL DrawShopYouCantAffordThat
 
     LDA #0                     ; clear joy_a and joy_b markers
     STA joy_a
     STA joy_b
-   @Loop:
-      CALL ShopFrameNoCursor    ; then just keep looping frames
-      LDA joy_a                ;  until either A or B pressed
-      ORA joy_b
-      BEQ @Loop
+
+    @Loop:
+    CALL ShopFrameNoCursor    ; then just keep looping frames
+    LDA joy_a                ;  until either A or B pressed
+    ORA joy_b
+    BEQ @Loop
 
     PLA                ; then pull the previous return address, and exit
     PLA                ;  this is effectively a double-RTS.  Returning not
@@ -4467,8 +4444,8 @@ InnClinic_CanAfford:
     SBC #0
     STA gold+2
 
-    JUMP DrawShopGoldBox  ; redraw the gold box to reflect changes, and exit
-
+    FARCALL DrawShopGoldBox  ; redraw the gold box to reflect changes, and exit
+    RTS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4529,27 +4506,27 @@ ClinicBuildNameString:
     CMP #$01              ; check to see if he's dead
     BNE @NotDead          ; if not... skip him.  Otherwise...
 
-      TXA                 ; put char index in A
-      ROL A
-      ROL A
-      ROL A
-      AND #$03            ; shift and mask to make it char ID (0-3)
+        TXA                 ; put char index in A
+        ROL A
+        ROL A
+        ROL A
+        AND #$03            ; shift and mask to make it char ID (0-3)
 
-      ADC #$10            ; add 10 to get the "draw stat" string control code ($10-$13).  Carry is impossible here
-      STA str_buf+$10, Y  ; put it in the string buffer
-      LDA #$00
-      STA str_buf+$11, Y  ; draw stat 0 (name)
-      LDA #$01
-      STA str_buf+$12, Y  ; followed by a double line break
+        ADC #$10            ; add 10 to get the "draw stat" string control code ($10-$13).  Carry is impossible here
+        STA str_buf+$10, Y  ; put it in the string buffer
+        LDA #$00
+        STA str_buf+$11, Y  ; draw stat 0 (name)
+        LDA #$01
+        STA str_buf+$12, Y  ; followed by a double line break
 
-      TYA
-      CLC
-      ADC #$03            ; add 3 to the string index (we just put 3 bytes in the buffer)
-      TAY
+        TYA
+        CLC
+        ADC #$03            ; add 3 to the string index (we just put 3 bytes in the buffer)
+        TAY
 
-      INC cursor_max      ; and increment our dead guy counter
+        INC cursor_max      ; and increment our dead guy counter
 
-  @NotDead:
+    @NotDead:
     TXA
     CLC
     ADC #$40              ; add $40 to our char index (look at next char)
@@ -4692,13 +4669,8 @@ DrawShop:
     LDA #0
     STA menustall                ; disable menu stalling (PPU is off)
 
-    LDA #$01
-    CALL DrawShopBox              ; draw shop box ID=1  (the title box)
-
-    LDA shop_type                ; get the shop type
-    CALL DrawShopString           ; and draw that string (the shop title string)
-
-    CALL DrawShopGoldBox          ; draw the gold box
+    FARCALL DrawShopTitle
+    FARCALL DrawShopGoldBox
 
     CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
 
@@ -4706,6 +4678,9 @@ DrawShop:
     STA menustall                ; now that the screen is on, turn on menu stalling as well
 
     RTS                          ; and exit
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -4797,29 +4772,6 @@ LoadShopInventory:
     STA item_box+5       ; put a null terminator at the end of the item_box
 
     RTS                  ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Shop Gold Box   [$A7EF :: 0x3A7FF]
-;;
-;;     Draws the box containing remaining GP in the shops and all of its contents
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawShopGoldBox:
-    LDA #$04
-    CALL DrawShopBox            ; Draw shop box #4  (the gold box)
-    CALL PrintGold              ; print current gold to format buffer
-    CALL DrawShopComplexString  ; draw formatted string
-
-    LDA dest_x                 ; add 6 to the X coord
-    CLC
-    ADC #$06
-    STA dest_x
-
-    LDA #$08                   ; draw shop string ID=$08 (" G")
-    JUMP DrawShopString         ; then exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5014,10 +4966,7 @@ ShopLoop_BuyExit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopLoop_YesNo:
-    LDA #$03
-    CALL DrawShopBox          ; draw shop box ID=3 (the command box)
-    LDA #$0F
-    CALL DrawShopString       ; draw shop string ID=$0F ("Yes"/"No")
+    FARCALL DrawShopYesNo
 
     LDA #2
     STA cursor_max           ; 2 cursor options
@@ -5037,11 +4986,6 @@ ShopLoop_YesNo:
 
 ShopLoop_BuySellExit:
     LDA #$03
-    CALL DrawShopBox          ; draw box 3 (command box)
-    LDA #$0A
-    CALL DrawShopString       ; string 0A ("Buy Sell Exit")
-
-    LDA #$03
     STA cursor_max           ; 3 options
 
     JUMP CommonShopLoop_Cmd   ; do command loop
@@ -5059,26 +5003,12 @@ ShopLoop_BuySellExit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopLoop_CharNames:
-    LDA #$03
-    CALL DrawShopBox            ; draw shop box 3 (command box)
-
-    LDA #<@NamesString         ; set our pointer to the string containing char names
-    STA Var0
-    LDA #>@NamesString
-    STA Var1
-    CALL DrawShopComplexString  ; and draw it
+    FARCALL DrawShopHeroList
 
     LDA #4
     STA cursor_max             ; give the user 4 options
 
-    JUMP CommonShopLoop_Cmd     ; then run the common loop
-
-  @NamesString:
-  .byte $10,$00,$01   ; char 0's name, double line break
-  .byte $11,$00,$01   ; char 1's, double line break
-  .byte $12,$00,$01   ; char 2's, double line break
-  .byte $13,$00,$00   ; char 3's, null terminator
-
+    NOJUMP CommonShopLoop_Cmd     ; then run the common loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5436,26 +5366,6 @@ LoadShopBoxDims:
 
     RTS
 
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Shop Dialogue Box  [$AA5B :: 0x3AA6B]
-;;
-;;     Draws the shop dialogue and desired text string (shop text string ID in A)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawShopDialogueBox:
-    PHA                  ; back up desired dialogue string by pushing it
-    LDA #$00
-    CALL DrawShopBox      ; draw shop box ID 0 (the dialogue box)
-    PLA                  ; pull our dialogue string
-    JUMP DrawShopString   ; draw it, then exit
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  Draw Shop Buy Item Confirm  [$AA65 :: 0x3AA75]
@@ -5488,9 +5398,6 @@ DrawShopDialogueBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawShopBuyItemConfirm:
-    LDA #$0E
-    CALL DrawShopDialogueBox  ; draws "Gold  OK?" -- IE:  all the non-price text
-
     LDA cursor            ; get the cursor
     ASL A
     ASL A
@@ -5499,7 +5406,6 @@ DrawShopBuyItemConfirm:
     ADC #<(str_buf+$15)   ; add str_buf+$15
     STA Var0          ; use as low byte of pointer.  See routine description
                           ; for details of why its doing this
-
     CLC                   ; add 2 and put in X.  X will now be
     ADC #$02              ;  where we need to put the null terminator (2 bytes after
     TAX                   ;  the start of the string -- all we're drawing is "03 XX")
@@ -5522,9 +5428,12 @@ DrawShopBuyItemConfirm:
     LDA tmp+1
     STA shop_curprice+1
 
-    JUMP DrawShopComplexString  ; draw our complex string (item price), and exit
-
-
+    LDA tmp
+    STA stringifyVariables+0
+    LDA tmp+1
+    STA stringifyVariables+1
+    FARCALL DrawShopItemCostOK
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5535,19 +5444,12 @@ DrawShopBuyItemConfirm:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawInnClinicConfirm:
-    LDA #$0E
-    CALL DrawShopDialogueBox   ; draw "Gold  OK?" -- all the non-price text
-
-    LDA item_box              ; copy the inn price (first two bytes in item_box)
-    STA tmp                   ;  to tmp  (for PrintNumber)
+    LDA item_box+0
+    STA stringifyVariables+0
     LDA item_box+1
-    STA tmp+1
-    LDA #0
-    STA tmp+2                 ; 5digit print number needs 3 bytes... so just set high byte to zero
-
-    CALL PrintNumber_5Digit    ; print it
-    JUMP DrawShopComplexString ; and draw it
-
+    STA stringifyVariables+1
+    FARCALL DrawShopItemCostOK
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5573,12 +5475,7 @@ DrawShopSellItemConfirm:
     ADC shop_charindex       ; and add it to our char index
     STA shop_charindex       ;  so char index points directly to the item being sold
 
-    LDA item_box, X          ; get the item ID from the item box (stupid)
-    PHA                      ; push it (stupid)
-    LDA #$0E
-    CALL DrawShopDialogueBox  ; draw " Gold OK?" dialogue -- all the text except the actual price
-    PLA                      ; pull the previously pushed item ID (would make more sense to just LDA it here)
-
+    LDA item_box, X          ; get the item ID from the item box
     FARCALL LoadPrice            ; load the price of this item
     LSR tmp+1                ; then divide that price by 2 to get the sale price
     ROR tmp
@@ -5588,8 +5485,12 @@ DrawShopSellItemConfirm:
     LDA tmp+1
     STA shop_curprice+1      ; copy the price to shop_curprice
 
-    CALL PrintNumber_5Digit    ; print the sale price as 5 digits
-    JUMP DrawShopComplexString ; then draw it, and exit
+    LDA tmp
+    STA stringifyVariables+0
+    LDA tmp+1
+    STA stringifyVariables+1
+    FARCALL DrawShopItemCostOK
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -5644,11 +5545,10 @@ MagicShop_AssertLearn:
     AND tmp+4           ; AND with permissions byte
     BEQ @HasPermission  ;  if result is zero, they have permission to learn
 
-      LDA #$19                  ; otherwise...
-      CALL DrawShopDialogueBox   ; "You can't learn that" dialogue
-      PLA                       ; drop the return address
-      PLA
-      JUMP MagicShop_Loop        ; and jump back to the magic shop loop
+    FARCALL DrawShopYouCantLearnThat
+    PLA                       ; drop the return address
+    PLA
+    JUMP MagicShop_Loop        ; and jump back to the magic shop loop
 
   @HasPermission:
     LDA tmp+2            ; get magic ID
@@ -5680,16 +5580,13 @@ MagicShop_AssertLearn:
     INX
     LDA ch0_spells, X
     BEQ @FoundEmptySlot
-
-    LDA #$22                 ; if no empty slot found...
-    CALL DrawShopDialogueBox  ; "That level is full" dialogue
+    FARCALL DrawShopThisSpellFull
     PLA                      ; drop return address
     PLA
     JUMP MagicShop_Loop       ; and jump back to magic loop
 
-  @AlreadyKnow:
-    LDA #$1A                 ; if they already know the spell...
-    CALL DrawShopDialogueBox  ; "You already know that" dialogue
+    @AlreadyKnow:
+    FARCALL DrawShopAlreadyKnowSpell
     PLA                      ; drop return addy
     PLA
     JUMP MagicShop_Loop       ; jump back to magic loop
@@ -9203,8 +9100,9 @@ DrawEquipMenu:
     LDX equipoffset
     CPX #ch_weapons - ch_stats  ; check whether this is the weapon or armor screen
     BEQ :+
-      LDA #$3E                  ;   if not the weapon screen, change menu string ID to $3E ("ARMOR")
-:   CALL DrawMenuString          ; then draw that title string
+        LDA #$3E                  ;   if not the weapon screen, change menu string ID to $3E ("ARMOR")
+    :   
+    CALL DrawMenuString          ; then draw that title string
 
     LDA #1
     CALL @DrawEquipBox           ; then draw the top menu box

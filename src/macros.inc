@@ -47,19 +47,6 @@
     STA MMC5_PRG_BANK2   ; Swap to the desired page
 .endmacro
 
-.macro TEXT_OLD _address, _x, _y
-    LDA #<_address
-    STA Var5
-    LDA #>_address
-    STA Var6
-    LDA #(_x)
-    STA stringwriterDestX
-    LDA #(_y)
-    STA stringwriterDestY
-    LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
-    STA Var7
-    FARCALL StringWriter
-.endmacro
 
 .macro TEXT _address, _x, _y
     LDA #<_address
