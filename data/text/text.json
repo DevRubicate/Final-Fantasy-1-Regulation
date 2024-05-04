@@ -1,0 +1,323 @@
+{
+    "text": [
+        {"name": "ALPHABET", "text": "A B C D E F G H I J\n\nK L M N O P Q R S T\n\nU V W X Y Z ' , .  \n\n0 1 2 3 4 5 6 7 8 9\n\na b c d e f g h i j\n\nk l m n o p q r s t\n\nu v w x y z - \" ! ?"},
+        {"name": "TITLE_SELECT_NAME",         "text": "SELECT  NAME"},
+        {"name": "TITLE_CONTINUE",            "text": "CONTINUE"},
+        {"name": "TITLE_NEW_GAME",            "text": "NEW GAME"},
+        {"name": "TITLE_RESPOND_RATE",        "text": "RESPOND RATE {DIGIT1}{READ8 23568}"},
+        {"name": "TITLE_COPYRIGHT_SQUARE",    "text": "C 1987 SQUARE  "},
+        {"name": "TITLE_COPYRIGHT_NINTENDO",  "text": "C 1990 NINTENDO"},
+        {"name": "CLASS_NAME_FIGHTER",             "text": "FIGHTER"},
+        {"name": "CLASS_NAME_THIEF",               "text": "THIEF"},
+        {"name": "CLASS_NAME_BLACK_BELT",          "text": "Bl.BELT"},
+        {"name": "CLASS_NAME_RED_MAGE",            "text": "RedMAGE"},
+        {"name": "CLASS_NAME_WHITE_MAGE",          "text": "Wh.MAGE"},
+        {"name": "CLASS_NAME_BLACK_MAGE",          "text": "Bl.MAGE"},
+        {"name": "CLASS_NAME_KNIGHT",              "text": "KNIGHT"},
+        {"name": "CLASS_NAME_MASTER",              "text": "MASTER"},
+        {"name": "CLASS_NAME_NINJA",               "text": "NINJA"},
+        {"name": "CLASS_NAME_RED_WIZARD",          "text": "REDWIZ"},
+        {"name": "CLASS_NAME_WHITE_WIZARD",        "text": "WHITEWIZ"},
+        {"name": "CLASS_NAME_BLACK_WIZARD",        "text": "BLACKWIZ"},
+        {"name": "HERO_0_NAME",                    "text": "{SET_HERO}{BYTE 0}{HERO_NAME}"},
+        {"name": "HERO_1_NAME",                    "text": "{SET_HERO}{BYTE 1}{HERO_NAME}"},
+        {"name": "HERO_2_NAME",                    "text": "{SET_HERO}{BYTE 2}{HERO_NAME}"},
+        {"name": "HERO_3_NAME",                    "text": "{SET_HERO}{BYTE 3}{HERO_NAME}"},
+
+        {"name": "TEMPLATE_HERO_MENU",             "text": "{HERO_NAME}\n\nL {DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 1}\n\nHP\n {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\n\nMAGIC\n{DIGIT1}{HERO_SPELLCHARGE1}/{DIGIT1}{HERO_SPELLCHARGE2}/{DIGIT1}{HERO_SPELLCHARGE3}/{DIGIT1}{HERO_SPELLCHARGE4}/\n{DIGIT1}{HERO_SPELLCHARGE5}/{DIGIT1}{HERO_SPELLCHARGE6}/{DIGIT1}{HERO_SPELLCHARGE7}/{DIGIT1}{HERO_SPELLCHARGE8}"},
+        {"name": "MENU_GOLD",                      "text": "{DIGIT6R}{READ24 $601C} G"},
+
+        {"name": "SHOP_WELCOME",              "text": "Welcome"},
+        {"name": "SHOP_WELCOMEWOULDYOUSTAY",  "text": "Welcome\n\nStay,\nto save\nyour\ndata."},
+        {"name": "SHOP_WHATDOYOUWANT",        "text": "What do\nyou\nwant?"},
+        {"name": "SHOP_WHOWILLLEARNSPELL",    "text": "Who\nwill\nlearn\nthe\nspell?"},
+        {"name": "SHOP_WHOWILLTAKEIT",        "text": "Who\nwill\ntake\nit?"},
+        {"name": "SHOP_THANKYOUWHATELSE",     "text": "Thank\nyou!\nWhat\nelse?"},
+        {"name": "SHOP_YOUCANTCARRYANYMORE",  "text": "You\ncan't\ncarry\nanymore"},
+        {"name": "SHOP_YOUCANTAFFORDTHAT",    "text": "You\ncan't\nafford\nthat."},
+        {"name": "SHOP_YOUCANTLEARNTHAT",     "text": "Sorry,\nYou\ncan't\nlearn\nthat.\nSomeone\nelse?"},
+        {"name": "SHOP_THISSPELLFULL",        "text": "This\nlevel\nspell\nis full\n\nSomeone\nelse?"},
+        {"name": "SHOP_ALREADYKNOWSPELL",     "text": "You\nalready\nknow\nthat\nspell.\nSomeone\nelse?"},
+        {"name": "SHOP_WHOSEITEMSELL",        "text": "Whose\nitem\ndo you\nwant to\nsell?"},
+        {"name": "SHOP_YOUHAVENOTHING",       "text": "You\nhave\nnothing\nto sell\n\nAny-\nthing\nelse?"},
+        {"name": "SHOP_TOOBAD",               "text": "Too bad\n\nSome-\nthing\nelse?"},
+        {"name": "SHOP_YOUHAVETOOMANY",       "text": "You\ncan't\ncarry\nanymore"},
+        {"name": "SHOP_DONTFORGET",           "text": "Don't\nforget,\nif you\nleave\nyour\ngame,"},
+        {"name": "SHOP_HOLDRESET",            "text": "Hold\nRESET\nwhile\nyou\nturn\nPOWER\noff!!"},
+        {"name": "SHOP_NOBODYDEAD",           "text": "You do\nnot\nneed my\nhelp\nnow."},
+        {"name": "SHOP_WHOREVIVE",            "text": "Who\nshall\nbe\nrevived\n"},
+        {"name": "SHOP_RETURNLIFE",           "text": "WARRIOR\n\nReturn\nto\nlife!"},
+        {"name": "SHOP_ITEMCOSTOK",           "text": "{DIGIT5L}{READ16 $5CDA}\nGold\nOK?"},
+        {"name": "SHOP_BUYSELLEXIT",          "text": "Buy\n\nSell\n\nExit"},
+        {"name": "SHOP_BUYEXIT",              "text": "Buy\n\nExit"},
+        {"name": "SHOP_YESNO",                "text": "Yes\n\nNo"},
+        {"name": "SHOP_TITLEWEAPON",          "text": "WEAPON"},
+        {"name": "SHOP_TITLEARMOR",           "text": "ARMOR"},
+        {"name": "SHOP_TITLEWHITEMAGIC",      "text": "WMAGIC"},
+        {"name": "SHOP_TITLEBLACKMAGIC",      "text": "BMAGIC"},
+        {"name": "SHOP_TITLECLINIC",          "text": "CLINIC"},
+        {"name": "SHOP_TITLEITEM",            "text": "ITEM"},
+        {"name": "SHOP_TITLEINN",             "text": "INN"},
+
+        {"name": "TEMPLATE_ITEM_LIST",             "text": "{ITEM_NAME}{READ8 $300}\n\n\n\n{ITEM_NAME}{READ8 $301}\n\n\n\n{ITEM_NAME}{READ8 $302}\n\n\n\n{ITEM_NAME}{READ8 $303}\n\n\n\n{ITEM_NAME}{READ8 $304}"},
+
+        {"name": "ITEM_FROST",                    "text": "FROST",            "original": "FROST"},
+        {"name": "ITEM_HEAT",                     "text": "HEAT",             "original": "HEAT"},
+        {"name": "ITEM_GLANCE",                   "text": "GLANCE",           "original": "GLANCE"},
+        {"name": "ITEM_GAZE",                     "text": "GAZE",             "original": "GAZE"},
+        {"name": "ITEM_FLASH",                    "text": "FLASH",            "original": "FLASH"},
+        {"name": "ITEM_SCORCH",                   "text": "SCORCH",           "original": "SCORCH"},
+        {"name": "ITEM_CRACK",                    "text": "CRACK",            "original": "CRACK"},
+        {"name": "ITEM_SQUINT",                   "text": "SQUINT",           "original": "SQUINT"},
+        {"name": "ITEM_STARE",                    "text": "STARE",            "original": "STARE"},
+        {"name": "ITEM_GLARE",                    "text": "GLARE",            "original": "GLARE"},
+        {"name": "ITEM_BLIZZARD",                 "text": "BLIZZARD",         "original": "BLIZZARD"},
+        {"name": "ITEM_BLAZE",                    "text": "BLAZE",            "original": "BLAZE"},
+        {"name": "ITEM_INFERNO",                  "text": "INFERNO",          "original": "INFERNO"},
+        {"name": "ITEM_CREMATE",                  "text": "CREMATE",          "original": "CREMATE"},
+        {"name": "ITEM_POISON",                   "text": "POISON",           "original": "POISON"},
+        {"name": "ITEM_TRANCE",                   "text": "TRANCE",           "original": "TRANCE"},
+        {"name": "ITEM_THUNDER",                  "text": "THUNDER",          "original": "THUNDER"},
+        {"name": "ITEM_TOXIC",                    "text": "TOXIC",            "original": "TOXIC"},
+        {"name": "ITEM_SNORTING",                 "text": "SNORTING",         "original": "SNORTING"},
+        {"name": "ITEM_NUCLEAR",                  "text": "NUCLEAR",          "original": "NUCLEAR"},
+        {"name": "ITEM_INK",                      "text": "INK",              "original": "INK"},
+        {"name": "ITEM_STINGER",                  "text": "STINGER",          "original": "STINGER"},
+        {"name": "ITEM_DAZZLE",                   "text": "DAZZLE",           "original": "DAZZLE"},
+        {"name": "ITEM_SWIRL",                    "text": "SWIRL",            "original": "SWIRL"},
+        {"name": "ITEM_TORNADO",                  "text": "TORNADO",          "original": "TORNADO"},
+        {"name": "ITEM_LUTE",                     "text": "LUTE",             "original": "LUTE"},
+        {"name": "ITEM_CROWN",                    "text": "CROWN",            "original": "CROWN"},
+        {"name": "ITEM_CRYSTAL",                  "text": "CRYSTAL",          "original": "CRYSTAL"},
+        {"name": "ITEM_HERB",                     "text": "HERB",             "original": "HERB"},
+        {"name": "ITEM_KEY",                      "text": "KEY",              "original": "KEY"},
+        {"name": "ITEM_TNT",                      "text": "TNT",              "original": "TNT"},
+        {"name": "ITEM_ADAMANT",                  "text": "ADAMANT",          "original": "ADAMANT"},
+        {"name": "ITEM_SLAB",                     "text": "SLAB",             "original": "SLAB"},
+        {"name": "ITEM_RUBY",                     "text": "RUBY",             "original": "RUBY"},
+        {"name": "ITEM_ROD",                      "text": "ROD",              "original": "ROD"},
+        {"name": "ITEM_FLOATER",                  "text": "FLOATER",          "original": "FLOATER"},
+        {"name": "ITEM_CHIME",                    "text": "CHIME",            "original": "CHIME"},
+        {"name": "ITEM_TAIL",                     "text": "TAIL",             "original": "TAIL"},
+        {"name": "ITEM_CUBE",                     "text": "CUBE",             "original": "CUBE"},
+        {"name": "ITEM_BOTTLE",                   "text": "BOTTLE",           "original": "BOTTLE"},
+        {"name": "ITEM_OXYALE",                   "text": "OXYALE",           "original": "OXYALE"},
+        {"name": "ITEM_CANOE",                    "text": "CANOE",            "original": "CANOE"},
+        {"name": "ITEM_TENT",                     "text": "TENT",             "original": "TENT"},
+        {"name": "ITEM_CABIN",                    "text": "CABIN",            "original": "CABIN"},
+        {"name": "ITEM_HOUSE",                    "text": "HOUSE",            "original": "HOUSE"},
+        {"name": "ITEM_HEAL",                     "text": "HEAL",             "original": "HEAL{E1}"},
+        {"name": "ITEM_PURE",                     "text": "PURE",             "original": "PURE{E1}"},
+        {"name": "ITEM_SOFT",                     "text": "SOFT",             "original": "SOFT{E1}"},
+        {"name": "ITEM_WOODEN_NUNCHUCK",          "text": "Wooden",           "original": "Wooden{D9}"},
+        {"name": "ITEM_SMALL_KNIFE",              "text": "Small",            "original": "Small {D6}"},
+        {"name": "ITEM_WOODEN_STAFF",             "text": "Wooden",           "original": "Wooden{D8}"},
+        {"name": "ITEM_RAPIER",                   "text": "Rapier",           "original": "Rapier"},
+        {"name": "ITEM_IRON_HAMMER",              "text": "Iron",             "original": "Iron  {D5}"},
+        {"name": "ITEM_SHORT_SWORD",              "text": "Short",            "original": "Short {D4}"},
+        {"name": "ITEM_HAND_AXE",                 "text": "Hand",             "original": "Hand  {D7}"},
+        {"name": "ITEM_SCIMTAR",                  "text": "Scimtar",          "original": "Scimtar"},
+        {"name": "ITEM_IRON_NUNCHUCK",            "text": "Iron",             "original": "Iron  {D9}"},
+        {"name": "ITEM_LARGE_KNIFE",              "text": "Large",            "original": "Large {D6}"},
+        {"name": "ITEM_IRON_STAFF",               "text": "Iron",             "original": "Iron  {D8}"},
+        {"name": "ITEM_SABRE",                    "text": "Sabre",            "original": "Sabre"},
+        {"name": "ITEM_LONG_SWORD",               "text": "Long",             "original": "Long  {D4}"},
+        {"name": "ITEM_GREAT_AXE",                "text": "Great",            "original": "Great {D7}"},
+        {"name": "ITEM_FALCHON",                  "text": "Falchon",          "original": "Falchon"},
+        {"name": "ITEM_SILVER_KNIFE",             "text": "Silver",           "original": "Silver{D6}"},
+        {"name": "ITEM_SILVER_SWORD",             "text": "Silver",           "original": "Silver{D4}"},
+        {"name": "ITEM_SILVER_HAMMER",            "text": "Silver",           "original": "Silver{D5}"},
+        {"name": "ITEM_SILVER_AXE",               "text": "Silver",           "original": "Silver{D7}"},
+        {"name": "ITEM_FLAME_SWORD",              "text": "Flame",            "original": "Flame {D4}"},
+        {"name": "ITEM_ICE_SWORD",                "text": "Ice",              "original": "Ice   {D4}"},
+        {"name": "ITEM_DRAGON_SWORD",             "text": "Dragon",           "original": "Dragon{D4}"},
+        {"name": "ITEM_GIANT_SWORD",              "text": "Giant",            "original": "Giant {D4}"},
+        {"name": "ITEM_SUN_SWORD",                "text": "Sun",              "original": "Sun   {D4}"},
+        {"name": "ITEM_CORAL_SWORD",              "text": "Coral",            "original": "Coral {D4}"},
+        {"name": "ITEM_WERE_SWORD",               "text": "Were",             "original": "Were  {D4}"},
+        {"name": "ITEM_RUNE_SWORD",               "text": "Rune",             "original": "Rune  {D4}"},
+        {"name": "ITEM_POWER_STAFF",              "text": "Power",            "original": "Power {D8}"},
+        {"name": "ITEM_LIGHT_AXE",                "text": "Light",            "original": "Light {D7}"},
+        {"name": "ITEM_HEAL_STAFF",               "text": "Heal",             "original": "Heal  {D8}"},
+        {"name": "ITEM_MAGE_STAFF",               "text": "Mage",             "original": "Mage  {D8}"},
+        {"name": "ITEM_DEFENSE",                  "text": "Defense",          "original": "Defense"},
+        {"name": "ITEM_WIZARD_STAFF",             "text": "Wizard",           "original": "Wizard{D8}"},
+        {"name": "ITEM_VORPAL",                   "text": "Vorpal",           "original": "Vorpal"},
+        {"name": "ITEM_CATCLAW",                  "text": "CatClaw",          "original": "CatClaw"},
+        {"name": "ITEM_THOR_HAMMER",              "text": "Thor",             "original": "Thor  {D5}"},
+        {"name": "ITEM_BANE_SWORD",               "text": "Bane",             "original": "Bane  {D4}"},
+        {"name": "ITEM_KATANA",                   "text": "Katana",           "original": "Katana"},
+        {"name": "ITEM_XCALBER",                  "text": "Xcalber",          "original": "Xcalber"},
+        {"name": "ITEM_MASMUNE",                  "text": "Masmune",          "original": "Masmune"},
+        {"name": "ITEM_CLOTH",                    "text": "Cloth",            "original": "Cloth"},
+        {"name": "ITEM_WOODEN_ARMOR",             "text": "Wooden",           "original": "Wooden{DA}"},
+        {"name": "ITEM_CHAIN_ARMOR",              "text": "Chain",            "original": "Chain {DA}"},
+        {"name": "ITEM_IRON_ARMOR",               "text": "Iron",             "original": "Iron  {DA}"},
+        {"name": "ITEM_STEEL_ARMOR",              "text": "Steel",            "original": "Steel {DA}"},
+        {"name": "ITEM_SILVER_ARMOR",             "text": "Silver",           "original": "Silver{DA}"},
+        {"name": "ITEM_FLAME_ARMOR",              "text": "Flame",            "original": "Flame {DA}"},
+        {"name": "ITEM_ICE_ARMOR",                "text": "Ice",              "original": "Ice   {DA}"},
+        {"name": "ITEM_OPAL_ARMOR",               "text": "Opal",             "original": "Opal  {DA}"},
+        {"name": "ITEM_DRAGON_ARMOR",             "text": "Dragon",           "original": "Dragon{DA}"},
+        {"name": "ITEM_COPPER_BRACELET",          "text": "Copper",           "original": "Copper{DE}"},
+        {"name": "ITEM_SILVER_BRACELET",          "text": "Silver",           "original": "Silver{DE}"},
+        {"name": "ITEM_GOLD_BRACELET",            "text": "Gold",             "original": "Gold  {DE}"},
+        {"name": "ITEM_OPAL_BRACELET",            "text": "Opal",             "original": "Opal  {DE}"},
+        {"name": "ITEM_WHITE_CLOTH",              "text": "White",            "original": "White {DF}"},
+        {"name": "ITEM_BLACK_CLOTH",              "text": "Black",            "original": "Black {DF}"},
+        {"name": "ITEM_WOODEN_SHIELD",            "text": "Wooden",           "original": "Wooden{DB}"},
+        {"name": "ITEM_IRON_SHIELD",              "text": "Iron",             "original": "Iron  {DB}"},
+        {"name": "ITEM_SILVER_SHIELD",            "text": "Silver",           "original": "Silver{DB}"},
+        {"name": "ITEM_FLAME_SHIELD",             "text": "Flame",            "original": "Flame {DB}"},
+        {"name": "ITEM_ICE_SHIELD",               "text": "Ice",              "original": "Ice   {DB}"},
+        {"name": "ITEM_OPAL_SHIELD",              "text": "Opal",             "original": "Opal  {DB}"},
+        {"name": "ITEM_AEGIS_SHIELD",             "text": "Aegis",            "original": "Aegis {DB}"},
+        {"name": "ITEM_BUCKLER",                  "text": "Buckler",          "original": "Buckler"},
+        {"name": "ITEM_PROCAPE",                  "text": "ProCape",          "original": "ProCape"},
+        {"name": "ITEM_CAP",                      "text": "Cap",              "original": "Cap"},
+        {"name": "ITEM_WOODEN_HELMET",            "text": "Wooden",           "original": "Wooden{DC}"},
+        {"name": "ITEM_IRON_HELMET",              "text": "Iron",             "original": "Iron  {DC}"},
+        {"name": "ITEM_SILVER_HELMET",            "text": "Silver",           "original": "Silver{DC}"},
+        {"name": "ITEM_OPAL_HELMET",              "text": "Opal",             "original": "Opal  {DC}"},
+        {"name": "ITEM_HEAL_HELMET",              "text": "Heal",             "original": "Heal  {DC}"},
+        {"name": "ITEM_RIBBON",                   "text": "Ribbon",           "original": "Ribbon"},
+        {"name": "ITEM_GLOVES",                   "text": "Gloves",           "original": "Gloves"},
+        {"name": "ITEM_COPPER_GAUNTLET",          "text": "Copper",           "original": "Copper{DD}"},
+        {"name": "ITEM_IRON_GAUNTLET",            "text": "Iron",             "original": "Iron  {DD}"},
+        {"name": "ITEM_SILVER_GAUNTLET",          "text": "Silver",           "original": "Silver{DD}"},
+        {"name": "ITEM_ZEUS_GAUNTLET",            "text": "Zeus",             "original": "Zeus  {DD}"},
+        {"name": "ITEM_POWER_GAUNTLET",           "text": "Power",            "original": "Power {DD}"},
+        {"name": "ITEM_OPAL_GAUNTLET",            "text": "Opal",             "original": "Opal  {DD}"},
+        {"name": "ITEM_PRORING",                  "text": "ProRing",          "original": "ProRing"},
+
+        {"name": "TEST",         "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}
+    ]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

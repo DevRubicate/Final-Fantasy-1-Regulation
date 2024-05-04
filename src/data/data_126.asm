@@ -1,4 +1,5 @@
 .segment "DATA_126"
 
-.include "src/global-import.inc"
+; 0 - 8192
+.res 8192
 

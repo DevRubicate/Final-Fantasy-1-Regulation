@@ -9,7 +9,7 @@ LD65 ?= ld65
 NODE ?= node
 CA65FLAGS ::= -I. -g --feature force_range
 LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg -m build/final_fantasy_1_regulation.map
-NODE_SCRIPTS ::= $(wildcard script/*.js)
+NODE_SCRIPTS ::= $(wildcard script/*.mjs)
 
 .PHONY: all clean run_node
 

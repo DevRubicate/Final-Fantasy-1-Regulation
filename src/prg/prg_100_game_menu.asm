@@ -4,11 +4,14 @@
 
 .import Stringify, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex
 
+.import TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD
+
 .export DrawGameMenu, DrawGameMenuGoldBox
 
 DrawGameMenu:
 
-    BOX     11, 1, 10, 14
+    POS     11, 1
+    BOX     10, 14
     LDA #0
     STA stringwriterSetHero
     LDA #12
@@ -17,7 +20,8 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    BOX     21, 1, 10, 14
+    POS     21, 1
+    BOX     10, 14
     LDA #1
     STA stringwriterSetHero
     LDA #22
@@ -26,7 +30,8 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    BOX     11, 15, 10, 14
+    POS     11, 15
+    BOX     10, 14
     LDA #2
     STA stringwriterSetHero
     LDA #12
@@ -35,7 +40,8 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    BOX     21, 15, 10, 14
+    POS     21, 15
+    BOX     10, 14
     LDA #3
     STA stringwriterSetHero
     LDA #22
@@ -49,16 +55,18 @@ DrawGameMenu:
     RTS
 
 DrawMainMenuHeroData:
-    LDA #<TEMPLATE_HERO_MENU
+    LDA #<TEXT_TEMPLATE_HERO_MENU
     STA Var0
-    LDA #>TEMPLATE_HERO_MENU
+    LDA #>TEXT_TEMPLATE_HERO_MENU
     STA Var1
-    LDA #<TextBank(TEMPLATE_HERO_MENU)
+    LDA #<TextBank(TEXT_TEMPLATE_HERO_MENU)
     STA Var2
     FARCALL Stringify
     RTS
 
 DrawGameMenuGoldBox:
-    BOX     1, 10, 10, 5
-    TEXT    MENU_GOLD, 2, 12
+    POS     1, 10
+    BOX     10, 5
+    POS     2, 12
+    TEXT    TEXT_MENU_GOLD
     RTS

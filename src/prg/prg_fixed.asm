@@ -76,6 +76,8 @@
 ; prg_2C_dialog_string
 .import DrawDialogueString
 
+.import BankTest
+
 .export DrawPalette
 .export WaitForVBlank
 .export FormatBattleString
@@ -1326,6 +1328,7 @@ Impl_FARCALL:
 
     ; Activate the trampoline
     ;RTS
+
 
 .segment "RESET_VECTOR"
 

@@ -10,6 +10,7 @@
     .endif
 .endmacro
 
+.define TextBank(_address) (124 + <((_address - $C000) / $2000) ) | %10000000
 
 ;;
 ;;  macro for quick page boundary assertions
@@ -47,29 +48,49 @@
     STA MMC5_PRG_BANK2   ; Swap to the desired page
 .endmacro
 
-
-.macro TEXT _address, _x, _y
-    LDA #<_address
-    STA Var0
-    LDA #>_address
-    STA Var1
+.macro POS _x, _y
     LDA #(_x)
     STA stringwriterDestX
     LDA #(_y)
     STA stringwriterDestY
+.endmacro
+
+.macro POSX _x
+    LDA #(_x)
+    STA stringwriterDestX
+.endmacro
+
+.macro POSY _y
+    LDA #(_y)
+    STA stringwriterDestY
+.endmacro
+
+.macro MOVEX _x
+    LDA stringwriterDestX
+    CLC
+    ADC #(_x)
+    STA stringwriterDestX
+.endmacro
+
+.macro MOVEY _y
+    LDA stringwriterDestY
+    CLC
+    ADC #(_y)
+    STA stringwriterDestY
+.endmacro
+
+.macro TEXT _address
+    LDA #<_address
+    STA Var0
+    LDA #>_address
+    STA Var1
     LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
     STA Var2
     FARCALL Stringify
 .endmacro
 
 
-.define TextBank(_address) (124 + <((_address - $C000) / $2000) ) | %10000000
-
-.macro BOX _x, _y, _w, _h
-    LDA #(_x)
-    STA stringwriterDestX
-    LDA #(_y)
-    STA stringwriterDestY
+.macro BOX _w, _h
     LDA #(_w)
     STA box_wd
     LDA #(_h)

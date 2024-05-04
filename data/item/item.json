@@ -1,0 +1,518 @@
+{
+    "item": [
+        {
+            "name": "FROST",
+            "text": "FROST",
+        },
+        {
+            "name": "HEAT",
+            "text": "HEAT",
+        },
+        {
+            "name": "GLANCE",
+            "text": "GLANCE",
+        },
+        {
+            "name": "GAZE",
+            "text": "GAZE",
+        },
+        {
+            "name": "FLASH",
+            "text": "FLASH",
+        },
+        {
+            "name": "SCORCH",
+            "text": "SCORCH",
+        },
+        {
+            "name": "CRACK",
+            "text": "CRACK",
+        },
+        {
+            "name": "SQUINT",
+            "text": "SQUINT",
+        },
+        {
+            "name": "STARE",
+            "text": "STARE",
+        },
+        {
+            "name": "GLARE",
+            "text": "GLARE",
+        },
+        {
+            "name": "BLIZZARD",
+            "text": "BLIZZARD",
+        },
+        {
+            "name": "BLAZE",
+            "text": "BLAZE",
+        },
+        {
+            "name": "INFERNO",
+            "text": "INFERNO",
+        },
+        {
+            "name": "CREMATE",
+            "text": "CREMATE",
+        },
+        {
+            "name": "POISON",
+            "text": "POISON",
+        },
+        {
+            "name": "TRANCE",
+            "text": "TRANCE",
+        },
+        {
+            "name": "THUNDER",
+            "text": "THUNDER",
+        },
+        {
+            "name": "TOXIC",
+            "text": "TOXIC",
+        },
+        {
+            "name": "SNORTING",
+            "text": "SNORTING",
+        },
+        {
+            "name": "NUCLEAR",
+            "text": "NUCLEAR",
+        },
+        {
+            "name": "INK",
+            "text": "INK",
+        },
+        {
+            "name": "STINGER",
+            "text": "STINGER",
+        },
+        {
+            "name": "DAZZLE",
+            "text": "DAZZLE",
+        },
+        {
+            "name": "SWIRL",
+            "text": "SWIRL",
+        },
+        {
+            "name": "TORNADO",
+            "text": "TORNADO",
+        },
+        {
+            "name": "LUTE",
+            "text": "LUTE",
+        },
+        {
+            "name": "CROWN",
+            "text": "CROWN",
+        },
+        {
+            "name": "CRYSTAL",
+            "text": "CRYSTAL",
+        },
+        {
+            "name": "HERB",
+            "text": "HERB",
+        },
+        {
+            "name": "KEY",
+            "text": "KEY",
+        },
+        {
+            "name": "TNT",
+            "text": "TNT",
+        },
+        {
+            "name": "ADAMANT",
+            "text": "ADAMANT",
+        },
+        {
+            "name": "SLAB",
+            "text": "SLAB",
+        },
+        {
+            "name": "RUBY",
+            "text": "RUBY",
+        },
+        {
+            "name": "ROD",
+            "text": "ROD",
+        },
+        {
+            "name": "FLOATER",
+            "text": "FLOATER",
+        },
+        {
+            "name": "CHIME",
+            "text": "CHIME",
+        },
+        {
+            "name": "TAIL",
+            "text": "TAIL",
+        },
+        {
+            "name": "CUBE",
+            "text": "CUBE",
+        },
+        {
+            "name": "BOTTLE",
+            "text": "BOTTLE",
+        },
+        {
+            "name": "OXYALE",
+            "text": "OXYALE",
+        },
+        {
+            "name": "CANOE",
+            "text": "CANOE",
+        },
+        {
+            "name": "TENT",
+            "text": "TENT",
+        },
+        {
+            "name": "CABIN",
+            "text": "CABIN",
+        },
+        {
+            "name": "HOUSE",
+            "text": "HOUSE",
+        },
+        {
+            "name": "HEAL",
+            "text": "HEAL",
+        },
+        {
+            "name": "PURE",
+            "text": "PURE",
+        },
+        {
+            "name": "SOFT",
+            "text": "SOFT",
+        },
+        {
+            "name": "WOODEN_NUNCHUCK",
+            "text": "WOODEN_NUNCHUCK",
+        },
+        {
+            "name": "SMALL_KNIFE",
+            "text": "SMALL_KNIFE",
+        },
+        {
+            "name": "WOODEN_STAFF",
+            "text": "WOODEN_STAFF",
+        },
+        {
+            "name": "RAPIER",
+            "text": "RAPIER",
+        },
+        {
+            "name": "IRON_HAMMER",
+            "text": "IRON_HAMMER",
+        },
+        {
+            "name": "SHORT_SWORD",
+            "text": "SHORT_SWORD",
+        },
+        {
+            "name": "HAND_AXE",
+            "text": "HAND_AXE",
+        },
+        {
+            "name": "SCIMTAR",
+            "text": "SCIMTAR",
+        },
+        {
+            "name": "IRON_NUNCHUCK",
+            "text": "IRON_NUNCHUCK",
+        },
+        {
+            "name": "LARGE_KNIFE",
+            "text": "LARGE_KNIFE",
+        },
+        {
+            "name": "IRON_STAFF",
+            "text": "IRON_STAFF",
+        },
+        {
+            "name": "SABRE",
+            "text": "SABRE",
+        },
+        {
+            "name": "LONG_SWORD",
+            "text": "LONG_SWORD",
+        },
+        {
+            "name": "GREAT_AXE",
+            "text": "GREAT_AXE",
+        },
+        {
+            "name": "FALCHON",
+            "text": "FALCHON",
+        },
+        {
+            "name": "SILVER_KNIFE",
+            "text": "SILVER_KNIFE",
+        },
+        {
+            "name": "SILVER_SWORD",
+            "text": "SILVER_SWORD",
+        },
+        {
+            "name": "SILVER_HAMMER",
+            "text": "SILVER_HAMMER",
+        },
+        {
+            "name": "SILVER_AXE",
+            "text": "SILVER_AXE",
+        },
+        {
+            "name": "FLAME_SWORD",
+            "text": "FLAME_SWORD",
+        },
+        {
+            "name": "ICE_SWORD",
+            "text": "ICE_SWORD",
+        },
+        {
+            "name": "DRAGON_SWORD",
+            "text": "DRAGON_SWORD",
+        },
+        {
+            "name": "GIANT_SWORD",
+            "text": "GIANT_SWORD",
+        },
+        {
+            "name": "SUN_SWORD",
+            "text": "SUN_SWORD",
+        },
+        {
+            "name": "CORAL_SWORD",
+            "text": "CORAL_SWORD",
+        },
+        {
+            "name": "WERE_SWORD",
+            "text": "WERE_SWORD",
+        },
+        {
+            "name": "RUNE_SWORD",
+            "text": "RUNE_SWORD",
+        },
+        {
+            "name": "POWER_STAFF",
+            "text": "POWER_STAFF",
+        },
+        {
+            "name": "LIGHT_AXE",
+            "text": "LIGHT_AXE",
+        },
+        {
+            "name": "HEAL_STAFF",
+            "text": "HEAL_STAFF",
+        },
+        {
+            "name": "MAGE_STAFF",
+            "text": "MAGE_STAFF",
+        },
+        {
+            "name": "DEFENSE",
+            "text": "DEFENSE",
+        },
+        {
+            "name": "WIZARD_STAFF",
+            "text": "WIZARD_STAFF",
+        },
+        {
+            "name": "VORPAL",
+            "text": "VORPAL",
+        },
+        {
+            "name": "CATCLAW",
+            "text": "CATCLAW",
+        },
+        {
+            "name": "THOR_HAMMER",
+            "text": "THOR_HAMMER",
+        },
+        {
+            "name": "BANE_SWORD",
+            "text": "BANE_SWORD",
+        },
+        {
+            "name": "KATANA",
+            "text": "KATANA",
+        },
+        {
+            "name": "XCALBER",
+            "text": "XCALBER",
+        },
+        {
+            "name": "MASMUNE",
+            "text": "MASMUNE",
+        },
+        {
+            "name": "CLOTH",
+            "text": "CLOTH",
+        },
+        {
+            "name": "WOODEN_ARMOR",
+            "text": "WOODEN_ARMOR",
+        },
+        {
+            "name": "CHAIN_ARMOR",
+            "text": "CHAIN_ARMOR",
+        },
+        {
+            "name": "IRON_ARMOR",
+            "text": "IRON_ARMOR",
+        },
+        {
+            "name": "STEEL_ARMOR",
+            "text": "STEEL_ARMOR",
+        },
+        {
+            "name": "SILVER_ARMOR",
+            "text": "SILVER_ARMOR",
+        },
+        {
+            "name": "FLAME_ARMOR",
+            "text": "FLAME_ARMOR",
+        },
+        {
+            "name": "ICE_ARMOR",
+            "text": "ICE_ARMOR",
+        },
+        {
+            "name": "OPAL_ARMOR",
+            "text": "OPAL_ARMOR",
+        },
+        {
+            "name": "DRAGON_ARMOR",
+            "text": "DRAGON_ARMOR",
+        },
+        {
+            "name": "COPPER_BRACELET",
+            "text": "COPPER_BRACELET",
+        },
+        {
+            "name": "SILVER_BRACELET",
+            "text": "SILVER_BRACELET",
+        },
+        {
+            "name": "GOLD_BRACELET",
+            "text": "GOLD_BRACELET",
+        },
+        {
+            "name": "OPAL_BRACELET",
+            "text": "OPAL_BRACELET",
+        },
+        {
+            "name": "WHITE_CLOTH",
+            "text": "WHITE_CLOTH",
+        },
+        {
+            "name": "BLACK_CLOTH",
+            "text": "BLACK_CLOTH",
+        },
+        {
+            "name": "WOODEN_SHIELD",
+            "text": "WOODEN_SHIELD",
+        },
+        {
+            "name": "IRON_SHIELD",
+            "text": "IRON_SHIELD",
+        },
+        {
+            "name": "SILVER_SHIELD",
+            "text": "SILVER_SHIELD",
+        },
+        {
+            "name": "FLAME_SHIELD",
+            "text": "FLAME_SHIELD",
+        },
+        {
+            "name": "ICE_SHIELD",
+            "text": "ICE_SHIELD",
+        },
+        {
+            "name": "OPAL_SHIELD",
+            "text": "OPAL_SHIELD",
+        },
+        {
+            "name": "AEGIS_SHIELD",
+            "text": "AEGIS_SHIELD",
+        },
+        {
+            "name": "BUCKLER",
+            "text": "BUCKLER",
+        },
+        {
+            "name": "PROCAPE",
+            "text": "PROCAPE",
+        },
+        {
+            "name": "CAP",
+            "text": "CAP",
+        },
+        {
+            "name": "WOODEN_HELMET",
+            "text": "WOODEN_HELMET",
+        },
+        {
+            "name": "IRON_HELMET",
+            "text": "IRON_HELMET",
+        },
+        {
+            "name": "SILVER_HELMET",
+            "text": "SILVER_HELMET",
+        },
+        {
+            "name": "OPAL_HELMET",
+            "text": "OPAL_HELMET",
+        },
+        {
+            "name": "HEAL_HELMET",
+            "text": "HEAL_HELMET",
+        },
+        {
+            "name": "RIBBON",
+            "text": "RIBBON",
+        },
+        {
+            "name": "GLOVES",
+            "text": "GLOVES",
+        },
+        {
+            "name": "COPPER_GAUNTLET",
+            "text": "COPPER_GAUNTLET",
+        },
+        {
+            "name": "IRON_GAUNTLET",
+            "text": "IRON_GAUNTLET",
+        },
+        {
+            "name": "SILVER_GAUNTLET",
+            "text": "SILVER_GAUNTLET",
+        },
+        {
+            "name": "ZEUS_GAUNTLET",
+            "text": "ZEUS_GAUNTLET",
+        },
+        {
+            "name": "POWER_GAUNTLET",
+            "text": "POWER_GAUNTLET",
+        },
+        {
+            "name": "OPAL_GAUNTLET",
+            "text": "OPAL_GAUNTLET",
+        },
+        {
+            "name": "PRORING",
+            "text": "PRORING",
+        },
+    ]
+}
+
+

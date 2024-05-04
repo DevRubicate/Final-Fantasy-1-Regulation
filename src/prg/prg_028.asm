@@ -18,9 +18,11 @@
 .import DrawShopYouHaveNothing, DrawShopWhoWillLearnSpell, DrawShopTooBad, DrawShopYouHaveTooMany
 .import DrawShopWelcomeWouldYouStay, DrawShopYouCantLearnThat, DrawShopDontForget, DrawShopHoldReset
 .import DrawShopThisSpellFull, DrawShopAlreadyKnowSpell, DrawShopItemCostOK
-.import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife
-.import DrawShopBuySellExit, DrawShopYesNo, DrawShopHeroList
-.import DrawShopTitle, DrawShopGoldBox
+.import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
+.import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
+.import DrawShopTitle, DrawShopGoldBox, DrawShopItemList
+
+.import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -44,10 +46,6 @@ lut_ShopStrings:
 lut_ShopData:
   .incbin "bin/0E_8300_shopdata.bin"
 
- ;; LUT for the copyright text.  Simply a 2-byte target PPU address, followed by a
- ;;  null terminated string.  Two strings total.
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  IntroStory_Joy  [$84CA :: 0x384DA]
@@ -68,7 +66,6 @@ IntroStory_Joy:
       RTS
     :   
     FARJUMP GameStart       ; if it was pressed, restart game (brings up title screen)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3063,36 +3060,6 @@ PtyGen_DrawOneText:
     LDA HeroStringPtrBank, X
     STA Var2
     FARCALL Stringify
-
-
-
-
-;    LDA ptygen_name, X      ; next, copy over the 4-byte name of the character
-;    STA format_buf+3        ;  over to the format buffer
-;    LDA ptygen_name+1, X
-;    STA format_buf+4
-;    LDA ptygen_name+2, X
-;    STA format_buf+5
-;    LDA ptygen_name+3, X
-;    STA format_buf+6
-;
-;    LDA ptygen_name_x, X    ; set destination coords appropriately
-;    STA dest_x
-;    LDA ptygen_name_y, X
-;    STA dest_y
-;
-;    LDA #<(format_buf+3)    ; set pointer to start of 4-byte string
-;    STA Var0
-;    LDA #>(format_buf+3)
-;    STA Var1
-;    LDA #($0E * 2) | %10000000
-;    STA Var2
-;
-;    LDA #BANK_THIS          ; set banks again (not necessary as they haven't changed from above
-;    STA cur_bank            ;   but oh well)
-;    STA ret_bank
-
-
     RTS
 
 SlotCoordX:
@@ -3101,20 +3068,18 @@ SlotCoordY:
     .byte 4, 4, 16, 16
 
 HeroStringPtrLo:
-    .lobytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+    .lobytes TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME
 HeroStringPtrHi:
-    .hibytes HERO_0_NAME, HERO_1_NAME, HERO_2_NAME, HERO_3_NAME
+    .hibytes TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME
 HeroStringPtrBank:
-    .byte TextBank(HERO_0_NAME), TextBank(HERO_1_NAME), TextBank(HERO_2_NAME), TextBank(HERO_3_NAME)
-
+    .byte TextBank(TEXT_HERO_0_NAME), TextBank(TEXT_HERO_1_NAME), TextBank(TEXT_HERO_2_NAME), TextBank(TEXT_HERO_3_NAME)
 
 ClassStringPtrLo:
-    .lobytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+    .lobytes TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 ClassStringPtrHi:
-    .hibytes CLASS_NAME_FIGHTER, CLASS_NAME_THIEF, CLASS_NAME_BLACK_BELT, CLASS_NAME_RED_MAGE, CLASS_NAME_WHITE_MAGE, CLASS_NAME_BLACK_MAGE
+    .hibytes TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 ClassStringPtrBank:
-    .byte TextBank(CLASS_NAME_FIGHTER), TextBank(CLASS_NAME_THIEF), TextBank(CLASS_NAME_BLACK_BELT), TextBank(CLASS_NAME_RED_MAGE), TextBank(CLASS_NAME_WHITE_MAGE), TextBank(CLASS_NAME_BLACK_MAGE)
-
+    .byte TextBank(TEXT_CLASS_NAME_FIGHTER), TextBank(TEXT_CLASS_NAME_THIEF), TextBank(TEXT_CLASS_NAME_BLACK_BELT), TextBank(TEXT_CLASS_NAME_RED_MAGE), TextBank(TEXT_CLASS_NAME_WHITE_MAGE), TextBank(TEXT_CLASS_NAME_BLACK_MAGE)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3131,8 +3096,6 @@ PtyGen_DrawCursor:
     LDA ptygen_curs_y, X
     STA spr_y
     JUMP JumpDrawCursor          ; and draw the cursor there
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3176,35 +3139,6 @@ CharName_DrawCursor:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;NameInput_DrawName:
-;    LDX char_index          ; copy the character's name to our temp @buf
-;    LDA ptygen_name, X
-;    STA name_input_draw_buf
-;    LDA ptygen_name+1, X
-;    STA name_input_draw_buf+1
-;    LDA ptygen_name+2, X
-;    STA name_input_draw_buf+2
-;    LDA ptygen_name+3, X
-;    STA name_input_draw_buf+3              ; The code assumes name_input_draw_buf+4 is 0
-;    
-;    LDA #>name_input_draw_buf              ; Set the text pointer
-;    STA Var1
-;    LDA #<name_input_draw_buf
-;    STA Var0
-;    LDA #($0E * 2) | %10000000
-;    STA Var2
-;    
-;    LDA #BANK_THIS          ; set cur/ret banks
-;    STA cur_bank
-;    STA ret_bank
-;    
-;    LDA #$0E                ; set X/Y positions for the name to be printed
-;    STA dest_x
-;    LDA #$04
-;    STA dest_y
-;    
-;    LDA #$01                ; drawing while PPU is on, so set menustall
-;    STA menustall
 Invoke_DrawComplexString:
     FARJUMP DrawComplexString_New   ; Then draw the name and exit!
     
@@ -3235,10 +3169,14 @@ DrawNameInputScreen:
     LDA #0
     STA menustall           ; no menustall (PPU is off at this point)
     
-    BOX 13, 2, 6, 4
-    BOX 4, 8, 23, 20
-    TEXT TEXT_ALPHABET, 6, 10
-    TEXT TEXT_TITLE_SELECT_NAME, 9, 26
+    POS     13, 2
+    BOX     6, 4
+    POS     4, 8
+    BOX     23, 20
+    POS     6, 10
+    TEXT    TEXT_ALPHABET
+    POS     9, 26
+    TEXT    TEXT_TITLE_SELECT_NAME
 RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3380,17 +3318,25 @@ EnterTitleScreen:
     CALL IntroTitlePrepare    ; clear NT, start music, etc
     BIT PPUSTATUS                ;  reset PPU toggle
 
-    BOX     11, 10, 10, 4
-    TEXT    TEXT_TITLE_CONTINUE, 12, 12
+    POS     11, 10
+    BOX     10, 4
+    POS     12, 12 
+    TEXT    TEXT_TITLE_CONTINUE
 
-    BOX     11, 15, 10, 4
-    TEXT    TEXT_TITLE_NEW_GAME, 12, 17
+    POS     11, 15
+    BOX     10, 4
+    POS     12, 17
+    TEXT    TEXT_TITLE_NEW_GAME
 
-    BOX     8, 20, 16, 4
-    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
+    POS     8, 20
+    BOX     16, 4
+    POS     9, 22
+    TEXT    TEXT_TITLE_RESPOND_RATE
 
-    TEXT    TEXT_TITLE_COPYRIGHT_SQUARE, 8, 25
-    TEXT    TEXT_TITLE_COPYRIGHT_NINTENDO, 8, 26
+    POS     8, 25
+    TEXT    TEXT_TITLE_COPYRIGHT_SQUARE
+    POS     8, 26
+    TEXT    TEXT_TITLE_COPYRIGHT_NINTENDO
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
     STA PAPU_EN               ;   will do this automatically)
@@ -3415,7 +3361,8 @@ EnterTitleScreen:
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
 
-    TEXT    TEXT_TITLE_RESPOND_RATE, 9, 22
+    POS     9, 22
+    TEXT    TEXT_TITLE_RESPOND_RATE
 
     FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
@@ -4463,14 +4410,16 @@ Clinic_SelectTarget:
     CALL DrawShopBox            ; draw shop box #3 (command box)
     CALL ClinicBuildNameString  ; build the name string (this is a bit wasteful here.. this was
                                ;  just done in the clinic code prior to calling this routine.  Oh well.
+    FARCALL DrawShopDeadHeroList
 
-    LDA #<(str_buf+$10)        ; set our text pointer to point to the generated string
-    STA Var0
-    LDA #>(str_buf+$10)
-    STA Var1
-    CALL DrawShopComplexString  ; and draw it
 
-    JUMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
+;    LDA #<(str_buf+$10)        ; set our text pointer to point to the generated string
+;    STA Var0
+;    LDA #>(str_buf+$10)
+;    STA Var1
+;    CALL DrawShopComplexString  ; and draw it
+;
+     JUMP CommonShopLoop_Cmd     ; then do the shop loop to get the user's selection
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4832,18 +4781,19 @@ EquipMenu_BuildSellBox:
       SEC                ; if they didn't... SEC to indicate so
       RTS                ;  and exit
 
-:   LDA #0
+    :   
+    LDA #0
     STA item_box, Y      ; otherwise, slap a null terminator at the end
     CLC                  ; CLC to indicate items are for sale
     RTS                  ; and exit
 
-  @Armor:                      ; Same as above @Weapons block
+    @Armor:                      ; Same as above @Weapons block
     CLC
     ADC #ch_armor - ch_stats   ; except we check armor instead of weapons
     STA shop_charindex
     TAX
 
-  @ArmorLoop:
+    @ArmorLoop:
     LDA ch_stats, X
     BEQ @LoopBreak
     AND #$7F
@@ -4907,8 +4857,17 @@ ShopSelectBuyItem:
     ADC #8               ;  is drawn after this item
     TAY
 
-    INC cursor_max       ; increment cursor_max, our item counter
 
+
+
+
+
+
+
+
+
+
+    INC cursor_max       ; increment cursor_max, our item counter
     LDA cursor_max
     CMP #5               ; ensure we don't exceed 5 items (max the shop space will allow)
     BCC @Loop            ; if we haven't reached 5 items yet, keep looping
@@ -4924,7 +4883,11 @@ ShopSelectBuyItem:
     STA Var0
     LDA #>(str_buf+$10)
     STA Var1
-    CALL DrawShopComplexString  ; and draw it
+    ;CALL DrawShopComplexString  ; and draw it
+
+    FARCALL DrawShopItemList
+
+
 
     LDA #$03
     CALL LoadShopBoxDims
@@ -4945,10 +4908,7 @@ ShopSelectBuyItem:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopLoop_BuyExit:
-    LDA #$03
-    CALL DrawShopBox          ; draw shop box ID=3 (the command box)
-    LDA #$0B
-    CALL DrawShopString       ; draw shop string ID=$0B ("Buy"/"Exit")
+    FARCALL DrawShopBuyExit
 
     LDA #2
     STA cursor_max           ; 2 cursor options
@@ -5281,25 +5241,6 @@ DrawShopPartySprites:
     STA spr_x
     LDA #0<<6
     FARJUMP DrawOBSprite    ; draw char 0 at $88,$50, then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Shop String  [$AA26 :: 0x3AA36]
-;;
-;;     Draws a stock shop string as a Complex String given its ID number.  These strings
-;;  include shop dialogue, stop titles, and other things.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawShopString:
-    ASL A              ; double the ID (2 bytes per pointer)
-    TAX                ; put it in X
-
-    LDA lut_ShopStrings, X  ; load the pointer from the shop string LUT
-    STA Var0
-    LDA lut_ShopStrings+1, X
-    STA Var1     ;  ... then draw it....
-                       ; no JUMP or RTS -- code seamlessly flows into DrawShopComplexString
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
