@@ -10,7 +10,7 @@
     .endif
 .endmacro
 
-.define TextBank(_address) (124 + <((_address - $C000) / $2000) ) | %10000000
+.define TextBank(_address) (.bank(_address) | %10000000)
 
 ;;
 ;;  macro for quick page boundary assertions
@@ -84,7 +84,7 @@
     STA Var0
     LDA #>_address
     STA Var1
-    LDA #( (124 + <((_address - $C000) / $2000) ) | %10000000)
+    LDA #( .bank(_address) | %10000000)
     STA Var2
     FARCALL Stringify
 .endmacro

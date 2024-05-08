@@ -1,217 +1,312 @@
 import {promises as fs}           from 'fs';
 import path                       from 'path';
 
-class Packer {
-    pages = [
-        {address: 0, page: 0, size: 0x2000, occupied: null, next: null, previous: null},
-        {address: 0, page: 1, size: 0x2000, occupied: null, next: null, previous: null},
-        {address: 0, page: 2, size: 0x2000, occupied: null, next: null, previous: null},
-    ];
-    stuff = [];
 
-    constructor() {
 
+class Structure {
+    pages = [];
+    backupPages = null;
+    constructor(pages) {
+        this.pages = pages;
+        this.backupPages = [];
     }
-    addStatic(param) {
-        const extraPages = Math.floor(param.size / 256);
-        const height = Math.min(param.size, 256);
-
-        this.stuff.push({
-            data: param.data,
-            name: param.name,
-            size: param.size,
-            height,
-            lastHeight: param.size % 256,
-            extraPages,
-            priority: (extraPages << 16) + height,
-        })
-    }
-    addTableStatic(param) {
-        const childSize = param.children[0].size;
-        if(param.children.find(a => a.size !== childSize)) {
-            throw new Error('addTableStatic: Mismatch in child size');
-        }
-        const tableSize = param.children.length;
-        const height = Math.min(tableSize, 256);
-        const extraPages = Math.floor(param.children.length / 256);
-        
-        this.stuff.push({
-            data: param.data,
-            name: param.name,
-            size: tableSize,
-            height,
-            lastHeight: param.size % 256,
-            extraPages,
-            priority: (extraPages << 16) + (height * childSize),
-            variants: childSize,
-        })
-    }
-    addTableReference(param) {
-        this.stuff.push({
-            
-        })
-    }
-    addTablePointer(param) {
-        this.stuff.push({
-            
-        })
-    }
-    allocateGreedy(thing) {
-        const sortedNodes = this.getFreeNodes()
-            .sort((a, b) => {
-                if(!a && !b) {
-                    return 0;
-                } else if(!a) {
-                    return 1;
-                } else if(!b) {
-                    return -1;
+    clonePages(pages) {
+        const clonedPages = [];
+        for(let i=0; i<pages.length; ++i) {
+            let nodeClone = null;
+            let node = pages[i];
+            do {
+                const previousNodeClone = nodeClone;
+                nodeClone = {
+                    ...node
+                };
+                nodeClone.previous = previousNodeClone;
+                if(previousNodeClone) {
+                    previousNodeClone.next = nodeClone;
                 } else {
-                    return a.address - b.address;
+                    clonedPages.push(nodeClone);
                 }
-            });
-
-        while(true) {
-            let stuck = true;
-            for(let i=0; i<sortedNodes.length; ++i) {
-                if(!sortedNodes[i]) {
-                    continue;
-                }
-                stuck = false;
-                const currentNode = sortedNodes[i];
-                const currentPage = currentNode.page;
-                const currentAddress = currentNode.address;
-
-                let neededPages = thing.extraPages+1;
-                let foundPages = 1;
-
-
-                let pagesToTheLeft = [];
-                for(let j=currentPage-1; j>=0; --j) {
-                    if(foundPages === neededPages) {
-                        break;
-                    }
-
-                    let node = this.pages[j];
-                    while(
-                        node &&
-                        node.occupied &&
-                        node.address+node.size <= currentAddress
-                    ) {
-                        node = node.next;
-                    }
-                    const wastedSize = currentAddress - node.address;
-                    const neededSize = 256;
-                    if(node.size - wastedSize >= neededSize) {
-                        ++foundPages;
-                        pagesToTheLeft.push(node);
-                    } else {
-                        break;
-                    }
-                }
-
-                let pagesToTheRight = [];
-                for(let j=currentPage+1; j<this.pages.length; ++j) {
-                    if(foundPages === neededPages) {
-                        break;
-                    }
-
-                    let node = this.pages[j];
-                    while(
-                        node &&
-                        node.occupied &&
-                        node.address+node.size <= currentAddress
-                    ) {
-                        node = node.next;
-                    }
-                    const wastedSize = currentAddress - node.address;
-                    const neededSize = (foundPages < neededPages) ? 256 : thing.lastHeight;
-
-                    if(node.size - wastedSize >= neededSize) {
-                        ++foundPages;
-                        pagesToTheRight.push(node);
-                    } else {
-                        break;
-                    }
-                }
-
-                if(foundPages === neededPages) {
-                    let pageCounter = 0;
-                    let remainingPages = foundPages;
-                    for(let j=0; j<pagesToTheLeft.length; ++j) {
-                        const leftNode = pagesToTheLeft[j];
-                        const from = pageCounter * 256;
-                        const to = pageCounter * 256 + 256;
-                        this.data.takeCell(
-                            thing.subData(from, to),
-                            pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
-                            `${from} - ${to}`,
-                            leftNode,
-                            currentAddress,
-                            256
-                        );
-                        ++pageCounter;
-                    }
-                    
-                    const requiredSize = pageCounter < neededPages ? 256 : thing.lastHeight;
-                    const from = pageCounter * 256;
-                    const to = pageCounter * 256 + requiredSize;
-                    this.takeCell(
-                        thing.data.subData(from, to),
-                        pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
-                        `${from} - ${to}`,
-                        currentNode,
-                        currentAddress,
-                        requiredSize
-                    );
-                    ++pageCounter;
-                    
-                    for(let j=0; j<pagesToTheRight.length; ++j) {
-                        const rightNode = pagesToTheRight[j];
-                        const requiredSize = pageCounter < neededPages ? 256 : thing.lastHeight;
-                        const from = pageCounter * 256;
-                        const to = pageCounter * 256 + requiredSize;
-                        this.takeCell(
-                            thing.data.subData(from, to),
-                            `${thing.name}_PART${pageCounter+1}`,
-                            `${from} - ${to}`,
-                            rightNode,
-                            currentAddress,
-                            requiredSize
-                        );
-                        ++pageCounter;
-                    }
-                    return;
-                }
-            }
-            if(stuck) {
-                throw new Error('stuck');
-            }
+            } while(node = node.next);
         }
+        return clonedPages;
     }
-    allocateGenerous(thing) {
-        const sortedNodes = this.getFreeNodes()
-            .sort((a, b) => {
-                return a.size - b.size;
-            });
+    transaction() {
+        this.backupPages.push(
+            this.clonePages(this.pages)
+        );
+    }
+    rollback() {
+        if(this.backupPages.length === 0) {
+            throw new Error('Structure.rollback: No transaction active');
+        }
+        this.pages = this.backupPages.pop();
+    }
+    commit() {
+        this.backupPages.pop();
+    }
+}
 
-        for(let i=0; i<sortedNodes.length; ++i) {
-            const node = sortedNodes[i];
-            const currentPage = node.page;
-            const currentAddress = node.address;
-            if(node.size >= thing.size) {
+class Packer {
+    structure;
+    stuff = [];
+    constructor() {
+        this.structure = new Structure(
+            [
+                {address: 0, page: 0, size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 1, size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 2, size: 0x2000, occupied: null, next: null, previous: null},
+            ]
+        );
+    }
+    addStatic(entry) {
+         this.stuff.push({
+            entry: entry,
+            priority: entry.data.getLength(),
+        })
+    }
+    addReferenceTable(entry) {
+        this.stuff.push({
+            entry: entry,
+            priority: entry.data.getLength(),
+        })
+    }
 
-                this.takeCell(
-                    thing.data,
-                    thing.name,
-                    `${currentAddress} - ${currentAddress + thing.size}`,
-                    node,
-                    currentAddress,
-                    thing.size
+    place(plan) {
+        const siblingPackages = plan.entry.data.getSiblingPackages();
+
+        const banned = [];
+        outer: while(true) {
+            this.structure.transaction();
+
+            let success = true;
+            const baseAllocation = this.allocate(plan.entry, {}, banned);
+            if(!baseAllocation) {
+                this.structure.rollback();
+                return false;
+            }
+
+            for(let i=0; i<siblingPackages.length; ++i) {
+                const tagalongAllocation = this.allocate(
+                    {
+                        name: `${plan.entry.name}_SIBLING${i+2}`,
+                        data: siblingPackages[i],
+                    },
+                    {page: baseAllocation.node.page},
+                    []
                 );
-                return;
+                if(!tagalongAllocation) {
+                    banned.push({page: baseAllocation.anchorNode.page, address: baseAllocation.anchorNode.address});
+
+                    this.structure.rollback();
+                    continue outer;
+                }
+            }
+            // success
+            break;
+        }
+        this.structure.commit();
+
+        return true;
+    }
+    allocate(thing, param = {}, banned) {
+        const dataLength = thing.data.getLength();
+
+        const sizes = [];
+        for(let i=0, len=Math.ceil(dataLength / 256); i<len; ++i) {
+            sizes.push(
+                i < len - 1 ? 256 : dataLength % 256
+            );
+        }
+        const greedy = sizes.length > 1;
+
+
+
+        let nodes = this.getFreeNodes();
+        if(typeof param.page !== 'undefined') {
+            nodes = nodes.filter(a => a.page === param.page);
+        }
+
+        nodes = nodes.filter(a => !banned.find(b => a.page === b.page && a.address === b.address));
+
+        if(greedy) {
+            nodes.sort(
+                (a, b) => a.address === b.address ? b.page - a.page : a.address - b.address
+            );
+        } else {
+            nodes.sort(
+                (a, b) => a.address === b.address ? b.page - a.page : b.address - a.address
+            );
+        }
+
+        outer: while(nodes.length > 0) {
+            const currentNode = nodes.pop();
+            const currentPage = currentNode.page;
+            const currentAddress = currentNode.address;
+
+            let pageIndex = 0;
+
+            // Check if there are any available pages on the left
+            let pagesToTheLeft = [];
+            if(typeof param.page === 'undefined') {
+                for(let j=currentPage-1; j>=0; --j) {
+
+                    if(pageIndex >= sizes.length - 1) {
+                        // There is only 1 segment left to allocate so we break here as the last segment should be put in
+                        // the middle page.
+                        break;
+                    }
+
+                    let leftNode = this.structure.pages[j];
+                    while(
+                        leftNode &&
+                        leftNode.occupied &&
+                        leftNode.address+leftNode.size <= currentAddress
+                    ) {
+                        leftNode = leftNode.next;
+                    }
+                    const wastedSize = currentAddress - leftNode.address;
+                    if(leftNode.size - wastedSize >= sizes[pageIndex]) {
+                        ++pageIndex;
+                        pagesToTheLeft.push(leftNode);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Increment pageIndex once for the middle page
+            ++pageIndex;
+
+            // Check if there are any available pages on the right
+            let pagesToTheRight = [];
+            for(let j=currentPage+1; j<this.structure.pages.length; ++j) {
+                if(pageIndex >= sizes.length - 1) {
+                    // There is only 1 segment left to allocate so we break here as the last segment should be put in
+                    // the middle page.
+                    break;
+                }
+
+                let rightNode = this.structure.pages[j];
+                while(
+                    rightNode &&
+                    rightNode.occupied &&
+                    rightNode.address+rightNode.size <= currentAddress
+                ) {
+                    rightNode = rightNode.next;
+                }
+                const wastedSize = currentAddress - rightNode.address;
+                if(rightNode.size - wastedSize >= sizes[pageIndex]) {
+                    ++pageIndex;
+                    pagesToTheRight.push(rightNode);
+                } else {
+                    break;
+                }
+            }
+
+            // We incremented pageIndex once for each suitable node we found, so if our pageIndex was
+            // incremented until it is equal to our sizes array, it means we have successfully found enough
+            // cells to hold this complete allocation
+            if(pageIndex === sizes.length) {
+                this.structure.transaction();
+
+                let pageCounter = 0;
+                let offset = 0;
+
+                // Allocates cells to the left of center
+                for(let j=0; j<pagesToTheLeft.length; ++j) {
+                    const leftNode = pagesToTheLeft[j];
+                    const subData = thing.data.split(
+                        offset,
+                        offset + sizes[pageCounter]
+                    );
+                    this.takeCell(
+                        subData,
+                        pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
+                        `address ${leftNode.address} - ${leftNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
+                        leftNode,
+                        currentAddress,
+                        sizes[pageCounter]
+                    );
+                    offset += sizes[pageCounter];
+
+                    // Now we allocate any child allocations from this subdata to the page that the subdata was
+                    // allocated to.
+                    const children = subData.childAllocations();
+                    for(let k=0; k<children.length; ++k) {
+                        const success = this.allocate(children[k], {page: pageCounter}, []);
+                        if(!success) {
+                            this.structure.rollback();
+                            continue outer;
+                        }
+                    }
+
+                    ++pageCounter;
+                }
+
+                // Allocate center cell
+                const subData = thing.data.split(
+                    offset,
+                    offset + sizes[pageCounter]
+                );
+                this.takeCell(
+                    subData,
+                    pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
+                    `address ${currentNode.address} - ${currentNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
+                    currentNode,
+                    currentAddress,
+                    sizes[pageCounter]
+                );
+                offset += sizes[pageCounter];
+                // Now we allocate any child allocations from this subdata to the page that the subdata was
+                // allocated to.
+
+                const children = subData.childAllocations();
+                for(let k=0; k<children.length; ++k) {
+                    const success = this.allocate(children[k], {page: pageCounter}, []);
+                    if(!success) {
+                        this.structure.rollback();
+                        continue outer;
+                    }
+                }
+                ++pageCounter;
+
+                // Allocate cells to the right of center
+                for(let j=0; j<pagesToTheRight.length; ++j) {
+                    const rightNode = pagesToTheRight[j];
+                    const subData = thing.data.split(
+                        offset,
+                        offset + sizes[pageCounter]
+                    )
+                    this.takeCell(
+                        subData,
+                        `${thing.name}_PART${pageCounter+1}`,
+                        `address ${rightNode.address} - ${rightNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
+                        rightNode,
+                        currentAddress,
+                        sizes[pageCounter]
+                    );
+                    offset += sizes[pageCounter];
+                    // Now we allocate any child allocations from this subdata to the page that the subdata was
+                    // allocated to.
+                    const children = subData.childAllocations();
+                    for(let k=0; k<children.length; ++k) {
+                        const success = this.allocate(children[k], {page: pageCounter}, []);
+                        if(!success) {
+                            this.structure.rollback();
+                            continue outer;
+                        }
+                    }
+                    ++pageCounter;
+                }
+
+                this.structure.commit();
+                return {
+                    anchorNode: currentNode,
+                    node: pagesToTheLeft[0] ?? currentNode,
+                };
             }
         }
-        throw new Error('No more room');
+        return null;
     }
     takeCell(data, labelName, comment, cell, address, size) {
         if(cell.address === address) {
@@ -289,8 +384,8 @@ class Packer {
     }
     getFreeNodes() {
         const freeNodes = [];
-        for(let i=0; i<this.pages.length; ++i) {
-            let node = this.pages[i];
+        for(let i=0; i<this.structure.pages.length; ++i) {
+            let node = this.structure.pages[i];
             while(node) {
                 if(!node.occupied) {freeNodes.push(node);}
                 node = node.next;   
@@ -303,15 +398,14 @@ class Packer {
 
         for(let i=0; i<this.stuff.length; ++i) {
             const thing = this.stuff[i];
-            if(thing.extraPages === 0) {
-                this.allocateGenerous(thing);
-            } else {
-                this.allocateGreedy(thing);
+            const success = this.place(thing);
+            if(!success) {
+                throw new Error('Could not allocate');
             }
         }
 
         const files = [];
-        for(let i=0; i<this.pages.length; ++i) {
+        for(let i=0; i<this.structure.pages.length; ++i) {
             const file = {name: `data_${String(124+i).padStart(3, '0')}.asm`, output: ''}
             files.push(file);
 
@@ -319,7 +413,7 @@ class Packer {
 
             {
                 const labelExports = [];
-                let node = this.pages[i];
+                let node = this.structure.pages[i];
                 do {
                     if(node.occupied) {
                         labelExports.push(node.name);
@@ -330,7 +424,7 @@ class Packer {
                 }
             }
 
-            let node = this.pages[i];
+            let node = this.structure.pages[i];
             do {
                 if(node.occupied) {
                     file.output += `; ${node.comment}\n`;
@@ -348,20 +442,65 @@ class Packer {
 }
 
 class BinaryBuffer {
-    constructor(arr) {
-        this.arr = arr ?? [];
+    data;
+    constructor(data) {
+        this.data = data ?? [];
     }
-    push(value) {
-        this.arr.push(value & 0xFF);
+    push(...input) {
+        for(let i=0; i<input.length; ++i) {
+            this.data[i] = this.data[i] ?? [];
+            this.data[i].push(input[i] & 0xFF);
+        }
     }
     getLength() {
-        return this.arr.length;
+        return this.data[0].length;
     }
     getOutput() {
-        return this.arr.map(a => `$${a.toString(16).padStart(2, '0')}`).join(', ');
+        return this.data[0].map(a => `$${a.toString(16).padStart(2, '0')}`).join(', ');
     }
-    subData(start, end) {
-        return new BinaryBuffer(this.arr.slice(start, end));
+    split(start, end) {
+        const subData = [];
+        for(let i=0; i<this.data.length; ++i) {
+            subData.push(this.data[i].slice(start, end));
+        }
+        return new BinaryBuffer(subData);
+    }
+    getSiblingPackages() {
+        return this.data.slice(1).map(a => new BinaryBuffer([a]));
+    }
+    childAllocations() {
+        return [];
+    }
+}
+
+class PointerPackage {
+    data;
+    constructor(data, secondary) {
+        this.data = data ?? [];
+        this.secondary = !!secondary;
+    }
+    push(input) {
+        this.data.push(input);
+    }
+    getLength() {
+        return this.data.length;
+    }
+    getOutput() {
+        return this.data.map(a => `$${(7).toString(16).padStart(2, '0')}`).join(', ');
+    }
+    split(start, end) {
+        return new PointerPackage(this.data.slice(start, end), this.secondary);
+    }
+    getSiblingPackages() {
+        return [new PointerPackage(this.data.slice(), true)];
+    }
+    childAllocations() {
+        if(!this.secondary) {
+            return this.data.map(a => ({name: a.name, data: a.data}));
+        } else {
+            return [];
+        }
+
     }
 }
 
@@ -375,18 +514,7 @@ class Preprocessor {
             for(let i=0; i<jsonData.text.length; ++i) {
                 const node = jsonData.text[i];
                 const textData = this.compileText(node.text);
-
-                packer.addStatic({
-                    name: `TEXT_${node.name}`,
-                    size: textData.buffer.getLength(),
-                    data: textData.buffer
-                });
-                /*
-                packer.addStatic(textData.binary.length, (address) => {
-                    //label.push({name: `TEXT_${node.name}`, value: address});
-                    return textData.binary;
-                });
-                */
+                packer.addStatic({name: `TEXT_${node.name}`, data: textData.buffer});
             }
         }
 
@@ -394,65 +522,35 @@ class Preprocessor {
 
             const items = [];
 
+            const itemName = new PointerPackage();
+            const itemPrice = new BinaryBuffer();
+
+
             for(let i=0; i<jsonData.item.length; ++i) {
                 const node = jsonData.item[i];
 
-                // Add this item to the output
-                //const itemData = compileItem(node);
-                //packer.addStatic(itemData.binary.length, () => {
-                //    label.push({name: `ITEM_${node.name}`, value: i + 1});
-                //    return itemData.binary;
-                //});
+                itemPrice.push(
+                    node.price & 0xFF,
+                    node.price << 8 & 0xFF,
+                    node.price << 16 & 0xFF,
+                );
+
+
 
                 // Add this item's text to the output
                 const textData = this.compileText(node.text);
-                /*
-                items.push(
-                    packer.addStatic(textData.binary.length, (address) => {
-                        //label.push({name: `TEXT_${node.name}`, value: address});
-                        return textData.binary;
-                    });
-                );
-                */
-                packer.addStatic({
-                    name: `TEXT_ITEM_${node.name}`,
-                    size: textData.buffer.getLength(),
-                    data: textData.buffer
-                });
-
-                
+                itemName.push({name: `TEXT_ITEM_${node.name}`, data: textData.buffer});
             }
-
-
-            /*
-            packer.addTwoDimensional(items.length, (address) => {
-                label.push({name: `TABLE_ITEM_NAME_LO`, value: address});
-                return items.map(a => String.fromCharCode(a.node.address & 0xFF)).join('');
-            });
-            packer.addTwoDimensional(items.length, (address) => {
-                label.push({name: `TABLE_ITEM_NAME_HI`, value: address});
-                return items.map(a => (a.node.address >> 8) & 0xFF).join('');
-            });
-            */
-
+            packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
+            packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
         }
-
 
         return packer.build();
-
-        /*
-        return {
-            label: translateLabel(label),
-            buffer: Buffer.from(output, 'binary'),
-        }
-        */
     }
-
     compileItem() {
 
         return {binary: ''};
     }
-
     compileText(input) {
         const dict = {
             '/': 26,
@@ -564,7 +662,6 @@ class Preprocessor {
 
         return {buffer: buffer};
     }
-
     translateCommand(commandString, buffer) {
         const segment = commandString.split(' ');
         switch(segment[0]) {
@@ -788,7 +885,6 @@ class Preprocessor {
         }
         return buffer;
     }
-
     getPositiveInteger(n) {
         if(n.charAt(0) === '$') {
             return parseInt(n.substring(1), 16);
@@ -798,7 +894,6 @@ class Preprocessor {
             throw new Error(`Invalid input, must be positive integer, got "${n}" instead`);
         }
     }
-
     translateLabel(input) {
         let output = '';
         for(let i=0; i<input.length; ++i) {
