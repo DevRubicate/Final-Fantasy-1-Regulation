@@ -6,12 +6,11 @@
 .import WaitForVBlank, MenuCondStall, MusicPlay
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
-.import TEXT_ITEM_FROST, TEXT_ITEM_HEAT, TEXT_ITEM_GLANCE, TEXT_ITEM_GAZE, TEXT_ITEM_FLASH, TEXT_ITEM_SCORCH, TEXT_ITEM_CRACK, TEXT_ITEM_SQUINT, TEXT_ITEM_STARE, TEXT_ITEM_GLARE, TEXT_ITEM_BLIZZARD, TEXT_ITEM_BLAZE, TEXT_ITEM_INFERNO, TEXT_ITEM_CREMATE, TEXT_ITEM_POISON, TEXT_ITEM_TRANCE, TEXT_ITEM_THUNDER, TEXT_ITEM_TOXIC, TEXT_ITEM_SNORTING, TEXT_ITEM_NUCLEAR, TEXT_ITEM_INK, TEXT_ITEM_STINGER, TEXT_ITEM_DAZZLE, TEXT_ITEM_SWIRL, TEXT_ITEM_TORNADO, TEXT_ITEM_LUTE, TEXT_ITEM_CROWN, TEXT_ITEM_CRYSTAL, TEXT_ITEM_HERB, TEXT_ITEM_KEY, TEXT_ITEM_TNT, TEXT_ITEM_ADAMANT, TEXT_ITEM_SLAB, TEXT_ITEM_RUBY, TEXT_ITEM_ROD, TEXT_ITEM_FLOATER, TEXT_ITEM_CHIME, TEXT_ITEM_TAIL, TEXT_ITEM_CUBE, TEXT_ITEM_BOTTLE, TEXT_ITEM_OXYALE, TEXT_ITEM_CANOE, TEXT_ITEM_TENT, TEXT_ITEM_CABIN, TEXT_ITEM_HOUSE, TEXT_ITEM_HEAL, TEXT_ITEM_PURE, TEXT_ITEM_SOFT, TEXT_ITEM_WOODEN_NUNCHUCK, TEXT_ITEM_SMALL_KNIFE, TEXT_ITEM_WOODEN_STAFF, TEXT_ITEM_RAPIER, TEXT_ITEM_IRON_HAMMER, TEXT_ITEM_SHORT_SWORD, TEXT_ITEM_HAND_AXE, TEXT_ITEM_SCIMTAR, TEXT_ITEM_IRON_NUNCHUCK, TEXT_ITEM_LARGE_KNIFE, TEXT_ITEM_IRON_STAFF, TEXT_ITEM_SABRE, TEXT_ITEM_LONG_SWORD, TEXT_ITEM_GREAT_AXE, TEXT_ITEM_FALCHON, TEXT_ITEM_SILVER_KNIFE, TEXT_ITEM_SILVER_SWORD, TEXT_ITEM_SILVER_HAMMER, TEXT_ITEM_SILVER_AXE, TEXT_ITEM_FLAME_SWORD, TEXT_ITEM_ICE_SWORD, TEXT_ITEM_DRAGON_SWORD, TEXT_ITEM_GIANT_SWORD, TEXT_ITEM_SUN_SWORD, TEXT_ITEM_CORAL_SWORD, TEXT_ITEM_WERE_SWORD, TEXT_ITEM_RUNE_SWORD, TEXT_ITEM_POWER_STAFF, TEXT_ITEM_LIGHT_AXE, TEXT_ITEM_HEAL_STAFF, TEXT_ITEM_MAGE_STAFF, TEXT_ITEM_DEFENSE, TEXT_ITEM_WIZARD_STAFF, TEXT_ITEM_VORPAL, TEXT_ITEM_CATCLAW, TEXT_ITEM_THOR_HAMMER, TEXT_ITEM_BANE_SWORD, TEXT_ITEM_KATANA, TEXT_ITEM_XCALBER, TEXT_ITEM_MASMUNE, TEXT_ITEM_CLOTH, TEXT_ITEM_WOODEN_ARMOR, TEXT_ITEM_CHAIN_ARMOR, TEXT_ITEM_IRON_ARMOR, TEXT_ITEM_STEEL_ARMOR, TEXT_ITEM_SILVER_ARMOR, TEXT_ITEM_FLAME_ARMOR, TEXT_ITEM_ICE_ARMOR, TEXT_ITEM_OPAL_ARMOR, TEXT_ITEM_DRAGON_ARMOR, TEXT_ITEM_COPPER_BRACELET, TEXT_ITEM_SILVER_BRACELET, TEXT_ITEM_GOLD_BRACELET, TEXT_ITEM_OPAL_BRACELET, TEXT_ITEM_WHITE_CLOTH, TEXT_ITEM_BLACK_CLOTH, TEXT_ITEM_WOODEN_SHIELD, TEXT_ITEM_IRON_SHIELD, TEXT_ITEM_SILVER_SHIELD, TEXT_ITEM_FLAME_SHIELD, TEXT_ITEM_ICE_SHIELD, TEXT_ITEM_OPAL_SHIELD, TEXT_ITEM_AEGIS_SHIELD, TEXT_ITEM_BUCKLER, TEXT_ITEM_PROCAPE, TEXT_ITEM_CAP, TEXT_ITEM_WOODEN_HELMET, TEXT_ITEM_IRON_HELMET, TEXT_ITEM_SILVER_HELMET, TEXT_ITEM_OPAL_HELMET, TEXT_ITEM_HEAL_HELMET, TEXT_ITEM_RIBBON, TEXT_ITEM_GLOVES, TEXT_ITEM_COPPER_GAUNTLET, TEXT_ITEM_IRON_GAUNTLET, TEXT_ITEM_SILVER_GAUNTLET, TEXT_ITEM_ZEUS_GAUNTLET, TEXT_ITEM_POWER_GAUNTLET, TEXT_ITEM_OPAL_GAUNTLET, TEXT_ITEM_PRORING
 
+.import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
+.import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 
 .export PlotBox, Stringify
-
-
 
 Stringify:
     LDA #0
@@ -24,6 +23,8 @@ Stringify:
     STA stringwriterNewlineOrigin
 
     CALL SetStringifyPPUAddress
+    LDY #0
+    STY stringifyCursor
     @Loop:
 
         ; Fetch one character and return it in register A. In a plain string this means simply grabbing
@@ -56,7 +57,9 @@ Stringify:
         STA stringwriterDestX
         INC stringwriterDestY
         CALL StringifyLimiter
+        STY stringifyCursor
         CALL SetStringifyPPUAddress  ; then set the PPU address appropriately
+        LDY stringifyCursor
         JUMP @Loop
 
         @Void:
@@ -74,6 +77,8 @@ Stringify:
 SaveStringifyStack:
     LDX stringwriterStackIndex
     INC stringwriterStackIndex
+    TYA
+    STA stringwriterStackCursor, X
     LDA Var0
     STA stringwriterStackLo, X
     LDA Var1
@@ -86,15 +91,17 @@ StringifyLimiter:
     LDA stringifyCounter
     CLC
     ADC #1
-    CMP #10
+    CMP #6
     BCC @noWait
     LDA scrollX
     STA PPUSCROLL
     LDA scrollY
     STA PPUSCROLL
+    STY stringifyCursor
     FARCALL MusicPlay    ; keep the music playing
     CALL WaitForVBlank   ; wait for VBlank
     CALL SetStringifyPPUAddress
+    LDY stringifyCursor
     LDA #0
     @noWait:
     STA stringifyCounter
@@ -109,13 +116,10 @@ StringifyDelay:
     CALL SetStringifyPPUAddress
     RTS
 
-
-
 FetchCharacter:
     LDA Var2                        ; Load the bank this string is located in
     STA MMC5_PRG_BANK2              ; Switch to the bank
 
-    LDY #0
     LDA (Var0),Y
     BEQ @Terminator
     BMI @Control                    ; If the char is negative it means it's a control char
@@ -123,7 +127,6 @@ FetchCharacter:
     ; This is a regular plain char, so all we do is advance our char pointer, and then return the char
     ; as-is.
     CALL IncrementStringifyAdvance
-    LDY #0
     LDX #0
     RTS
 
@@ -155,6 +158,8 @@ FetchCharacter:
     ; parent string, and then fetch a new character from there instead.
     TAX
     DEX
+    LDY stringwriterStackCursor, X      ; Load the Y register
+    STY stringifyCursor
     LDA stringwriterStackLo, X          ; Load lo address
     STA Var0
     LDA stringwriterStackHi, X          ; Load hi address
@@ -215,6 +220,7 @@ FetchCharacterDigit1:
     CALL FetchValue
     CLC
     ADC #32
+    LDY stringifyCursor
     RTS
 FetchCharacterDigit2L:
     CALL ClearDigit
@@ -224,7 +230,9 @@ FetchCharacterDigit2L:
     LDA #128
     STA Var10
     CALL TrimDigit2
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+6)
     STA Var0
     LDA #>(yxa2decOutput+6)
@@ -238,7 +246,9 @@ FetchCharacterDigit2R:
     LDA #97
     STA Var10
     CALL TrimDigit2
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+6)
     STA Var0
     LDA #>(yxa2decOutput+6)
@@ -252,7 +262,9 @@ FetchCharacterDigit3L:
     LDA #128
     STA Var10
     CALL TrimDigit3
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+5)
     STA Var0
     LDA #>(yxa2decOutput+5)
@@ -266,7 +278,9 @@ FetchCharacterDigit3R:
     LDA #97
     STA Var10
     CALL TrimDigit3
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+5)
     STA Var0
     LDA #>(yxa2decOutput+5)
@@ -280,7 +294,9 @@ FetchCharacterDigit4L:
     LDA #128
     STA Var10
     CALL TrimDigit3
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+4)
     STA Var0
     LDA #>(yxa2decOutput+4)
@@ -294,7 +310,9 @@ FetchCharacterDigit4R:
     LDA #97
     STA Var10
     CALL TrimDigit4
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    LDY #0
     LDA #<(yxa2decOutput+4)
     STA Var0
     LDA #>(yxa2decOutput+4)
@@ -308,12 +326,14 @@ FetchCharacterDigit5L:
     LDA #128
     STA Var10
     CALL TrimDigit5
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+3)
     STA Var0
     LDA #>(yxa2decOutput+3)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit5R:
     CALL ClearDigit
@@ -323,12 +343,14 @@ FetchCharacterDigit5R:
     LDA #97
     STA Var10
     CALL TrimDigit5
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+3)
     STA Var0
     LDA #>(yxa2decOutput+3)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit6L:
     CALL ClearDigit
@@ -338,12 +360,14 @@ FetchCharacterDigit6L:
     LDA #128
     STA Var10
     CALL TrimDigit6
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+2)
     STA Var0
     LDA #>(yxa2decOutput+2)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit6R:
     CALL ClearDigit
@@ -353,12 +377,14 @@ FetchCharacterDigit6R:
     LDA #97
     STA Var10
     CALL TrimDigit6
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+2)
     STA Var0
     LDA #>(yxa2decOutput+2)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit7L:
     CALL ClearDigit
@@ -368,12 +394,14 @@ FetchCharacterDigit7L:
     LDA #128
     STA Var10
     CALL TrimDigit7
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+1)
     STA Var0
     LDA #>(yxa2decOutput+1)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit7R:
     CALL ClearDigit
@@ -383,12 +411,14 @@ FetchCharacterDigit7R:
     LDA #97
     STA Var10
     CALL TrimDigit7
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+1)
     STA Var0
     LDA #>(yxa2decOutput+1)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit8L:
     CALL ClearDigit
@@ -398,12 +428,14 @@ FetchCharacterDigit8L:
     LDA #128
     STA Var10
     CALL TrimDigit8
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+0)
     STA Var0
     LDA #>(yxa2decOutput+0)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterDigit8R:
     CALL ClearDigit
@@ -413,17 +445,20 @@ FetchCharacterDigit8R:
     LDA #97
     STA Var10
     CALL TrimDigit8
+    LDY stringifyCursor
     CALL SaveStringifyStack
+    CALL StringifyDelay
+    LDY #0
     LDA #<(yxa2decOutput+0)
     STA Var0
     LDA #>(yxa2decOutput+0)
     STA Var1
-    CALL StringifyDelay
     JUMP FetchCharacter
 FetchCharacterSetHero:
     CALL IncrementStringifyAdvance
     CALL FetchValue
     STA stringwriterSetHero
+    LDY stringifyCursor
     LDA #128
     RTS
 FetchCharacterHeroName:
@@ -440,6 +475,7 @@ FetchCharacterHeroName:
     LDA #>heroName0
     ADC #0              ; OPTIMIZE: This could be removed if we ensure heroNames are on the same page
     STA Var1
+    LDY #0
     JUMP FetchCharacter
 FetchCharacterHeroClass:
     CALL IncrementStringifyAdvance
@@ -453,27 +489,30 @@ FetchCharacterHeroClass:
     STA Var1
     LDA ClassStringPtrBank, X
     STA Var2
+    LDY #0
     JUMP FetchCharacter
 FetchCharacterItemName:
     CALL IncrementStringifyAdvance
     CALL FetchValue
     PHA
+    LDY stringifyCursor
     CALL SaveStringifyStack
     PLA
     TAX
-    LDA LUTItemNamesLo, X
-    STA Var0
-    LDA LUTItemNamesHi, X
-    STA Var1
-    LDA LUTItemNamesBank, X
+
+    ; TODO: 16 bit item ids
+    LDA #TextBank(LUT_ITEM_NAME)              ; Switch to the bank
     STA Var2
+    STA MMC5_PRG_BANK2
+    LDA LUT_ITEM_NAME, X
+    STA Var0
+    LDA LUT_ITEM_NAME_SIBLING2, X
+    STA Var1
+    LDY #0
     JUMP FetchCharacter
 
 IncrementStringifyAdvance:
-    INC Var0
-    BNE :+
-    INC Var1
-    :
+    INY
     RTS
 
 ClearDigit:
@@ -565,11 +604,9 @@ ClassStringPtrBank:
     .byte TextBank(TEXT_CLASS_NAME_FIGHTER), TextBank(TEXT_CLASS_NAME_THIEF), TextBank(TEXT_CLASS_NAME_BLACK_BELT), TextBank(TEXT_CLASS_NAME_RED_MAGE), TextBank(TEXT_CLASS_NAME_WHITE_MAGE), TextBank(TEXT_CLASS_NAME_BLACK_MAGE)
 
 FetchValue:
-
     LDA Var2                        ; Load the bank this string is located in
     STA MMC5_PRG_BANK2              ; Switch to the bank
-
-    LDY #0
+    STY stringifyCursor
     LDA (Var0),Y
     BMI @Control                            ; If the char is negative it means it's a control char
         LDX #0
@@ -658,16 +695,15 @@ FetchValueJumpTableLo:
     .lobytes FetchValueItemPrice - 1
 
 FetchValueByte:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0),Y
     TAX
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     TXA
     LDX #0
     RTS
 FetchValueWord:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0),Y
     PHA
@@ -675,10 +711,10 @@ FetchValueWord:
     LDA (Var0),Y
     TAX
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     PLA
     RTS
 FetchValueTribyte:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0),Y
     PHA
@@ -687,14 +723,16 @@ FetchValueTribyte:
     PHA
     CALL IncrementStringifyAdvance
     LDA (Var0),Y
+    PHA
+    CALL IncrementStringifyAdvance
+    STY stringifyCursor
+    PLA
     TAY
-    CALL IncrementStringifyAdvance
     PLA
     TAX
     PLA
     RTS
 FetchValueRead8:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0), Y           ; hi
     STA Var4
@@ -702,11 +740,12 @@ FetchValueRead8:
     LDA (Var0), Y           ; lo
     STA Var3
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
+    LDY #0
     LDA (Var3), Y           ; value
     LDX #0
     RTS
 FetchValueRead16:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0), Y           ; hi
     STA Var4
@@ -714,6 +753,8 @@ FetchValueRead16:
     LDA (Var0), Y           ; lo
     STA Var3
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
+    LDY #0
     LDA (Var3), Y           ; 0 - 7 bit
     PHA
     INY
@@ -723,7 +764,6 @@ FetchValueRead16:
     DEY
     RTS
 FetchValueRead24:
-    LDY #0
     CALL IncrementStringifyAdvance
     LDA (Var0), Y           ; hi
     STA Var4
@@ -731,6 +771,8 @@ FetchValueRead24:
     LDA (Var0), Y           ; lo
     STA Var3
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
+    LDY #0
     LDA (Var3), Y           ; 0 - 7 bit
     PHA
     INY
@@ -752,13 +794,16 @@ FetchValueAdd:
     LDA Var11
     PHA
 
+    LDY stringifyCursor
     CALL IncrementStringifyAdvance
     CALL FetchValue
     STA Var11
     STX Var12
     STY Var13
 
+    LDY stringifyCursor
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
 
     PLA
     CLC
@@ -796,8 +841,6 @@ FetchValueAdd:
     LDY #255
     RTS
 
-
-
 FetchValueSub:
     ERROR
     RTS
@@ -824,28 +867,35 @@ FetchValueXor:
     RTS
 FetchValueHeroLevel:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDX stringwriterSetHero
     LDA heroLevel,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroHP:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     TAX
     LDA heroHP,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxHP:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     TAX
     LDA heroMaxHP,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge1:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -853,9 +903,11 @@ FetchValueHeroSpellCharge1:
     TAX
     LDA heroSpellCharges+0,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge2:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -863,9 +915,11 @@ FetchValueHeroSpellCharge2:
     TAX
     LDA heroSpellCharges+1,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge3:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -873,9 +927,11 @@ FetchValueHeroSpellCharge3:
     TAX
     LDA heroSpellCharges+2,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge4:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -883,9 +939,11 @@ FetchValueHeroSpellCharge4:
     TAX
     LDA heroSpellCharges+3,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge5:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -893,9 +951,11 @@ FetchValueHeroSpellCharge5:
     TAX
     LDA heroSpellCharges+4,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge6:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -903,9 +963,11 @@ FetchValueHeroSpellCharge6:
     TAX
     LDA heroSpellCharges+5,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge7:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -913,9 +975,11 @@ FetchValueHeroSpellCharge7:
     TAX
     LDA heroSpellCharges+6,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroSpellCharge8:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -923,9 +987,11 @@ FetchValueHeroSpellCharge8:
     TAX
     LDA heroSpellCharges+7,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge1:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -933,9 +999,11 @@ FetchValueHeroMaxSpellCharge1:
     TAX
     LDA heroMaxSpellCharges+0,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge2:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -943,9 +1011,11 @@ FetchValueHeroMaxSpellCharge2:
     TAX
     LDA heroMaxSpellCharges+1,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge3:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -953,9 +1023,11 @@ FetchValueHeroMaxSpellCharge3:
     TAX
     LDA heroMaxSpellCharges+2,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge4:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -963,9 +1035,11 @@ FetchValueHeroMaxSpellCharge4:
     TAX
     LDA heroMaxSpellCharges+3,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge5:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -973,9 +1047,11 @@ FetchValueHeroMaxSpellCharge5:
     TAX
     LDA heroMaxSpellCharges+4,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge6:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -983,9 +1059,11 @@ FetchValueHeroMaxSpellCharge6:
     TAX
     LDA heroMaxSpellCharges+5,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge7:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -993,9 +1071,11 @@ FetchValueHeroMaxSpellCharge7:
     TAX
     LDA heroMaxSpellCharges+6,X
     LDX #0
+    LDY #0
     RTS
 FetchValueHeroMaxSpellCharge8:
     CALL IncrementStringifyAdvance
+    STY stringifyCursor
     LDA stringwriterSetHero
     ASL A
     ASL A
@@ -1003,11 +1083,23 @@ FetchValueHeroMaxSpellCharge8:
     TAX
     LDA heroMaxSpellCharges+7,X
     LDX #0
+    LDY #0
     RTS
 FetchValueItemPrice:
-    LDA #50
-    LDX #1
-    LDY #0
+    CALL IncrementStringifyAdvance
+    CALL FetchValue
+    TAX
+    ; TODO: 16 bit item ids
+    LDA #TextBank(LUT_ITEM_PRICE)              ; Switch to the bank
+    STA MMC5_PRG_BANK2
+    LDA LUT_ITEM_PRICE, X
+    PHA
+    LDA LUT_ITEM_PRICE_SIBLING2, X
+    PHA
+    LDY LUT_ITEM_PRICE_SIBLING3, X
+    PLA
+    TAX
+    PLA
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1049,397 +1141,6 @@ SetStringifyPPUAddress:
     ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
     STA PPUADDR                ;  for our low byte of PPU address
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Item name lookup table
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-LUTItemNamesLo:
-    .lobytes TEXT_ITEM_FROST
-    .lobytes TEXT_ITEM_HEAT
-    .lobytes TEXT_ITEM_GLANCE
-    .lobytes TEXT_ITEM_GAZE
-    .lobytes TEXT_ITEM_FLASH
-    .lobytes TEXT_ITEM_SCORCH
-    .lobytes TEXT_ITEM_CRACK
-    .lobytes TEXT_ITEM_SQUINT
-    .lobytes TEXT_ITEM_STARE
-    .lobytes TEXT_ITEM_GLARE
-    .lobytes TEXT_ITEM_BLIZZARD
-    .lobytes TEXT_ITEM_BLAZE
-    .lobytes TEXT_ITEM_INFERNO
-    .lobytes TEXT_ITEM_CREMATE
-    .lobytes TEXT_ITEM_POISON
-    .lobytes TEXT_ITEM_TRANCE
-    .lobytes TEXT_ITEM_THUNDER
-    .lobytes TEXT_ITEM_TOXIC
-    .lobytes TEXT_ITEM_SNORTING
-    .lobytes TEXT_ITEM_NUCLEAR
-    .lobytes TEXT_ITEM_INK
-    .lobytes TEXT_ITEM_STINGER
-    .lobytes TEXT_ITEM_DAZZLE
-    .lobytes TEXT_ITEM_SWIRL
-    .lobytes TEXT_ITEM_TORNADO
-    .lobytes TEXT_ITEM_LUTE
-    .lobytes TEXT_ITEM_CROWN
-    .lobytes TEXT_ITEM_CRYSTAL
-    .lobytes TEXT_ITEM_HERB
-    .lobytes TEXT_ITEM_KEY
-    .lobytes TEXT_ITEM_TNT
-    .lobytes TEXT_ITEM_ADAMANT
-    .lobytes TEXT_ITEM_SLAB
-    .lobytes TEXT_ITEM_RUBY
-    .lobytes TEXT_ITEM_ROD
-    .lobytes TEXT_ITEM_FLOATER
-    .lobytes TEXT_ITEM_CHIME
-    .lobytes TEXT_ITEM_TAIL
-    .lobytes TEXT_ITEM_CUBE
-    .lobytes TEXT_ITEM_BOTTLE
-    .lobytes TEXT_ITEM_OXYALE
-    .lobytes TEXT_ITEM_CANOE
-    .lobytes TEXT_ITEM_TENT
-    .lobytes TEXT_ITEM_CABIN
-    .lobytes TEXT_ITEM_HOUSE
-    .lobytes TEXT_ITEM_HEAL
-    .lobytes TEXT_ITEM_PURE
-    .lobytes TEXT_ITEM_SOFT
-    .lobytes TEXT_ITEM_WOODEN_NUNCHUCK
-    .lobytes TEXT_ITEM_SMALL_KNIFE
-    .lobytes TEXT_ITEM_WOODEN_STAFF
-    .lobytes TEXT_ITEM_RAPIER
-    .lobytes TEXT_ITEM_IRON_HAMMER
-    .lobytes TEXT_ITEM_SHORT_SWORD
-    .lobytes TEXT_ITEM_HAND_AXE
-    .lobytes TEXT_ITEM_SCIMTAR
-    .lobytes TEXT_ITEM_IRON_NUNCHUCK
-    .lobytes TEXT_ITEM_LARGE_KNIFE
-    .lobytes TEXT_ITEM_IRON_STAFF
-    .lobytes TEXT_ITEM_SABRE
-    .lobytes TEXT_ITEM_LONG_SWORD
-    .lobytes TEXT_ITEM_GREAT_AXE
-    .lobytes TEXT_ITEM_FALCHON
-    .lobytes TEXT_ITEM_SILVER_KNIFE
-    .lobytes TEXT_ITEM_SILVER_SWORD
-    .lobytes TEXT_ITEM_SILVER_HAMMER
-    .lobytes TEXT_ITEM_SILVER_AXE
-    .lobytes TEXT_ITEM_FLAME_SWORD
-    .lobytes TEXT_ITEM_ICE_SWORD
-    .lobytes TEXT_ITEM_DRAGON_SWORD
-    .lobytes TEXT_ITEM_GIANT_SWORD
-    .lobytes TEXT_ITEM_SUN_SWORD
-    .lobytes TEXT_ITEM_CORAL_SWORD
-    .lobytes TEXT_ITEM_WERE_SWORD
-    .lobytes TEXT_ITEM_RUNE_SWORD
-    .lobytes TEXT_ITEM_POWER_STAFF
-    .lobytes TEXT_ITEM_LIGHT_AXE
-    .lobytes TEXT_ITEM_HEAL_STAFF
-    .lobytes TEXT_ITEM_MAGE_STAFF
-    .lobytes TEXT_ITEM_DEFENSE
-    .lobytes TEXT_ITEM_WIZARD_STAFF
-    .lobytes TEXT_ITEM_VORPAL
-    .lobytes TEXT_ITEM_CATCLAW
-    .lobytes TEXT_ITEM_THOR_HAMMER
-    .lobytes TEXT_ITEM_BANE_SWORD
-    .lobytes TEXT_ITEM_KATANA
-    .lobytes TEXT_ITEM_XCALBER
-    .lobytes TEXT_ITEM_MASMUNE
-    .lobytes TEXT_ITEM_CLOTH
-    .lobytes TEXT_ITEM_WOODEN_ARMOR
-    .lobytes TEXT_ITEM_CHAIN_ARMOR
-    .lobytes TEXT_ITEM_IRON_ARMOR
-    .lobytes TEXT_ITEM_STEEL_ARMOR
-    .lobytes TEXT_ITEM_SILVER_ARMOR
-    .lobytes TEXT_ITEM_FLAME_ARMOR
-    .lobytes TEXT_ITEM_ICE_ARMOR
-    .lobytes TEXT_ITEM_OPAL_ARMOR
-    .lobytes TEXT_ITEM_DRAGON_ARMOR
-    .lobytes TEXT_ITEM_COPPER_BRACELET
-    .lobytes TEXT_ITEM_SILVER_BRACELET
-    .lobytes TEXT_ITEM_GOLD_BRACELET
-    .lobytes TEXT_ITEM_OPAL_BRACELET
-    .lobytes TEXT_ITEM_WHITE_CLOTH
-    .lobytes TEXT_ITEM_BLACK_CLOTH
-    .lobytes TEXT_ITEM_WOODEN_SHIELD
-    .lobytes TEXT_ITEM_IRON_SHIELD
-    .lobytes TEXT_ITEM_SILVER_SHIELD
-    .lobytes TEXT_ITEM_FLAME_SHIELD
-    .lobytes TEXT_ITEM_ICE_SHIELD
-    .lobytes TEXT_ITEM_OPAL_SHIELD
-    .lobytes TEXT_ITEM_AEGIS_SHIELD
-    .lobytes TEXT_ITEM_BUCKLER
-    .lobytes TEXT_ITEM_PROCAPE
-    .lobytes TEXT_ITEM_CAP
-    .lobytes TEXT_ITEM_WOODEN_HELMET
-    .lobytes TEXT_ITEM_IRON_HELMET
-    .lobytes TEXT_ITEM_SILVER_HELMET
-    .lobytes TEXT_ITEM_OPAL_HELMET
-    .lobytes TEXT_ITEM_HEAL_HELMET
-    .lobytes TEXT_ITEM_RIBBON
-    .lobytes TEXT_ITEM_GLOVES
-    .lobytes TEXT_ITEM_COPPER_GAUNTLET
-    .lobytes TEXT_ITEM_IRON_GAUNTLET
-    .lobytes TEXT_ITEM_SILVER_GAUNTLET
-    .lobytes TEXT_ITEM_ZEUS_GAUNTLET
-    .lobytes TEXT_ITEM_POWER_GAUNTLET
-    .lobytes TEXT_ITEM_OPAL_GAUNTLET
-    .lobytes TEXT_ITEM_PRORING
-LUTItemNamesHi:
-    .hibytes TEXT_ITEM_FROST
-    .hibytes TEXT_ITEM_HEAT
-    .hibytes TEXT_ITEM_GLANCE
-    .hibytes TEXT_ITEM_GAZE
-    .hibytes TEXT_ITEM_FLASH
-    .hibytes TEXT_ITEM_SCORCH
-    .hibytes TEXT_ITEM_CRACK
-    .hibytes TEXT_ITEM_SQUINT
-    .hibytes TEXT_ITEM_STARE
-    .hibytes TEXT_ITEM_GLARE
-    .hibytes TEXT_ITEM_BLIZZARD
-    .hibytes TEXT_ITEM_BLAZE
-    .hibytes TEXT_ITEM_INFERNO
-    .hibytes TEXT_ITEM_CREMATE
-    .hibytes TEXT_ITEM_POISON
-    .hibytes TEXT_ITEM_TRANCE
-    .hibytes TEXT_ITEM_THUNDER
-    .hibytes TEXT_ITEM_TOXIC
-    .hibytes TEXT_ITEM_SNORTING
-    .hibytes TEXT_ITEM_NUCLEAR
-    .hibytes TEXT_ITEM_INK
-    .hibytes TEXT_ITEM_STINGER
-    .hibytes TEXT_ITEM_DAZZLE
-    .hibytes TEXT_ITEM_SWIRL
-    .hibytes TEXT_ITEM_TORNADO
-    .hibytes TEXT_ITEM_LUTE
-    .hibytes TEXT_ITEM_CROWN
-    .hibytes TEXT_ITEM_CRYSTAL
-    .hibytes TEXT_ITEM_HERB
-    .hibytes TEXT_ITEM_KEY
-    .hibytes TEXT_ITEM_TNT
-    .hibytes TEXT_ITEM_ADAMANT
-    .hibytes TEXT_ITEM_SLAB
-    .hibytes TEXT_ITEM_RUBY
-    .hibytes TEXT_ITEM_ROD
-    .hibytes TEXT_ITEM_FLOATER
-    .hibytes TEXT_ITEM_CHIME
-    .hibytes TEXT_ITEM_TAIL
-    .hibytes TEXT_ITEM_CUBE
-    .hibytes TEXT_ITEM_BOTTLE
-    .hibytes TEXT_ITEM_OXYALE
-    .hibytes TEXT_ITEM_CANOE
-    .hibytes TEXT_ITEM_TENT
-    .hibytes TEXT_ITEM_CABIN
-    .hibytes TEXT_ITEM_HOUSE
-    .hibytes TEXT_ITEM_HEAL
-    .hibytes TEXT_ITEM_PURE
-    .hibytes TEXT_ITEM_SOFT
-    .hibytes TEXT_ITEM_WOODEN_NUNCHUCK
-    .hibytes TEXT_ITEM_SMALL_KNIFE
-    .hibytes TEXT_ITEM_WOODEN_STAFF
-    .hibytes TEXT_ITEM_RAPIER
-    .hibytes TEXT_ITEM_IRON_HAMMER
-    .hibytes TEXT_ITEM_SHORT_SWORD
-    .hibytes TEXT_ITEM_HAND_AXE
-    .hibytes TEXT_ITEM_SCIMTAR
-    .hibytes TEXT_ITEM_IRON_NUNCHUCK
-    .hibytes TEXT_ITEM_LARGE_KNIFE
-    .hibytes TEXT_ITEM_IRON_STAFF
-    .hibytes TEXT_ITEM_SABRE
-    .hibytes TEXT_ITEM_LONG_SWORD
-    .hibytes TEXT_ITEM_GREAT_AXE
-    .hibytes TEXT_ITEM_FALCHON
-    .hibytes TEXT_ITEM_SILVER_KNIFE
-    .hibytes TEXT_ITEM_SILVER_SWORD
-    .hibytes TEXT_ITEM_SILVER_HAMMER
-    .hibytes TEXT_ITEM_SILVER_AXE
-    .hibytes TEXT_ITEM_FLAME_SWORD
-    .hibytes TEXT_ITEM_ICE_SWORD
-    .hibytes TEXT_ITEM_DRAGON_SWORD
-    .hibytes TEXT_ITEM_GIANT_SWORD
-    .hibytes TEXT_ITEM_SUN_SWORD
-    .hibytes TEXT_ITEM_CORAL_SWORD
-    .hibytes TEXT_ITEM_WERE_SWORD
-    .hibytes TEXT_ITEM_RUNE_SWORD
-    .hibytes TEXT_ITEM_POWER_STAFF
-    .hibytes TEXT_ITEM_LIGHT_AXE
-    .hibytes TEXT_ITEM_HEAL_STAFF
-    .hibytes TEXT_ITEM_MAGE_STAFF
-    .hibytes TEXT_ITEM_DEFENSE
-    .hibytes TEXT_ITEM_WIZARD_STAFF
-    .hibytes TEXT_ITEM_VORPAL
-    .hibytes TEXT_ITEM_CATCLAW
-    .hibytes TEXT_ITEM_THOR_HAMMER
-    .hibytes TEXT_ITEM_BANE_SWORD
-    .hibytes TEXT_ITEM_KATANA
-    .hibytes TEXT_ITEM_XCALBER
-    .hibytes TEXT_ITEM_MASMUNE
-    .hibytes TEXT_ITEM_CLOTH
-    .hibytes TEXT_ITEM_WOODEN_ARMOR
-    .hibytes TEXT_ITEM_CHAIN_ARMOR
-    .hibytes TEXT_ITEM_IRON_ARMOR
-    .hibytes TEXT_ITEM_STEEL_ARMOR
-    .hibytes TEXT_ITEM_SILVER_ARMOR
-    .hibytes TEXT_ITEM_FLAME_ARMOR
-    .hibytes TEXT_ITEM_ICE_ARMOR
-    .hibytes TEXT_ITEM_OPAL_ARMOR
-    .hibytes TEXT_ITEM_DRAGON_ARMOR
-    .hibytes TEXT_ITEM_COPPER_BRACELET
-    .hibytes TEXT_ITEM_SILVER_BRACELET
-    .hibytes TEXT_ITEM_GOLD_BRACELET
-    .hibytes TEXT_ITEM_OPAL_BRACELET
-    .hibytes TEXT_ITEM_WHITE_CLOTH
-    .hibytes TEXT_ITEM_BLACK_CLOTH
-    .hibytes TEXT_ITEM_WOODEN_SHIELD
-    .hibytes TEXT_ITEM_IRON_SHIELD
-    .hibytes TEXT_ITEM_SILVER_SHIELD
-    .hibytes TEXT_ITEM_FLAME_SHIELD
-    .hibytes TEXT_ITEM_ICE_SHIELD
-    .hibytes TEXT_ITEM_OPAL_SHIELD
-    .hibytes TEXT_ITEM_AEGIS_SHIELD
-    .hibytes TEXT_ITEM_BUCKLER
-    .hibytes TEXT_ITEM_PROCAPE
-    .hibytes TEXT_ITEM_CAP
-    .hibytes TEXT_ITEM_WOODEN_HELMET
-    .hibytes TEXT_ITEM_IRON_HELMET
-    .hibytes TEXT_ITEM_SILVER_HELMET
-    .hibytes TEXT_ITEM_OPAL_HELMET
-    .hibytes TEXT_ITEM_HEAL_HELMET
-    .hibytes TEXT_ITEM_RIBBON
-    .hibytes TEXT_ITEM_GLOVES
-    .hibytes TEXT_ITEM_COPPER_GAUNTLET
-    .hibytes TEXT_ITEM_IRON_GAUNTLET
-    .hibytes TEXT_ITEM_SILVER_GAUNTLET
-    .hibytes TEXT_ITEM_ZEUS_GAUNTLET
-    .hibytes TEXT_ITEM_POWER_GAUNTLET
-    .hibytes TEXT_ITEM_OPAL_GAUNTLET
-    .hibytes TEXT_ITEM_PRORING
-LUTItemNamesBank:
-    .byte TextBank(TEXT_ITEM_FROST)
-    .byte TextBank(TEXT_ITEM_HEAT)
-    .byte TextBank(TEXT_ITEM_GLANCE)
-    .byte TextBank(TEXT_ITEM_GAZE)
-    .byte TextBank(TEXT_ITEM_FLASH)
-    .byte TextBank(TEXT_ITEM_SCORCH)
-    .byte TextBank(TEXT_ITEM_CRACK)
-    .byte TextBank(TEXT_ITEM_SQUINT)
-    .byte TextBank(TEXT_ITEM_STARE)
-    .byte TextBank(TEXT_ITEM_GLARE)
-    .byte TextBank(TEXT_ITEM_BLIZZARD)
-    .byte TextBank(TEXT_ITEM_BLAZE)
-    .byte TextBank(TEXT_ITEM_INFERNO)
-    .byte TextBank(TEXT_ITEM_CREMATE)
-    .byte TextBank(TEXT_ITEM_POISON)
-    .byte TextBank(TEXT_ITEM_TRANCE)
-    .byte TextBank(TEXT_ITEM_THUNDER)
-    .byte TextBank(TEXT_ITEM_TOXIC)
-    .byte TextBank(TEXT_ITEM_SNORTING)
-    .byte TextBank(TEXT_ITEM_NUCLEAR)
-    .byte TextBank(TEXT_ITEM_INK)
-    .byte TextBank(TEXT_ITEM_STINGER)
-    .byte TextBank(TEXT_ITEM_DAZZLE)
-    .byte TextBank(TEXT_ITEM_SWIRL)
-    .byte TextBank(TEXT_ITEM_TORNADO)
-    .byte TextBank(TEXT_ITEM_LUTE)
-    .byte TextBank(TEXT_ITEM_CROWN)
-    .byte TextBank(TEXT_ITEM_CRYSTAL)
-    .byte TextBank(TEXT_ITEM_HERB)
-    .byte TextBank(TEXT_ITEM_KEY)
-    .byte TextBank(TEXT_ITEM_TNT)
-    .byte TextBank(TEXT_ITEM_ADAMANT)
-    .byte TextBank(TEXT_ITEM_SLAB)
-    .byte TextBank(TEXT_ITEM_RUBY)
-    .byte TextBank(TEXT_ITEM_ROD)
-    .byte TextBank(TEXT_ITEM_FLOATER)
-    .byte TextBank(TEXT_ITEM_CHIME)
-    .byte TextBank(TEXT_ITEM_TAIL)
-    .byte TextBank(TEXT_ITEM_CUBE)
-    .byte TextBank(TEXT_ITEM_BOTTLE)
-    .byte TextBank(TEXT_ITEM_OXYALE)
-    .byte TextBank(TEXT_ITEM_CANOE)
-    .byte TextBank(TEXT_ITEM_TENT)
-    .byte TextBank(TEXT_ITEM_CABIN)
-    .byte TextBank(TEXT_ITEM_HOUSE)
-    .byte TextBank(TEXT_ITEM_HEAL)
-    .byte TextBank(TEXT_ITEM_PURE)
-    .byte TextBank(TEXT_ITEM_SOFT)
-    .byte TextBank(TEXT_ITEM_WOODEN_NUNCHUCK)
-    .byte TextBank(TEXT_ITEM_SMALL_KNIFE)
-    .byte TextBank(TEXT_ITEM_WOODEN_STAFF)
-    .byte TextBank(TEXT_ITEM_RAPIER)
-    .byte TextBank(TEXT_ITEM_IRON_HAMMER)
-    .byte TextBank(TEXT_ITEM_SHORT_SWORD)
-    .byte TextBank(TEXT_ITEM_HAND_AXE)
-    .byte TextBank(TEXT_ITEM_SCIMTAR)
-    .byte TextBank(TEXT_ITEM_IRON_NUNCHUCK)
-    .byte TextBank(TEXT_ITEM_LARGE_KNIFE)
-    .byte TextBank(TEXT_ITEM_IRON_STAFF)
-    .byte TextBank(TEXT_ITEM_SABRE)
-    .byte TextBank(TEXT_ITEM_LONG_SWORD)
-    .byte TextBank(TEXT_ITEM_GREAT_AXE)
-    .byte TextBank(TEXT_ITEM_FALCHON)
-    .byte TextBank(TEXT_ITEM_SILVER_KNIFE)
-    .byte TextBank(TEXT_ITEM_SILVER_SWORD)
-    .byte TextBank(TEXT_ITEM_SILVER_HAMMER)
-    .byte TextBank(TEXT_ITEM_SILVER_AXE)
-    .byte TextBank(TEXT_ITEM_FLAME_SWORD)
-    .byte TextBank(TEXT_ITEM_ICE_SWORD)
-    .byte TextBank(TEXT_ITEM_DRAGON_SWORD)
-    .byte TextBank(TEXT_ITEM_GIANT_SWORD)
-    .byte TextBank(TEXT_ITEM_SUN_SWORD)
-    .byte TextBank(TEXT_ITEM_CORAL_SWORD)
-    .byte TextBank(TEXT_ITEM_WERE_SWORD)
-    .byte TextBank(TEXT_ITEM_RUNE_SWORD)
-    .byte TextBank(TEXT_ITEM_POWER_STAFF)
-    .byte TextBank(TEXT_ITEM_LIGHT_AXE)
-    .byte TextBank(TEXT_ITEM_HEAL_STAFF)
-    .byte TextBank(TEXT_ITEM_MAGE_STAFF)
-    .byte TextBank(TEXT_ITEM_DEFENSE)
-    .byte TextBank(TEXT_ITEM_WIZARD_STAFF)
-    .byte TextBank(TEXT_ITEM_VORPAL)
-    .byte TextBank(TEXT_ITEM_CATCLAW)
-    .byte TextBank(TEXT_ITEM_THOR_HAMMER)
-    .byte TextBank(TEXT_ITEM_BANE_SWORD)
-    .byte TextBank(TEXT_ITEM_KATANA)
-    .byte TextBank(TEXT_ITEM_XCALBER)
-    .byte TextBank(TEXT_ITEM_MASMUNE)
-    .byte TextBank(TEXT_ITEM_CLOTH)
-    .byte TextBank(TEXT_ITEM_WOODEN_ARMOR)
-    .byte TextBank(TEXT_ITEM_CHAIN_ARMOR)
-    .byte TextBank(TEXT_ITEM_IRON_ARMOR)
-    .byte TextBank(TEXT_ITEM_STEEL_ARMOR)
-    .byte TextBank(TEXT_ITEM_SILVER_ARMOR)
-    .byte TextBank(TEXT_ITEM_FLAME_ARMOR)
-    .byte TextBank(TEXT_ITEM_ICE_ARMOR)
-    .byte TextBank(TEXT_ITEM_OPAL_ARMOR)
-    .byte TextBank(TEXT_ITEM_DRAGON_ARMOR)
-    .byte TextBank(TEXT_ITEM_COPPER_BRACELET)
-    .byte TextBank(TEXT_ITEM_SILVER_BRACELET)
-    .byte TextBank(TEXT_ITEM_GOLD_BRACELET)
-    .byte TextBank(TEXT_ITEM_OPAL_BRACELET)
-    .byte TextBank(TEXT_ITEM_WHITE_CLOTH)
-    .byte TextBank(TEXT_ITEM_BLACK_CLOTH)
-    .byte TextBank(TEXT_ITEM_WOODEN_SHIELD)
-    .byte TextBank(TEXT_ITEM_IRON_SHIELD)
-    .byte TextBank(TEXT_ITEM_SILVER_SHIELD)
-    .byte TextBank(TEXT_ITEM_FLAME_SHIELD)
-    .byte TextBank(TEXT_ITEM_ICE_SHIELD)
-    .byte TextBank(TEXT_ITEM_OPAL_SHIELD)
-    .byte TextBank(TEXT_ITEM_AEGIS_SHIELD)
-    .byte TextBank(TEXT_ITEM_BUCKLER)
-    .byte TextBank(TEXT_ITEM_PROCAPE)
-    .byte TextBank(TEXT_ITEM_CAP)
-    .byte TextBank(TEXT_ITEM_WOODEN_HELMET)
-    .byte TextBank(TEXT_ITEM_IRON_HELMET)
-    .byte TextBank(TEXT_ITEM_SILVER_HELMET)
-    .byte TextBank(TEXT_ITEM_OPAL_HELMET)
-    .byte TextBank(TEXT_ITEM_HEAL_HELMET)
-    .byte TextBank(TEXT_ITEM_RIBBON)
-    .byte TextBank(TEXT_ITEM_GLOVES)
-    .byte TextBank(TEXT_ITEM_COPPER_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_IRON_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_SILVER_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_ZEUS_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_POWER_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_OPAL_GAUNTLET)
-    .byte TextBank(TEXT_ITEM_PRORING)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

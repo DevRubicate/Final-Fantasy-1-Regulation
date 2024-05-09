@@ -1,0 +1,30 @@
+{
+    "shop": [
+        {
+            "name": "SHOP_WEAPON_CONERIA",
+            "list": [
+                "WOODEN_STAFF",
+                "SMALL_KNIFE",
+                "WOODEN_NUNCHUCK",
+                "RAPIER",
+                "IRON_HAMMER"
+            ]
+        },
+        {
+            "name": "SHOP_ARMOR_CONERIA",
+            "list": [
+                "CLOTH",
+                "WOODEN_ARMOR",
+                "CHAIN_ARMOR"
+            ]
+        },
+        {
+            "name": "SHOP_BLACKMAGIC_CONERIA",
+            "list": [
+                "CLOTH",
+                "WOODEN_ARMOR",
+                "CHAIN_ARMOR"
+            ]
+        }
+    ]
+}

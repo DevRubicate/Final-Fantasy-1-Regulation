@@ -83,7 +83,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
     RESZP doorppuaddr,                      2 ; 2 bytes     ; $0E 2 bytes, PPU address of door drawing work
-    RESZP theend_selectedtile,              0 ; 1 bytes ; $10
+    RESZP theend_selectedtile,              0 ; 1 bytes     ; $10
     RESZP tmp,                              0 ; 16 bytes    ; $10
     GAP                                     8
     RESZP mu_scoreptr,                      2 ; 2 bytes     ; $18
@@ -986,3 +986,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringifyCounter,       1
     RES             stringifyActiveItem,    2
     RES             stringifyVariables,     16
+    RES             stringifyCursor,        1
+
+    RES             stringwriterStackCursor,16

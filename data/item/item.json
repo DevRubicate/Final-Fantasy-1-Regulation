@@ -3,644 +3,642 @@
         {
             "name": "FROST",
             "text": "FROST",
-            "price": 100
+            "price": 0
         },
         {
             "name": "HEAT",
             "text": "HEAT",
-            "price": 100
+            "price": 0
         },
         {
             "name": "GLANCE",
             "text": "GLANCE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "GAZE",
             "text": "GAZE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "FLASH",
             "text": "FLASH",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SCORCH",
             "text": "SCORCH",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CRACK",
             "text": "CRACK",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SQUINT",
             "text": "SQUINT",
-            "price": 100
+            "price": 0
         },
         {
             "name": "STARE",
             "text": "STARE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "GLARE",
             "text": "GLARE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "BLIZZARD",
             "text": "BLIZZARD",
-            "price": 100
+            "price": 0
         },
         {
             "name": "BLAZE",
             "text": "BLAZE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "INFERNO",
             "text": "INFERNO",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CREMATE",
             "text": "CREMATE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "POISON",
             "text": "POISON",
-            "price": 100
+            "price": 0
         },
         {
             "name": "TRANCE",
             "text": "TRANCE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "THUNDER",
             "text": "THUNDER",
-            "price": 100
+            "price": 0
         },
         {
             "name": "TOXIC",
             "text": "TOXIC",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SNORTING",
             "text": "SNORTING",
-            "price": 100
+            "price": 0
         },
         {
             "name": "NUCLEAR",
             "text": "NUCLEAR",
-            "price": 100
+            "price": 0
         },
         {
             "name": "INK",
             "text": "INK",
-            "price": 100
+            "price": 0
         },
         {
             "name": "STINGER",
             "text": "STINGER",
-            "price": 100
+            "price": 0
         },
         {
             "name": "DAZZLE",
             "text": "DAZZLE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SWIRL",
             "text": "SWIRL",
-            "price": 100
+            "price": 0
         },
         {
             "name": "TORNADO",
             "text": "TORNADO",
-            "price": 100
+            "price": 0
         },
         {
             "name": "LUTE",
             "text": "LUTE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CROWN",
             "text": "CROWN",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CRYSTAL",
             "text": "CRYSTAL",
-            "price": 100
+            "price": 0
         },
         {
             "name": "HERB",
             "text": "HERB",
-            "price": 100
+            "price": 0
         },
         {
             "name": "KEY",
             "text": "KEY",
-            "price": 100
+            "price": 50
         },
         {
             "name": "TNT",
             "text": "TNT",
-            "price": 100
+            "price": 200
         },
         {
             "name": "ADAMANT",
             "text": "ADAMANT",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SLAB",
             "text": "SLAB",
-            "price": 100
+            "price": 400
         },
         {
             "name": "RUBY",
             "text": "RUBY",
-            "price": 100
+            "price": 0
         },
         {
             "name": "ROD",
             "text": "ROD",
-            "price": 100
+            "price": 0
         },
         {
             "name": "FLOATER",
             "text": "FLOATER",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CHIME",
             "text": "CHIME",
-            "price": 100
+            "price": 0
         },
         {
             "name": "TAIL",
             "text": "TAIL",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CUBE",
             "text": "CUBE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "BOTTLE",
             "text": "BOTTLE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "OXYALE",
             "text": "OXYALE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CANOE",
             "text": "CANOE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "TENT",
             "text": "TENT",
-            "price": 100
+            "price": 0
         },
         {
             "name": "CABIN",
             "text": "CABIN",
-            "price": 100
+            "price": 0
         },
         {
             "name": "HOUSE",
             "text": "HOUSE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "HEAL",
             "text": "HEAL",
-            "price": 100
+            "price": 0
         },
         {
             "name": "PURE",
             "text": "PURE",
-            "price": 100
+            "price": 0
         },
         {
             "name": "SOFT",
             "text": "SOFT",
-            "price": 100
+            "price": 0
         },
         {
             "name": "WOODEN_NUNCHUCK",
-            "text": "WOODEN",
-            "price": 100
+            "text": "Wooden{NUNCHUCK}",
+            "price": 10
         },
         {
             "name": "SMALL_KNIFE",
-            "text": "SMALL",
-            "price": 100
+            "text": "Small {KNIFE}",
+            "price": 5
         },
         {
             "name": "WOODEN_STAFF",
-            "text": "WOODEN",
-            "price": 100
+            "text": "Wooden{STAFF}",
+            "price": 5
         },
         {
             "name": "RAPIER",
-            "text": "RAPIER",
-            "price": 100
+            "text": "Rapier",
+            "price": 10
         },
         {
             "name": "IRON_HAMMER",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron  {HAMMER}",
+            "price": 10
         },
         {
             "name": "SHORT_SWORD",
-            "text": "SHORT",
-            "price": 100
+            "text": "Short",
+            "price": 0
         },
         {
             "name": "HAND_AXE",
-            "text": "HAND",
-            "price": 100
+            "text": "Hand",
+            "price": 0
         },
         {
             "name": "SCIMTAR",
-            "text": "SCIMTAR",
-            "price": 100
+            "text": "Scimtar",
+            "price": 0
         },
         {
             "name": "IRON_NUNCHUCK",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "LARGE_KNIFE",
-            "text": "LARGE",
-            "price": 100
+            "text": "Large",
+            "price": 0
         },
         {
             "name": "IRON_STAFF",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "SABRE",
-            "text": "SABRE",
-            "price": 100
+            "text": "Sabre",
+            "price": 0
         },
         {
             "name": "LONG_SWORD",
-            "text": "LONG",
-            "price": 100
+            "text": "Long",
+            "price": 0
         },
         {
             "name": "GREAT_AXE",
-            "text": "GREAT",
-            "price": 100
+            "text": "Great",
+            "price": 0
         },
         {
             "name": "FALCHON",
-            "text": "FALCHON",
-            "price": 100
+            "text": "Falchon",
+            "price": 0
         },
         {
             "name": "SILVER_KNIFE",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "SILVER_SWORD",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "SILVER_HAMMER",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "SILVER_AXE",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "FLAME_SWORD",
-            "text": "FLAME",
-            "price": 100
+            "text": "Flame",
+            "price": 0
         },
         {
             "name": "ICE_SWORD",
-            "text": "ICE",
-            "price": 100
+            "text": "Ice",
+            "price": 0
         },
         {
             "name": "DRAGON_SWORD",
-            "text": "DRAGON",
-            "price": 100
+            "text": "Dragon",
+            "price": 0
         },
         {
             "name": "GIANT_SWORD",
-            "text": "GIANT",
-            "price": 100
+            "text": "Giant",
+            "price": 0
         },
         {
             "name": "SUN_SWORD",
-            "text": "SUN",
-            "price": 100
+            "text": "Sun",
+            "price": 0
         },
         {
             "name": "CORAL_SWORD",
-            "text": "CORAL",
-            "price": 100
+            "text": "Coral",
+            "price": 0
         },
         {
             "name": "WERE_SWORD",
-            "text": "WERE",
-            "price": 100
+            "text": "Were",
+            "price": 0
         },
         {
             "name": "RUNE_SWORD",
-            "text": "RUNE",
-            "price": 100
+            "text": "Rune",
+            "price": 0
         },
         {
             "name": "POWER_STAFF",
-            "text": "POWER",
-            "price": 100
+            "text": "Power",
+            "price": 0
         },
         {
             "name": "LIGHT_AXE",
-            "text": "LIGHT",
-            "price": 100
+            "text": "Light",
+            "price": 0
         },
         {
             "name": "HEAL_STAFF",
-            "text": "HEAL",
-            "price": 100
+            "text": "Heal",
+            "price": 0
         },
         {
             "name": "MAGE_STAFF",
-            "text": "MAGE",
-            "price": 100
+            "text": "Mage",
+            "price": 0
         },
         {
             "name": "DEFENSE",
-            "text": "DEFENSE",
-            "price": 100
+            "text": "Defense",
+            "price": 0
         },
         {
             "name": "WIZARD_STAFF",
-            "text": "WIZARD",
-            "price": 100
+            "text": "Wizard",
+            "price": 0
         },
         {
             "name": "VORPAL",
-            "text": "VORPAL",
-            "price": 100
+            "text": "Vorpal",
+            "price": 0
         },
         {
             "name": "CATCLAW",
-            "text": "CATCLAW",
-            "price": 100
+            "text": "Catclaw",
+            "price": 0
         },
         {
             "name": "THOR_HAMMER",
-            "text": "THOR",
-            "price": 100
+            "text": "Thor",
+            "price": 0
         },
         {
             "name": "BANE_SWORD",
-            "text": "BANE",
-            "price": 100
+            "text": "Bane",
+            "price": 0
         },
         {
             "name": "KATANA",
-            "text": "KATANA",
-            "price": 100
+            "text": "Katana",
+            "price": 0
         },
         {
             "name": "XCALBER",
-            "text": "XCALBER",
-            "price": 100
+            "text": "Xcalber",
+            "price": 0
         },
         {
             "name": "MASMUNE",
-            "text": "MASMUNE",
-            "price": 100
+            "text": "Masmune",
+            "price": 0
         },
         {
             "name": "CLOTH",
-            "text": "CLOTH",
-            "price": 100
+            "text": "Cloth",
+            "price": 10
         },
         {
             "name": "WOODEN_ARMOR",
-            "text": "WOODEN",
-            "price": 100
+            "text": "Wooden",
+            "price": 50
         },
         {
             "name": "CHAIN_ARMOR",
-            "text": "CHAIN",
-            "price": 100
+            "text": "Chain",
+            "price": 80
         },
         {
             "name": "IRON_ARMOR",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "STEEL_ARMOR",
-            "text": "STEEL",
-            "price": 100
+            "text": "Steel",
+            "price": 0
         },
         {
             "name": "SILVER_ARMOR",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "FLAME_ARMOR",
-            "text": "FLAME",
-            "price": 100
+            "text": "Flame",
+            "price": 0
         },
         {
             "name": "ICE_ARMOR",
-            "text": "ICE",
-            "price": 100
+            "text": "Ice",
+            "price": 0
         },
         {
             "name": "OPAL_ARMOR",
-            "text": "OPAL",
-            "price": 100
+            "text": "Opal",
+            "price": 0
         },
         {
             "name": "DRAGON_ARMOR",
-            "text": "DRAGON",
-            "price": 100
+            "text": "Dragon",
+            "price": 0
         },
         {
             "name": "COPPER_BRACELET",
-            "text": "COPPER",
-            "price": 100
+            "text": "Copper",
+            "price": 0
         },
         {
             "name": "SILVER_BRACELET",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "GOLD_BRACELET",
-            "text": "GOLD",
-            "price": 100
+            "text": "Gold",
+            "price": 0
         },
         {
             "name": "OPAL_BRACELET",
-            "text": "OPAL",
-            "price": 100
+            "text": "Opal",
+            "price": 0
         },
         {
             "name": "WHITE_CLOTH",
-            "text": "WHITE",
-            "price": 100
+            "text": "White",
+            "price": 0
         },
         {
             "name": "BLACK_CLOTH",
-            "text": "BLACK",
-            "price": 100
+            "text": "Black",
+            "price": 0
         },
         {
             "name": "WOODEN_SHIELD",
-            "text": "WOODEN",
-            "price": 100
+            "text": "Wooden",
+            "price": 0
         },
         {
             "name": "IRON_SHIELD",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "SILVER_SHIELD",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "FLAME_SHIELD",
-            "text": "FLAME",
-            "price": 100
+            "text": "Flame",
+            "price": 0
         },
         {
             "name": "ICE_SHIELD",
-            "text": "ICE",
-            "price": 100
+            "text": "Ice",
+            "price": 0
         },
         {
             "name": "OPAL_SHIELD",
-            "text": "OPAL",
-            "price": 100
+            "text": "Opal",
+            "price": 0
         },
         {
             "name": "AEGIS_SHIELD",
-            "text": "AEGIS",
-            "price": 100
+            "text": "Aegis",
+            "price": 0
         },
         {
             "name": "BUCKLER",
-            "text": "BUCKLER",
-            "price": 100
+            "text": "Buckler",
+            "price": 0
         },
         {
             "name": "PROCAPE",
-            "text": "PROCAPE",
-            "price": 100
+            "text": "Procape",
+            "price": 0
         },
         {
             "name": "CAP",
-            "text": "CAP",
-            "price": 100
+            "text": "Cap",
+            "price": 0
         },
         {
             "name": "WOODEN_HELMET",
-            "text": "WOODEN",
-            "price": 100
+            "text": "Wooden",
+            "price": 0
         },
         {
             "name": "IRON_HELMET",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "SILVER_HELMET",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "OPAL_HELMET",
-            "text": "OPAL",
-            "price": 100
+            "text": "Opal",
+            "price": 0
         },
         {
             "name": "HEAL_HELMET",
-            "text": "HEAL",
-            "price": 100
+            "text": "Heal",
+            "price": 0
         },
         {
             "name": "RIBBON",
-            "text": "RIBBON",
-            "price": 100
+            "text": "Ribbon",
+            "price": 0
         },
         {
             "name": "GLOVES",
-            "text": "GLOVES",
-            "price": 100
+            "text": "Gloves",
+            "price": 0
         },
         {
             "name": "COPPER_GAUNTLET",
-            "text": "COPPER",
-            "price": 100
+            "text": "Copper",
+            "price": 0
         },
         {
             "name": "IRON_GAUNTLET",
-            "text": "IRON",
-            "price": 100
+            "text": "Iron",
+            "price": 0
         },
         {
             "name": "SILVER_GAUNTLET",
-            "text": "SILVER",
-            "price": 100
+            "text": "Silver",
+            "price": 0
         },
         {
             "name": "ZEUS_GAUNTLET",
-            "text": "ZEUS",
-            "price": 100
+            "text": "Zeus",
+            "price": 0
         },
         {
             "name": "POWER_GAUNTLET",
-            "text": "POWER",
-            "price": 100
+            "text": "Power",
+            "price": 0
         },
         {
             "name": "OPAL_GAUNTLET",
-            "text": "OPAL",
-            "price": 100
+            "text": "Opal",
+            "price": 0
         },
         {
             "name": "PRORING",
-            "text": "PRORING",
-            "price": 100
+            "text": "Proring",
+            "price": 0
         }
     ]
 }
-
-

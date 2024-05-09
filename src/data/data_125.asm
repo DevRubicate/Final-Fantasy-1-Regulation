@@ -1,135 +1,527 @@
 .segment "DATA_125"
 
-.export LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2, TEXT_TEMPLATE_HERO_MENU, TEXT_SHOP_YOUCANTLEARNTHAT, TEXT_SHOP_ALREADYKNOWSPELL, TEXT_SHOP_THISSPELLFULL, TEXT_SHOP_HOLDRESET, TEXT_SHOP_WELCOMEWOULDYOUSTAY, TEXT_SHOP_NOBODYDEAD, TEXT_SHOP_WHOWILLLEARNSPELL, TEXT_SHOP_YOUCANTCARRYANYMORE, TEXT_SHOP_YOUCANTAFFORDTHAT, TEXT_SHOP_WHOREVIVE, TEXT_SHOP_WHATDOYOUWANT, TEXT_SHOP_WHOWILLTAKEIT, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_SHOP_ITEMCOSTOK, TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_CLASS_NAME_BLACK_WIZARD, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_BLACK_MAGE, TEXT_SHOP_YESNO, TEXT_CLASS_NAME_MASTER, TEXT_MENU_GOLD, TEXT_SHOP_TITLEWHITEMAGIC, TEXT_SHOP_TITLECLINIC, TEXT_CLASS_NAME_NINJA, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_3_NAME, TEXT_SHOP_TITLEINN
+.export LUT_ITEM_NAME, TEXT_ITEM_FROST, TEXT_ITEM_HEAT, TEXT_ITEM_GLANCE, TEXT_ITEM_GAZE, TEXT_ITEM_FLASH, TEXT_ITEM_SCORCH, TEXT_ITEM_CRACK, TEXT_ITEM_SQUINT, TEXT_ITEM_STARE, TEXT_ITEM_GLARE, TEXT_ITEM_BLIZZARD, TEXT_ITEM_BLAZE, TEXT_ITEM_INFERNO, TEXT_ITEM_CREMATE, TEXT_ITEM_POISON, TEXT_ITEM_TRANCE, TEXT_ITEM_THUNDER, TEXT_ITEM_TOXIC, TEXT_ITEM_SNORTING, TEXT_ITEM_NUCLEAR, TEXT_ITEM_INK, TEXT_ITEM_STINGER, TEXT_ITEM_DAZZLE, TEXT_ITEM_SWIRL, TEXT_ITEM_TORNADO, TEXT_ITEM_LUTE, TEXT_ITEM_CROWN, TEXT_ITEM_CRYSTAL, TEXT_ITEM_HERB, TEXT_ITEM_KEY, TEXT_ITEM_TNT, TEXT_ITEM_ADAMANT, TEXT_ITEM_SLAB, TEXT_ITEM_RUBY, TEXT_ITEM_ROD, TEXT_ITEM_FLOATER, TEXT_ITEM_CHIME, TEXT_ITEM_TAIL, TEXT_ITEM_CUBE, TEXT_ITEM_BOTTLE, TEXT_ITEM_OXYALE, TEXT_ITEM_CANOE, TEXT_ITEM_TENT, TEXT_ITEM_CABIN, TEXT_ITEM_HOUSE, TEXT_ITEM_HEAL, TEXT_ITEM_PURE, TEXT_ITEM_SOFT, TEXT_ITEM_WOODEN_NUNCHUCK, TEXT_ITEM_SMALL_KNIFE, TEXT_ITEM_WOODEN_STAFF, TEXT_ITEM_RAPIER, TEXT_ITEM_IRON_HAMMER, TEXT_ITEM_SHORT_SWORD, TEXT_ITEM_HAND_AXE, TEXT_ITEM_SCIMTAR, TEXT_ITEM_IRON_NUNCHUCK, TEXT_ITEM_LARGE_KNIFE, TEXT_ITEM_IRON_STAFF, TEXT_ITEM_SABRE, TEXT_ITEM_LONG_SWORD, TEXT_ITEM_GREAT_AXE, TEXT_ITEM_FALCHON, TEXT_ITEM_SILVER_KNIFE, TEXT_ITEM_SILVER_SWORD, TEXT_ITEM_SILVER_HAMMER, TEXT_ITEM_SILVER_AXE, TEXT_ITEM_FLAME_SWORD, TEXT_ITEM_ICE_SWORD, TEXT_ITEM_DRAGON_SWORD, TEXT_ITEM_GIANT_SWORD, TEXT_ITEM_SUN_SWORD, TEXT_ITEM_CORAL_SWORD, TEXT_ITEM_WERE_SWORD, TEXT_ITEM_RUNE_SWORD, TEXT_ITEM_POWER_STAFF, TEXT_ITEM_LIGHT_AXE, TEXT_ITEM_HEAL_STAFF, TEXT_ITEM_MAGE_STAFF, TEXT_ITEM_DEFENSE, TEXT_ITEM_WIZARD_STAFF, TEXT_ITEM_VORPAL, TEXT_ITEM_CATCLAW, TEXT_ITEM_THOR_HAMMER, TEXT_ITEM_BANE_SWORD, TEXT_ITEM_KATANA, TEXT_ITEM_XCALBER, TEXT_ITEM_MASMUNE, TEXT_ITEM_CLOTH, TEXT_ITEM_WOODEN_ARMOR, TEXT_ITEM_CHAIN_ARMOR, TEXT_ITEM_IRON_ARMOR, TEXT_ITEM_STEEL_ARMOR, TEXT_ITEM_SILVER_ARMOR, TEXT_ITEM_FLAME_ARMOR, TEXT_ITEM_ICE_ARMOR, TEXT_ITEM_OPAL_ARMOR, TEXT_ITEM_DRAGON_ARMOR, TEXT_ITEM_COPPER_BRACELET, TEXT_ITEM_SILVER_BRACELET, TEXT_ITEM_GOLD_BRACELET, TEXT_ITEM_OPAL_BRACELET, TEXT_ITEM_WHITE_CLOTH, TEXT_ITEM_BLACK_CLOTH, TEXT_ITEM_WOODEN_SHIELD, TEXT_ITEM_IRON_SHIELD, TEXT_ITEM_SILVER_SHIELD, TEXT_ITEM_FLAME_SHIELD, TEXT_ITEM_ICE_SHIELD, TEXT_ITEM_OPAL_SHIELD, TEXT_ITEM_AEGIS_SHIELD, TEXT_ITEM_BUCKLER, TEXT_ITEM_PROCAPE, TEXT_ITEM_CAP, TEXT_ITEM_WOODEN_HELMET, TEXT_ITEM_IRON_HELMET, TEXT_ITEM_SILVER_HELMET, TEXT_ITEM_OPAL_HELMET, TEXT_ITEM_HEAL_HELMET, TEXT_ITEM_RIBBON, TEXT_ITEM_GLOVES, TEXT_ITEM_COPPER_GAUNTLET, TEXT_ITEM_IRON_GAUNTLET, TEXT_ITEM_SILVER_GAUNTLET, TEXT_ITEM_ZEUS_GAUNTLET, TEXT_ITEM_POWER_GAUNTLET, TEXT_ITEM_OPAL_GAUNTLET, TEXT_ITEM_PRORING, LUT_ITEM_NAME_SIBLING2
 
-; address 0 - 128 (bytes 0 - 128)
+; address 0 - 129 (bytes 0 - 129)
 LUT_ITEM_NAME:
-.byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+.byte 0, <TEXT_ITEM_FROST, <TEXT_ITEM_HEAT, <TEXT_ITEM_GLANCE, <TEXT_ITEM_GAZE, <TEXT_ITEM_FLASH, <TEXT_ITEM_SCORCH, <TEXT_ITEM_CRACK, <TEXT_ITEM_SQUINT, <TEXT_ITEM_STARE, <TEXT_ITEM_GLARE, <TEXT_ITEM_BLIZZARD, <TEXT_ITEM_BLAZE, <TEXT_ITEM_INFERNO, <TEXT_ITEM_CREMATE, <TEXT_ITEM_POISON, <TEXT_ITEM_TRANCE, <TEXT_ITEM_THUNDER, <TEXT_ITEM_TOXIC, <TEXT_ITEM_SNORTING, <TEXT_ITEM_NUCLEAR, <TEXT_ITEM_INK, <TEXT_ITEM_STINGER, <TEXT_ITEM_DAZZLE, <TEXT_ITEM_SWIRL, <TEXT_ITEM_TORNADO, <TEXT_ITEM_LUTE, <TEXT_ITEM_CROWN, <TEXT_ITEM_CRYSTAL, <TEXT_ITEM_HERB, <TEXT_ITEM_KEY, <TEXT_ITEM_TNT, <TEXT_ITEM_ADAMANT, <TEXT_ITEM_SLAB, <TEXT_ITEM_RUBY, <TEXT_ITEM_ROD, <TEXT_ITEM_FLOATER, <TEXT_ITEM_CHIME, <TEXT_ITEM_TAIL, <TEXT_ITEM_CUBE, <TEXT_ITEM_BOTTLE, <TEXT_ITEM_OXYALE, <TEXT_ITEM_CANOE, <TEXT_ITEM_TENT, <TEXT_ITEM_CABIN, <TEXT_ITEM_HOUSE, <TEXT_ITEM_HEAL, <TEXT_ITEM_PURE, <TEXT_ITEM_SOFT, <TEXT_ITEM_WOODEN_NUNCHUCK, <TEXT_ITEM_SMALL_KNIFE, <TEXT_ITEM_WOODEN_STAFF, <TEXT_ITEM_RAPIER, <TEXT_ITEM_IRON_HAMMER, <TEXT_ITEM_SHORT_SWORD, <TEXT_ITEM_HAND_AXE, <TEXT_ITEM_SCIMTAR, <TEXT_ITEM_IRON_NUNCHUCK, <TEXT_ITEM_LARGE_KNIFE, <TEXT_ITEM_IRON_STAFF, <TEXT_ITEM_SABRE, <TEXT_ITEM_LONG_SWORD, <TEXT_ITEM_GREAT_AXE, <TEXT_ITEM_FALCHON, <TEXT_ITEM_SILVER_KNIFE, <TEXT_ITEM_SILVER_SWORD, <TEXT_ITEM_SILVER_HAMMER, <TEXT_ITEM_SILVER_AXE, <TEXT_ITEM_FLAME_SWORD, <TEXT_ITEM_ICE_SWORD, <TEXT_ITEM_DRAGON_SWORD, <TEXT_ITEM_GIANT_SWORD, <TEXT_ITEM_SUN_SWORD, <TEXT_ITEM_CORAL_SWORD, <TEXT_ITEM_WERE_SWORD, <TEXT_ITEM_RUNE_SWORD, <TEXT_ITEM_POWER_STAFF, <TEXT_ITEM_LIGHT_AXE, <TEXT_ITEM_HEAL_STAFF, <TEXT_ITEM_MAGE_STAFF, <TEXT_ITEM_DEFENSE, <TEXT_ITEM_WIZARD_STAFF, <TEXT_ITEM_VORPAL, <TEXT_ITEM_CATCLAW, <TEXT_ITEM_THOR_HAMMER, <TEXT_ITEM_BANE_SWORD, <TEXT_ITEM_KATANA, <TEXT_ITEM_XCALBER, <TEXT_ITEM_MASMUNE, <TEXT_ITEM_CLOTH, <TEXT_ITEM_WOODEN_ARMOR, <TEXT_ITEM_CHAIN_ARMOR, <TEXT_ITEM_IRON_ARMOR, <TEXT_ITEM_STEEL_ARMOR, <TEXT_ITEM_SILVER_ARMOR, <TEXT_ITEM_FLAME_ARMOR, <TEXT_ITEM_ICE_ARMOR, <TEXT_ITEM_OPAL_ARMOR, <TEXT_ITEM_DRAGON_ARMOR, <TEXT_ITEM_COPPER_BRACELET, <TEXT_ITEM_SILVER_BRACELET, <TEXT_ITEM_GOLD_BRACELET, <TEXT_ITEM_OPAL_BRACELET, <TEXT_ITEM_WHITE_CLOTH, <TEXT_ITEM_BLACK_CLOTH, <TEXT_ITEM_WOODEN_SHIELD, <TEXT_ITEM_IRON_SHIELD, <TEXT_ITEM_SILVER_SHIELD, <TEXT_ITEM_FLAME_SHIELD, <TEXT_ITEM_ICE_SHIELD, <TEXT_ITEM_OPAL_SHIELD, <TEXT_ITEM_AEGIS_SHIELD, <TEXT_ITEM_BUCKLER, <TEXT_ITEM_PROCAPE, <TEXT_ITEM_CAP, <TEXT_ITEM_WOODEN_HELMET, <TEXT_ITEM_IRON_HELMET, <TEXT_ITEM_SILVER_HELMET, <TEXT_ITEM_OPAL_HELMET, <TEXT_ITEM_HEAL_HELMET, <TEXT_ITEM_RIBBON, <TEXT_ITEM_GLOVES, <TEXT_ITEM_COPPER_GAUNTLET, <TEXT_ITEM_IRON_GAUNTLET, <TEXT_ITEM_SILVER_GAUNTLET, <TEXT_ITEM_ZEUS_GAUNTLET, <TEXT_ITEM_POWER_GAUNTLET, <TEXT_ITEM_OPAL_GAUNTLET, <TEXT_ITEM_PRORING
 
-; address 128 - 256 (bytes 0 - 128)
-LUT_ITEM_NAME_SIBLING2:
-.byte $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+; address 129 - 135 (bytes 0 - 6)
+TEXT_ITEM_FROST:
+.byte $2f, $3b, $38, $3c, $3d, $00
 
-; address 256 - 311 (bytes 0 - 55)
-TEXT_TEMPLATE_HERO_MENU:
-.byte $91, $7f, $7f, $35, $61, $82, $86, $8f, $80, $01, $7f, $7f, $31, $39, $7f, $61, $84, $90, $1a, $84, $91, $7f, $7f, $7f, $36, $2a, $30, $32, $2c, $7f, $81, $92, $1a, $81, $93, $1a, $81, $94, $1a, $81, $95, $1a, $7f, $81, $96, $1a, $81, $97, $1a, $81, $98, $1a, $81, $99, $00
+; address 135 - 140 (bytes 0 - 5)
+TEXT_ITEM_HEAT:
+.byte $31, $2e, $2a, $3d, $00
 
-; address 311 - 354 (bytes 0 - 43)
-TEXT_SHOP_YOUCANTLEARNTHAT:
-.byte $3c, $52, $55, $55, $5c, $5f, $7f, $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $4f, $48, $44, $55, $51, $7f, $57, $4b, $44, $57, $60, $7f, $3c, $52, $50, $48, $52, $51, $48, $7f, $48, $4f, $56, $48, $65, $00
+; address 140 - 147 (bytes 0 - 7)
+TEXT_ITEM_GLANCE:
+.byte $30, $35, $2a, $37, $2c, $2e, $00
 
-; address 354 - 397 (bytes 0 - 43)
-TEXT_SHOP_ALREADYKNOWSPELL:
-.byte $42, $52, $58, $7f, $44, $4f, $55, $48, $44, $47, $5c, $7f, $4e, $51, $52, $5a, $7f, $57, $4b, $44, $57, $7f, $56, $53, $48, $4f, $4f, $60, $7f, $3c, $52, $50, $48, $52, $51, $48, $7f, $48, $4f, $56, $48, $65, $00
+; address 147 - 152 (bytes 0 - 5)
+TEXT_ITEM_GAZE:
+.byte $30, $2a, $43, $2e, $00
 
-; address 397 - 437 (bytes 0 - 40)
-TEXT_SHOP_THISSPELLFULL:
-.byte $3d, $4b, $4c, $56, $7f, $4f, $48, $59, $48, $4f, $7f, $56, $53, $48, $4f, $4f, $7f, $4c, $56, $61, $49, $58, $4f, $4f, $7f, $7f, $3c, $52, $50, $48, $52, $51, $48, $7f, $48, $4f, $56, $48, $65, $00
+; address 152 - 158 (bytes 0 - 6)
+TEXT_ITEM_FLASH:
+.byte $2f, $35, $2a, $3c, $31, $00
 
-; address 437 - 475 (bytes 0 - 38)
-TEXT_SHOP_HOLDRESET:
-.byte $31, $52, $4f, $47, $7f, $3b, $2e, $3c, $2e, $3d, $7f, $5a, $4b, $4c, $4f, $48, $7f, $5c, $52, $58, $7f, $57, $58, $55, $51, $7f, $39, $38, $40, $2e, $3b, $7f, $52, $49, $49, $64, $64, $00
+; address 158 - 165 (bytes 0 - 7)
+TEXT_ITEM_SCORCH:
+.byte $3c, $2c, $38, $3b, $2c, $31, $00
 
-; address 475 - 509 (bytes 0 - 34)
-TEXT_SHOP_WELCOMEWOULDYOUSTAY:
-.byte $40, $48, $4f, $46, $52, $50, $48, $7f, $7f, $3c, $57, $44, $5c, $5f, $7f, $57, $52, $61, $56, $44, $59, $48, $7f, $5c, $52, $58, $55, $7f, $47, $44, $57, $44, $60, $00
+; address 165 - 171 (bytes 0 - 6)
+TEXT_ITEM_CRACK:
+.byte $2c, $3b, $2a, $2c, $34, $00
 
-; address 509 - 538 (bytes 0 - 29)
-TEXT_SHOP_NOBODYDEAD:
-.byte $42, $52, $58, $61, $47, $52, $7f, $51, $52, $57, $7f, $51, $48, $48, $47, $61, $50, $5c, $7f, $4b, $48, $4f, $53, $7f, $51, $52, $5a, $60, $00
+; address 171 - 178 (bytes 0 - 7)
+TEXT_ITEM_SQUINT:
+.byte $3c, $3a, $3e, $32, $37, $3d, $00
 
-; address 538 - 564 (bytes 0 - 26)
-TEXT_SHOP_WHOWILLLEARNSPELL:
-.byte $40, $4b, $52, $7f, $5a, $4c, $4f, $4f, $7f, $4f, $48, $44, $55, $51, $7f, $57, $4b, $48, $7f, $56, $53, $48, $4f, $4f, $65, $00
+; address 178 - 184 (bytes 0 - 6)
+TEXT_ITEM_STARE:
+.byte $3c, $3d, $2a, $3b, $2e, $00
 
-; address 564 - 588 (bytes 0 - 24)
-TEXT_SHOP_YOUCANTCARRYANYMORE:
-.byte $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $46, $44, $55, $55, $5c, $7f, $44, $51, $5c, $50, $52, $55, $48, $00
+; address 184 - 190 (bytes 0 - 6)
+TEXT_ITEM_GLARE:
+.byte $30, $35, $2a, $3b, $2e, $00
 
-; address 588 - 611 (bytes 0 - 23)
-TEXT_SHOP_YOUCANTAFFORDTHAT:
-.byte $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $44, $49, $49, $52, $55, $47, $7f, $57, $4b, $44, $57, $60, $00
+; address 190 - 199 (bytes 0 - 9)
+TEXT_ITEM_BLIZZARD:
+.byte $2b, $35, $32, $43, $43, $2a, $3b, $2d, $00
 
-; address 611 - 633 (bytes 0 - 22)
-TEXT_SHOP_WHOREVIVE:
-.byte $40, $4b, $52, $7f, $56, $4b, $44, $4f, $4f, $7f, $45, $48, $7f, $55, $48, $59, $4c, $59, $48, $47, $7f, $00
+; address 199 - 205 (bytes 0 - 6)
+TEXT_ITEM_BLAZE:
+.byte $2b, $35, $2a, $43, $2e, $00
 
-; address 633 - 651 (bytes 0 - 18)
-TEXT_SHOP_WHATDOYOUWANT:
-.byte $40, $4b, $44, $57, $61, $47, $52, $7f, $5c, $52, $58, $7f, $5a, $44, $51, $57, $65, $00
+; address 205 - 213 (bytes 0 - 8)
+TEXT_ITEM_INFERNO:
+.byte $32, $37, $2f, $2e, $3b, $37, $38, $00
 
-; address 651 - 669 (bytes 0 - 18)
-TEXT_SHOP_WHOWILLTAKEIT:
-.byte $40, $4b, $52, $7f, $5a, $4c, $4f, $4f, $7f, $57, $44, $4e, $48, $7f, $4c, $57, $65, $00
+; address 213 - 221 (bytes 0 - 8)
+TEXT_ITEM_CREMATE:
+.byte $2c, $3b, $2e, $36, $2a, $3d, $2e, $00
 
-; address 669 - 685 (bytes 0 - 16)
-TEXT_TITLE_COPYRIGHT_NINTENDO:
-.byte $2c, $61, $21, $29, $29, $20, $61, $37, $32, $37, $3d, $2e, $37, $2d, $38, $00
+; address 221 - 228 (bytes 0 - 7)
+TEXT_ITEM_POISON:
+.byte $39, $38, $32, $3c, $38, $37, $00
 
-; address 685 - 699 (bytes 0 - 14)
-TEXT_SHOP_ITEMCOSTOK:
-.byte $88, $84, $5c, $da, $7f, $30, $52, $4f, $47, $7f, $38, $34, $65, $00
+; address 228 - 235 (bytes 0 - 7)
+TEXT_ITEM_TRANCE:
+.byte $3d, $3b, $2a, $37, $2c, $2e, $00
 
-; address 699 - 708 (bytes 0 - 9)
-TEXT_TITLE_CONTINUE:
-.byte $2c, $38, $37, $3d, $32, $37, $3e, $2e, $00
+; address 235 - 243 (bytes 0 - 8)
+TEXT_ITEM_THUNDER:
+.byte $3d, $31, $3e, $37, $2d, $2e, $3b, $00
 
-; address 708 - 717 (bytes 0 - 9)
-TEXT_TITLE_NEW_GAME:
-.byte $37, $2e, $40, $61, $30, $2a, $36, $2e, $00
+; address 243 - 249 (bytes 0 - 6)
+TEXT_ITEM_TOXIC:
+.byte $3d, $38, $41, $32, $2c, $00
 
-; address 717 - 726 (bytes 0 - 9)
-TEXT_CLASS_NAME_BLACK_WIZARD:
-.byte $2b, $35, $2a, $2c, $34, $40, $32, $43, $00
+; address 249 - 258 (bytes 0 - 9)
+TEXT_ITEM_SNORTING:
+.byte $3c, $37, $38, $3b, $3d, $32, $37, $30, $00
 
-; address 726 - 734 (bytes 0 - 8)
-TEXT_CLASS_NAME_RED_MAGE:
-.byte $3b, $48, $47, $36, $2a, $30, $2e, $00
+; address 258 - 266 (bytes 0 - 8)
+TEXT_ITEM_NUCLEAR:
+.byte $37, $3e, $2c, $35, $2e, $2a, $3b, $00
 
-; address 734 - 742 (bytes 0 - 8)
-TEXT_CLASS_NAME_BLACK_MAGE:
-.byte $2b, $4f, $60, $36, $2a, $30, $2e, $00
+; address 266 - 270 (bytes 0 - 4)
+TEXT_ITEM_INK:
+.byte $32, $37, $34, $00
 
-; address 742 - 750 (bytes 0 - 8)
-TEXT_SHOP_YESNO:
-.byte $42, $48, $56, $7f, $7f, $37, $52, $00
+; address 270 - 278 (bytes 0 - 8)
+TEXT_ITEM_STINGER:
+.byte $3c, $3d, $32, $37, $30, $2e, $3b, $00
+
+; address 278 - 285 (bytes 0 - 7)
+TEXT_ITEM_DAZZLE:
+.byte $2d, $2a, $43, $43, $35, $2e, $00
+
+; address 285 - 291 (bytes 0 - 6)
+TEXT_ITEM_SWIRL:
+.byte $3c, $40, $32, $3b, $35, $00
+
+; address 291 - 299 (bytes 0 - 8)
+TEXT_ITEM_TORNADO:
+.byte $3d, $38, $3b, $37, $2a, $2d, $38, $00
+
+; address 299 - 304 (bytes 0 - 5)
+TEXT_ITEM_LUTE:
+.byte $35, $3e, $3d, $2e, $00
+
+; address 304 - 310 (bytes 0 - 6)
+TEXT_ITEM_CROWN:
+.byte $2c, $3b, $38, $40, $37, $00
+
+; address 310 - 318 (bytes 0 - 8)
+TEXT_ITEM_CRYSTAL:
+.byte $2c, $3b, $42, $3c, $3d, $2a, $35, $00
+
+; address 318 - 323 (bytes 0 - 5)
+TEXT_ITEM_HERB:
+.byte $31, $2e, $3b, $2b, $00
+
+; address 323 - 327 (bytes 0 - 4)
+TEXT_ITEM_KEY:
+.byte $34, $2e, $42, $00
+
+; address 327 - 331 (bytes 0 - 4)
+TEXT_ITEM_TNT:
+.byte $3d, $37, $3d, $00
+
+; address 331 - 339 (bytes 0 - 8)
+TEXT_ITEM_ADAMANT:
+.byte $2a, $2d, $2a, $36, $2a, $37, $3d, $00
+
+; address 339 - 344 (bytes 0 - 5)
+TEXT_ITEM_SLAB:
+.byte $3c, $35, $2a, $2b, $00
+
+; address 344 - 349 (bytes 0 - 5)
+TEXT_ITEM_RUBY:
+.byte $3b, $3e, $2b, $42, $00
+
+; address 349 - 353 (bytes 0 - 4)
+TEXT_ITEM_ROD:
+.byte $3b, $38, $2d, $00
+
+; address 353 - 361 (bytes 0 - 8)
+TEXT_ITEM_FLOATER:
+.byte $2f, $35, $38, $2a, $3d, $2e, $3b, $00
+
+; address 361 - 367 (bytes 0 - 6)
+TEXT_ITEM_CHIME:
+.byte $2c, $31, $32, $36, $2e, $00
+
+; address 367 - 372 (bytes 0 - 5)
+TEXT_ITEM_TAIL:
+.byte $3d, $2a, $32, $35, $00
+
+; address 372 - 377 (bytes 0 - 5)
+TEXT_ITEM_CUBE:
+.byte $2c, $3e, $2b, $2e, $00
+
+; address 377 - 384 (bytes 0 - 7)
+TEXT_ITEM_BOTTLE:
+.byte $2b, $38, $3d, $3d, $35, $2e, $00
+
+; address 384 - 391 (bytes 0 - 7)
+TEXT_ITEM_OXYALE:
+.byte $38, $41, $42, $2a, $35, $2e, $00
+
+; address 391 - 397 (bytes 0 - 6)
+TEXT_ITEM_CANOE:
+.byte $2c, $2a, $37, $38, $2e, $00
+
+; address 397 - 402 (bytes 0 - 5)
+TEXT_ITEM_TENT:
+.byte $3d, $2e, $37, $3d, $00
+
+; address 402 - 408 (bytes 0 - 6)
+TEXT_ITEM_CABIN:
+.byte $2c, $2a, $2b, $32, $37, $00
+
+; address 408 - 414 (bytes 0 - 6)
+TEXT_ITEM_HOUSE:
+.byte $31, $38, $3e, $3c, $2e, $00
+
+; address 414 - 419 (bytes 0 - 5)
+TEXT_ITEM_HEAL:
+.byte $31, $2e, $2a, $35, $00
+
+; address 419 - 424 (bytes 0 - 5)
+TEXT_ITEM_PURE:
+.byte $39, $3e, $3b, $2e, $00
+
+; address 424 - 429 (bytes 0 - 5)
+TEXT_ITEM_SOFT:
+.byte $3c, $38, $2f, $3d, $00
+
+; address 429 - 437 (bytes 0 - 8)
+TEXT_ITEM_WOODEN_NUNCHUCK:
+.byte $40, $52, $52, $47, $48, $51, $79, $00
+
+; address 437 - 445 (bytes 0 - 8)
+TEXT_ITEM_SMALL_KNIFE:
+.byte $3c, $50, $44, $4f, $4f, $61, $76, $00
+
+; address 445 - 453 (bytes 0 - 8)
+TEXT_ITEM_WOODEN_STAFF:
+.byte $40, $52, $52, $47, $48, $51, $78, $00
+
+; address 453 - 460 (bytes 0 - 7)
+TEXT_ITEM_RAPIER:
+.byte $3b, $44, $53, $4c, $48, $55, $00
+
+; address 460 - 468 (bytes 0 - 8)
+TEXT_ITEM_IRON_HAMMER:
+.byte $32, $55, $52, $51, $61, $61, $75, $00
+
+; address 468 - 474 (bytes 0 - 6)
+TEXT_ITEM_SHORT_SWORD:
+.byte $3c, $4b, $52, $55, $57, $00
+
+; address 474 - 479 (bytes 0 - 5)
+TEXT_ITEM_HAND_AXE:
+.byte $31, $44, $51, $47, $00
+
+; address 479 - 487 (bytes 0 - 8)
+TEXT_ITEM_SCIMTAR:
+.byte $3c, $46, $4c, $50, $57, $44, $55, $00
+
+; address 487 - 492 (bytes 0 - 5)
+TEXT_ITEM_IRON_NUNCHUCK:
+.byte $32, $55, $52, $51, $00
+
+; address 492 - 498 (bytes 0 - 6)
+TEXT_ITEM_LARGE_KNIFE:
+.byte $35, $44, $55, $4a, $48, $00
+
+; address 498 - 503 (bytes 0 - 5)
+TEXT_ITEM_IRON_STAFF:
+.byte $32, $55, $52, $51, $00
+
+; address 503 - 509 (bytes 0 - 6)
+TEXT_ITEM_SABRE:
+.byte $3c, $44, $45, $55, $48, $00
+
+; address 509 - 514 (bytes 0 - 5)
+TEXT_ITEM_LONG_SWORD:
+.byte $35, $52, $51, $4a, $00
+
+; address 514 - 520 (bytes 0 - 6)
+TEXT_ITEM_GREAT_AXE:
+.byte $30, $55, $48, $44, $57, $00
+
+; address 520 - 528 (bytes 0 - 8)
+TEXT_ITEM_FALCHON:
+.byte $2f, $44, $4f, $46, $4b, $52, $51, $00
+
+; address 528 - 535 (bytes 0 - 7)
+TEXT_ITEM_SILVER_KNIFE:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 535 - 542 (bytes 0 - 7)
+TEXT_ITEM_SILVER_SWORD:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 542 - 549 (bytes 0 - 7)
+TEXT_ITEM_SILVER_HAMMER:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 549 - 556 (bytes 0 - 7)
+TEXT_ITEM_SILVER_AXE:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 556 - 562 (bytes 0 - 6)
+TEXT_ITEM_FLAME_SWORD:
+.byte $2f, $4f, $44, $50, $48, $00
+
+; address 562 - 566 (bytes 0 - 4)
+TEXT_ITEM_ICE_SWORD:
+.byte $32, $46, $48, $00
+
+; address 566 - 573 (bytes 0 - 7)
+TEXT_ITEM_DRAGON_SWORD:
+.byte $2d, $55, $44, $4a, $52, $51, $00
+
+; address 573 - 579 (bytes 0 - 6)
+TEXT_ITEM_GIANT_SWORD:
+.byte $30, $4c, $44, $51, $57, $00
+
+; address 579 - 583 (bytes 0 - 4)
+TEXT_ITEM_SUN_SWORD:
+.byte $3c, $58, $51, $00
+
+; address 583 - 589 (bytes 0 - 6)
+TEXT_ITEM_CORAL_SWORD:
+.byte $2c, $52, $55, $44, $4f, $00
+
+; address 589 - 594 (bytes 0 - 5)
+TEXT_ITEM_WERE_SWORD:
+.byte $40, $48, $55, $48, $00
+
+; address 594 - 599 (bytes 0 - 5)
+TEXT_ITEM_RUNE_SWORD:
+.byte $3b, $58, $51, $48, $00
+
+; address 599 - 605 (bytes 0 - 6)
+TEXT_ITEM_POWER_STAFF:
+.byte $39, $52, $5a, $48, $55, $00
+
+; address 605 - 611 (bytes 0 - 6)
+TEXT_ITEM_LIGHT_AXE:
+.byte $35, $4c, $4a, $4b, $57, $00
+
+; address 611 - 616 (bytes 0 - 5)
+TEXT_ITEM_HEAL_STAFF:
+.byte $31, $48, $44, $4f, $00
+
+; address 616 - 621 (bytes 0 - 5)
+TEXT_ITEM_MAGE_STAFF:
+.byte $36, $44, $4a, $48, $00
+
+; address 621 - 629 (bytes 0 - 8)
+TEXT_ITEM_DEFENSE:
+.byte $2d, $48, $49, $48, $51, $56, $48, $00
+
+; address 629 - 636 (bytes 0 - 7)
+TEXT_ITEM_WIZARD_STAFF:
+.byte $40, $4c, $5d, $44, $55, $47, $00
+
+; address 636 - 643 (bytes 0 - 7)
+TEXT_ITEM_VORPAL:
+.byte $3f, $52, $55, $53, $44, $4f, $00
+
+; address 643 - 651 (bytes 0 - 8)
+TEXT_ITEM_CATCLAW:
+.byte $2c, $44, $57, $46, $4f, $44, $5a, $00
+
+; address 651 - 656 (bytes 0 - 5)
+TEXT_ITEM_THOR_HAMMER:
+.byte $3d, $4b, $52, $55, $00
+
+; address 656 - 661 (bytes 0 - 5)
+TEXT_ITEM_BANE_SWORD:
+.byte $2b, $44, $51, $48, $00
+
+; address 661 - 668 (bytes 0 - 7)
+TEXT_ITEM_KATANA:
+.byte $34, $44, $57, $44, $51, $44, $00
+
+; address 668 - 676 (bytes 0 - 8)
+TEXT_ITEM_XCALBER:
+.byte $41, $46, $44, $4f, $45, $48, $55, $00
+
+; address 676 - 684 (bytes 0 - 8)
+TEXT_ITEM_MASMUNE:
+.byte $36, $44, $56, $50, $58, $51, $48, $00
+
+; address 684 - 690 (bytes 0 - 6)
+TEXT_ITEM_CLOTH:
+.byte $2c, $4f, $52, $57, $4b, $00
+
+; address 690 - 697 (bytes 0 - 7)
+TEXT_ITEM_WOODEN_ARMOR:
+.byte $40, $52, $52, $47, $48, $51, $00
+
+; address 697 - 703 (bytes 0 - 6)
+TEXT_ITEM_CHAIN_ARMOR:
+.byte $2c, $4b, $44, $4c, $51, $00
+
+; address 703 - 708 (bytes 0 - 5)
+TEXT_ITEM_IRON_ARMOR:
+.byte $32, $55, $52, $51, $00
+
+; address 708 - 714 (bytes 0 - 6)
+TEXT_ITEM_STEEL_ARMOR:
+.byte $3c, $57, $48, $48, $4f, $00
+
+; address 714 - 721 (bytes 0 - 7)
+TEXT_ITEM_SILVER_ARMOR:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 721 - 727 (bytes 0 - 6)
+TEXT_ITEM_FLAME_ARMOR:
+.byte $2f, $4f, $44, $50, $48, $00
+
+; address 727 - 731 (bytes 0 - 4)
+TEXT_ITEM_ICE_ARMOR:
+.byte $32, $46, $48, $00
+
+; address 731 - 736 (bytes 0 - 5)
+TEXT_ITEM_OPAL_ARMOR:
+.byte $38, $53, $44, $4f, $00
+
+; address 736 - 743 (bytes 0 - 7)
+TEXT_ITEM_DRAGON_ARMOR:
+.byte $2d, $55, $44, $4a, $52, $51, $00
+
+; address 743 - 750 (bytes 0 - 7)
+TEXT_ITEM_COPPER_BRACELET:
+.byte $2c, $52, $53, $53, $48, $55, $00
 
 ; address 750 - 757 (bytes 0 - 7)
-TEXT_CLASS_NAME_MASTER:
-.byte $36, $2a, $3c, $3d, $2e, $3b, $00
+TEXT_ITEM_SILVER_BRACELET:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
 
-; address 757 - 764 (bytes 0 - 7)
-TEXT_MENU_GOLD:
-.byte $8b, $85, $60, $1c, $61, $30, $00
+; address 757 - 762 (bytes 0 - 5)
+TEXT_ITEM_GOLD_BRACELET:
+.byte $30, $52, $4f, $47, $00
 
-; address 764 - 771 (bytes 0 - 7)
-TEXT_SHOP_TITLEWHITEMAGIC:
-.byte $40, $36, $2a, $30, $32, $2c, $00
+; address 762 - 767 (bytes 0 - 5)
+TEXT_ITEM_OPAL_BRACELET:
+.byte $38, $53, $44, $4f, $00
 
-; address 771 - 778 (bytes 0 - 7)
-TEXT_SHOP_TITLECLINIC:
-.byte $2c, $35, $32, $37, $32, $2c, $00
+; address 767 - 773 (bytes 0 - 6)
+TEXT_ITEM_WHITE_CLOTH:
+.byte $40, $4b, $4c, $57, $48, $00
 
-; address 778 - 784 (bytes 0 - 6)
-TEXT_CLASS_NAME_NINJA:
-.byte $37, $32, $37, $33, $2a, $00
+; address 773 - 779 (bytes 0 - 6)
+TEXT_ITEM_BLACK_CLOTH:
+.byte $2b, $4f, $44, $46, $4e, $00
 
-; address 784 - 789 (bytes 0 - 5)
-TEXT_HERO_0_NAME:
-.byte $90, $80, $00, $91, $00
+; address 779 - 786 (bytes 0 - 7)
+TEXT_ITEM_WOODEN_SHIELD:
+.byte $40, $52, $52, $47, $48, $51, $00
 
-; address 789 - 794 (bytes 0 - 5)
-TEXT_HERO_1_NAME:
-.byte $90, $80, $01, $91, $00
+; address 786 - 791 (bytes 0 - 5)
+TEXT_ITEM_IRON_SHIELD:
+.byte $32, $55, $52, $51, $00
 
-; address 794 - 799 (bytes 0 - 5)
-TEXT_HERO_3_NAME:
-.byte $90, $80, $03, $91, $00
+; address 791 - 798 (bytes 0 - 7)
+TEXT_ITEM_SILVER_SHIELD:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
 
-; address 799 - 803 (bytes 0 - 4)
-TEXT_SHOP_TITLEINN:
-.byte $32, $37, $37, $00
+; address 798 - 804 (bytes 0 - 6)
+TEXT_ITEM_FLAME_SHIELD:
+.byte $2f, $4f, $44, $50, $48, $00
 
-; 803 - 8192
-.res 7389
+; address 804 - 808 (bytes 0 - 4)
+TEXT_ITEM_ICE_SHIELD:
+.byte $32, $46, $48, $00
+
+; address 808 - 813 (bytes 0 - 5)
+TEXT_ITEM_OPAL_SHIELD:
+.byte $38, $53, $44, $4f, $00
+
+; address 813 - 819 (bytes 0 - 6)
+TEXT_ITEM_AEGIS_SHIELD:
+.byte $2a, $48, $4a, $4c, $56, $00
+
+; address 819 - 827 (bytes 0 - 8)
+TEXT_ITEM_BUCKLER:
+.byte $2b, $58, $46, $4e, $4f, $48, $55, $00
+
+; address 827 - 835 (bytes 0 - 8)
+TEXT_ITEM_PROCAPE:
+.byte $39, $55, $52, $46, $44, $53, $48, $00
+
+; address 835 - 839 (bytes 0 - 4)
+TEXT_ITEM_CAP:
+.byte $2c, $44, $53, $00
+
+; address 839 - 846 (bytes 0 - 7)
+TEXT_ITEM_WOODEN_HELMET:
+.byte $40, $52, $52, $47, $48, $51, $00
+
+; address 846 - 851 (bytes 0 - 5)
+TEXT_ITEM_IRON_HELMET:
+.byte $32, $55, $52, $51, $00
+
+; address 851 - 858 (bytes 0 - 7)
+TEXT_ITEM_SILVER_HELMET:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 858 - 863 (bytes 0 - 5)
+TEXT_ITEM_OPAL_HELMET:
+.byte $38, $53, $44, $4f, $00
+
+; address 863 - 868 (bytes 0 - 5)
+TEXT_ITEM_HEAL_HELMET:
+.byte $31, $48, $44, $4f, $00
+
+; address 868 - 875 (bytes 0 - 7)
+TEXT_ITEM_RIBBON:
+.byte $3b, $4c, $45, $45, $52, $51, $00
+
+; address 875 - 882 (bytes 0 - 7)
+TEXT_ITEM_GLOVES:
+.byte $30, $4f, $52, $59, $48, $56, $00
+
+; address 882 - 889 (bytes 0 - 7)
+TEXT_ITEM_COPPER_GAUNTLET:
+.byte $2c, $52, $53, $53, $48, $55, $00
+
+; address 889 - 894 (bytes 0 - 5)
+TEXT_ITEM_IRON_GAUNTLET:
+.byte $32, $55, $52, $51, $00
+
+; address 894 - 901 (bytes 0 - 7)
+TEXT_ITEM_SILVER_GAUNTLET:
+.byte $3c, $4c, $4f, $59, $48, $55, $00
+
+; address 901 - 906 (bytes 0 - 5)
+TEXT_ITEM_ZEUS_GAUNTLET:
+.byte $43, $48, $58, $56, $00
+
+; address 906 - 912 (bytes 0 - 6)
+TEXT_ITEM_POWER_GAUNTLET:
+.byte $39, $52, $5a, $48, $55, $00
+
+; address 912 - 917 (bytes 0 - 5)
+TEXT_ITEM_OPAL_GAUNTLET:
+.byte $38, $53, $44, $4f, $00
+
+; address 917 - 925 (bytes 0 - 8)
+TEXT_ITEM_PRORING:
+.byte $39, $55, $52, $55, $4c, $51, $4a, $00
+
+; address 925 - 1054 (bytes 0 - 129)
+LUT_ITEM_NAME_SIBLING2:
+.byte 0, >TEXT_ITEM_FROST, >TEXT_ITEM_HEAT, >TEXT_ITEM_GLANCE, >TEXT_ITEM_GAZE, >TEXT_ITEM_FLASH, >TEXT_ITEM_SCORCH, >TEXT_ITEM_CRACK, >TEXT_ITEM_SQUINT, >TEXT_ITEM_STARE, >TEXT_ITEM_GLARE, >TEXT_ITEM_BLIZZARD, >TEXT_ITEM_BLAZE, >TEXT_ITEM_INFERNO, >TEXT_ITEM_CREMATE, >TEXT_ITEM_POISON, >TEXT_ITEM_TRANCE, >TEXT_ITEM_THUNDER, >TEXT_ITEM_TOXIC, >TEXT_ITEM_SNORTING, >TEXT_ITEM_NUCLEAR, >TEXT_ITEM_INK, >TEXT_ITEM_STINGER, >TEXT_ITEM_DAZZLE, >TEXT_ITEM_SWIRL, >TEXT_ITEM_TORNADO, >TEXT_ITEM_LUTE, >TEXT_ITEM_CROWN, >TEXT_ITEM_CRYSTAL, >TEXT_ITEM_HERB, >TEXT_ITEM_KEY, >TEXT_ITEM_TNT, >TEXT_ITEM_ADAMANT, >TEXT_ITEM_SLAB, >TEXT_ITEM_RUBY, >TEXT_ITEM_ROD, >TEXT_ITEM_FLOATER, >TEXT_ITEM_CHIME, >TEXT_ITEM_TAIL, >TEXT_ITEM_CUBE, >TEXT_ITEM_BOTTLE, >TEXT_ITEM_OXYALE, >TEXT_ITEM_CANOE, >TEXT_ITEM_TENT, >TEXT_ITEM_CABIN, >TEXT_ITEM_HOUSE, >TEXT_ITEM_HEAL, >TEXT_ITEM_PURE, >TEXT_ITEM_SOFT, >TEXT_ITEM_WOODEN_NUNCHUCK, >TEXT_ITEM_SMALL_KNIFE, >TEXT_ITEM_WOODEN_STAFF, >TEXT_ITEM_RAPIER, >TEXT_ITEM_IRON_HAMMER, >TEXT_ITEM_SHORT_SWORD, >TEXT_ITEM_HAND_AXE, >TEXT_ITEM_SCIMTAR, >TEXT_ITEM_IRON_NUNCHUCK, >TEXT_ITEM_LARGE_KNIFE, >TEXT_ITEM_IRON_STAFF, >TEXT_ITEM_SABRE, >TEXT_ITEM_LONG_SWORD, >TEXT_ITEM_GREAT_AXE, >TEXT_ITEM_FALCHON, >TEXT_ITEM_SILVER_KNIFE, >TEXT_ITEM_SILVER_SWORD, >TEXT_ITEM_SILVER_HAMMER, >TEXT_ITEM_SILVER_AXE, >TEXT_ITEM_FLAME_SWORD, >TEXT_ITEM_ICE_SWORD, >TEXT_ITEM_DRAGON_SWORD, >TEXT_ITEM_GIANT_SWORD, >TEXT_ITEM_SUN_SWORD, >TEXT_ITEM_CORAL_SWORD, >TEXT_ITEM_WERE_SWORD, >TEXT_ITEM_RUNE_SWORD, >TEXT_ITEM_POWER_STAFF, >TEXT_ITEM_LIGHT_AXE, >TEXT_ITEM_HEAL_STAFF, >TEXT_ITEM_MAGE_STAFF, >TEXT_ITEM_DEFENSE, >TEXT_ITEM_WIZARD_STAFF, >TEXT_ITEM_VORPAL, >TEXT_ITEM_CATCLAW, >TEXT_ITEM_THOR_HAMMER, >TEXT_ITEM_BANE_SWORD, >TEXT_ITEM_KATANA, >TEXT_ITEM_XCALBER, >TEXT_ITEM_MASMUNE, >TEXT_ITEM_CLOTH, >TEXT_ITEM_WOODEN_ARMOR, >TEXT_ITEM_CHAIN_ARMOR, >TEXT_ITEM_IRON_ARMOR, >TEXT_ITEM_STEEL_ARMOR, >TEXT_ITEM_SILVER_ARMOR, >TEXT_ITEM_FLAME_ARMOR, >TEXT_ITEM_ICE_ARMOR, >TEXT_ITEM_OPAL_ARMOR, >TEXT_ITEM_DRAGON_ARMOR, >TEXT_ITEM_COPPER_BRACELET, >TEXT_ITEM_SILVER_BRACELET, >TEXT_ITEM_GOLD_BRACELET, >TEXT_ITEM_OPAL_BRACELET, >TEXT_ITEM_WHITE_CLOTH, >TEXT_ITEM_BLACK_CLOTH, >TEXT_ITEM_WOODEN_SHIELD, >TEXT_ITEM_IRON_SHIELD, >TEXT_ITEM_SILVER_SHIELD, >TEXT_ITEM_FLAME_SHIELD, >TEXT_ITEM_ICE_SHIELD, >TEXT_ITEM_OPAL_SHIELD, >TEXT_ITEM_AEGIS_SHIELD, >TEXT_ITEM_BUCKLER, >TEXT_ITEM_PROCAPE, >TEXT_ITEM_CAP, >TEXT_ITEM_WOODEN_HELMET, >TEXT_ITEM_IRON_HELMET, >TEXT_ITEM_SILVER_HELMET, >TEXT_ITEM_OPAL_HELMET, >TEXT_ITEM_HEAL_HELMET, >TEXT_ITEM_RIBBON, >TEXT_ITEM_GLOVES, >TEXT_ITEM_COPPER_GAUNTLET, >TEXT_ITEM_IRON_GAUNTLET, >TEXT_ITEM_SILVER_GAUNTLET, >TEXT_ITEM_ZEUS_GAUNTLET, >TEXT_ITEM_POWER_GAUNTLET, >TEXT_ITEM_OPAL_GAUNTLET, >TEXT_ITEM_PRORING
+
+; 1054 - 8192
+.res 7138
 

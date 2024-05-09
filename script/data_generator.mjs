@@ -49,6 +49,7 @@ class Structure {
 class Packer {
     structure;
     stuff = [];
+    consts = [];
     constructor() {
         this.structure = new Structure(
             [
@@ -59,7 +60,7 @@ class Packer {
         );
     }
     addStatic(entry) {
-         this.stuff.push({
+        this.stuff.push({
             entry: entry,
             priority: entry.data.getLength(),
         })
@@ -69,6 +70,9 @@ class Packer {
             entry: entry,
             priority: entry.data.getLength(),
         })
+    }
+    addConst(entry) {
+        this.consts.push(entry);
     }
 
     place(plan) {
@@ -233,7 +237,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate(children[k], {page: pageCounter}, []);
+                        const success = this.allocate(children[k], {page: leftNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -262,7 +266,7 @@ class Packer {
 
                 const children = subData.childAllocations();
                 for(let k=0; k<children.length; ++k) {
-                    const success = this.allocate(children[k], {page: pageCounter}, []);
+                    const success = this.allocate(children[k], {page: currentNode.page}, []);
                     if(!success) {
                         this.structure.rollback();
                         continue outer;
@@ -290,7 +294,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate(children[k], {page: pageCounter}, []);
+                        const success = this.allocate(children[k], {page: rightNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -404,7 +408,13 @@ class Packer {
             }
         }
 
+
         const files = [];
+        files.push({
+            name: `data_consts.inc`,
+            output: this.consts.map(a => `${a.name} := ${a.data}`).join('\n')
+        });
+
         for(let i=0; i<this.structure.pages.length; ++i) {
             const file = {name: `data_${String(124+i).padStart(3, '0')}.asm`, output: ''}
             files.push(file);
@@ -441,7 +451,7 @@ class Packer {
     }
 }
 
-class BinaryBuffer {
+class BinaryPackage {
     data;
     constructor(data) {
         this.data = data ?? [];
@@ -463,10 +473,10 @@ class BinaryBuffer {
         for(let i=0; i<this.data.length; ++i) {
             subData.push(this.data[i].slice(start, end));
         }
-        return new BinaryBuffer(subData);
+        return new BinaryPackage(subData);
     }
     getSiblingPackages() {
-        return this.data.slice(1).map(a => new BinaryBuffer([a]));
+        return this.data.slice(1).map(a => new BinaryPackage([a]));
     }
     childAllocations() {
         return [];
@@ -486,7 +496,7 @@ class PointerPackage {
         return this.data.length;
     }
     getOutput() {
-        return this.data.map(a => `$${(7).toString(16).padStart(2, '0')}`).join(', ');
+        return this.data.map(a => a === 0 ? '0' : `${this.secondary?'>':'<'}${a.name}`).join(', ');
     }
     split(start, end) {
         return new PointerPackage(this.data.slice(start, end), this.secondary);
@@ -496,7 +506,7 @@ class PointerPackage {
     }
     childAllocations() {
         if(!this.secondary) {
-            return this.data.map(a => ({name: a.name, data: a.data}));
+            return this.data.filter(a => a !== 0).map(a => ({name: a.name, data: a.data}));
         } else {
             return [];
         }
@@ -508,7 +518,8 @@ class Preprocessor {
     constructor() {}
     processJson(jsonData) {
         const packer = new Packer();
-        const label = [];
+        
+        const ITEM = [];
 
         if(jsonData.text) {
             for(let i=0; i<jsonData.text.length; ++i) {
@@ -520,22 +531,26 @@ class Preprocessor {
 
         if(jsonData.item) {
 
-            const items = [];
-
             const itemName = new PointerPackage();
-            const itemPrice = new BinaryBuffer();
+            const itemPrice = new BinaryPackage();
 
+            // The zero entry
+            itemPrice.push(0, 0, 0);
+            itemName.push(0);
 
             for(let i=0; i<jsonData.item.length; ++i) {
                 const node = jsonData.item[i];
+                const itemId = i+1;
+
+                ITEM.push({name: node.name, data: itemId});
+
+                packer.addConst({name: `ITEM_${node.name}`, data: itemId});
 
                 itemPrice.push(
                     node.price & 0xFF,
-                    node.price << 8 & 0xFF,
-                    node.price << 16 & 0xFF,
+                    node.price >> 8 & 0xFF,
+                    node.price >> 16 & 0xFF,
                 );
-
-
 
                 // Add this item's text to the output
                 const textData = this.compileText(node.text);
@@ -543,6 +558,30 @@ class Preprocessor {
             }
             packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
             packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
+        }
+
+        if(jsonData.shop) {
+            
+            const shops = [];
+            for(let i=0; i<jsonData.shop.length; ++i) {
+                const node = jsonData.shop[i];
+                const shopList = new BinaryPackage();
+                for(let j=0; j<node.list.length; ++j) {
+                    const item = ITEM.find(a => a.name === node.list[j]);
+                    if(!item) {
+                        throw new Error(`Cannot find item ${node.list[j].name}`);
+                    }
+                    shopList.push(
+                        item.data & 0xFF,
+                        item.data >> 8 & 0xFF
+                    );
+                }
+                // Terminator
+                shopList.push(0, 0);
+
+                const shop = packer.addStatic({name: node.name, data: shopList});
+                shops.push(shop);
+            }
         }
 
         return packer.build();
@@ -632,7 +671,7 @@ class Preprocessor {
 
 
         let output = '';
-        const buffer = new BinaryBuffer();
+        const buffer = new BinaryPackage();
         for(let i=0; i<input.length; ++i) {
             const char = input[i]
 
@@ -665,6 +704,58 @@ class Preprocessor {
     translateCommand(commandString, buffer) {
         const segment = commandString.split(' ');
         switch(segment[0]) {
+            case 'SWORD': {
+                buffer.push(116);
+                break;
+            }
+            case 'HAMMER': {
+                buffer.push(117);
+                break;
+            }
+            case 'KNIFE': {
+                buffer.push(118);
+                break;
+            }
+            case 'AXE': {
+                buffer.push(119);
+                break;
+            }
+            case 'STAFF': {
+                buffer.push(120);
+                break;
+            }
+            case 'NUNCHUCK': {
+                buffer.push(121);
+                break;
+            }
+            case 'ARMOR': {
+                buffer.push(122);
+                break;
+            }
+            case 'SHIELD': {
+                buffer.push(123);
+                break;
+            }
+            case 'HELMET': {
+                buffer.push(124);
+                break;
+            }
+            case 'GAUNTLET': {
+                buffer.push(125);
+                break;
+            }
+            case 'BRACELET': {
+                buffer.push(126);
+                break;
+            }
+            case 'CLOTH': {
+                buffer.push(127);
+                break;
+            }
+            case 'POTION': {
+                buffer.push(129);
+                break;
+            }
             case 'BYTE':
                 buffer.push(128);
                 buffer.push(this.getPositiveInteger(segment[1]));
@@ -800,6 +891,9 @@ class Preprocessor {
                 break;
             case 'HERO_MAXSPELLCHARGE8':
                 buffer.push(161);
+                break;
+            case 'ITEM_PRICE':
+                buffer.push(162);
                 break;
             case 'SUBSTRING':
                 const address = getPositiveInteger(segment[1]);

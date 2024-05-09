@@ -20,7 +20,7 @@
 .import DrawShopThisSpellFull, DrawShopAlreadyKnowSpell, DrawShopItemCostOK
 .import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
 .import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
-.import DrawShopTitle, DrawShopGoldBox, DrawShopItemList
+.import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 
@@ -3834,7 +3834,7 @@ EquipShop_Loop:
   ;; Buying
 
   @Buy:
-    CALL LoadShopInventory       ; load shop inventory.  Needs to be done here
+    FARCALL LoadShopInventory       ; load shop inventory.  Needs to be done here
                                 ;  because item box can be filled with a character's
                                 ;  equipment instead of shop inventory.
 
@@ -4577,7 +4577,7 @@ ShopFrameNoCursor:
 
 
 DrawShop:
-    CALL LoadShopInventory      ; load up this shop's inventory into the item box
+    FARCALL LoadShopInventory      ; load up this shop's inventory into the item box
     CALL ClearNT                ; clear the nametable
 
               ; Fill attribute tables
@@ -4692,36 +4692,6 @@ DrawImageRect:
 
     RTS                   ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Shop Inventory  [$A7D1 :: 0x3A7E1]
-;;
-;;   Loads a shop's inventory into the item box
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadShopInventory:
-    LDA shop_id          ; get the shop ID
-    ASL A                ; double it
-    TAX                  ; put it in X for indexing
-
-    LDA lut_ShopData, X      ; load up the pointer to shop's inventory
-    STA tmp
-    LDA lut_ShopData+1, X
-    STA tmp+1
-
-    LDY #$04             ; copy 5 items from the inventory (max for a shop)
-  @Loop:
-     LDA (tmp), Y        ; get the item from the shop LUTs
-     STA item_box, Y     ; put it in the item box
-     DEY                 ; decrement loop counter and index
-     BPL @Loop           ; and loop until counter wraps
-
-    LDA #0
-    STA item_box+5       ; put a null terminator at the end of the item_box
-
-    RTS                  ; and exit
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  EquipMenu_BuildSellBox  [$A806 :: 0x3A816]
@@ -4825,69 +4795,10 @@ EquipMenu_BuildSellBox:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopSelectBuyItem:
-    LDA #0
-    STA cursor_max    ; zero cursor max.
-                      ; this will be an up counter counting the items in the shop.
-
-    LDY #0            ; zero Y... this will be our string building index
-
-  @Loop:
-    LDX cursor_max       ; get the current shop item index in X
-    LDA item_box, X      ; use it to get the next shop item
-    BEQ @Done            ; if null terminator, no more shop items.  We're done
-
-                         ; otherwise... start building the string
-    STA str_buf+$11, Y   ; put item ID at +$11
-    STA str_buf+$16, Y   ; and at +$16
-    LDA #$02
-    STA str_buf+$10, Y   ; put #2 (Item Name control code) at +$10 
-    LDA #$03
-    STA str_buf+$15, Y   ; put #3 (Item Price control code) at +$15
-    LDA #$01
-    STA str_buf+$12, Y   ; put #1 (double line break) at +$12 and +$17
-    STA str_buf+$17, Y
-    LDA #$FF
-    STA str_buf+$13, Y   ; put a space at +$13, +$14
-    STA str_buf+$14, Y   ; compiled string is:
-                         ;[ItemName]
-                         ;  [Price ]
-                         ; (with double line breaks before and after the price line)
-    TYA
-    CLC                  ; add 8 to our string index so the next item
-    ADC #8               ;  is drawn after this item
-    TAY
-
-
-
-
-
-
-
-
-
-
-
-    INC cursor_max       ; increment cursor_max, our item counter
-    LDA cursor_max
-    CMP #5               ; ensure we don't exceed 5 items (max the shop space will allow)
-    BCC @Loop            ; if we haven't reached 5 items yet, keep looping
-
-  @Done:
-    LDA #0
-    STA str_buf+$10, Y     ; slap a null terminator at the end of our string
-
-    LDA #$02
-    CALL DrawShopBox        ; draw shop box #2 (inv list box)
-
-    LDA #<(str_buf+$10)    ; load up the pointer to our string
-    STA Var0
-    LDA #>(str_buf+$10)
-    STA Var1
-    ;CALL DrawShopComplexString  ; and draw it
-
     FARCALL DrawShopItemList
 
-
+    LDA #5
+    STA cursor_max    ; zero cursor max.
 
     LDA #$03
     CALL LoadShopBoxDims
@@ -8001,30 +7912,7 @@ DrawMainMenu:
     CALL ClearNT                    ; start by clearing the NT
     CALL DrawOrbBox                 ; draw the orb box
     CALL DrawMainMenuOptionBox      ; and option box
-
-
     FARCALL DrawGameMenu
-
-;    LDA #1                         ; then draw the boxes for each character
-;    CALL DrawMainItemBox            ;  stats...starting with the first character
-;    LDA #$00
-;    CALL DrawMainMenuCharBoxBody
-;
-;    LDA #2                         ; second
-;    CALL DrawMainItemBox
-;    LDA #$40
-;    CALL DrawMainMenuCharBoxBody
-;
-;    LDA #3                         ; third
-;    CALL DrawMainItemBox
-;    LDA #$80
-;    CALL DrawMainMenuCharBoxBody
-;
-;    LDA #4                         ; fourth
-;    CALL DrawMainItemBox
-;    LDA #$C0
-;    CALL DrawMainMenuCharBoxBody    ; and then exit
-
     RTS
 
 

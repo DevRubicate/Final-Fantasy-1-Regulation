@@ -59,7 +59,7 @@
         {"name": "SHOP_TITLEITEM",            "text": "ITEM"},
         {"name": "SHOP_TITLEINN",             "text": "INN"},
 
-        {"name": "TEMPLATE_ITEM_LIST",             "text": "{ITEM_NAME}{READ8 $300}\n\n\n\n{ITEM_NAME}{READ8 $301}\n\n\n\n{ITEM_NAME}{READ8 $302}\n\n\n\n{ITEM_NAME}{READ8 $303}\n\n\n\n{ITEM_NAME}{READ8 $304}"}
+        {"name": "TEMPLATE_ITEM_LIST",        "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"}
     ]
 }
 
