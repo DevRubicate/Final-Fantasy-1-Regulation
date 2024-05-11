@@ -3,26 +3,22 @@
 .include "src/global-import.inc"
 .include "src/lib/yxa2dec.asm"
 
-.import WaitForVBlank, MenuCondStall, MusicPlay
+.import WaitForVBlank, MenuCondStall, MusicPlay, VideoUpdateWriteStackBytes, VideoUpdateSetAddress, VideoUpdateSetAddressSetValue, VideoUpdateSetValue, VideoUpdateRepeatValue, VideoUpdateWriteValueSetValue, VideoUpdateRepeatValueSetValueWriteValue
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
 .import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
+.import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 
-.export PlotBox, Stringify
+.export RenderBox, Stringify
 
 Stringify:
-    LDA #0
-    STA stringifyCounter
-
-    FARCALL MusicPlay    ; keep the music playing
-    CALL WaitForVBlank   ; wait for VBlank
-
     LDA stringwriterDestX
     STA stringwriterNewlineOrigin
 
-    CALL SetStringifyPPUAddress
+    CALL VideoUpdatePushAddress
+
     LDY #0
     STY stringifyCursor
     @Loop:
@@ -41,10 +37,7 @@ Stringify:
         ; Add CHR offset so this becomes a valid character
         CLC
         ADC #$60
-        PHA
-        CALL StringifyLimiter
-        PLA
-        STA PPUDATA                     ; Draw it
+        CALL VideoUpdatePushData        ; Push this byte
         LDA stringwriterDestX           ; Increment the dest address by 1
         CLC
         ADC #1
@@ -53,12 +46,14 @@ Stringify:
         JUMP @Loop
 
         @Newline:
+        CALL VideoUpdateSetWriteStackBytes
         LDA stringwriterNewlineOrigin
         STA stringwriterDestX
         INC stringwriterDestY
-        CALL StringifyLimiter
         STY stringifyCursor
-        CALL SetStringifyPPUAddress  ; then set the PPU address appropriately
+
+        CALL VideoUpdatePushAddress
+
         LDY stringifyCursor
         JUMP @Loop
 
@@ -66,12 +61,8 @@ Stringify:
         JUMP @Loop
 
         @Terminate:
-        ; We have to restore the scroll as this is messed up by our writing to the PPU
-        LDA scrollX
-        STA PPUSCROLL
-        LDA scrollY
-        STA PPUSCROLL
 
+        CALL VideoUpdateSetWriteStackBytes
         RTS
 
 SaveStringifyStack:
@@ -87,34 +78,8 @@ SaveStringifyStack:
     STA stringwriterStackBank, X
     RTS
 
-StringifyLimiter:
-    LDA stringifyCounter
-    CLC
-    ADC #1
-    CMP #6
-    BCC @noWait
-    LDA scrollX
-    STA PPUSCROLL
-    LDA scrollY
-    STA PPUSCROLL
-    STY stringifyCursor
-    FARCALL MusicPlay    ; keep the music playing
-    CALL WaitForVBlank   ; wait for VBlank
-    CALL SetStringifyPPUAddress
-    LDY stringifyCursor
-    LDA #0
-    @noWait:
-    STA stringifyCounter
-    RTS
-StringifyDelay:
-    LDA scrollX
-    STA PPUSCROLL
-    LDA scrollY
-    STA PPUSCROLL
-    FARCALL MusicPlay    ; keep the music playing
-    CALL WaitForVBlank   ; wait for VBlank
-    CALL SetStringifyPPUAddress
-    RTS
+
+
 
 FetchCharacter:
     LDA Var2                        ; Load the bank this string is located in
@@ -328,7 +293,6 @@ FetchCharacterDigit5L:
     CALL TrimDigit5
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+3)
     STA Var0
@@ -345,7 +309,6 @@ FetchCharacterDigit5R:
     CALL TrimDigit5
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+3)
     STA Var0
@@ -362,7 +325,6 @@ FetchCharacterDigit6L:
     CALL TrimDigit6
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+2)
     STA Var0
@@ -379,7 +341,6 @@ FetchCharacterDigit6R:
     CALL TrimDigit6
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+2)
     STA Var0
@@ -396,7 +357,6 @@ FetchCharacterDigit7L:
     CALL TrimDigit7
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+1)
     STA Var0
@@ -413,7 +373,6 @@ FetchCharacterDigit7R:
     CALL TrimDigit7
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+1)
     STA Var0
@@ -430,7 +389,6 @@ FetchCharacterDigit8L:
     CALL TrimDigit8
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+0)
     STA Var0
@@ -447,7 +405,6 @@ FetchCharacterDigit8R:
     CALL TrimDigit8
     LDY stringifyCursor
     CALL SaveStringifyStack
-    CALL StringifyDelay
     LDY #0
     LDA #<(yxa2decOutput+0)
     STA Var0
@@ -657,6 +614,9 @@ FetchValueJumpTableHi:
     .hibytes FetchValueHeroMaxSpellCharge7 - 1
     .hibytes FetchValueHeroMaxSpellCharge8 - 1
     .hibytes FetchValueItemPrice - 1
+    .hibytes FetchValueItemDataFirst - 1
+    .hibytes FetchValueItemDataSecond - 1
+    .hibytes FetchValueItemDataThird - 1
 FetchValueJumpTableLo:
     .lobytes FetchValueByte - 1
     .lobytes FetchValueWord - 1
@@ -693,6 +653,9 @@ FetchValueJumpTableLo:
     .lobytes FetchValueHeroMaxSpellCharge7 - 1
     .lobytes FetchValueHeroMaxSpellCharge8 - 1
     .lobytes FetchValueItemPrice - 1
+    .lobytes FetchValueItemDataFirst - 1
+    .lobytes FetchValueItemDataSecond - 1
+    .lobytes FetchValueItemDataThird - 1
 
 FetchValueByte:
     CALL IncrementStringifyAdvance
@@ -1101,24 +1064,37 @@ FetchValueItemPrice:
     TAX
     PLA
     RTS
+FetchValueItemDataFirst:
+    CALL IncrementStringifyAdvance
+    CALL FetchValue
+    TAX
+    ; TODO: 16 bit item ids
+    LDA #TextBank(LUT_ITEM_PRICE)              ; Switch to the bank
+    STA MMC5_PRG_BANK2
+    LDA LUT_ITEM_DATA_FIRST, X
+    PHA
+    LDA LUT_ITEM_DATA_FIRST_SIBLING2, X
+    PHA
+    LDY LUT_ITEM_DATA_FIRST_SIBLING3, X
+    PLA
+    TAX
+    PLA
+    RTS
+FetchValueItemDataSecond:
+    RTS
+FetchValueItemDataThird:
+    RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  SetStringifyPPUAddress
-;;
-;;    Sets the PPU address to have it start drawing at the coords
-;;  given by dest_x, dest_y.  The difference between this and the below
-;;  CoordToNTAddr routine is that this one actually sets the PPU address
-;;  (whereas the below simply does the conversion without setting PPU
-;;  address) -- AND this one works when dest_x is between 00-3F (both nametables)
-;;  whereas CoordToNTAddr only works when dest_x is between 00-1F (one nametable)
-;;
-;;  IN:  dest_x, dest_y
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SetStringifyPPUAddress:
-    LDA PPUSTATUS          ; reset PPU toggle
+VideoUpdatePushAddress:
+    LDA VideoUpdateCursor
+    BPL @noWait
+    CALL WaitForVBlank
+    @noWait:
+
+
+    LDA #0
+    STA stringifyLength
     LDX stringwriterDestX         ; get dest_x in X
     LDY stringwriterDestY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
@@ -1126,21 +1102,67 @@ SetStringifyPPUAddress:
 
     @NTA:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    STA PPUADDR                ; write it
+    PHA
     TXA                      ; put column/X coord in A
     ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    STA PPUADDR                ; and write as low byte
-    RTS
+    PHA
+    JUMP @Push
 
     @NTB:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
     ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    STA PPUADDR                ; write as high byte of PPU address
+    PHA                ; write as high byte of PPU address
     TXA                      ; put column in A
     AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
     ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    STA PPUADDR                ;  for our low byte of PPU address
+    PHA                ;  for our low byte of PPU address
+
+    @Push:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdateSetAddress-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdateSetAddress-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+
+    
+    TXA
+    CLC
+    ADC #4
+    STA VideoUpdateRetroactiveCursor
+    ADC #2
+    STA VideoUpdateCursor
     RTS
+
+VideoUpdatePushData:
+    LDX VideoUpdateCursor
+    STA VideoUpdateStack,X
+    INX
+    STX VideoUpdateCursor
+    INC stringifyLength
+    RTS
+
+VideoUpdateSetWriteStackBytes:
+    LDX VideoUpdateRetroactiveCursor
+    LDA #<(VideoUpdateWriteStackBytes-1)
+    SEC
+    SBC stringifyLength
+    SBC stringifyLength
+    SBC stringifyLength
+    SBC stringifyLength
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdateWriteStackBytes-1)
+    STA VideoUpdateStack+1,X
+
+    LDX VideoUpdateCursor
+    LDA #$80
+    STA VideoUpdateStack+0,X
+    STA VideoUpdateStack+1,X
+    RTS
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1236,6 +1258,227 @@ PlotBox:
     STA PPUSCROLL
 
 
+    RTS
+
+RenderBox:
+    LDA VideoUpdateCursor
+    BPL :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+
+    LDX stringwriterDestX         ; get dest_x in X
+    LDY stringwriterDestY         ; and dest_y in Y
+    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
+
+    @NTA:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    PHA
+    TXA                      ; put column/X coord in A
+    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+    PHA
+    JUMP @Push
+
+    @NTB:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    PHA                ; write as high byte of PPU address
+    TXA                      ; put column in A
+    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+    PHA                ;  for our low byte of PPU address
+
+    @Push:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+    LDA #$F7
+    STA VideoUpdateStack+4,X
+
+    LDA #<(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+5,X
+    LDA #>(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+6,X
+    LDA #$F8
+    STA VideoUpdateStack+7,X
+    
+    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
+    SEC
+    SBC box_wd
+    SBC box_wd
+    SBC box_wd
+    STA VideoUpdateStack+8,X
+    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
+    STA VideoUpdateStack+9,X
+    LDA #$F9
+    STA VideoUpdateStack+10,X
+
+    TXA
+    CLC
+    ADC #11
+    STA VideoUpdateCursor
+
+
+
+    ; MIDDLE SECTION
+    @LoopMiddleSection:
+    LDA VideoUpdateCursor
+    BPL :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+    INC stringwriterDestY
+
+    LDX stringwriterDestX         ; get dest_x in X
+    LDY stringwriterDestY         ; and dest_y in Y
+    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+    BCS @NTB2           ;  if it is, to NTB, otherwise, NTA
+
+    @NTA2:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    PHA
+    TXA                      ; put column/X coord in A
+    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+    PHA
+    JUMP @Push2
+
+    @NTB2:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    PHA                ; write as high byte of PPU address
+    TXA                      ; put column in A
+    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+    PHA                ;  for our low byte of PPU address
+
+    @Push2:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+    LDA #$FA
+    STA VideoUpdateStack+4,X
+
+    LDA #<(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+5,X
+    LDA #>(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+6,X
+    LDA #$FF
+    STA VideoUpdateStack+7,X
+    
+    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
+    SEC
+    SBC box_wd
+    SBC box_wd
+    SBC box_wd
+    STA VideoUpdateStack+8,X
+    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
+    STA VideoUpdateStack+9,X
+    LDA #$FB
+    STA VideoUpdateStack+10,X
+
+    TXA
+    CLC
+    ADC #11
+    STA VideoUpdateCursor
+
+    DEC box_ht
+    BEQ :+
+    JUMP @LoopMiddleSection
+    :
+
+    ; LOWER SECTION
+    LDA VideoUpdateCursor
+    BPL :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+    INC stringwriterDestY
+
+    LDX stringwriterDestX         ; get dest_x in X
+    LDY stringwriterDestY         ; and dest_y in Y
+    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+    BCS @NTB3           ;  if it is, to NTB, otherwise, NTA
+
+    @NTA3:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    PHA
+    TXA                      ; put column/X coord in A
+    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+    PHA
+    JUMP @Push3
+
+    @NTB3:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    PHA                ; write as high byte of PPU address
+    TXA                      ; put column in A
+    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+    PHA                ;  for our low byte of PPU address
+
+    @Push3:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdateSetAddressSetValue-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+    LDA #$FC
+    STA VideoUpdateStack+4,X
+
+    LDA #<(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+5,X
+    LDA #>(VideoUpdateWriteValueSetValue-1)
+    STA VideoUpdateStack+6,X
+    LDA #$FD
+    STA VideoUpdateStack+7,X
+    
+    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
+    SEC
+    SBC box_wd
+    SBC box_wd
+    SBC box_wd
+    STA VideoUpdateStack+8,X
+    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
+    STA VideoUpdateStack+9,X
+    LDA #$FE
+    STA VideoUpdateStack+10,X
+
+    TXA
+    CLC
+    ADC #11
+    STA VideoUpdateCursor
+
+    ; All done
+    LDX VideoUpdateCursor
+    LDA #$80
+    STA VideoUpdateStack+0,X
+    STA VideoUpdateStack+1,X
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

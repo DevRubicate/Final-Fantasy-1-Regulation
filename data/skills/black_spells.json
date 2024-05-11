@@ -1,0 +1,228 @@
+{
+    "skills": [
+        {
+            "name": "LIT",
+            "text": "LIT",
+            "price": 100,
+            "level": 1,
+            "type": "BLACK"
+        },
+        {
+            "name": "FIRE",
+            "text": "FIRE",
+            "price": 100,
+            "level": 1,
+            "type": "BLACK"
+        },
+        {
+            "name": "LOCK",
+            "text": "LOCK",
+            "price": 100,
+            "level": 1,
+            "type": "BLACK"
+        },
+        {
+            "name": "SLEP",
+            "text": "SLEP",
+            "price": 100,
+            "level": 1,
+            "type": "BLACK"
+        },
+        {
+            "name": "DARK",
+            "text": "DARK",
+            "price": 400,
+            "level": 2,
+            "type": "BLACK"
+        },
+        {
+            "name": "ICE",
+            "text": "ICE",
+            "price": 400,
+            "level": 2,
+            "type": "BLACK"
+        },
+        {
+            "name": "SLOW",
+            "text": "SLOW",
+            "price": 400,
+            "level": 2,
+            "type": "BLACK"
+        },
+        {
+            "name": "TMPR",
+            "text": "TMPR",
+            "price": 400,
+            "level": 2,
+            "type": "BLACK"
+        },
+        {
+            "name": "HOLD",
+            "text": "HOLD",
+            "price": 1500,
+            "level": 3,
+            "type": "BLACK"
+        },
+        {
+            "name": "LIT2",
+            "text": "LIT2",
+            "price": 1500,
+            "level": 3,
+            "type": "BLACK"
+        },
+        {
+            "name": "FIR2",
+            "text": "FIR2",
+            "price": 1500,
+            "level": 3,
+            "type": "BLACK"
+        },
+        {
+            "name": "LOK2",
+            "text": "LOK2",
+            "price": 1500,
+            "level": 3,
+            "type": "BLACK"
+        },
+        {
+            "name": "FAST",
+            "text": "FAST",
+            "price": 4000,
+            "level": 4,
+            "type": "BLACK"
+        },
+        {
+            "name": "ICE2",
+            "text": "ICE2",
+            "price": 4000,
+            "level": 4,
+            "type": "BLACK"
+        },
+        {
+            "name": "CONF",
+            "text": "CONF",
+            "price": 4000,
+            "level": 4,
+            "type": "BLACK"
+        },
+        {
+            "name": "SLP2",
+            "text": "SLP2",
+            "price": 4000,
+            "level": 4,
+            "type": "BLACK"
+        },
+        {
+            "name": "FIR3",
+            "text": "FIR3",
+            "price": 8000,
+            "level": 5,
+            "type": "BLACK"
+        },
+        {
+            "name": "BANE",
+            "text": "BANE",
+            "price": 8000,
+            "level": 5,
+            "type": "BLACK"
+        },
+        {
+            "name": "SLO2",
+            "text": "SLO2",
+            "price": 8000,
+            "level": 5,
+            "type": "BLACK"
+        },
+        {
+            "name": "WARP",
+            "text": "WARP",
+            "price": 8000,
+            "level": 5,
+            "type": "BLACK"
+        },
+        {
+            "name": "LIT3",
+            "text": "LIT3",
+            "price": 20000,
+            "level": 6,
+            "type": "BLACK"
+        },
+        {
+            "name": "QAKE",
+            "text": "QAKE",
+            "price": 20000,
+            "level": 6,
+            "type": "BLACK"
+        },
+        {
+            "name": "RUB",
+            "text": "RUB",
+            "price": 20000,
+            "level": 6,
+            "type": "BLACK"
+        },
+        {
+            "name": "STUN",
+            "text": "STUN",
+            "price": 20000,
+            "level": 6,
+            "type": "BLACK"
+        },
+        {
+            "name": "BLND",
+            "text": "BLND",
+            "price": 45000,
+            "level": 7,
+            "type": "BLACK"
+        },
+        {
+            "name": "BRAK",
+            "text": "BRAK",
+            "price": 45000,
+            "level": 7,
+            "type": "BLACK"
+        },
+        {
+            "name": "ICE3",
+            "text": "ICE3",
+            "price": 45000,
+            "level": 7,
+            "type": "BLACK"
+        },
+        {
+            "name": "SABR",
+            "text": "SABR",
+            "price": 45000,
+            "level": 7,
+            "type": "BLACK"
+        },
+        {
+            "name": "NUKE",
+            "text": "NUKE",
+            "price": 60000,
+            "level": 8,
+            "type": "BLACK"
+        },
+        {
+            "name": "STOP",
+            "text": "STOP",
+            "price": 60000,
+            "level": 8,
+            "type": "BLACK"
+        },
+        {
+            "name": "XXXX",
+            "text": "XXXX",
+            "price": 60000,
+            "level": 8,
+            "type": "BLACK"
+        },
+        {
+            "name": "ZAP",
+            "text": "ZAP!",
+            "price": 60000,
+            "level": 8,
+            "type": "BLACK"
+        }
+    ]
+}

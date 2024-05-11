@@ -24,6 +24,7 @@
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
+.import VideoUpdate_Start, ClearVideoStack
 
 ; prg_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -1128,14 +1129,6 @@ Copy256:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;   NMI Vector [$FE9C :: 0x3FEAC] 
-;;
-;;     This is called when an NMI occurs.  FF1 has a bizarre way
-;;    of doing NMIs.  It calls a Wait for VBlank routine, which enables
-;;    NMIs, and does an infinite JUMP loop.  When an NMI is triggered,
-;;    It does not RTI (since that would put it back in that infinite
-;;    loop).  Instead, it tosses the RTI address and does an RTS, which
-;;    returns to the area in code that called the Wait for Vblank routine
-;;
 ;;     Changes to this routine can impact the timing of various raster effects,
 ;;    potentially breaking them.  It is recommended that you don't change this
 ;;    routine unless you're very careful.  Unedited, this routine exits no earlier
@@ -1146,8 +1139,30 @@ Copy256:
 OnNMI:
     SEI
     PHA
+    LDA VideoUpdateCursor
+    BEQ @noVideoUpdate
+    TXA
+    PHA
+    TYA
+    PHA
+    LDA current_bank1
+    PHA
+    LDA #(.bank(VideoUpdate_Start) | %10000000)
+    STA MMC5_PRG_BANK1
+    JSR VideoUpdate_Start
+    PLA
+    STA MMC5_PRG_BANK1
+    PLA
+    TAY
+    PLA
+    TAX
+    @noVideoUpdate:
+
+
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
     INC vBlankCounter
+
+
     PLA
     CLI
     RTI
@@ -1382,6 +1397,7 @@ OnReset:
         BNE @Loop
 
     FARCALL ResetRAM
+    FARCALL ClearVideoStack
 
     FARCALL DisableAPU
     SWITCH GameStart

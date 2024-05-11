@@ -1,0 +1,452 @@
+{
+    "item": [
+        {
+            "name": "SPELLBOOK_LIT",
+            "text": "LIT",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FIRE",
+            "text": "FIRE",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LOCK",
+            "text": "LOCK",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SLEP",
+            "text": "SLEP",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_DARK",
+            "text": "DARK",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ICE",
+            "text": "ICE",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SLOW",
+            "text": "SLOW",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_TMPR",
+            "text": "TMPR",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HOLD",
+            "text": "HOLD",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LIT2",
+            "text": "LIT2",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FIR2",
+            "text": "FIR2",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LOK2",
+            "text": "LOK2",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FAST",
+            "text": "FAST",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ICE2",
+            "text": "ICE2",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_CONF",
+            "text": "CONF",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SLP2",
+            "text": "SLP2",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FIR3",
+            "text": "FIR3",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_BANE",
+            "text": "BANE",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SLO2",
+            "text": "SLO2",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_WARP",
+            "text": "WARP",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LIT3",
+            "text": "LIT3",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_QAKE",
+            "text": "QAKE",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_RUB",
+            "text": "RUB",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_STUN",
+            "text": "STUN",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_BLND",
+            "text": "BLND",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_BRAK",
+            "text": "BRAK",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ICE3",
+            "text": "ICE3",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SABR",
+            "text": "SABR",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_NUKE",
+            "text": "NUKE",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_STOP",
+            "text": "STOP",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_XXXX",
+            "text": "XXXX",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ZAP",
+            "text": "ZAP!",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_CURE",
+            "text": "CURE",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FOG",
+            "text": "FOG",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HARM",
+            "text": "HARM",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_RUSE",
+            "text": "RUSE",
+            "price": 100,
+            "level": 1,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ALIT",
+            "text": "ALIT",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_INVS",
+            "text": "INVS",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LAMP",
+            "text": "LAMP",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_MUTE",
+            "text": "MUTE",
+            "price": 400,
+            "level": 2,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_AFIR",
+            "text": "AFIR",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_CUR2",
+            "text": "CUR2",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HEAL",
+            "text": "HEAL",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HRM2",
+            "text": "HRM2",
+            "price": 1500,
+            "level": 3,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_AICE",
+            "text": "AICE",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_AMUT",
+            "text": "AMUT",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FEAR",
+            "text": "FEAR",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_PURE",
+            "text": "PURE",
+            "price": 4000,
+            "level": 4,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_CUR3",
+            "text": "CUR3",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HEL2",
+            "text": "HEL2",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HRM3",
+            "text": "HRM3",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LIFE",
+            "text": "LIFE",
+            "price": 8000,
+            "level": 5,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_EXIT",
+            "text": "EXIT",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FOG2",
+            "text": "FOG2",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_INV2",
+            "text": "INV2",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_SOFT",
+            "text": "SOFT",
+            "price": 20000,
+            "level": 6,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_ARUB",
+            "text": "ARUB",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_CUR4",
+            "text": "CUR4",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HEL3",
+            "text": "HEL3",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_HRM4",
+            "text": "HRM4",
+            "price": 45000,
+            "level": 7,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_FADE",
+            "text": "FADE",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_LIF2",
+            "text": "LIF2",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_WALL",
+            "text": "WALL",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        },
+        {
+            "name": "SPELLBOOK_XFER",
+            "text": "XFER",
+            "price": 60000,
+            "level": 8,
+            "type": "SPELLBOOK"
+        }
+    ]
+}

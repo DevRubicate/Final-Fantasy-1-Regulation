@@ -1,0 +1,228 @@
+{
+    "skills": [
+        {
+            "name": "CURE",
+            "text": "CURE",
+            "price": 100,
+            "level": 1,
+            "type": "WHITE"
+        },
+        {
+            "name": "FOG",
+            "text": "FOG",
+            "price": 100,
+            "level": 1,
+            "type": "WHITE"
+        },
+        {
+            "name": "HARM",
+            "text": "HARM",
+            "price": 100,
+            "level": 1,
+            "type": "WHITE"
+        },
+        {
+            "name": "RUSE",
+            "text": "RUSE",
+            "price": 100,
+            "level": 1,
+            "type": "WHITE"
+        },
+        {
+            "name": "ALIT",
+            "text": "ALIT",
+            "price": 400,
+            "level": 2,
+            "type": "WHITE"
+        },
+        {
+            "name": "INVS",
+            "text": "INVS",
+            "price": 400,
+            "level": 2,
+            "type": "WHITE"
+        },
+        {
+            "name": "LAMP",
+            "text": "LAMP",
+            "price": 400,
+            "level": 2,
+            "type": "WHITE"
+        },
+        {
+            "name": "MUTE",
+            "text": "MUTE",
+            "price": 400,
+            "level": 2,
+            "type": "WHITE"
+        },
+        {
+            "name": "AFIR",
+            "text": "AFIR",
+            "price": 1500,
+            "level": 3,
+            "type": "WHITE"
+        },
+        {
+            "name": "CUR2",
+            "text": "CUR2",
+            "price": 1500,
+            "level": 3,
+            "type": "WHITE"
+        },
+        {
+            "name": "HEAL",
+            "text": "HEAL",
+            "price": 1500,
+            "level": 3,
+            "type": "WHITE"
+        },
+        {
+            "name": "HRM2",
+            "text": "HRM2",
+            "price": 1500,
+            "level": 3,
+            "type": "WHITE"
+        },
+        {
+            "name": "AICE",
+            "text": "AICE",
+            "price": 4000,
+            "level": 4,
+            "type": "WHITE"
+        },
+        {
+            "name": "AMUT",
+            "text": "AMUT",
+            "price": 4000,
+            "level": 4,
+            "type": "WHITE"
+        },
+        {
+            "name": "FEAR",
+            "text": "FEAR",
+            "price": 4000,
+            "level": 4,
+            "type": "WHITE"
+        },
+        {
+            "name": "PURE",
+            "text": "PURE",
+            "price": 4000,
+            "level": 4,
+            "type": "WHITE"
+        },
+        {
+            "name": "CUR3",
+            "text": "CUR3",
+            "price": 8000,
+            "level": 5,
+            "type": "WHITE"
+        },
+        {
+            "name": "HEL2",
+            "text": "HEL2",
+            "price": 8000,
+            "level": 5,
+            "type": "WHITE"
+        },
+        {
+            "name": "HRM3",
+            "text": "HRM3",
+            "price": 8000,
+            "level": 5,
+            "type": "WHITE"
+        },
+        {
+            "name": "LIFE",
+            "text": "LIFE",
+            "price": 8000,
+            "level": 5,
+            "type": "WHITE"
+        },
+        {
+            "name": "EXIT",
+            "text": "EXIT",
+            "price": 20000,
+            "level": 6,
+            "type": "WHITE"
+        },
+        {
+            "name": "FOG2",
+            "text": "FOG2",
+            "price": 20000,
+            "level": 6,
+            "type": "WHITE"
+        },
+        {
+            "name": "INV2",
+            "text": "INV2",
+            "price": 20000,
+            "level": 6,
+            "type": "WHITE"
+        },
+        {
+            "name": "SOFT",
+            "text": "SOFT",
+            "price": 20000,
+            "level": 6,
+            "type": "WHITE"
+        },
+        {
+            "name": "ARUB",
+            "text": "ARUB",
+            "price": 45000,
+            "level": 7,
+            "type": "WHITE"
+        },
+        {
+            "name": "CUR4",
+            "text": "CUR4",
+            "price": 45000,
+            "level": 7,
+            "type": "WHITE"
+        },
+        {
+            "name": "HEL3",
+            "text": "HEL3",
+            "price": 45000,
+            "level": 7,
+            "type": "WHITE"
+        },
+        {
+            "name": "HRM4",
+            "text": "HRM4",
+            "price": 45000,
+            "level": 7,
+            "type": "WHITE"
+        },
+        {
+            "name": "FADE",
+            "text": "FADE",
+            "price": 60000,
+            "level": 8,
+            "type": "WHITE"
+        },
+        {
+            "name": "LIF2",
+            "text": "LIF2",
+            "price": 60000,
+            "level": 8,
+            "type": "WHITE"
+        },
+        {
+            "name": "WALL",
+            "text": "WALL",
+            "price": 60000,
+            "level": 8,
+            "type": "WHITE"
+        },
+        {
+            "name": "XFER",
+            "text": "XFER",
+            "price": 60000,
+            "level": 8,
+            "type": "WHITE"
+        }
+    ]
+}

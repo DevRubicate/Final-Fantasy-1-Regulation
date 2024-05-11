@@ -80,6 +80,8 @@
 .endmacro
 
 .macro TEXT _address
+    .import Stringify
+    
     LDA #<_address
     STA Var0
     LDA #>_address
@@ -89,13 +91,14 @@
     FARCALL Stringify
 .endmacro
 
-
 .macro BOX _w, _h
-    LDA #(_w)
+    .import RenderBox
+
+    LDA #(_w-2)
     STA box_wd
-    LDA #(_h)
+    LDA #(_h-2)
     STA box_ht
-    FARCALL PlotBox
+    FARCALL RenderBox
 .endmacro
 
 .macro CALL _address

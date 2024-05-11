@@ -1,0 +1,154 @@
+{
+    "skills": [
+        {
+            "name": "FROST",
+            "text": "FROST",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "HEAT",
+            "text": "HEAT",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "GLANCE",
+            "text": "GLANCE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "GAZE",
+            "text": "GAZE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "FLASH",
+            "text": "FLASH",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "SCORCH",
+            "text": "SCORCH",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "CRACK",
+            "text": "CRACK",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "SQUINT",
+            "text": "SQUINT",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "STARE",
+            "text": "STARE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "GLARE",
+            "text": "GLARE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "BLIZZARD",
+            "text": "BLIZZARD",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "BLAZE",
+            "text": "BLAZE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "INFERNO",
+            "text": "INFERNO",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "CREMATE",
+            "text": "CREMATE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "POISON",
+            "text": "POISON",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "TRANCE",
+            "text": "TRANCE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "THUNDER",
+            "text": "THUNDER",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "TOXIC",
+            "text": "TOXIC",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "SNORTING",
+            "text": "SNORTING",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "NUCLEAR",
+            "text": "NUCLEAR",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "INK",
+            "text": "INK",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "STINGER",
+            "text": "STINGER",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "DAZZLE",
+            "text": "DAZZLE",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "SWIRL",
+            "text": "SWIRL",
+            "level": 1,
+            "type": "ENEMY"
+        },
+        {
+            "name": "TORNADO",
+            "text": "TORNADO",
+            "level": 1,
+            "type": "ENEMY"
+        }
+    ]
+}

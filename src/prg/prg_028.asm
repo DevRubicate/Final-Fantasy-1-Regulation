@@ -10,7 +10,7 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import WhitespaceWriter, PlotBox
+.import WhitespaceWriter, RenderBox
 .import Stringify
 .import DrawGameMenu
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
@@ -20,14 +20,13 @@
 .import DrawShopThisSpellFull, DrawShopAlreadyKnowSpell, DrawShopItemCostOK
 .import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
 .import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
-.import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory
+.import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
 .export EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
-
 
 
 BANK_THIS = $0E
@@ -2575,7 +2574,6 @@ PtyGen_DrawScreen:
     STA joy_prevdir
 
     CALL ClearNT             ; wipe the screen clean
-    ;CALL PtyGen_DrawBoxes    ;  draw the boxes
     CALL PtyGen_DrawText     ;  and the text in those boxes
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
@@ -3016,7 +3014,7 @@ PtyGen_DrawOneText:
     STA box_wd
     LDA #10
     STA box_ht
-    FARCALL PlotBox
+    FARCALL RenderBox
 
     LDX slotIndex
     LDA SlotCoordX, X
@@ -3710,7 +3708,7 @@ lut_ShopEntryJump:
   .WORD EnterShop_Clinic     ; clinic
   .WORD EnterShop_Inn        ; inn
   .WORD EnterShop_Item       ; item
-  .WORD EnterShop_Caravan    ; caravan
+  .WORD EnterShop_Item       ; caravan
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3951,9 +3949,6 @@ ItemShop_CancelBuy:           ; jumped to for cancelled purchases
     FARCALL DrawShopTooBad       ; "too bad, something else?" dialogue
     JUMP ItemShop_Loop           ; return to loop
 
-EnterShop_Caravan:
-    BNE EnterShop_Item          ; this always branches.. but even if it didn't....
-                                ;  EnterShop_Item is the next instruction.  Pretty silly.
 EnterShop_Item:
     FARCALL DrawShopWelcome
 
@@ -5040,66 +5035,7 @@ lut_ShopCurs_List:   ; cursor positions for the inventory list box
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopSelectBuyMagic:
-    LDA #0
-    STA cursor_max     ; zero cursor max... this will count the number of spells for sale.
-    LDY #0             ; Y will be our string index
-
-  @Loop:
-    LDX cursor_max
-    LDA item_box, X    ; get next item in shop inventory
-    BEQ @Done          ; if it's zero (the null terminator), break out of the loop
-
-    STA str_buf+$11, Y ; store item ID at $11
-    STA str_buf+$16, Y ; and $16
-    LDA #$02
-    STA str_buf+$10, Y ; store $02 ("draw item name" control byte) at $10
-    LDA #$03
-    STA str_buf+$15, Y ; store $03 ("draw item price" control byte) at $15
-    LDA #$01
-    STA str_buf+$12, Y ; store $01 (double line break) at $12 and $17
-    STA str_buf+$17, Y
-    LDA #$C6
-    STA str_buf+$13, Y ; store tile $C6 (the special 'L' character) at $13
-
-    LDA str_buf+$11, Y ; get the item ID
-    SEC
-    SBC #$B0           ; subtract $B0 (spell IDs start at $B0
-    LSR A
-    LSR A
-    LSR A              ; then divide by 8.  This gives us the spell's level
-    SEC
-    ADC #$80           ; SEC then add $80 (so really... add $81).  This converts the 0-based
-                       ;  level, into the 1-based tile to draw.  IE:  level=0 prints the "1" tile.
-    STA str_buf+$14, Y ; put that tile at $14
-
-                 ; string is now:  "02 XX 01 C6 VV 03 XX 01" where XX is the item ID, and VV is the spell level
-                 ;  which... after processing all control codes... will draw to:
-                 ;
-                 ; Name
-                 ; LVPrice
-
-    TYA
-    CLC                ; that bit of string is 8 bytes... so add 8 to our
-    ADC #$08           ;  string index:  Y
-    TAY
-
-    INC cursor_max     ; increment cursor max to count this entry
-    LDA cursor_max
-    CMP #5             ; check to see if we have 5 spells yet (can't sell more than 5)
-    BCC @Loop          ; keep looping if we have less than 5
-
-  @Done:
-    LDA #$00
-    STA str_buf+$10, Y ; put a null terminator at the end of the string
-
-    LDA #$02
-    CALL DrawShopBox    ; draw shop box 2 (inventory list box)
-
-    LDA #<(str_buf+$10)         ; set the text pointer to our string
-    STA Var0
-    LDA #>(str_buf+$10)
-    STA Var1
-    CALL DrawShopComplexString   ; and draw it
+    FARCALL DrawShopItemList
 
     LDA #$03
     CALL LoadShopBoxDims         ; then erase shop box 3 (command box)
@@ -5860,7 +5796,7 @@ MainMenuLoop:
     BNE @NotItem                ; if zero.... (ITEM)
 
     @Item:
-      CALL EnterItemMenu         ; enter item menu
+      FARCALL EnterItemsMenu         ; enter item menu
       JUMP ResumeMainMenu        ; then resume (redraw) main menu
 
   @NotItem:
@@ -7813,7 +7749,7 @@ DrawMainMenuCursor:
     LDY cursor                    ; get current cursor selection
     LDA lut_MainMenuCursor_Y, Y   ;  use cursor as an index to get the desired Y coord
     STA spr_y                     ;  write the Y coord
-    LDA #$10                      ; X coord for main menu cursor is always $10
+    LDA #8                      ; X coord for main menu cursor is always 8
     STA spr_x
     JUMP JumpDrawCursor                ; draw it!  and exit
 
@@ -7911,7 +7847,6 @@ DrawMagicMenuCursor:
 DrawMainMenu:
     CALL ClearNT                    ; start by clearing the NT
     CALL DrawOrbBox                 ; draw the orb box
-    CALL DrawMainMenuOptionBox      ; and option box
     FARCALL DrawGameMenu
     RTS
 

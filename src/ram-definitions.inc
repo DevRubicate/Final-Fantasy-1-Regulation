@@ -248,6 +248,10 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP tmp_9c,                           0 ; 1 bytes      ; $9D
     RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
     RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
+    RESZP Var20,                            1
+    RESZP Var21,                            1
+    RESZP Var22,                            1
+    RESZP Var23,                            1
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
     GAP                                     $80
@@ -306,7 +310,8 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
 
 SECTION "STACK"
-    tmp_hi          = $0110  ; 3? bytes
+    RES             VideoUpdateStack,                   200
+
 
 SECTION "OAM"
     oam             = $0200  ; 256 bytes -- must be on page bound
@@ -983,9 +988,34 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             Var13,                  1
 
     RES             vBlankCounter,          1
-    RES             stringifyCounter,       1
     RES             stringifyActiveItem,    2
     RES             stringifyVariables,     16
     RES             stringifyCursor,        1
+    RES             stringifyLength,        1
 
     RES             stringwriterStackCursor,16
+    RES             tmp_hi,                 3  ; 3? bytes
+
+    RES             VideoUpdateCursor,              1
+    RES             VideoUpdateIncrementMode,       1
+    RES             StackPointerBackup,             1
+    RES             VideoUpdateRetroactiveCursor,   1
+
+    RES             activeItem,                     2
+    RES             inventory,                      100
+    RES             hero0Inventory,                 10
+    RES             hero1Inventory,                 10
+    RES             hero2Inventory,                 10
+    RES             hero3Inventory,                 10
+
+    RES             interactiveMenuXCoordinate,     1
+    RES             interactiveMenuYCoordinate,     1
+    RES             interactiveMenuCursor,          1
+    RES             interactiveMenuLength,          1
+    RES             interactiveMenuSize,            1
+
+    RES             joypadState,                    1
+    RES             joypadStateIgnore,              1
+
+    RES             interactiveMenuLoop,            1
+    RES             interactiveMenuOutcome,         1

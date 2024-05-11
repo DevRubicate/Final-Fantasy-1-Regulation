@@ -1,31 +1,42 @@
 {
     "text": [
         {"name": "ALPHABET", "text": "A B C D E F G H I J\n\nK L M N O P Q R S T\n\nU V W X Y Z ' , .  \n\n0 1 2 3 4 5 6 7 8 9\n\na b c d e f g h i j\n\nk l m n o p q r s t\n\nu v w x y z - \" ! ?"},
-        {"name": "TITLE_SELECT_NAME",         "text": "SELECT  NAME"},
-        {"name": "TITLE_CONTINUE",            "text": "CONTINUE"},
-        {"name": "TITLE_NEW_GAME",            "text": "NEW GAME"},
-        {"name": "TITLE_RESPOND_RATE",        "text": "RESPOND RATE {DIGIT1}{ADD}{READ8 23568}{BYTE 1}"},
-        {"name": "TITLE_COPYRIGHT_SQUARE",    "text": "C 1987 SQUARE  "},
-        {"name": "TITLE_COPYRIGHT_NINTENDO",  "text": "C 1990 NINTENDO"},
-        {"name": "CLASS_NAME_FIGHTER",             "text": "FIGHTER"},
-        {"name": "CLASS_NAME_THIEF",               "text": "THIEF"},
-        {"name": "CLASS_NAME_BLACK_BELT",          "text": "Bl.BELT"},
-        {"name": "CLASS_NAME_RED_MAGE",            "text": "RedMAGE"},
-        {"name": "CLASS_NAME_WHITE_MAGE",          "text": "Wh.MAGE"},
-        {"name": "CLASS_NAME_BLACK_MAGE",          "text": "Bl.MAGE"},
-        {"name": "CLASS_NAME_KNIGHT",              "text": "KNIGHT"},
-        {"name": "CLASS_NAME_MASTER",              "text": "MASTER"},
-        {"name": "CLASS_NAME_NINJA",               "text": "NINJA"},
-        {"name": "CLASS_NAME_RED_WIZARD",          "text": "REDWIZ"},
-        {"name": "CLASS_NAME_WHITE_WIZARD",        "text": "WHITEWIZ"},
-        {"name": "CLASS_NAME_BLACK_WIZARD",        "text": "BLACKWIZ"},
-        {"name": "HERO_0_NAME",                    "text": "{SET_HERO}{BYTE 0}{HERO_NAME}"},
-        {"name": "HERO_1_NAME",                    "text": "{SET_HERO}{BYTE 1}{HERO_NAME}"},
-        {"name": "HERO_2_NAME",                    "text": "{SET_HERO}{BYTE 2}{HERO_NAME}"},
-        {"name": "HERO_3_NAME",                    "text": "{SET_HERO}{BYTE 3}{HERO_NAME}"},
+        {"name": "TITLE_SELECT_NAME",               "text": "SELECT  NAME"},
+        {"name": "TITLE_CONTINUE",                  "text": "CONTINUE"},
+        {"name": "TITLE_NEW_GAME",                  "text": "NEW GAME"},
+        {"name": "TITLE_RESPOND_RATE",              "text": "RESPOND RATE {DIGIT1}{ADD}{READ8 23568}{BYTE 1}"},
+        {"name": "TITLE_COPYRIGHT_SQUARE",          "text": "C 1987 SQUARE  "},
+        {"name": "TITLE_COPYRIGHT_NINTENDO",        "text": "C 1990 NINTENDO"},
+        {"name": "CLASS_NAME_FIGHTER",              "text": "FIGHTER"},
+        {"name": "CLASS_NAME_THIEF",                "text": "THIEF"},
+        {"name": "CLASS_NAME_BLACK_BELT",           "text": "Bl.BELT"},
+        {"name": "CLASS_NAME_RED_MAGE",             "text": "RedMAGE"},
+        {"name": "CLASS_NAME_WHITE_MAGE",           "text": "Wh.MAGE"},
+        {"name": "CLASS_NAME_BLACK_MAGE",           "text": "Bl.MAGE"},
+        {"name": "CLASS_NAME_KNIGHT",               "text": "KNIGHT"},
+        {"name": "CLASS_NAME_MASTER",               "text": "MASTER"},
+        {"name": "CLASS_NAME_NINJA",                "text": "NINJA"},
+        {"name": "CLASS_NAME_RED_WIZARD",           "text": "REDWIZ"},
+        {"name": "CLASS_NAME_WHITE_WIZARD",         "text": "WHITEWIZ"},
+        {"name": "CLASS_NAME_BLACK_WIZARD",         "text": "BLACKWIZ"},
+        {"name": "HERO_0_NAME",                     "text": "{SET_HERO}{BYTE 0}{HERO_NAME}"},
+        {"name": "HERO_1_NAME",                     "text": "{SET_HERO}{BYTE 1}{HERO_NAME}"},
+        {"name": "HERO_2_NAME",                     "text": "{SET_HERO}{BYTE 2}{HERO_NAME}"},
+        {"name": "HERO_3_NAME",                     "text": "{SET_HERO}{BYTE 3}{HERO_NAME}"},
 
-        {"name": "TEMPLATE_HERO_MENU",             "text": "{HERO_NAME}\n\nL {DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 1}\n\nHP\n {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\n\nMAGIC\n{DIGIT1}{HERO_SPELLCHARGE1}/{DIGIT1}{HERO_SPELLCHARGE2}/{DIGIT1}{HERO_SPELLCHARGE3}/{DIGIT1}{HERO_SPELLCHARGE4}/\n{DIGIT1}{HERO_SPELLCHARGE5}/{DIGIT1}{HERO_SPELLCHARGE6}/{DIGIT1}{HERO_SPELLCHARGE7}/{DIGIT1}{HERO_SPELLCHARGE8}"},
-        {"name": "MENU_GOLD",                      "text": "{DIGIT6R}{READ24 $601C} G"},
+        {"name": "TEMPLATE_HERO_MENU",              "text": "{HERO_NAME}\n\nL {DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 1}\n\nHP\n {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\n\nMAGIC\n{DIGIT1}{HERO_SPELLCHARGE1}/{DIGIT1}{HERO_SPELLCHARGE2}/{DIGIT1}{HERO_SPELLCHARGE3}/{DIGIT1}{HERO_SPELLCHARGE4}/\n{DIGIT1}{HERO_SPELLCHARGE5}/{DIGIT1}{HERO_SPELLCHARGE6}/{DIGIT1}{HERO_SPELLCHARGE7}/{DIGIT1}{HERO_SPELLCHARGE8}"},
+        {"name": "MENU_GOLD",                       "text": "{DIGIT6R}{READ24 $601C} G"},
+        {"name": "MENU_SELECTION",                  "text": "ITEMS\n\nMAGIC\n\nWEAPON\n\nARMOR\n\nSTATUS"},
+
+
+        {"name": "TEMPLATE_HERO_EQUIP_STATUS",      "text": "{HERO_NAME}\n{HERO_CLASS}  L{DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 2}  HP {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\nStr   50   Luck  40\nAgi   50   Hit   10\nVit   70   Def   15\nInt   30   MDef  30"},
+
+
+
+        {"name": "EXAMPLE_EQUIP_LIST",              "text": "E Iron Sword\nE Iron Helmet\nE Bracelet\n  Wooden Axe"},
+        {"name": "EQUIP_OPTIMIZE_REMOVE_ALL",       "text": "EQUIP   OPTIMIZE   REMOVE ALL"},
+
+
 
         {"name": "SHOP_WELCOME",              "text": "Welcome"},
         {"name": "SHOP_WELCOMEWOULDYOUSTAY",  "text": "Welcome\n\nStay,\nto save\nyour\ndata."},
@@ -59,7 +70,9 @@
         {"name": "SHOP_TITLEITEM",            "text": "ITEM"},
         {"name": "SHOP_TITLEINN",             "text": "INN"},
 
-        {"name": "TEMPLATE_ITEM_LIST",        "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"}
+        {"name": "TEMPLATE_ITEM_LIST",        "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"},
+        {"name": "TEMPLATE_SPELL_LIST",       "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"},
+        {"name": "ITEM_NAME",                 "text": "{ITEM_NAME}{READ8 $5D02}"}
     ]
 }
 

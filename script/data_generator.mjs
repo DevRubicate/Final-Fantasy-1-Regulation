@@ -533,31 +533,51 @@ class Preprocessor {
 
             const itemName = new PointerPackage();
             const itemPrice = new BinaryPackage();
+            const itemDataFirst = new BinaryPackage();
 
             // The zero entry
             itemPrice.push(0, 0, 0);
             itemName.push(0);
+            itemDataFirst.push(0, 0, 0);
 
             for(let i=0; i<jsonData.item.length; ++i) {
-                const node = jsonData.item[i];
+                const item = jsonData.item[i];
                 const itemId = i+1;
 
-                ITEM.push({name: node.name, data: itemId});
+                ITEM.push({name: item.name, data: itemId});
 
-                packer.addConst({name: `ITEM_${node.name}`, data: itemId});
+                packer.addConst({name: `ITEM_${item.name}`, data: itemId});
 
                 itemPrice.push(
-                    node.price & 0xFF,
-                    node.price >> 8 & 0xFF,
-                    node.price >> 16 & 0xFF,
+                    item.price & 0xFF,
+                    item.price >> 8 & 0xFF,
+                    item.price >> 16 & 0xFF,
                 );
 
+                switch(item.type) {
+                    case 'ITEM':
+                        itemDataFirst.push(0, 0, 0);
+                        break;
+                    case 'EQUIP':
+                        itemDataFirst.push(0, 0, 0);
+                        break;
+                    case 'SPELLBOOK':
+                        itemDataFirst.push(item.level, 0, 0);
+                        break;
+                    case 'QUEST':
+                        itemDataFirst.push(0, 0, 0);
+                        break;
+                    default: throw new Error(`item ${item.name} has invalid type: ${item.type}`);
+                }
+
                 // Add this item's text to the output
-                const textData = this.compileText(node.text);
-                itemName.push({name: `TEXT_ITEM_${node.name}`, data: textData.buffer});
+                const textData = this.compileText(item.text);
+                itemName.push({name: `TEXT_ITEM_${item.name}`, data: textData.buffer});
             }
             packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
             packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
+            packer.addStatic({name: 'LUT_ITEM_DATA_FIRST', data: itemDataFirst});
+
         }
 
         if(jsonData.shop) {
@@ -663,6 +683,7 @@ class Preprocessor {
             '"': 99,
             '!': 100,
             '?': 101,
+            '%': 101,
             '\n': 127,
         };
 
@@ -749,11 +770,11 @@ class Preprocessor {
                 break;
             }
             case 'CLOTH': {
-                buffer.push(127);
+                buffer.push(125); //127
                 break;
             }
             case 'POTION': {
-                buffer.push(129);
+                buffer.push(125); //129
                 break;
             }
             case 'BYTE':

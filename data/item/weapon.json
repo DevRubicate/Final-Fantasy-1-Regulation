@@ -1,0 +1,244 @@
+{
+    "item": [
+        {
+            "name": "WOODEN_NUNCHUCK",
+            "text": "Wooden{NUNCHUCK}",
+            "price": 10,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SMALL_KNIFE",
+            "text": "Small {KNIFE}",
+            "price": 5,
+            "type": "EQUIP"
+        },
+        {
+            "name": "WOODEN_STAFF",
+            "text": "Wooden{STAFF}",
+            "price": 5,
+            "type": "EQUIP"
+        },
+        {
+            "name": "RAPIER",
+            "text": "Rapier",
+            "price": 10,
+            "type": "EQUIP"
+        },
+        {
+            "name": "IRON_HAMMER",
+            "text": "Iron  {HAMMER}",
+            "price": 10,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SHORT_SWORD",
+            "text": "Short",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "HAND_AXE",
+            "text": "Hand",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SCIMTAR",
+            "text": "Scimtar",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "IRON_NUNCHUCK",
+            "text": "Iron",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "LARGE_KNIFE",
+            "text": "Large",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "IRON_STAFF",
+            "text": "Iron",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SABRE",
+            "text": "Sabre",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "LONG_SWORD",
+            "text": "Long",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "GREAT_AXE",
+            "text": "Great",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "FALCHON",
+            "text": "Falchon",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SILVER_KNIFE",
+            "text": "Silver",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SILVER_SWORD",
+            "text": "Silver",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SILVER_HAMMER",
+            "text": "Silver",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SILVER_AXE",
+            "text": "Silver",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "FLAME_SWORD",
+            "text": "Flame",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "ICE_SWORD",
+            "text": "Ice",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "DRAGON_SWORD",
+            "text": "Dragon",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "GIANT_SWORD",
+            "text": "Giant",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "SUN_SWORD",
+            "text": "Sun",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "CORAL_SWORD",
+            "text": "Coral",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "WERE_SWORD",
+            "text": "Were",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "RUNE_SWORD",
+            "text": "Rune",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "POWER_STAFF",
+            "text": "Power",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "LIGHT_AXE",
+            "text": "Light",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "HEAL_STAFF",
+            "text": "Heal",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "MAGE_STAFF",
+            "text": "Mage",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "DEFENSE",
+            "text": "Defense",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "WIZARD_STAFF",
+            "text": "Wizard",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "VORPAL",
+            "text": "Vorpal",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "CATCLAW",
+            "text": "Catclaw",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "THOR_HAMMER",
+            "text": "Thor",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "BANE_SWORD",
+            "text": "Bane",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "KATANA",
+            "text": "Katana",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "XCALBER",
+            "text": "Xcalber",
+            "price": 0,
+            "type": "EQUIP"
+        },
+        {
+            "name": "MASMUNE",
+            "text": "Masmune",
+            "price": 0,
+            "type": "EQUIP"
+        }
+    ]
+}

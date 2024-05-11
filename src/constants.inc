@@ -1,4 +1,8 @@
 
+
+VIDEOUPDATE_INCREMENT1 := 5
+VIDEOUPDATE_INCREMENT32 := 0
+
 ;;;;;;;;;;;;;;;;;;
 ;;  directions for facing and keys
 

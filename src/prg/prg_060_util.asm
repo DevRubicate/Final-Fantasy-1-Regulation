@@ -439,6 +439,12 @@ ReadJoypadData:
       DEX
       BNE @Loop  ; loop until X expires (8 reads, once for each button)
 
+    LDA joypadState
+    EOR #0
+    STA joypadStateIgnore
+
+    LDA joy
+    STA joypadState
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

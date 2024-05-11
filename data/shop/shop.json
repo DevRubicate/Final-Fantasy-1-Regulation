@@ -21,9 +21,19 @@
         {
             "name": "SHOP_BLACKMAGIC_CONERIA",
             "list": [
-                "CLOTH",
-                "WOODEN_ARMOR",
-                "CHAIN_ARMOR"
+                "SPELLBOOK_FIRE",
+                "SPELLBOOK_SLEP",
+                "SPELLBOOK_LOCK",
+                "SPELLBOOK_LIT"
+            ]
+        },
+        {
+            "name": "SHOP_WHITEMAGIC_CONERIA",
+            "list": [
+                "SPELLBOOK_CURE",
+                "SPELLBOOK_HARM",
+                "SPELLBOOK_FOG",
+                "SPELLBOOK_RUSE"
             ]
         }
     ]
