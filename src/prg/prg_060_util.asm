@@ -439,13 +439,37 @@ ReadJoypadData:
       DEX
       BNE @Loop  ; loop until X expires (8 reads, once for each button)
 
-    LDA joypadState
+
+    LDA joypadPreviousFrame
     EOR #0
     STA joypadStateIgnore
 
     LDA joy
     STA joypadState
+    CMP joypadPreviousFrame
+    BEQ :+
+        LDX joypadPreviousFrame
+        STX joypadPreviousState
+        STA joypadPreviousFrame
+
+        LDA #0
+        STA joypadBuildup
+    :
+
+    ; This code makes sure that if a button is held it has that nifty repeating pattern
+    LDA joypadBuildup
+    CLC
+    ADC #1
+    CMP #20
+    BCC :+
+        LDA #0
+        STA joypadStateIgnore 
+        LDA #17
+    :
+    STA joypadBuildup
+
     RTS
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

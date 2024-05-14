@@ -314,6 +314,17 @@ SECTION "STACK"
 
 
 SECTION "OAM"
+    ; Sprite memory is laid out in four bytes:
+    ; Byte 0 - Stores the y-coordinate of the top left of the sprite minus 1.
+    ; Byte 1 - Index number of the sprite in the pattern tables.
+    ; Byte 2 - Stores the attributes of the sprite.
+    ; * Bits 0-1 - Most significant two bits of the colour.
+    ; * Bit 5 - Indicates whether this sprite has priority over the background.
+    ; * Bit 6 - Indicates whether to flip the sprite horizontally.
+    ; * Bit 7 - Indicates whether to flip the sprite vertically.
+    ; Byte 3 - X coordinate
+    RES             spriteRAM,                          256
+
     oam             = $0200  ; 256 bytes -- must be on page bound
     oam_y           = oam
     oam_t           = oam+1
@@ -1008,14 +1019,44 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             hero2Inventory,                 10
     RES             hero3Inventory,                 10
 
+    RES             hero0InventorySize,             1
+    RES             hero1InventorySize,             1
+    RES             hero2InventorySize,             1
+    RES             hero3InventorySize,             1
+
+    RES             hero0InventoryStatus,           10
+    RES             hero1InventoryStatus,           10
+    RES             hero2InventoryStatus,           10
+    RES             hero3InventoryStatus,           10
+
+
     RES             interactiveMenuXCoordinate,     1
     RES             interactiveMenuYCoordinate,     1
     RES             interactiveMenuCursor,          1
     RES             interactiveMenuLength,          1
     RES             interactiveMenuSize,            1
+    RES             interactiveMenuMode,            1
+    RES             interactiveMenuCursorSelected,  1
+    RES             interactiveMenuListOffset,      1
+    RES             interactiveMenuLoop,            1
+    RES             interactiveMenuOutcome,         1
+    RES             interactiveMenuActiveHero,      1
 
     RES             joypadState,                    1
     RES             joypadStateIgnore,              1
 
-    RES             interactiveMenuLoop,            1
-    RES             interactiveMenuOutcome,         1
+    RES             spriteRAMCursor,                1
+    RES             generalCounter,                 1
+
+    RES             joypadPreviousFrame,            1
+    RES             joypadPreviousState,            1
+    RES             joypadBuildup,                  1
+
+    RES             stringwriterWhitespaceWidth,    1
+    RES             stringwriterLineWidth,          1
+
+    RES             drawValue,                      1
+    RES             drawX,                          1
+    RES             drawY,                          1
+    RES             drawWidth,                      1
+    RES             drawHeight,                     1

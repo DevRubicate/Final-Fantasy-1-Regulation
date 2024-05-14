@@ -24,7 +24,7 @@
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
-.import VideoUpdate_Start, ClearVideoStack
+.import VideoUpdate_Start, ClearVideoStack, ClearSprites
 
 ; prg_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -1158,6 +1158,17 @@ OnNMI:
     TAX
     @noVideoUpdate:
 
+
+    LDA spriteRAMCursor
+    BEQ :+
+    LDA #>oam
+    STA OAMDMA                   ; Do OAM DMA
+    FARCALL ClearSprites
+    LDA #0
+    STA spriteRAMCursor
+    :
+
+    INC generalCounter
 
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
     INC vBlankCounter

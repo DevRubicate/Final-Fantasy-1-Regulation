@@ -3,17 +3,22 @@
 .include "src/global-import.inc"
 .include "src/lib/yxa2dec.asm"
 
-.import WaitForVBlank, MenuCondStall, MusicPlay, VideoUpdateWriteStackBytes, VideoUpdateSetAddress, VideoUpdateSetAddressSetValue, VideoUpdateSetValue, VideoUpdateRepeatValue, VideoUpdateWriteValueSetValue, VideoUpdateRepeatValueSetValueWriteValue
+.import WaitForVBlank, MenuCondStall, MusicPlay
+.import VideoUpdate_Inc1_Address, VideoUpdate_Address, VideoUpdate_Inc32_Address, VideoUpdate_Inc1_Address_Set, VideoUpdate_Address_Set, VideoUpdate_Inc32_Address_Set, VideoUpdate_Inc1_Address_Set_Write, VideoUpdate_Address_Set_Write, VideoUpdate_Inc32_Address_Set_Write, VideoUpdate_Inc1_Write_Set, VideoUpdate_Write_Set, VideoUpdate_Inc32_Write_Set, VideoUpdate_Inc1_Set, VideoUpdate_Set, VideoUpdate_Inc32_Set
+.import VideoUpdateWriteStackBytes, VideoUpdateRepeatValue, VideoUpdateRepeatValueSetValueWriteValue
+.import VideoUpdate_MassWrite
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
-
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
 .import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 
-.export RenderBox, Stringify
+.export RenderBox, Stringify, SetTile, DrawRectangle
 
 Stringify:
+    LDA #0
+    STA stringwriterLineWidth
+
     LDA stringwriterDestX
     STA stringwriterNewlineOrigin
 
@@ -46,6 +51,7 @@ Stringify:
         JUMP @Loop
 
         @Newline:
+        CALL PadWhitespace
         CALL VideoUpdateSetWriteStackBytes
         LDA stringwriterNewlineOrigin
         STA stringwriterDestX
@@ -61,8 +67,11 @@ Stringify:
         JUMP @Loop
 
         @Terminate:
-
+        CALL PadWhitespace
         CALL VideoUpdateSetWriteStackBytes
+
+        LDA #0
+        STA stringwriterWhitespaceWidth
         RTS
 
 SaveStringifyStack:
@@ -78,8 +87,27 @@ SaveStringifyStack:
     STA stringwriterStackBank, X
     RTS
 
+PadWhitespace:
+    LDA stringwriterWhitespaceWidth
+    SEC
+    SBC stringwriterLineWidth
+    BMI @done
+    BEQ @done
+    TAY
+
+    @loop:
+    LDA #$C1
+    CALL VideoUpdatePushData
+    DEY
+    BNE @loop
 
 
+    @done:
+    ; Since we starting a newline we reset the established width of the line
+    LDA #0
+    STA stringwriterLineWidth
+
+    RTS
 
 FetchCharacter:
     LDA Var2                        ; Load the bank this string is located in
@@ -803,7 +831,6 @@ FetchValueAdd:
     LDX #255
     LDY #255
     RTS
-
 FetchValueSub:
     ERROR
     RTS
@@ -1085,7 +1112,6 @@ FetchValueItemDataSecond:
 FetchValueItemDataThird:
     RTS
 
-
 VideoUpdatePushAddress:
     LDA VideoUpdateCursor
     BPL @noWait
@@ -1119,9 +1145,9 @@ VideoUpdatePushAddress:
 
     @Push:
     LDX VideoUpdateCursor
-    LDA #<(VideoUpdateSetAddress-1)
+    LDA #<(VideoUpdate_Inc1_Address-1)
     STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdateSetAddress-1)
+    LDA #>(VideoUpdate_Inc1_Address-1)
     STA VideoUpdateStack+1,X
     PLA
     STA VideoUpdateStack+3,X
@@ -1136,15 +1162,14 @@ VideoUpdatePushAddress:
     ADC #2
     STA VideoUpdateCursor
     RTS
-
 VideoUpdatePushData:
     LDX VideoUpdateCursor
     STA VideoUpdateStack,X
     INX
     STX VideoUpdateCursor
     INC stringifyLength
+    INC stringwriterLineWidth
     RTS
-
 VideoUpdateSetWriteStackBytes:
     LDX VideoUpdateRetroactiveCursor
     LDA #<(VideoUpdateWriteStackBytes-1)
@@ -1163,103 +1188,64 @@ VideoUpdateSetWriteStackBytes:
     STA VideoUpdateStack+1,X
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Convert Coords to NT Addr   [$DCAB :: 0x3DCBB]
-;;
-;;   Converts a X,Y coord pair to a Nametable address
-;;
-;;   Y remains unchanged
-;;
-;;   IN:    dest_x
-;;          dest_y
-;;
-;;   OUT:   ppu_dest, ppu_dest+1
-;;
+; SetTile
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SetTile:
+    PHA
+    LDA VideoUpdateCursor
+    BPL @noWait
+    CALL WaitForVBlank
+    @noWait:
 
-CoordToNTAddr:
-    LDY stringwriterDestY                ; put the Y coord (row) in Y.  We'll use it to index the NT lut
-    LDA stringwriterDestX                ; put Y coord (col) in A
-    AND #$1F                  ; wrap Y coord
-    ORA lut_NTRowStartLo, Y   ; OR Y coord with low byte of row start
-    STA ppu_dest              ;  this is the low byte of the addres -- record it
-    LDA lut_NTRowStartHi, Y   ; fetch high byte based on row
-    STA ppu_dest+1            ;  and record it
+    LDX stringwriterDestX         ; get dest_x in X
+    LDY stringwriterDestY         ; and dest_y in Y
+    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
+
+    @NTA:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    PHA
+    TXA                      ; put column/X coord in A
+    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+    PHA
+    JUMP @Push
+
+    @NTB:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    PHA                ; write as high byte of PPU address
+    TXA                      ; put column in A
+    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+    PHA                ;  for our low byte of PPU address
+
+    @Push:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdate_Address_Set_Write-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_Address_Set_Write-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+    PLA
+    STA VideoUpdateStack+4,X
+    
+    TXA
+    CLC
+    ADC #5
+    STA VideoUpdateCursor
+
+    LDA #$80
+    STA VideoUpdateStack+5,X
+    STA VideoUpdateStack+6,X
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  [$DCF4 :: 0x3DD04]
-;;
-;;  These LUTs are used by routines to find the NT address of the start of each row
-;;    Really, they just shortcut a multiplication by $20 ($20 tiles per row)
-;;
-
-lut_NTRowStartLo:
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-
-lut_NTRowStartHi:
-  .byte $20,$20,$20,$20,$20,$20,$20,$20
-  .byte $21,$21,$21,$21,$21,$21,$21,$21
-  .byte $22,$22,$22,$22,$22,$22,$22,$22
-  .byte $23,$23,$23,$23,$23,$23,$23,$23
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Draw Box  [$E063 :: 0x3E073]
-;;
-;;    Draws a box of given size, to given coords.  NT changes only, no attribute changes
-;;   The box CANNOT cross an NT boundary (ie:  this routine isn't used for the dialog box
-;;   which often does cross NT boundaries)
-;;
-;;   Y remains unchanged
-;;
-;;   IN:   menustall = Nonzero if the box is to be drawn 1 row per frame (stall between rows)
-;;                      or zero if box is to be drawn immediately with no stalling
-;;         box_x,y   = Desired Coords of box
-;;         box_wd,ht = Desired width/height of box (must be at least 3x3 tiles)
-;;         cur_bank  = Bank number to swap to (only used if stalling between rows)
-;;
-;;   OUT:  dest_x,y  = X,Y coords of inner box body (ie:  where you start drawing text or whatever)
-;;
-;;   TMP:  tmp+10 and tmp+11 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PlotBox:
-    CALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
-    LDA box_wd        ; Get width of box
-    SEC
-    SBC #$02          ; subtract 2 to get width of "innards" (minus left and right borders)
-    STA tmp+10        ;  put this new width in temp ram
-    LDA box_ht        ; Do same with box height
-    SEC
-    SBC #$02
-    STA tmp+11        ;  put new height in temp ram
-
-    CALL WaitForVBlank   ; wait for VBlank
-    CALL PlotBoxRow_Top    ; Draw the top row of the box
-    @Loop:                    ; Loop to draw all inner rows
-      CALL PlotBoxRow_Mid  ;   draw inner row
-      DEC tmp+11          ;   decrement our adjusted height
-      BNE @Loop           ;   loop until expires
-    CALL PlotBoxRow_Bot    ; Draw bottom row
-
-    LDA soft2000          ; reset some PPU info
-    STA PPUCTRL
-    LDA #0
-    STA PPUSCROLL             ; and scroll information
-    STA PPUSCROLL
-
-
-    RTS
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RenderBox
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 RenderBox:
     LDA VideoUpdateCursor
     BPL :+
@@ -1294,9 +1280,9 @@ RenderBox:
 
     @Push:
     LDX VideoUpdateCursor
-    LDA #<(VideoUpdateSetAddressSetValue-1)
+    LDA #<(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdateSetAddressSetValue-1)
+    LDA #>(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+1,X
     PLA
     STA VideoUpdateStack+3,X
@@ -1305,9 +1291,9 @@ RenderBox:
     LDA #$F7
     STA VideoUpdateStack+4,X
 
-    LDA #<(VideoUpdateWriteValueSetValue-1)
+    LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdateWriteValueSetValue-1)
+    LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
     LDA #$F8
     STA VideoUpdateStack+7,X
@@ -1366,9 +1352,9 @@ RenderBox:
 
     @Push2:
     LDX VideoUpdateCursor
-    LDA #<(VideoUpdateSetAddressSetValue-1)
+    LDA #<(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdateSetAddressSetValue-1)
+    LDA #>(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+1,X
     PLA
     STA VideoUpdateStack+3,X
@@ -1377,9 +1363,9 @@ RenderBox:
     LDA #$FA
     STA VideoUpdateStack+4,X
 
-    LDA #<(VideoUpdateWriteValueSetValue-1)
+    LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdateWriteValueSetValue-1)
+    LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
     LDA #$FF
     STA VideoUpdateStack+7,X
@@ -1440,9 +1426,9 @@ RenderBox:
 
     @Push3:
     LDX VideoUpdateCursor
-    LDA #<(VideoUpdateSetAddressSetValue-1)
+    LDA #<(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdateSetAddressSetValue-1)
+    LDA #>(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+1,X
     PLA
     STA VideoUpdateStack+3,X
@@ -1451,9 +1437,9 @@ RenderBox:
     LDA #$FC
     STA VideoUpdateStack+4,X
 
-    LDA #<(VideoUpdateWriteValueSetValue-1)
+    LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdateWriteValueSetValue-1)
+    LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
     LDA #$FD
     STA VideoUpdateStack+7,X
@@ -1479,6 +1465,180 @@ RenderBox:
     LDA #$80
     STA VideoUpdateStack+0,X
     STA VideoUpdateStack+1,X
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; DrawRectangle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+DrawRectangle:
+    @LoopMiddleSection:
+    LDA VideoUpdateCursor
+    BPL :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+
+    LDX drawX         ; get X
+    LDY drawY         ; and Y
+    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+    BCS @NTB2           ;  if it is, to NTB, otherwise, NTA
+
+    @NTA2:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    PHA
+    TXA                      ; put column/X coord in A
+    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+    PHA
+    JUMP @Push2
+
+    @NTB2:
+    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    PHA                ; write as high byte of PPU address
+    TXA                      ; put column in A
+    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+    PHA                ;  for our low byte of PPU address
+
+    @Push2:
+    LDX VideoUpdateCursor
+    LDA #<(VideoUpdate_Inc1_Address_Set-1)
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_Inc1_Address_Set-1)
+    STA VideoUpdateStack+1,X
+    PLA
+    STA VideoUpdateStack+3,X
+    PLA
+    STA VideoUpdateStack+2,X
+    LDA drawValue
+    STA VideoUpdateStack+4,X
+
+    
+    LDA #<(VideoUpdate_MassWrite-1)
+    SEC
+    SBC drawWidth
+    SBC drawWidth
+    SBC drawWidth
+    STA VideoUpdateStack+5,X
+    LDA #>(VideoUpdate_MassWrite-1)
+    STA VideoUpdateStack+6,X
+
+    TXA
+    CLC
+    ADC #7
+    STA VideoUpdateCursor
+
+    DEC drawHeight
+    BEQ :+
+    INC drawY
+    JUMP @LoopMiddleSection
+    :
+
+    ; All done
+    LDX VideoUpdateCursor
+    LDA #$80
+    STA VideoUpdateStack+0,X
+    STA VideoUpdateStack+1,X
+
+    RTS
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;   Convert Coords to NT Addr   [$DCAB :: 0x3DCBB]
+;;
+;;   Converts a X,Y coord pair to a Nametable address
+;;
+;;   Y remains unchanged
+;;
+;;   IN:    dest_x
+;;          dest_y
+;;
+;;   OUT:   ppu_dest, ppu_dest+1
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CoordToNTAddr:
+    LDY stringwriterDestY                ; put the Y coord (row) in Y.  We'll use it to index the NT lut
+    LDA stringwriterDestX                ; put Y coord (col) in A
+    AND #$1F                  ; wrap Y coord
+    ORA lut_NTRowStartLo, Y   ; OR Y coord with low byte of row start
+    STA ppu_dest              ;  this is the low byte of the addres -- record it
+    LDA lut_NTRowStartHi, Y   ; fetch high byte based on row
+    STA ppu_dest+1            ;  and record it
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  [$DCF4 :: 0x3DD04]
+;;
+;;  These LUTs are used by routines to find the NT address of the start of each row
+;;    Really, they just shortcut a multiplication by $20 ($20 tiles per row)
+;;
+
+lut_NTRowStartLo:
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+
+lut_NTRowStartHi:
+  .byte $20,$20,$20,$20,$20,$20,$20,$20
+  .byte $21,$21,$21,$21,$21,$21,$21,$21
+  .byte $22,$22,$22,$22,$22,$22,$22,$22
+  .byte $23,$23,$23,$23,$23,$23,$23,$23
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;   Draw Box  [$E063 :: 0x3E073]
+;;
+;;    Draws a box of given size, to given coords.  NT changes only, no attribute changes
+;;   The box CANNOT cross an NT boundary (ie:  this routine isn't used for the dialog box
+;;   which often does cross NT boundaries)
+;;
+;;   Y remains unchanged
+;;
+;;   IN:   menustall = Nonzero if the box is to be drawn 1 row per frame (stall between rows)
+;;                      or zero if box is to be drawn immediately with no stalling
+;;         box_x,y   = Desired Coords of box
+;;         box_wd,ht = Desired width/height of box (must be at least 3x3 tiles)
+;;         cur_bank  = Bank number to swap to (only used if stalling between rows)
+;;
+;;   OUT:  dest_x,y  = X,Y coords of inner box body (ie:  where you start drawing text or whatever)
+;;
+;;   TMP:  tmp+10 and tmp+11 used
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PlotBox:
+    CALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
+    LDA box_wd        ; Get width of box
+    SEC
+    SBC #$02          ; subtract 2 to get width of "innards" (minus left and right borders)
+    STA tmp+10        ;  put this new width in temp ram
+    LDA box_ht        ; Do same with box height
+    SEC
+    SBC #$02
+    STA tmp+11        ;  put new height in temp ram
+
+    CALL WaitForVBlank   ; wait for VBlank
+    CALL PlotBoxRow_Top    ; Draw the top row of the box
+    @Loop:                    ; Loop to draw all inner rows
+      CALL PlotBoxRow_Mid  ;   draw inner row
+      DEC tmp+11          ;   decrement our adjusted height
+      BNE @Loop           ;   loop until expires
+    CALL PlotBoxRow_Bot    ; Draw bottom row
+
+    LDA soft2000          ; reset some PPU info
+    STA PPUCTRL
+    LDA #0
+    STA PPUSCROLL             ; and scroll information
+    STA PPUSCROLL
+
+
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

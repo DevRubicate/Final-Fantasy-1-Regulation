@@ -16,6 +16,10 @@
 ;;  macro for quick page boundary assertions
 ;;
 
+.MACRO VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+    .assert (<*) < $FB, error, "Video update subroutine is aligned on page boundary"
+.ENDMACRO
+
  ; for critical page checks (absolutely should cross page boundary)
 .macro CRITPAGECHECK lbl
     .assert >* = >lbl, error, "Critical timing loop crosses page boundary"

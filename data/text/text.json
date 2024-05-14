@@ -29,14 +29,15 @@
         {"name": "MENU_SELECTION",                  "text": "ITEMS\n\nMAGIC\n\nWEAPON\n\nARMOR\n\nSTATUS"},
 
 
-        {"name": "TEMPLATE_HERO_EQUIP_STATUS",      "text": "{HERO_NAME}\n{HERO_CLASS}  L{DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 2}  HP {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\nStr   50   Luck  40\nAgi   50   Hit   10\nVit   70   Def   15\nInt   30   MDef  30"},
+        {"name": "TEMPLATE_HERO_EQUIP_STATUS",      "text": "{HERO_NAME}  {HERO_CLASS}  L{DIGIT2L}{ADD}{HERO_LEVEL}{BYTE 2}  HP {DIGIT3L}{HERO_HP}/{DIGIT3L}{HERO_MAXHP}\n\nStr   50   Luck  40\nAgi   50   Hit   10\nVit   70   Def   15\nInt   30   MDef  30\nWis   20   Evade 40"},
 
 
 
         {"name": "EXAMPLE_EQUIP_LIST",              "text": "E Iron Sword\nE Iron Helmet\nE Bracelet\n  Wooden Axe"},
-        {"name": "EQUIP_OPTIMIZE_REMOVE_ALL",       "text": "EQUIP   OPTIMIZE   REMOVE ALL"},
+        {"name": "EQUIP_OPTIMIZE_REMOVE",           "text": "  EQUIP   OPTIMIZE   REMOVE"},
 
-
+        {"name": "INVENTORY",                       "text": "INVENTORY"},
+        {"name": "DASH",                            "text": "-"},
 
         {"name": "SHOP_WELCOME",              "text": "Welcome"},
         {"name": "SHOP_WELCOMEWOULDYOUSTAY",  "text": "Welcome\n\nStay,\nto save\nyour\ndata."},
