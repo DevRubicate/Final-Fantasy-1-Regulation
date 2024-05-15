@@ -53,9 +53,19 @@ class Packer {
     constructor() {
         this.structure = new Structure(
             [
-                {address: 0, page: 0, size: 0x2000, occupied: null, next: null, previous: null},
-                {address: 0, page: 1, size: 0x2000, occupied: null, next: null, previous: null},
-                {address: 0, page: 2, size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 0,  size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 1,  size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 2,  size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 3,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 4,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 5,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 6,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 7,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 8,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 9,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 10,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 11,   size: 0x2000, occupied: null, next: null, previous: null},
+                {address: 0, page: 12,   size: 0x2000, occupied: null, next: null, previous: null},
             ]
         );
     }
@@ -126,6 +136,11 @@ class Packer {
 
 
         let nodes = this.getFreeNodes();
+
+        // remove cells that are too small
+        nodes = nodes.filter(a => a.size >= sizes[0]);
+
+        // Remove cells that aren't on the rigth page
         if(typeof param.page !== 'undefined') {
             nodes = nodes.filter(a => a.page === param.page);
         }
@@ -184,13 +199,8 @@ class Packer {
             // Check if there are any available pages on the right
             let pagesToTheRight = [];
             for(let j=currentPage+1; j<this.structure.pages.length; ++j) {
-                if(pageIndex >= sizes.length - 1) {
-                    // There is only 1 segment left to allocate so we break here as the last segment should be put in
-                    // the middle page.
-                    break;
-                }
-
                 let rightNode = this.structure.pages[j];
+
                 while(
                     rightNode &&
                     rightNode.occupied &&
@@ -225,11 +235,12 @@ class Packer {
                     );
                     this.takeCell(
                         subData,
-                        pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
+                        pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter + 1}`,
                         `address ${leftNode.address} - ${leftNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                         leftNode,
                         currentAddress,
-                        sizes[pageCounter]
+                        sizes[pageCounter],
+                        pageCounter !== 0,
                     );
                     offset += sizes[pageCounter];
 
@@ -252,13 +263,15 @@ class Packer {
                     offset,
                     offset + sizes[pageCounter]
                 );
+
                 this.takeCell(
                     subData,
-                    pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter+1}`,
+                    pageCounter === 0 ? `${thing.name}` : `${thing.name}_EXTENDED`,
                     `address ${currentNode.address} - ${currentNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                     currentNode,
                     currentAddress,
-                    sizes[pageCounter]
+                    sizes[pageCounter],
+                    pageCounter !== 0
                 );
                 offset += sizes[pageCounter];
                 // Now we allocate any child allocations from this subdata to the page that the subdata was
@@ -283,11 +296,12 @@ class Packer {
                     )
                     this.takeCell(
                         subData,
-                        `${thing.name}_PART${pageCounter+1}`,
+                        `${thing.name}_EXTENDED`,
                         `address ${rightNode.address} - ${rightNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                         rightNode,
                         currentAddress,
-                        sizes[pageCounter]
+                        sizes[pageCounter],
+                        true
                     );
                     offset += sizes[pageCounter];
                     // Now we allocate any child allocations from this subdata to the page that the subdata was
@@ -312,7 +326,7 @@ class Packer {
         }
         return null;
     }
-    takeCell(data, labelName, comment, cell, address, size) {
+    takeCell(data, labelName, comment, cell, address, size, noExport = false) {
         if(cell.address === address) {
             if(cell.size === size) {
                 cell.occupied = data;
@@ -328,11 +342,12 @@ class Packer {
                 };
                 cell.occupied = data;
                 cell.size = size;
+                cell.noExport = noExport;
                 if(cell.next) {cell.next.previous = nextCell;}
                 cell.next = nextCell;
                 cell.comment = comment;
             } else {
-                throw new Error('fatal');
+                throw new Error(`takeCell: Tried to allocate size ${size} into a cell that's size ${cell.size}. ${comment}`);
             }
         } else if(cell.address < address) {
             const wastedSize = address - cell.address;
@@ -348,6 +363,7 @@ class Packer {
                 }
                 cell.occupied = data;
                 cell.size = size;
+                cell.noExport = noExport;
                 if(cell.previous) {cell.previous.next = previousCell;}
                 cell.previous = previousCell;
                 cell.comment = comment;
@@ -372,6 +388,7 @@ class Packer {
                 };
                 cell.occupied = data;
                 cell.size = size;
+                cell.noExport = noExport;
                 if(cell.previous) {cell.previous.next = previousCell;}
                 cell.previous = previousCell;
                 if(cell.next) {cell.next.previous = nextCell;}
@@ -404,7 +421,7 @@ class Packer {
             const thing = this.stuff[i];
             const success = this.place(thing);
             if(!success) {
-                throw new Error('Could not allocate');
+                throw new Error(`Could not allocate ${thing.entry.name}`);
             }
         }
 
@@ -416,16 +433,16 @@ class Packer {
         });
 
         for(let i=0; i<this.structure.pages.length; ++i) {
-            const file = {name: `data_${String(124+i).padStart(3, '0')}.asm`, output: ''}
+            const file = {name: `data_${String(114+i).padStart(3, '0')}.asm`, output: ''}
             files.push(file);
 
-            file.output += `.segment "DATA_${String(124+i).padStart(3, '0')}"\n\n`
+            file.output += `.segment "DATA_${String(114+i).padStart(3, '0')}"\n\n`
 
             {
                 const labelExports = [];
                 let node = this.structure.pages[i];
                 do {
-                    if(node.occupied) {
+                    if(node.occupied && !node.noExport) {
                         labelExports.push(node.name);
                     }
                 } while(node = node.next);
@@ -510,7 +527,6 @@ class PointerPackage {
         } else {
             return [];
         }
-
     }
 }
 
@@ -518,7 +534,7 @@ class Preprocessor {
     constructor() {}
     processJson(jsonData) {
         const packer = new Packer();
-        
+
         const ITEM = [];
 
         if(jsonData.text) {
@@ -604,11 +620,31 @@ class Preprocessor {
             }
         }
 
-        return packer.build();
-    }
-    compileItem() {
+        if(jsonData.tile) {
+            const tiles = new PointerPackage();
+            for(let i=0; i<jsonData.tile.length; ++i) {
+                const node = jsonData.tile[i];
+                const image = jsonData.chr.find(a => a.name === node.source);
+                const tileEntries = [];
+                const data = [...image.data];
+                let entry = [];
+                for(let j=0; j<data.length; ++j) {
+                    const value = data[j];
+                    if(value === 0xFF) {
+                        entry.push(0xFF);
+                        tileEntries.push(entry);
+                        entry = [];
+                    } else {
+                        entry.push(value);
+                    }
+                }
+                tiles.push({name: `TILE_${node.name}`, data: new BinaryPackage([tileEntries[node.index]])});
+            }
+            packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
+        }
 
-        return {binary: ''};
+
+        return packer.build();
     }
     compileText(input) {
         const dict = {
@@ -1064,6 +1100,16 @@ class Main {
         }
     }
 
+    static async readZChrFile(filePath, output) {
+        try {
+            const data = await fs.readFile(filePath);
+            output.chr = output.chr ?? [];
+            output.chr.push({name: filePath.split(path.sep).join('/'), data: data});
+        } catch (err) {
+            console.error(`Error reading file ${filePath}: ${err}`);
+        }
+    }
+
     // Recursive function to process all files in the directory
     static async processDirectory(directory, output = {}) {
         try {
@@ -1074,6 +1120,8 @@ class Main {
                     await Main.processDirectory(entryPath, output); // Recurse into subdirectories
                 } else if (entry.isFile() && entry.name.endsWith('.json')) {
                     await Main.readJsonFile(entryPath, output); // Read JSON files
+                } else if(entry.isFile() && entry.name.endsWith('.zchr')) {
+                    await Main.readZChrFile(entryPath, output); // Read JSON files
                 }
             }
             return output;

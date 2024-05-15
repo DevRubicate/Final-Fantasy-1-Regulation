@@ -1135,10 +1135,21 @@ Copy256:
 ;;    than 37 cycles after NMI (30 cycles used in this routine, plus 7 for the NMI)
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LagFrame:
+    LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
+    INC vBlankCounter
+    PLA
+    CLI
+    RTI
 
 OnNMI:
     SEI
     PHA
+
+    ; if vBlank was not anticipated, do a lagframe update instead
+    LDA vBlankAnticipated
+    BEQ LagFrame
+
     LDA VideoUpdateCursor
     BEQ @noVideoUpdate
     TXA
@@ -1169,10 +1180,8 @@ OnNMI:
     :
 
     INC generalCounter
-
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
     INC vBlankCounter
-
 
     PLA
     CLI
@@ -1191,6 +1200,7 @@ WaitForVBlank:
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
     STA PPUCTRL      ; and write it to PPU status reg
+    INC vBlankAnticipated
     LDA vBlankCounter
     @LoopForever:
     CMP vBlankCounter

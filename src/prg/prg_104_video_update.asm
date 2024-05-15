@@ -143,7 +143,7 @@ VideoUpdate_Inc32_Set:
     PLA
     RTS
 
-.align  256
+.align 256
     ; TODO: Verify you can actually use this 85 times
     .REPEAT 85, i
         STA PPUDATA
@@ -154,7 +154,7 @@ VideoUpdate_MassWrite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; VideoUpdateWriteStackBytes
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.align  256
+.align 256
     .REPEAT 64, i
         PLA
         STA PPUDATA
@@ -165,7 +165,7 @@ VideoUpdateWriteStackBytes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; VideoUpdateRepeatValueSetValueWriteValue
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.align  256
+.align 256
     .REPEAT 64, i
         STA PPUDATA
     .ENDREPEAT

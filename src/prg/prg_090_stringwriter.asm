@@ -1545,7 +1545,6 @@ DrawRectangle:
 
     RTS
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;   Convert Coords to NT Addr   [$DCAB :: 0x3DCBB]

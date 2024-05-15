@@ -1,0 +1,9 @@
+{
+    "tile": [
+        {
+            "name": "SEA",
+            "source": "data/chr/test.zchr",
+            "index": 0
+        }
+    ]
+}

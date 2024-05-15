@@ -252,6 +252,10 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var21,                            1
     RESZP Var22,                            1
     RESZP Var23,                            1
+    RESZP donut_temp,                       15  ; can be aliased to some shared temp memory
+    RESZP donut_block_count,                1   ; temp memory only used in donut_bulk_load()
+    RESZP donut_stream_ptr,                 2   ; persist between calls to donut_decompress_block
+
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
     GAP                                     $80
@@ -311,7 +315,7 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
 
 SECTION "STACK"
     RES             VideoUpdateStack,                   200
-
+    donut_output_buffer = VideoUpdateStack
 
 SECTION "OAM"
     ; Sprite memory is laid out in four bytes:
@@ -1060,3 +1064,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             drawY,                          1
     RES             drawWidth,                      1
     RES             drawHeight,                     1
+
+    RES             donut_stream_bank,              1
+
+    RES             vBlankAnticipated,              1

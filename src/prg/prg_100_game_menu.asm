@@ -4,10 +4,12 @@
 
 .import Stringify, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex, MusicPlay
 .import WaitForVBlank, ClearOAM
-
 .import TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
-
 .import Stringify, DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
+
+.import UploadCHR
+.import CHR_CHRTEST
+
 
 .export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu
 
@@ -205,14 +207,27 @@ EnterEquipMenu:
         STA interactiveMenuCursor
         JUMP EnterHeroInventory
     :
-    CMP #0
-    BNE :+
-        LDA #0
-        STA interactiveMenuCursor
-        JUMP EnterInventory
-    :
+    CMP #251
+    BNE :+++
+        LDA interactiveMenuCursor
+        BNE :+
+            STA interactiveMenuCursor
+            JUMP EnterHeroInventory
+        :
+        CMP #1
+        BNE :+
 
-    CMP #3
+            LDA #0
+            STA Var0
+            STA Var1
+            LDA #1
+            STA Var2
+
+            FARCALL UploadCHR
+        :
+        JUMP @Loop
+    :
+    CMP #250
     BNE :+
         RTS
     :
@@ -254,7 +269,7 @@ ActEquipMenu:
     ; If the A button is pressed
     CMP #$80
     BNE :+
-        LDA interactiveMenuCursor
+        LDA #251
         STA interactiveMenuOutcome
         RTS
     :
@@ -262,7 +277,7 @@ ActEquipMenu:
     ; If the B button is pressed
     CMP #$40
     BNE :+
-        LDA #3
+        LDA #250
         STA interactiveMenuOutcome
         RTS
     :
