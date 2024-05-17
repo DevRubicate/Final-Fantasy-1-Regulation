@@ -1,5 +1,7 @@
 .segment "DATA_118"
 
+.include "src/global-import.inc"
+
 .export TEXT_ALPHABET, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_SHOP_TITLEWEAPON, TEXT_HERO_0_NAME, TEXT_ITEM_DESCRIPTION
 
 ; address 0 - 146 (bytes 0 - 146)
@@ -20,7 +22,7 @@ TEXT_HERO_0_NAME:
 
 ; address 166 - 171 (bytes 0 - 5)
 TEXT_ITEM_DESCRIPTION:
-.byte $94, $83, $5d, $02, $00
+.byte $94, $83, >stringifyActiveItem, <stringifyActiveItem, $00
 
 ; 171 - 8192
 .res 8021

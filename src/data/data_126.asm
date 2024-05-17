@@ -1,5 +1,7 @@
 .segment "DATA_126"
 
+.include "src/global-import.inc"
+
 .export TEXT_SHOP_YOUHAVENOTHING, TEXT_SHOP_HOLDRESET, TEXT_SHOP_TOOBAD, TEXT_SHOP_THANKYOUWHATELSE, TEXT_SHOP_ITEMCOSTOK, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_MASTER, TEXT_CLASS_NAME_NINJA, TEXT_ITEM_NAME
 
 ; address 0 - 43 (bytes 0 - 43)
@@ -36,7 +38,7 @@ TEXT_CLASS_NAME_NINJA:
 
 ; address 165 - 170 (bytes 0 - 5)
 TEXT_ITEM_NAME:
-.byte $93, $83, $5d, $02, $00
+.byte $93, $83, >stringifyActiveItem, <stringifyActiveItem, $00
 
 ; 170 - 8192
 .res 8022

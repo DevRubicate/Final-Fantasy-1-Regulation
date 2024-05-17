@@ -233,11 +233,6 @@ EnterItemsMenu:
 
 
 
-
-
-    ;LDA #$F1
-    ;STA stringwriterTile4
-
     LDA #$F6
     STA stringwriterTile7
     LDA #$F0
@@ -259,15 +254,6 @@ EnterItemsMenu:
 
     POS     16, 10
     BOX     16, 16
-
-    ;LDA #$F6
-    ;STA stringwriterTile1
-    ;LDA #$FA
-    ;STA stringwriterTile4
-
-
-
-
 
     POS     2, 1
     TEXT TEXT_EQUIP_OPTIMIZE_REMOVE
@@ -658,7 +644,7 @@ DrawInventory:
     ; If this item slot is empty then stop the loop
     LDA (Var20),Y
     BEQ @RTS
-    STA activeItem
+    STA stringifyActiveItem
 
     ; Set the position of this item
     LDA #17
@@ -986,7 +972,7 @@ DrawHeroInventory:
     ; If this item slot is empty then move onto writing dashes instead
     LDA (Var20),Y
     BEQ @emptySlots
-    STA activeItem
+    STA stringifyActiveItem
 
     ; Set the position of this item
     LDX #2
@@ -1026,7 +1012,6 @@ DrawHeroInventory:
 
     ; Write the string
     FARCALL Stringify
-
 
     ; Compare our loop iteration with the max entries we want to show, and end the loop if we are there
     LDA interactiveMenuLoop
@@ -1384,7 +1369,7 @@ DrawItemDescription:
     LDY interactiveMenuCursor
     LDA (Var20),Y
     BEQ @RTS
-    STA activeItem
+    STA stringifyActiveItem
 
     ; Set the position of this item
     LDA #2

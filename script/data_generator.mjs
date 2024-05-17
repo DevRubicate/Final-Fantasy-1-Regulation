@@ -436,7 +436,8 @@ class Packer {
             const file = {name: `data_${String(114+i).padStart(3, '0')}.asm`, output: ''}
             files.push(file);
 
-            file.output += `.segment "DATA_${String(114+i).padStart(3, '0')}"\n\n`
+            file.output += `.segment "DATA_${String(114+i).padStart(3, '0')}"\n\n`;
+            file.output += `.include "src/global-import.inc"\n\n`;
 
             {
                 const labelExports = [];
@@ -476,14 +477,20 @@ class BinaryPackage {
     push(...input) {
         for(let i=0; i<input.length; ++i) {
             this.data[i] = this.data[i] ?? [];
-            this.data[i].push(input[i] & 0xFF);
+            this.data[i].push(input[i]);
         }
     }
     getLength() {
         return this.data[0].length;
     }
     getOutput() {
-        return this.data[0].map(a => `$${a.toString(16).padStart(2, '0')}`).join(', ');
+        return this.data[0].map(a => {
+            if(typeof a === 'number') {
+                return `$${a.toString(16).padStart(2, '0')}`;
+            } else {
+                return a;
+            }
+        }).join(', ');
     }
     split(start, end) {
         const subData = [];
@@ -838,9 +845,8 @@ class Preprocessor {
                 break;
             }
             case 'READ8': {
-                const address = this.getPositiveInteger(segment[1]);
-                const lo = address & 0xFF;
-                const hi = (address >> 8) & 0xFF;
+                const lo = this.getFirstPart(segment[1]);
+                const hi = this.getSecondPart(segment[1]);
                 buffer.push(131);
                 buffer.push(hi);
                 buffer.push(lo);
@@ -1047,6 +1053,40 @@ class Preprocessor {
             throw new Error(`Invalid input, must be positive integer, got "${n}" instead`);
         }
     }
+    getFirstPart(n) {
+        if(n.charAt(0) === '@') {
+           return `<${n.substring(1)}`;
+        } if(n.charAt(0) === '$') {
+            return parseInt(n.substring(1), 16) & 0xFF;
+        } else if(n >>> 0 === parseFloat(n)) {
+            return parseFloat(n) & 0xFF;
+        } else {
+            throw new Error(`getFirstPart: Invalid identifier. Must be positive integer, $hex, or @label. Got "${n}" instead`);
+        }
+    }
+    getSecondPart(n) {
+        if(n.charAt(0) === '@') {
+           return `>${n.substring(1)}`;
+        } if(n.charAt(0) === '$') {
+            return (parseInt(n.substring(1), 16) >> 8) & 0xFF;
+        } else if(n >>> 0 === parseFloat(n)) {
+            return (parseFloat(n) >> 8) & 0xFF;
+        } else {
+            throw new Error(`getFirstPart: Invalid identifier. Must be positive integer, $hex, or @label. Got "${n}" instead`);
+        }
+    }
+    getThirdPart(n) {
+        if(n.charAt(0) === '@') {
+           throw new Error(`getThirdPart: Cannot accept @label`);
+        } if(n.charAt(0) === '$') {
+            return (parseInt(n.substring(1), 16) >> 16) & 0xFF;
+        } else if(n >>> 0 === parseFloat(n)) {
+            return (parseFloat(n) >> 16) & 0xFF;
+        } else {
+            throw new Error(`getFirstPart: Invalid identifier. Must be positive integer, $hex, or @label. Got "${n}" instead`);
+        }
+    }
+
     translateLabel(input) {
         let output = '';
         for(let i=0; i<input.length; ++i) {

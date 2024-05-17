@@ -1,5 +1,7 @@
 .segment "DATA_116"
 
+.include "src/global-import.inc"
+
 .export LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 
 ; address 0 - 168 (bytes 0 - 168)

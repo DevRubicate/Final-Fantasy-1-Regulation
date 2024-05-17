@@ -924,135 +924,40 @@ SECTION "THEEND" ; $6800 - $6F00
 
 
 SECTION "EXTRA" ; $5C00 - $5FFF
-    RES             scrollX,                1
-    RES             scrollY,                1
-    RES             far_depth,              1
-    RES             safecall_reg_a,         1
-    RES             safecall_reg_y,         1
-    RES             safecall_reg_flags,     1
-    RES             rng_seed,               2
-    RES             framecounter,           2
-    RES             npcdir_seed,            1 ; RNG seed for determining direction for NPCs to walk
-    RES             battlestep,             1
-    RES             battlestep_sign,        1
-    RES             battlecounter,          1
-    RES             battlerate,             1 ; X/256 chance of a random encounter occuring (SM only apparently)
-    RES             startintrocheck,        1
-    RES             respondrate,            1
-    RES             NTsoft2000,             1 ; same as soft2000, but used to track coarse NT scroll
-    RES             soft2000,               1
-    RES             btl_msgdraw_srcptr_bank,1
-    RES             btlformation,           1
-    RES             actual_bank,            1
-   
-
-
-
-    ; String writer
-    RES             stringwriterDestX,          1
-    RES             stringwriterDestY,          1
-    RES             stringwriterNewlineOrigin,  1
-    RES             stringwriterSetHero,        1
-    RES             stringwriterTargetSize,     1
-    RES             stringwriterDigitLength,    2
-    RES             stringwriterDigitSize,      2
-    RES             stringwriterBinary,         3
-    RES             stringwriterDecimal,        6
-
-    RES             stringwriterStackIndex,     1
-    RES             stringwriterStackLo,        16
-    RES             stringwriterStackHi,        16
-    RES             stringwriterStackBank,      16
-
-    RES             yxa2decOutput,              9
-
-    ; temp
-    RES             slotIndex,              1
-    RES             partyGenerationClass,   4
-
-    RES             heroLevel,              1*4
-    RES             heroHP,                 2*4
-    RES             heroMaxHP,              2*4
-    RES             heroName0,              5
-    RES             heroName1,              5
-    RES             heroName2,              5
-    RES             heroName3,              5
-    RES             heroSpellCharges,       8*4
-    RES             heroMaxSpellCharges,    8*4
-
-    RES             Var7,                   1
-    RES             Var8,                   1
-    RES             Var9,                   1
-    RES             Var10,                  1
-    RES             Var11,                  1
-    RES             Var12,                  1
-    RES             Var13,                  1
-
-    RES             vBlankCounter,          1
-    RES             stringifyActiveItem,    2
-    RES             stringifyVariables,     16
-    RES             stringifyCursor,        1
-    RES             stringifyLength,        1
-
-    RES             stringwriterStackCursor,16
-    RES             tmp_hi,                 3  ; 3? bytes
-
+    RES             scrollX,                        1
+    RES             scrollY,                        1
+    RES             far_depth,                      1
+    RES             safecall_reg_a,                 1
+    RES             safecall_reg_y,                 1
+    RES             safecall_reg_flags,             1
+    RES             rng_seed,                       2
+    RES             framecounter,                   2
+    RES             npcdir_seed,                    1 ; RNG seed for determining direction for NPCs to walk
+    RES             battlestep,                     1
+    RES             battlestep_sign,                1
+    RES             battlecounter,                  1
+    RES             battlerate,                     1 ; X/256 chance of a random encounter occuring (SM only apparently)
+    RES             startintrocheck,                1
+    RES             respondrate,                    1
+    RES             NTsoft2000,                     1 ; same as soft2000, but used to track coarse NT scroll
+    RES             soft2000,                       1
+    RES             btl_msgdraw_srcptr_bank,        1
+    RES             btlformation,                   1
+    RES             actual_bank,                    1
+    RES             slotIndex,                      1
+    RES             partyGenerationClass,           4
+    RES             Var7,                           1
+    RES             Var8,                           1
+    RES             Var9,                           1
+    RES             Var10,                          1
+    RES             Var11,                          1
+    RES             Var12,                          1
+    RES             Var13,                          1
+    RES             vBlankCounter,                  1
     RES             VideoUpdateCursor,              1
     RES             VideoUpdateIncrementMode,       1
     RES             StackPointerBackup,             1
     RES             VideoUpdateRetroactiveCursor,   1
-
-    RES             activeItem,                     2
-    RES             inventory,                      100
-    RES             hero0Inventory,                 10
-    RES             hero1Inventory,                 10
-    RES             hero2Inventory,                 10
-    RES             hero3Inventory,                 10
-
-    RES             hero0InventorySize,             1
-    RES             hero1InventorySize,             1
-    RES             hero2InventorySize,             1
-    RES             hero3InventorySize,             1
-
-    RES             hero0InventoryStatus,           10
-    RES             hero1InventoryStatus,           10
-    RES             hero2InventoryStatus,           10
-    RES             hero3InventoryStatus,           10
-
-
-    RES             interactiveMenuXCoordinate,     1
-    RES             interactiveMenuYCoordinate,     1
-    RES             interactiveMenuCursor,          1
-    RES             interactiveMenuLength,          1
-    RES             interactiveMenuSize,            1
-    RES             interactiveMenuMode,            1
-    RES             interactiveMenuCursorSelected,  1
-    RES             interactiveMenuListOffset,      1
-    RES             interactiveMenuLoop,            1
-    RES             interactiveMenuOutcome,         1
-    RES             interactiveMenuActiveHero,      1
-
-    RES             joypadState,                    1
-    RES             joypadStateIgnore,              1
-
-    RES             spriteRAMCursor,                1
-    RES             generalCounter,                 1
-
-    RES             joypadPreviousFrame,            1
-    RES             joypadPreviousState,            1
-    RES             joypadBuildup,                  1
-
-    RES             stringwriterWhitespaceWidth,    1
-    RES             stringwriterLineWidth,          1
-
-    RES             drawValue,                      1
-    RES             drawX,                          1
-    RES             drawY,                          1
-    RES             drawWidth,                      1
-    RES             drawHeight,                     1
-
-    RES             donut_stream_bank,              1
-
     RES             vBlankAnticipated,              1
     RES             joy,                            1
     RES             joy_ignore,                     1
@@ -1067,6 +972,16 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             mapdraw_x,                      1
     RES             mapdraw_y,                      1
     RES             mapflags,                       1
+    RES             joypadState,                    1
+    RES             joypadStateIgnore,              1
+    RES             spriteRAMCursor,                1
+    RES             generalCounter,                 1
+    RES             joypadPreviousFrame,            1
+    RES             joypadPreviousState,            1
+    RES             joypadBuildup,                  1
+    RES             donut_stream_bank,              1
+    RES             tmp_hi,                         3  ; 3? bytes
+
 
     RES             stringwriterTile1,              1
     RES             stringwriterTile2,              1
@@ -1077,3 +992,66 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterTile7,              1
     RES             stringwriterTile8,              1
     RES             stringwriterTile9,              1
+    RES             stringwriterWhitespaceWidth,    1
+    RES             stringwriterLineWidth,          1
+    RES             drawValue,                      1
+    RES             drawX,                          1
+    RES             drawY,                          1
+    RES             drawWidth,                      1
+    RES             drawHeight,                     1
+    RES             stringwriterStackCursor,        16
+    RES             stringifyCursor,                1
+    RES             stringifyLength,                1
+    RES             stringifyActiveItem,            2
+    RES             stringifyVariables,             16
+    RES             stringwriterDestX,              1
+    RES             stringwriterDestY,              1
+    RES             stringwriterNewlineOrigin,      1
+    RES             stringwriterSetHero,            1
+    RES             stringwriterTargetSize,         1
+    RES             stringwriterDigitLength,        2
+    RES             stringwriterDigitSize,          2
+    RES             stringwriterBinary,             3
+    RES             stringwriterDecimal,            6
+    RES             stringwriterStackIndex,         1
+    RES             stringwriterStackLo,            16
+    RES             stringwriterStackHi,            16
+    RES             stringwriterStackBank,          16
+    RES             yxa2decOutput,                  9
+
+    RES             inventory,                      100
+    RES             heroLevel,                      1*4
+    RES             heroHP,                         2*4
+    RES             heroMaxHP,                      2*4
+    RES             heroName0,                      5
+    RES             heroName1,                      5
+    RES             heroName2,                      5
+    RES             heroName3,                      5
+    RES             heroSpellCharges,               8*4
+    RES             heroMaxSpellCharges,            8*4
+    RES             hero0Inventory,                 10
+    RES             hero1Inventory,                 10
+    RES             hero2Inventory,                 10
+    RES             hero3Inventory,                 10
+    RES             hero0InventorySize,             1
+    RES             hero1InventorySize,             1
+    RES             hero2InventorySize,             1
+    RES             hero3InventorySize,             1
+    RES             hero0InventoryStatus,           10
+    RES             hero1InventoryStatus,           10
+    RES             hero2InventoryStatus,           10
+    RES             hero3InventoryStatus,           10
+
+    RES             interactiveMenuXCoordinate,     1
+    RES             interactiveMenuYCoordinate,     1
+    RES             interactiveMenuCursor,          1
+    RES             interactiveMenuLength,          1
+    RES             interactiveMenuSize,            1
+    RES             interactiveMenuMode,            1
+    RES             interactiveMenuCursorSelected,  1
+    RES             interactiveMenuListOffset,      1
+    RES             interactiveMenuLoop,            1
+    RES             interactiveMenuOutcome,         1
+    RES             interactiveMenuActiveHero,      1
+
+

@@ -73,8 +73,8 @@
 
         {"name": "TEMPLATE_ITEM_LIST",        "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"},
         {"name": "TEMPLATE_SPELL_LIST",       "text": "{ITEM_NAME}{READ8 $300}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $300}\n\n{ITEM_NAME}{READ8 $301}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $301}\n\n{ITEM_NAME}{READ8 $302}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $302}\n\n{ITEM_NAME}{READ8 $303}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $303}\n\n{ITEM_NAME}{READ8 $304}\n\n{DIGIT7R}{ITEM_PRICE}{READ8 $304}"},
-        {"name": "ITEM_NAME",                 "text": "{ITEM_NAME}{READ8 $5D02}"},
-        {"name": "ITEM_DESCRIPTION",          "text": "{ITEM_DESCRIPTION}{READ8 $5D02}"}
+        {"name": "ITEM_NAME",                 "text": "{ITEM_NAME}{READ8 @stringifyActiveItem}"},
+        {"name": "ITEM_DESCRIPTION",          "text": "{ITEM_DESCRIPTION}{READ8 @stringifyActiveItem}"}
     ]
 }
 
