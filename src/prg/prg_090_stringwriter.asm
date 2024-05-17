@@ -12,6 +12,7 @@
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
 .import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
+.import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
 
 .export RenderBox, Stringify, SetTile, DrawRectangle
 
@@ -183,6 +184,7 @@ FetchCharacterJumpTableHi:
     .hibytes FetchCharacterHeroName - 1
     .hibytes FetchCharacterHeroClass - 1
     .hibytes FetchCharacterItemName - 1
+    .hibytes FetchCharacterItemDescription - 1
 FetchCharacterJumpTableLo:
     .lobytes FetchCharacterSubstring - 1
     .lobytes FetchCharacterDigit1 - 1
@@ -204,6 +206,7 @@ FetchCharacterJumpTableLo:
     .lobytes FetchCharacterHeroName - 1
     .lobytes FetchCharacterHeroClass - 1
     .lobytes FetchCharacterItemName - 1
+    .lobytes FetchCharacterItemDescription - 1
 
 FetchCharacterSubstring:
     CALL FetchValue
@@ -492,6 +495,25 @@ FetchCharacterItemName:
     LDA LUT_ITEM_NAME, X
     STA Var0
     LDA LUT_ITEM_NAME_SIBLING2, X
+    STA Var1
+    LDY #0
+    JUMP FetchCharacter
+FetchCharacterItemDescription:
+    CALL IncrementStringifyAdvance
+    CALL FetchValue
+    PHA
+    LDY stringifyCursor
+    CALL SaveStringifyStack
+    PLA
+    TAX
+
+    ; TODO: 16 bit item ids
+    LDA #TextBank(LUT_ITEM_DESCRIPTION_SIBLING2)              ; Switch to the bank
+    STA Var2
+    STA MMC5_PRG_BANK2
+    LDA LUT_ITEM_DESCRIPTION, X
+    STA Var0
+    LDA LUT_ITEM_DESCRIPTION_SIBLING2, X
     STA Var1
     LDY #0
     JUMP FetchCharacter
@@ -1288,14 +1310,14 @@ RenderBox:
     STA VideoUpdateStack+3,X
     PLA
     STA VideoUpdateStack+2,X
-    LDA #$F7
+    LDA stringwriterTile1
     STA VideoUpdateStack+4,X
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA #$F8
+    LDA stringwriterTile2
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1306,7 +1328,7 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA #$F9
+    LDA stringwriterTile3
     STA VideoUpdateStack+10,X
 
     TXA
@@ -1360,14 +1382,14 @@ RenderBox:
     STA VideoUpdateStack+3,X
     PLA
     STA VideoUpdateStack+2,X
-    LDA #$FA
+    LDA stringwriterTile4
     STA VideoUpdateStack+4,X
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA #$FF
+    LDA stringwriterTile5
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1378,7 +1400,7 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA #$FB
+    LDA stringwriterTile6
     STA VideoUpdateStack+10,X
 
     TXA
@@ -1434,14 +1456,14 @@ RenderBox:
     STA VideoUpdateStack+3,X
     PLA
     STA VideoUpdateStack+2,X
-    LDA #$FC
+    LDA stringwriterTile7
     STA VideoUpdateStack+4,X
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA #$FD
+    LDA stringwriterTile8
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1452,7 +1474,7 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA #$FE
+    LDA stringwriterTile9
     STA VideoUpdateStack+10,X
 
     TXA

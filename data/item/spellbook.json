@@ -3,6 +3,7 @@
         {
             "name": "SPELLBOOK_LIT",
             "text": "LIT",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -10,6 +11,7 @@
         {
             "name": "SPELLBOOK_FIRE",
             "text": "FIRE",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -17,6 +19,7 @@
         {
             "name": "SPELLBOOK_LOCK",
             "text": "LOCK",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -24,6 +27,7 @@
         {
             "name": "SPELLBOOK_SLEP",
             "text": "SLEP",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -31,6 +35,7 @@
         {
             "name": "SPELLBOOK_DARK",
             "text": "DARK",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -38,6 +43,7 @@
         {
             "name": "SPELLBOOK_ICE",
             "text": "ICE",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -45,6 +51,7 @@
         {
             "name": "SPELLBOOK_SLOW",
             "text": "SLOW",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -52,6 +59,7 @@
         {
             "name": "SPELLBOOK_TMPR",
             "text": "TMPR",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -59,6 +67,7 @@
         {
             "name": "SPELLBOOK_HOLD",
             "text": "HOLD",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -66,6 +75,7 @@
         {
             "name": "SPELLBOOK_LIT2",
             "text": "LIT2",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -73,6 +83,7 @@
         {
             "name": "SPELLBOOK_FIR2",
             "text": "FIR2",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -80,6 +91,7 @@
         {
             "name": "SPELLBOOK_LOK2",
             "text": "LOK2",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -87,6 +99,7 @@
         {
             "name": "SPELLBOOK_FAST",
             "text": "FAST",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -94,6 +107,7 @@
         {
             "name": "SPELLBOOK_ICE2",
             "text": "ICE2",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -101,6 +115,7 @@
         {
             "name": "SPELLBOOK_CONF",
             "text": "CONF",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -108,6 +123,7 @@
         {
             "name": "SPELLBOOK_SLP2",
             "text": "SLP2",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -115,6 +131,7 @@
         {
             "name": "SPELLBOOK_FIR3",
             "text": "FIR3",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -122,6 +139,7 @@
         {
             "name": "SPELLBOOK_BANE",
             "text": "BANE",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -129,6 +147,7 @@
         {
             "name": "SPELLBOOK_SLO2",
             "text": "SLO2",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -136,6 +155,7 @@
         {
             "name": "SPELLBOOK_WARP",
             "text": "WARP",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -143,6 +163,7 @@
         {
             "name": "SPELLBOOK_LIT3",
             "text": "LIT3",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -150,6 +171,7 @@
         {
             "name": "SPELLBOOK_QAKE",
             "text": "QAKE",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -157,6 +179,7 @@
         {
             "name": "SPELLBOOK_RUB",
             "text": "RUB",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -164,6 +187,7 @@
         {
             "name": "SPELLBOOK_STUN",
             "text": "STUN",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -171,6 +195,7 @@
         {
             "name": "SPELLBOOK_BLND",
             "text": "BLND",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -178,6 +203,7 @@
         {
             "name": "SPELLBOOK_BRAK",
             "text": "BRAK",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -185,6 +211,7 @@
         {
             "name": "SPELLBOOK_ICE3",
             "text": "ICE3",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -192,6 +219,7 @@
         {
             "name": "SPELLBOOK_SABR",
             "text": "SABR",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -199,6 +227,7 @@
         {
             "name": "SPELLBOOK_NUKE",
             "text": "NUKE",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -206,6 +235,7 @@
         {
             "name": "SPELLBOOK_STOP",
             "text": "STOP",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -213,6 +243,7 @@
         {
             "name": "SPELLBOOK_XXXX",
             "text": "XXXX",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -220,6 +251,7 @@
         {
             "name": "SPELLBOOK_ZAP",
             "text": "ZAP!",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -227,6 +259,7 @@
         {
             "name": "SPELLBOOK_CURE",
             "text": "CURE",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -234,6 +267,7 @@
         {
             "name": "SPELLBOOK_FOG",
             "text": "FOG",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -241,6 +275,7 @@
         {
             "name": "SPELLBOOK_HARM",
             "text": "HARM",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -248,6 +283,7 @@
         {
             "name": "SPELLBOOK_RUSE",
             "text": "RUSE",
+            "description": "Missing description",
             "price": 100,
             "level": 1,
             "type": "SPELLBOOK"
@@ -255,6 +291,7 @@
         {
             "name": "SPELLBOOK_ALIT",
             "text": "ALIT",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -262,6 +299,7 @@
         {
             "name": "SPELLBOOK_INVS",
             "text": "INVS",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -269,6 +307,7 @@
         {
             "name": "SPELLBOOK_LAMP",
             "text": "LAMP",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -276,6 +315,7 @@
         {
             "name": "SPELLBOOK_MUTE",
             "text": "MUTE",
+            "description": "Missing description",
             "price": 400,
             "level": 2,
             "type": "SPELLBOOK"
@@ -283,6 +323,7 @@
         {
             "name": "SPELLBOOK_AFIR",
             "text": "AFIR",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -290,6 +331,7 @@
         {
             "name": "SPELLBOOK_CUR2",
             "text": "CUR2",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -297,6 +339,7 @@
         {
             "name": "SPELLBOOK_HEAL",
             "text": "HEAL",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -304,6 +347,7 @@
         {
             "name": "SPELLBOOK_HRM2",
             "text": "HRM2",
+            "description": "Missing description",
             "price": 1500,
             "level": 3,
             "type": "SPELLBOOK"
@@ -311,6 +355,7 @@
         {
             "name": "SPELLBOOK_AICE",
             "text": "AICE",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -318,6 +363,7 @@
         {
             "name": "SPELLBOOK_AMUT",
             "text": "AMUT",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -325,6 +371,7 @@
         {
             "name": "SPELLBOOK_FEAR",
             "text": "FEAR",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -332,6 +379,7 @@
         {
             "name": "SPELLBOOK_PURE",
             "text": "PURE",
+            "description": "Missing description",
             "price": 4000,
             "level": 4,
             "type": "SPELLBOOK"
@@ -339,6 +387,7 @@
         {
             "name": "SPELLBOOK_CUR3",
             "text": "CUR3",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -346,6 +395,7 @@
         {
             "name": "SPELLBOOK_HEL2",
             "text": "HEL2",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -353,6 +403,7 @@
         {
             "name": "SPELLBOOK_HRM3",
             "text": "HRM3",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -360,6 +411,7 @@
         {
             "name": "SPELLBOOK_LIFE",
             "text": "LIFE",
+            "description": "Missing description",
             "price": 8000,
             "level": 5,
             "type": "SPELLBOOK"
@@ -367,6 +419,7 @@
         {
             "name": "SPELLBOOK_EXIT",
             "text": "EXIT",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -374,6 +427,7 @@
         {
             "name": "SPELLBOOK_FOG2",
             "text": "FOG2",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -381,6 +435,7 @@
         {
             "name": "SPELLBOOK_INV2",
             "text": "INV2",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -388,6 +443,7 @@
         {
             "name": "SPELLBOOK_SOFT",
             "text": "SOFT",
+            "description": "Missing description",
             "price": 20000,
             "level": 6,
             "type": "SPELLBOOK"
@@ -395,6 +451,7 @@
         {
             "name": "SPELLBOOK_ARUB",
             "text": "ARUB",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -402,6 +459,7 @@
         {
             "name": "SPELLBOOK_CUR4",
             "text": "CUR4",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -409,6 +467,7 @@
         {
             "name": "SPELLBOOK_HEL3",
             "text": "HEL3",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -416,6 +475,7 @@
         {
             "name": "SPELLBOOK_HRM4",
             "text": "HRM4",
+            "description": "Missing description",
             "price": 45000,
             "level": 7,
             "type": "SPELLBOOK"
@@ -423,6 +483,7 @@
         {
             "name": "SPELLBOOK_FADE",
             "text": "FADE",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -430,6 +491,7 @@
         {
             "name": "SPELLBOOK_LIF2",
             "text": "LIF2",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -437,6 +499,7 @@
         {
             "name": "SPELLBOOK_WALL",
             "text": "WALL",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"
@@ -444,6 +507,7 @@
         {
             "name": "SPELLBOOK_XFER",
             "text": "XFER",
+            "description": "Missing description",
             "price": 60000,
             "level": 8,
             "type": "SPELLBOOK"

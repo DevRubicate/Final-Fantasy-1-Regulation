@@ -4,11 +4,12 @@
 
 .import Stringify, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex, MusicPlay
 .import WaitForVBlank, ClearOAM
-.import TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
-.import Stringify, DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
+.import TEXT_ITEM_DESCRIPTION, TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
+.import DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
 
 .import UploadCHR
-.import CHR_CHRTEST
+
+
 
 
 .export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu
@@ -17,6 +18,16 @@ DrawGameMenu:
 
     POS     11, 1
     BOX     10, 14
+
+    POS     21, 1
+    BOX     10, 14
+
+    POS     11, 15
+    BOX     10, 14
+
+    POS     21, 15
+    BOX     10, 14
+
     LDA #0
     STA stringwriterSetHero
     LDA #12
@@ -25,8 +36,6 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    POS     21, 1
-    BOX     10, 14
     LDA #1
     STA stringwriterSetHero
     LDA #22
@@ -35,8 +44,7 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    POS     11, 15
-    BOX     10, 14
+
     LDA #2
     STA stringwriterSetHero
     LDA #12
@@ -45,8 +53,7 @@ DrawGameMenu:
     STA stringwriterDestY
     CALL DrawMainMenuHeroData
 
-    POS     21, 15
-    BOX     10, 14
+
     LDA #3
     STA stringwriterSetHero
     LDA #22
@@ -87,6 +94,54 @@ DrawGameMenuSelection:
     RTS
 
 EnterItemsMenu:
+
+    CALL LoadFont
+
+    LDA #<TILE_BORDER_EDGE
+    STA Var0
+    LDA #>TILE_BORDER_EDGE
+    STA Var1
+    LDA #247
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_CORNER
+    STA Var0
+    LDA #>TILE_BORDER_CORNER
+    STA Var1
+    LDA #251
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_EDGE
+    STA Var0
+    LDA #>TILE_BORDER_EDGE
+    STA Var1
+    LDA #247
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_CONJUNCTION
+    STA Var0
+    LDA #>TILE_BORDER_CONJUNCTION
+    STA Var1
+    LDA #243
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_SPLIT
+    STA Var0
+    LDA #>TILE_BORDER_SPLIT
+    STA Var1
+    LDA #239
+    STA Var2
+    FARCALL UploadCHR
+
+
+
+
+
+
 
 
     LDA #1
@@ -137,35 +192,94 @@ EnterItemsMenu:
     LDA #5
     STA hero0InventorySize
 
+    LDA #$FE
+    STA stringwriterTile1
+    LDA #$F7
+    STA stringwriterTile2
+    LDA #$FB
+    STA stringwriterTile3
+    LDA #$FA
+    STA stringwriterTile4
+    LDA #$FF
+    STA stringwriterTile5
+    LDA #$F8
+    STA stringwriterTile6
+    LDA #$FD
+    STA stringwriterTile7
+    LDA #$F9
+    STA stringwriterTile8
+    LDA #$FC
+    STA stringwriterTile9
+
     POS     1, 0
     BOX     31, 3
 
-    POS     2, 1
-    TEXT TEXT_EQUIP_OPTIMIZE_REMOVE
+    LDA #$F6
+    STA stringwriterTile1
+    LDA #$F0
+    STA stringwriterTile2
+    LDA #$F4
+    STA stringwriterTile3
+
+
 
     POS     1, 2
     BOX     31, 9
-
-    POS     2, 3
-    TEXT TEXT_TEMPLATE_HERO_EQUIP_STATUS
-
-    POS     1, 10
-    BOX     16, 16
-    POS     6, 11
-    TEXT TEXT_HERO_0_NAME
-
-    POS     16, 10
-    BOX     16, 16
-    POS     19, 11
-    TEXT TEXT_INVENTORY
-
-
-
 
     POS     1, 25
     BOX     31, 5
 
 
+
+
+
+
+
+    ;LDA #$F1
+    ;STA stringwriterTile4
+
+    LDA #$F6
+    STA stringwriterTile7
+    LDA #$F0
+    STA stringwriterTile8
+    LDA #$F4
+    STA stringwriterTile9
+
+    POS     1, 10
+    BOX     16, 16
+
+    LDA #$F3
+    STA stringwriterTile1
+
+    LDA #$EF
+    STA stringwriterTile4
+
+    LDA #$F5
+    STA stringwriterTile7
+
+    POS     16, 10
+    BOX     16, 16
+
+    ;LDA #$F6
+    ;STA stringwriterTile1
+    ;LDA #$FA
+    ;STA stringwriterTile4
+
+
+
+
+
+    POS     2, 1
+    TEXT TEXT_EQUIP_OPTIMIZE_REMOVE
+
+    POS     2, 3
+    TEXT TEXT_TEMPLATE_HERO_EQUIP_STATUS
+
+    POS     6, 11
+    TEXT TEXT_HERO_0_NAME
+
+    POS     19, 11
+    TEXT TEXT_INVENTORY
 
 
 
@@ -216,14 +330,7 @@ EnterEquipMenu:
         :
         CMP #1
         BNE :+
-
-            LDA #0
-            STA Var0
-            STA Var1
-            LDA #1
-            STA Var2
-
-            FARCALL UploadCHR
+            ; Optimize
         :
         JUMP @Loop
     :
@@ -320,6 +427,8 @@ EnterInventory:
     LDA #>inventory
     STA Var21
 
+    CALL DrawItemDescription
+
     LDA #10
     STA interactiveMenuLength
 
@@ -415,6 +524,7 @@ ActInventory:
         SBC interactiveMenuListOffset
         BEQ @ExitInteractiveMenuUpwards
         DEC interactiveMenuCursor
+        CALL DrawItemDescription
         JUMP @doneControls
         @ExitInteractiveMenuUpwards:
         LDA #255
@@ -434,6 +544,7 @@ ActInventory:
         CLC
         ADC #1
         STA interactiveMenuCursor
+        CALL DrawItemDescription
         JUMP @doneControls
         @ExitInteractiveMenuDownwards:
         LDA interactiveMenuCursor
@@ -1252,3 +1363,178 @@ DumpItemFromHeroToInventory:
 
     RTS
 
+DrawItemDescription:
+    LDA #$FF
+    STA drawValue
+    LDA #2
+    STA drawX
+    LDA #26
+    STA drawY
+    LDA #(29)
+    STA drawWidth
+    LDA #(3)
+    STA drawHeight
+    FARCALL DrawRectangle
+
+    LDA #<inventory
+    STA Var20
+    LDA #>inventory
+    STA Var21
+
+    LDY interactiveMenuCursor
+    LDA (Var20),Y
+    BEQ @RTS
+    STA activeItem
+
+    ; Set the position of this item
+    LDA #2
+    STA stringwriterDestX
+    LDA #26
+    STA stringwriterDestY
+
+    ; Set the generic "print item name" string to be our active one
+    LDA #<TEXT_ITEM_DESCRIPTION
+    STA Var0
+    LDA #>TEXT_ITEM_DESCRIPTION
+    STA Var1
+    LDA #( .bank(TEXT_ITEM_DESCRIPTION) | %10000000)
+    STA Var2
+
+    ; Write the string
+    FARCALL Stringify
+    @RTS:
+    RTS
+
+LoadFont:
+
+
+
+    LDA #<TILE_FONT_PART_0
+    STA Var0
+    LDA #>TILE_FONT_PART_0
+    STA Var1
+    LDA #128
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_1
+    STA Var0
+    LDA #>TILE_FONT_PART_1
+    STA Var1
+    LDA #132
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_2
+    STA Var0
+    LDA #>TILE_FONT_PART_2
+    STA Var1
+    LDA #136
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_3
+    STA Var0
+    LDA #>TILE_FONT_PART_3
+    STA Var1
+    LDA #140
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_4
+    STA Var0
+    LDA #>TILE_FONT_PART_4
+    STA Var1
+    LDA #144
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_5
+    STA Var0
+    LDA #>TILE_FONT_PART_5
+    STA Var1
+    LDA #148
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_6
+    STA Var0
+    LDA #>TILE_FONT_PART_6
+    STA Var1
+    LDA #152
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_7
+    STA Var0
+    LDA #>TILE_FONT_PART_7
+    STA Var1
+    LDA #156
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_8
+    STA Var0
+    LDA #>TILE_FONT_PART_8
+    STA Var1
+    LDA #160
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_9
+    STA Var0
+    LDA #>TILE_FONT_PART_9
+    STA Var1
+    LDA #164
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_10
+    STA Var0
+    LDA #>TILE_FONT_PART_10
+    STA Var1
+    LDA #168
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_11
+    STA Var0
+    LDA #>TILE_FONT_PART_11
+    STA Var1
+    LDA #172
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_12
+    STA Var0
+    LDA #>TILE_FONT_PART_12
+    STA Var1
+    LDA #176
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_13
+    STA Var0
+    LDA #>TILE_FONT_PART_13
+    STA Var1
+    LDA #180
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_14
+    STA Var0
+    LDA #>TILE_FONT_PART_14
+    STA Var1
+    LDA #184
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_FONT_PART_15
+    STA Var0
+    LDA #>TILE_FONT_PART_15
+    STA Var1
+    LDA #188
+    STA Var2
+    FARCALL UploadCHR
+
+    RTS

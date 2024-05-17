@@ -90,22 +90,10 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     GAP                                     1
     RESZP dlgbox_row,                       0 ; 1 bytes     ; $1B
     RESZP palcyc_mode,                      1 ; 1 bytes     ; $1B
-    GAP                                     4
-    RESZP joy,                              1 ; 1 bytes     ; $20
-    RESZP joy_ignore,                       1 ; 1 bytes     ; $21
-    RESZP joy_select,                       1 ; 1 bytes     ; $22
-    RESZP joy_start,                        1 ; 1 bytes     ; $23
-    RESZP joy_a,                            1 ; 1 bytes     ; $24
-    RESZP joy_b,                            1 ; 1 bytes     ; $25
     RESZP sprindex,                         1 ; 1 bytes     ; $26
-    RESZP ow_scroll_x,                      1 ; 1 bytes     ; $27  ; X scroll of OW in tiles
-    RESZP ow_scroll_y,                      1 ; 1 bytes     ; $28  ; Y scroll in tiles
-    RESZP sm_scroll_x,                      1 ; 1 bytes     ; $29  ; ditto, but for standard maps
-    RESZP sm_scroll_y,                      1 ; 1 bytes     ; $2A
-    RESZP mapdraw_x,                        1 ; 1 bytes     ; $2B
-    RESZP mapdraw_y,                        1 ; 1 bytes     ; $2C
-    RESZP mapflags,                         1 ; 1 bytes     ; $2D  ; bit 0 set when in standard map.  bit 1 set to indicate column drawing instead of row drawing
-    GAP                                     1
+    RESZP donut_temp,                       15  ; can be aliased to some shared temp memory
+    RESZP donut_block_count,                1   ; temp memory only used in donut_bulk_load()
+    RESZP donut_stream_ptr,                 2   ; persist between calls to donut_decompress_block
     RESZP scroll_y,                         1 ; 1 bytes     ; $2F  ; Y scroll in tiles (16x16).  range=0-E
     RESZP mapdraw_nty,                      1 ; 1 bytes     ; $30
     RESZP mapdraw_ntx,                      1 ; 1 bytes     ; $31
@@ -252,9 +240,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var21,                            1
     RESZP Var22,                            1
     RESZP Var23,                            1
-    RESZP donut_temp,                       15  ; can be aliased to some shared temp memory
-    RESZP donut_block_count,                1   ; temp memory only used in donut_bulk_load()
-    RESZP donut_stream_ptr,                 2   ; persist between calls to donut_decompress_block
+
 
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
@@ -1068,3 +1054,26 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             donut_stream_bank,              1
 
     RES             vBlankAnticipated,              1
+    RES             joy,                            1
+    RES             joy_ignore,                     1
+    RES             joy_select,                     1
+    RES             joy_start,                      1
+    RES             joy_a,                          1
+    RES             joy_b,                          1
+    RES             ow_scroll_x,                    1
+    RES             ow_scroll_y,                    1
+    RES             sm_scroll_x,                    1
+    RES             sm_scroll_y,                    1
+    RES             mapdraw_x,                      1
+    RES             mapdraw_y,                      1
+    RES             mapflags,                       1
+
+    RES             stringwriterTile1,              1
+    RES             stringwriterTile2,              1
+    RES             stringwriterTile3,              1
+    RES             stringwriterTile4,              1
+    RES             stringwriterTile5,              1
+    RES             stringwriterTile6,              1
+    RES             stringwriterTile7,              1
+    RES             stringwriterTile8,              1
+    RES             stringwriterTile9,              1

@@ -1,6 +1,6 @@
-import {promises as fs}           from 'fs';
-import path                       from 'path';
-
+import { promises as fs }           from 'fs';
+import path                         from 'path';
+import { execFile }                 from 'child_process';
 
 
 class Structure {
@@ -548,12 +548,14 @@ class Preprocessor {
         if(jsonData.item) {
 
             const itemName = new PointerPackage();
+            const itemDescription = new PointerPackage();
             const itemPrice = new BinaryPackage();
             const itemDataFirst = new BinaryPackage();
 
             // The zero entry
             itemPrice.push(0, 0, 0);
             itemName.push(0);
+            itemDescription.push(0);
             itemDataFirst.push(0, 0, 0);
 
             for(let i=0; i<jsonData.item.length; ++i) {
@@ -588,9 +590,15 @@ class Preprocessor {
 
                 // Add this item's text to the output
                 const textData = this.compileText(item.text);
-                itemName.push({name: `TEXT_ITEM_${item.name}`, data: textData.buffer});
+                itemName.push({name: `TEXT_ITEM_NAME_${item.name}`, data: textData.buffer});
+
+                const descriptionData = this.compileText(item.description);
+                itemDescription.push({name: `TEXT_ITEM_DESCRIPTION_${item.name}`, data: descriptionData.buffer});
             }
             packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
+            packer.addReferenceTable({name: 'LUT_ITEM_DESCRIPTION', data: itemDescription});
+
+
             packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
             packer.addStatic({name: 'LUT_ITEM_DATA_FIRST', data: itemDataFirst});
 
@@ -624,21 +632,12 @@ class Preprocessor {
             const tiles = new PointerPackage();
             for(let i=0; i<jsonData.tile.length; ++i) {
                 const node = jsonData.tile[i];
-                const image = jsonData.chr.find(a => a.name === node.source);
-                const tileEntries = [];
-                const data = [...image.data];
-                let entry = [];
-                for(let j=0; j<data.length; ++j) {
-                    const value = data[j];
-                    if(value === 0xFF) {
-                        entry.push(0xFF);
-                        tileEntries.push(entry);
-                        entry = [];
-                    } else {
-                        entry.push(value);
-                    }
+                const chr = jsonData.chr.find(a => a.name === node.source);
+                if(!chr) {
+                    throw new Error(`Could not find ${node.source}`);
                 }
-                tiles.push({name: `TILE_${node.name}`, data: new BinaryPackage([tileEntries[node.index]])});
+                packer.addConst({name: `TILE_${node.name}`, data: i});
+                tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage([chr.tile[node.index]])});
             }
             packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
         }
@@ -1017,6 +1016,9 @@ class Preprocessor {
             case 'ITEM_NAME':
                 buffer.push(147);
                 break;
+            case 'ITEM_DESCRIPTION':
+                buffer.push(148);
+                break;
             case 'ADDRESS': {
                 const address = getPositiveInteger(segment[1]);
                 const lo = address & 0xFF;
@@ -1055,6 +1057,13 @@ class Preprocessor {
         return output;
     }
 }
+
+
+
+
+
+
+
 
 class Main {
     // Main function
@@ -1100,14 +1109,51 @@ class Main {
         }
     }
 
-    static async readZChrFile(filePath, output) {
+    static async readPNGFile(filePath, output) {
         try {
-            const data = await fs.readFile(filePath);
+            const data = await Main.runDonut(filePath, ['-i', '-l']);
+
+            const sizes = [];
+            for(let i=data.length-2; i>=0; --i) {
+                const value = data[i];
+                if(value === 255) {break;}
+                sizes.push(value);
+            }
+            sizes.reverse();
+
+            const tileEntries = [];
+            let entry = [];
+            let size = 0;
+            for(let i=0; i<data.length; ++i) {
+                const value = data[i];
+                entry.push(value);
+                ++size;
+                if(sizes[0] === size) {
+                    sizes.shift()
+                    size = 0;
+                    tileEntries.push(entry);
+                    entry = [];
+                }
+            }
+
             output.chr = output.chr ?? [];
-            output.chr.push({name: filePath.split(path.sep).join('/'), data: data});
+            output.chr.push({name: filePath.split(path.sep).join('/'), tile: tileEntries});
         } catch (err) {
             console.error(`Error reading file ${filePath}: ${err}`);
         }
+    }
+
+    static runDonut(inputFile, options) {
+        return new Promise((resolve, reject) => {
+            const args = options.concat([inputFile, '-']);
+            execFile('script/donut-nes.exe', args, {encoding: 'binary'}, (error, stdout, stderr) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(Array.from(Buffer.from(stdout, 'binary')));
+                }
+            });
+        });
     }
 
     // Recursive function to process all files in the directory
@@ -1120,8 +1166,8 @@ class Main {
                     await Main.processDirectory(entryPath, output); // Recurse into subdirectories
                 } else if (entry.isFile() && entry.name.endsWith('.json')) {
                     await Main.readJsonFile(entryPath, output); // Read JSON files
-                } else if(entry.isFile() && entry.name.endsWith('.zchr')) {
-                    await Main.readZChrFile(entryPath, output); // Read JSON files
+                } else if(entry.isFile() && entry.name.endsWith('.png')) {
+                    await Main.readPNGFile(entryPath, output); // Read PNG files
                 }
             }
             return output;
@@ -1131,22 +1177,9 @@ class Main {
     }
 }
 
+
 // Execute main function
 await Main.main();
 
 process.exit(0);
-
-/*
-AllocateStatic
-    Allocates into pages at 256 byte increments that are aligned
-AllocateTableStatic
-    Will split into separate tables to account for the length of the children
-AllocateTableReference
-    Will split into a hi and lo table for the pointer
-        Allocate children to the same page that the table is stretching into.
-        If children are of equal length, allocate them right after the table
-        If children are of different length, allocate them at the bottom of the page
-AllocateTablePointer
-    Will split into a hi, lo, and bank table for existing allocations.
-*/
 

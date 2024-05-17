@@ -1,39 +1,51 @@
 .segment "DATA_122"
 
-.export TEXT_EXAMPLE_EQUIP_LIST, TEXT_SHOP_WHOSEITEMSELL, TEXT_SHOP_YOUCANTAFFORDTHAT, TEXT_SHOP_ITEMCOSTOK, TEXT_TITLE_CONTINUE, TEXT_CLASS_NAME_BLACK_MAGE, TEXT_SHOP_TITLEBLACKMAGIC, TEXT_SHOP_TITLEINN
+.export TEXT_TEMPLATE_HERO_MENU, TEXT_SHOP_WELCOMEWOULDYOUSTAY, TEXT_SHOP_YOUCANTCARRYANYMORE, TEXT_SHOP_WHATDOYOUWANT, TEXT_TITLE_SELECT_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_KNIGHT, TEXT_CLASS_NAME_THIEF, TEXT_HERO_3_NAME, SHOP_ARMOR_CONERIA, SHOP_ARMOR_CONERIA_SIBLING2
 
-; address 0 - 51 (bytes 0 - 51)
-TEXT_EXAMPLE_EQUIP_LIST:
-.byte $2e, $61, $32, $55, $52, $51, $61, $3c, $5a, $52, $55, $47, $7f, $2e, $61, $32, $55, $52, $51, $61, $31, $48, $4f, $50, $48, $57, $7f, $2e, $61, $2b, $55, $44, $46, $48, $4f, $48, $57, $7f, $61, $61, $40, $52, $52, $47, $48, $51, $61, $2a, $5b, $48, $00
+; address 0 - 55 (bytes 0 - 55)
+TEXT_TEMPLATE_HERO_MENU:
+.byte $91, $7f, $7f, $35, $61, $82, $86, $8f, $80, $01, $7f, $7f, $31, $39, $7f, $61, $84, $90, $1a, $84, $91, $7f, $7f, $7f, $36, $2a, $30, $32, $2c, $7f, $81, $92, $1a, $81, $93, $1a, $81, $94, $1a, $81, $95, $1a, $7f, $81, $96, $1a, $81, $97, $1a, $81, $98, $1a, $81, $99, $00
 
-; address 51 - 83 (bytes 0 - 32)
-TEXT_SHOP_WHOSEITEMSELL:
-.byte $40, $4b, $52, $56, $48, $7f, $4c, $57, $48, $50, $7f, $47, $52, $61, $5c, $52, $58, $7f, $5a, $44, $51, $57, $61, $57, $52, $7f, $56, $48, $4f, $4f, $65, $00
+; address 55 - 89 (bytes 0 - 34)
+TEXT_SHOP_WELCOMEWOULDYOUSTAY:
+.byte $40, $48, $4f, $46, $52, $50, $48, $7f, $7f, $3c, $57, $44, $5c, $5f, $7f, $57, $52, $61, $56, $44, $59, $48, $7f, $5c, $52, $58, $55, $7f, $47, $44, $57, $44, $60, $00
 
-; address 83 - 106 (bytes 0 - 23)
-TEXT_SHOP_YOUCANTAFFORDTHAT:
-.byte $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $44, $49, $49, $52, $55, $47, $7f, $57, $4b, $44, $57, $60, $00
+; address 89 - 113 (bytes 0 - 24)
+TEXT_SHOP_YOUCANTCARRYANYMORE:
+.byte $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $46, $44, $55, $55, $5c, $7f, $44, $51, $5c, $50, $52, $55, $48, $00
 
-; address 106 - 120 (bytes 0 - 14)
-TEXT_SHOP_ITEMCOSTOK:
-.byte $88, $84, $5c, $da, $7f, $30, $52, $4f, $47, $7f, $38, $34, $65, $00
+; address 113 - 131 (bytes 0 - 18)
+TEXT_SHOP_WHATDOYOUWANT:
+.byte $40, $4b, $44, $57, $61, $47, $52, $7f, $5c, $52, $58, $7f, $5a, $44, $51, $57, $65, $00
 
-; address 120 - 129 (bytes 0 - 9)
-TEXT_TITLE_CONTINUE:
-.byte $2c, $38, $37, $3d, $32, $37, $3e, $2e, $00
+; address 131 - 144 (bytes 0 - 13)
+TEXT_TITLE_SELECT_NAME:
+.byte $3c, $2e, $35, $2e, $2c, $3d, $61, $61, $37, $2a, $36, $2e, $00
 
-; address 129 - 137 (bytes 0 - 8)
-TEXT_CLASS_NAME_BLACK_MAGE:
-.byte $2b, $4f, $60, $36, $2a, $30, $2e, $00
+; address 144 - 152 (bytes 0 - 8)
+TEXT_CLASS_NAME_FIGHTER:
+.byte $2f, $32, $30, $31, $3d, $2e, $3b, $00
 
-; address 137 - 144 (bytes 0 - 7)
-TEXT_SHOP_TITLEBLACKMAGIC:
-.byte $2b, $36, $2a, $30, $32, $2c, $00
+; address 152 - 159 (bytes 0 - 7)
+TEXT_CLASS_NAME_KNIGHT:
+.byte $34, $37, $32, $30, $31, $3d, $00
 
-; address 144 - 148 (bytes 0 - 4)
-TEXT_SHOP_TITLEINN:
-.byte $32, $37, $37, $00
+; address 159 - 165 (bytes 0 - 6)
+TEXT_CLASS_NAME_THIEF:
+.byte $3d, $31, $32, $2e, $2f, $00
 
-; 148 - 8192
-.res 8044
+; address 165 - 170 (bytes 0 - 5)
+TEXT_HERO_3_NAME:
+.byte $90, $80, $03, $91, $00
+
+; address 170 - 174 (bytes 0 - 4)
+SHOP_ARMOR_CONERIA:
+.byte $01, $02, $03, $00
+
+; address 174 - 178 (bytes 0 - 4)
+SHOP_ARMOR_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00
+
+; 178 - 8192
+.res 8014
 

@@ -326,8 +326,19 @@ UploadCHR:
     STA VideoUpdateStack+0,X
     LDA #>(VideoUpdate_Inc1_Address-1)
     STA VideoUpdateStack+1,X
-    LDA #$00
+
+    LDA Var2
+    LSR A
+    LSR A
+    LSR A
+    LSR A
     STA VideoUpdateStack+2,X
+
+    LDA Var2
+    ASL A
+    ASL A
+    ASL A
+    ASL A
     STA VideoUpdateStack+3,X
 
     LDA #<(VideoUpdateWriteStackBytes-1-(64*4))
@@ -343,6 +354,7 @@ UploadCHR:
     ADC #64
     STA VideoUpdateCursor
 
+    LDY #0
     CALL donut_decompress_block
 
     LDX VideoUpdateCursor

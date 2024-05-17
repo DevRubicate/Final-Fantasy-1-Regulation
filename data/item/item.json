@@ -3,36 +3,42 @@
         {
             "name": "TENT",
             "text": "TENT",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         },
         {
             "name": "CABIN",
             "text": "CABIN",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         },
         {
             "name": "HOUSE",
             "text": "HOUSE",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         },
         {
             "name": "HEAL_POTION",
             "text": "HEAL",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         },
         {
             "name": "PURE_POTION",
             "text": "PURE",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         },
         {
             "name": "SOFT_POTION",
             "text": "SOFT",
+            "description": "Missing description",
             "price": 0,
             "type": "ITEM"
         }

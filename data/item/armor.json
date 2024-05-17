@@ -3,240 +3,280 @@
         {
             "name": "CLOTH",
             "text": "{CLOTH}Cloth",
+            "description": "Padded cloth that offers\nminor defense without being\nunwieldy and cumbersome.",
             "price": 10,
             "type": "EQUIP"
         },
         {
             "name": "WOODEN_ARMOR",
             "text": "{ARMOR}Wooden Armor",
+            "description": "Missing description",
             "price": 50,
             "type": "EQUIP"
         },
         {
             "name": "CHAIN_ARMOR",
             "text": "{ARMOR}Chain Armor",
+            "description": "Missing description",
             "price": 80,
             "type": "EQUIP"
         },
         {
             "name": "IRON_ARMOR",
             "text": "{ARMOR}Iron Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "STEEL_ARMOR",
             "text": "{ARMOR}Steel Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "SILVER_ARMOR",
             "text": "{ARMOR}Silver Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "FLAME_ARMOR",
             "text": "{ARMOR}Flame Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "ICE_ARMOR",
             "text": "{ARMOR}Ice Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "OPAL_ARMOR",
             "text": "{ARMOR}Opal Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "DRAGON_ARMOR",
             "text": "{ARMOR}Dragon Armor",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "COPPER_BRACELET",
             "text": "{BRACELET}Copper Bracelet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "SILVER_BRACELET",
             "text": "{BRACELET}Silver Bracelet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "GOLD_BRACELET",
             "text": "{BRACELET}Gold Bracelet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "OPAL_BRACELET",
             "text": "{BRACELET}Opal Bracelet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "WHITE_CLOTH",
             "text": "{CLOTH}White Cloth",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "BLACK_CLOTH",
             "text": "{CLOTH}Black Cloth",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "WOODEN_SHIELD",
             "text": "{SHIELD}Wooden Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "IRON_SHIELD",
             "text": "{SHIELD}Iron Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "SILVER_SHIELD",
             "text": "{SHIELD}Silver Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "FLAME_SHIELD",
             "text": "{SHIELD}Flame Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "ICE_SHIELD",
             "text": "{SHIELD}Ice Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "OPAL_SHIELD",
             "text": "{SHIELD}Opal Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "AEGIS_SHIELD",
             "text": "{SHIELD}Aegis Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "BUCKLER",
             "text": "{SHIELD}Buckler Shield",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "PROCAPE",
             "text": "Procape",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "CAP",
             "text": "Cap",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "WOODEN_HELMET",
             "text": "{HELMET}Wooden Helmet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "IRON_HELMET",
             "text": "{HELMET}Iron Helmet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "SILVER_HELMET",
             "text": "{HELMET}Silver Helmet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "OPAL_HELMET",
             "text": "{HELMET}Opal Helmet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "HEAL_HELMET",
             "text": "{HELMET}Heal Helmet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "RIBBON",
             "text": "Ribbon",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "GLOVES",
             "text": "Gloves",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "COPPER_GAUNTLET",
             "text": "{GAUNTLET}Copper Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "IRON_GAUNTLET",
             "text": "{GAUNTLET}Iron Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "SILVER_GAUNTLET",
             "text": "{GAUNTLET}Silver Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "ZEUS_GAUNTLET",
             "text": "{GAUNTLET}Zeus Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "POWER_GAUNTLET",
             "text": "{GAUNTLET}Power Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "OPAL_GAUNTLET",
             "text": "{GAUNTLET}Opal Gauntlet",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         },
         {
             "name": "PRORING",
             "text": "Proring",
+            "description": "Missing description",
             "price": 0,
             "type": "EQUIP"
         }

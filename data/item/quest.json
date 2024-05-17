@@ -3,102 +3,119 @@
         {
             "name": "LUTE",
             "text": "LUTE",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "CROWN",
             "text": "CROWN",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "CRYSTAL",
             "text": "CRYSTAL",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "HERB",
             "text": "HERB",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "KEY",
             "text": "KEY",
+            "description": "Missing description",
             "price": 50,
             "type": "QUEST"
         },
         {
             "name": "TNT",
             "text": "TNT",
+            "description": "Missing description",
             "price": 200,
             "type": "QUEST"
         },
         {
             "name": "ADAMANT",
             "text": "ADAMANT",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "SLAB",
             "text": "SLAB",
+            "description": "Missing description",
             "price": 400,
             "type": "QUEST"
         },
         {
             "name": "RUBY",
             "text": "RUBY",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "ROD",
             "text": "ROD",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "FLOATER",
             "text": "FLOATER",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "CHIME",
             "text": "CHIME",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "TAIL",
             "text": "TAIL",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "CUBE",
             "text": "CUBE",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "BOTTLE",
             "text": "BOTTLE",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "OXYALE",
             "text": "OXYALE",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         },
         {
             "name": "CANOE",
             "text": "CANOE",
+            "description": "Missing description",
             "price": 0,
             "type": "QUEST"
         }
