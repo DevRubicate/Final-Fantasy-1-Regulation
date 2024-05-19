@@ -6,7 +6,7 @@
 .import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
 .import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, ClearOAM, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 .import GetSMTargetCoords, CanTalkToMapObject, DrawMapObjectsNoUpdate, TalkToObject, TalkToSMTile, DrawDialogueBox, ShowDialogueBox, EnterMainMenu, EnterLineupMenu, UpdateJoy
-.import CanPlayerMoveSM, StartMapMove
+.import CanPlayerMoveSM, StartMapMove, EnterShopMenu
 
 .export PrepStandardMap, RedrawDoor, ProcessSMInput
 .export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects, DoStandardMap
@@ -354,7 +354,7 @@ StandardMapLoop:
         STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
         LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
         FARCALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
-        FARCALL EnterShop           ; enter the shop
+        FARCALL EnterShopMenu       ; enter the shop
         CALL ReenterStandardMap  ;  then reenter the map
         JUMP StandardMapLoop     ;  and continue looping
 

@@ -953,9 +953,25 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             Var11,                          1
     RES             Var12,                          1
     RES             Var13,                          1
+    RES             Var14,                          1
+    RES             Var15,                          1
+    RES             Var16,                          1
+    RES             Var17,                          1
+    RES             Var18,                          1
+    RES             Var19,                          1
+    RES             Var24,                          1
+    RES             Var25,                          1
+    RES             Var26,                          1
+    RES             Var27,                          1
+    RES             Var28,                          1
+
+
+
     RES             vBlankCounter,                  1
     RES             VideoUpdateCursor,              1
+    RES             VideoUpdateStackTally,          1
     RES             VideoUpdateIncrementMode,       1
+    RES             VideoUpdateCost,                2
     RES             StackPointerBackup,             1
     RES             VideoUpdateRetroactiveCursor,   1
     RES             vBlankAnticipated,              1
@@ -981,17 +997,17 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             joypadBuildup,                  1
     RES             donut_stream_bank,              1
     RES             tmp_hi,                         3  ; 3? bytes
+    RES             fillColor,                      1
+    RES             palette0,                       3
+    RES             palette1,                       3
+    RES             palette2,                       3
+    RES             palette3,                       3
+    RES             palette4,                       3
+    RES             palette5,                       3
+    RES             palette6,                       3
+    RES             palette7,                       3
+    RES             attributeTable,                 64
 
-
-    RES             stringwriterTile1,              1
-    RES             stringwriterTile2,              1
-    RES             stringwriterTile3,              1
-    RES             stringwriterTile4,              1
-    RES             stringwriterTile5,              1
-    RES             stringwriterTile6,              1
-    RES             stringwriterTile7,              1
-    RES             stringwriterTile8,              1
-    RES             stringwriterTile9,              1
     RES             stringwriterWhitespaceWidth,    1
     RES             stringwriterLineWidth,          1
     RES             drawValue,                      1
@@ -999,13 +1015,10 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             drawY,                          1
     RES             drawWidth,                      1
     RES             drawHeight,                     1
-    RES             stringwriterStackCursor,        16
+    RES             drawVars,                       16
     RES             stringifyCursor,                1
     RES             stringifyLength,                1
     RES             stringifyActiveItem,            2
-    RES             stringifyVariables,             16
-    RES             stringwriterDestX,              1
-    RES             stringwriterDestY,              1
     RES             stringwriterNewlineOrigin,      1
     RES             stringwriterSetHero,            1
     RES             stringwriterTargetSize,         1
@@ -1014,6 +1027,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterBinary,             3
     RES             stringwriterDecimal,            6
     RES             stringwriterStackIndex,         1
+    RES             stringwriterStackCursor,        16
     RES             stringwriterStackLo,            16
     RES             stringwriterStackHi,            16
     RES             stringwriterStackBank,          16

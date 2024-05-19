@@ -8,6 +8,8 @@
 
 
 ClearSprites:
+    LDA #0
+    STA spriteRAMCursor
     LDA #255
     .REPEAT 64, i
         STA spriteRAM+(i*4)

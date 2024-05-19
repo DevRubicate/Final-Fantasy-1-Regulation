@@ -12,54 +12,59 @@
 
 
 
-.export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu
+.export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu, UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
 
 DrawGameMenu:
 
-    POS     11, 1
-    BOX     10, 14
+    CALL UploadFont
+    CALL UploadNineSliceBorders
+    CALL RestoreNineSliceBordersToDefault
 
-    POS     21, 1
-    BOX     10, 14
 
-    POS     11, 15
-    BOX     10, 14
+    POS         11, 1
+    NINESLICE   10, 14
 
-    POS     21, 15
-    BOX     10, 14
+    POS         21, 1
+    NINESLICE   10, 14
+
+    POS         11, 15
+    NINESLICE   10, 14
+
+    POS         21, 15
+    NINESLICE   10, 14
 
     LDA #0
     STA stringwriterSetHero
     LDA #12
-    STA stringwriterDestX
+    STA drawX
     LDA #3
-    STA stringwriterDestY
+    STA drawY
     CALL DrawMainMenuHeroData
 
     LDA #1
     STA stringwriterSetHero
     LDA #22
-    STA stringwriterDestX
+    STA drawX
     LDA #3
-    STA stringwriterDestY
+    STA drawY
     CALL DrawMainMenuHeroData
 
 
     LDA #2
     STA stringwriterSetHero
     LDA #12
-    STA stringwriterDestX
+    STA drawX
     LDA #17
-    STA stringwriterDestY
+    STA drawY
     CALL DrawMainMenuHeroData
 
 
     LDA #3
     STA stringwriterSetHero
     LDA #22
-    STA stringwriterDestX
+    STA drawX
     LDA #17
-    STA stringwriterDestY
+    STA drawY
     CALL DrawMainMenuHeroData
 
     CALL DrawGameMenuGoldBox
@@ -80,66 +85,20 @@ DrawMainMenuHeroData:
     RTS
 
 DrawGameMenuGoldBox:
-    POS     1, 10
-    BOX     10, 5
-    POS     2, 12
-    TEXT    TEXT_MENU_GOLD
+    POS         1, 11
+    NINESLICE   10, 3
+    POS         2, 12
+    TEXT        TEXT_MENU_GOLD
     RTS
 
 DrawGameMenuSelection:
-    POS     2, 16
-    BOX     8, 13
-    POS     3, 18
+    POS         2, 16
+    NINESLICE   8, 13
+    POS         3, 18
     TEXT    TEXT_MENU_SELECTION
     RTS
 
 EnterItemsMenu:
-
-    CALL LoadFont
-
-    LDA #<TILE_BORDER_EDGE
-    STA Var0
-    LDA #>TILE_BORDER_EDGE
-    STA Var1
-    LDA #247
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_CORNER
-    STA Var0
-    LDA #>TILE_BORDER_CORNER
-    STA Var1
-    LDA #251
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_EDGE
-    STA Var0
-    LDA #>TILE_BORDER_EDGE
-    STA Var1
-    LDA #247
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_CONJUNCTION
-    STA Var0
-    LDA #>TILE_BORDER_CONJUNCTION
-    STA Var1
-    LDA #243
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_SPLIT
-    STA Var0
-    LDA #>TILE_BORDER_SPLIT
-    STA Var1
-    LDA #239
-    STA Var2
-    FARCALL UploadCHR
-
-
-
-
 
 
 
@@ -192,68 +151,49 @@ EnterItemsMenu:
     LDA #5
     STA hero0InventorySize
 
-    LDA #$FE
-    STA stringwriterTile1
-    LDA #$F7
-    STA stringwriterTile2
-    LDA #$FB
-    STA stringwriterTile3
-    LDA #$FA
-    STA stringwriterTile4
-    LDA #$FF
-    STA stringwriterTile5
-    LDA #$F8
-    STA stringwriterTile6
-    LDA #$FD
-    STA stringwriterTile7
-    LDA #$F9
-    STA stringwriterTile8
-    LDA #$FC
-    STA stringwriterTile9
-
-    POS     1, 0
-    BOX     31, 3
+    POS         1, 0
+    NINESLICE   31, 3
 
     LDA #$F6
-    STA stringwriterTile1
+    STA drawVars+1
     LDA #$F0
-    STA stringwriterTile2
+    STA drawVars+2
     LDA #$F4
-    STA stringwriterTile3
+    STA drawVars+3
 
 
 
-    POS     1, 2
-    BOX     31, 9
+    POS         1, 2
+    NINESLICE   31, 9
 
-    POS     1, 25
-    BOX     31, 5
+    POS         1, 25
+    NINESLICE   31, 5
 
 
 
 
 
     LDA #$F6
-    STA stringwriterTile7
+    STA drawVars+7
     LDA #$F0
-    STA stringwriterTile8
+    STA drawVars+8
     LDA #$F4
-    STA stringwriterTile9
+    STA drawVars+9
 
-    POS     1, 10
-    BOX     16, 16
+    POS         1, 10
+    NINESLICE   16, 16
 
     LDA #$F3
-    STA stringwriterTile1
+    STA drawVars+1
 
     LDA #$EF
-    STA stringwriterTile4
+    STA drawVars+4
 
     LDA #$F5
-    STA stringwriterTile7
+    STA drawVars+7
 
-    POS     16, 10
-    BOX     16, 16
+    POS         16, 10
+    NINESLICE   16, 16
 
     POS     2, 1
     TEXT TEXT_EQUIP_OPTIMIZE_REMOVE
@@ -648,11 +588,11 @@ DrawInventory:
 
     ; Set the position of this item
     LDA #17
-    STA stringwriterDestX
+    STA drawX
     LDA #12
     CLC
     ADC interactiveMenuLoop
-    STA stringwriterDestY
+    STA drawY
 
     ; Set the hardcoded whitespace width of this item name to be 14, that way it will always completely
     ; overwrite the item text that used to be here
@@ -976,12 +916,12 @@ DrawHeroInventory:
 
     ; Set the position of this item
     LDX #2
-    STX stringwriterDestX
+    STX drawX
 
     LDA #12
     CLC
     ADC interactiveMenuLoop
-    STA stringwriterDestY
+    STA drawY
 
     ; Load this item's status byte
     LDX #$FF
@@ -995,7 +935,7 @@ DrawHeroInventory:
     
     ; Set the position of this item
     LDX #3
-    STX stringwriterDestX
+    STX drawX
 
     ; Set the hardcoded whitespace width of this item name to be 14, that way it will always completely
     ; overwrite the item text that used to be here
@@ -1034,11 +974,11 @@ DrawHeroInventory:
 
     ; Set the position of this item
     LDA #3
-    STA stringwriterDestX
+    STA drawX
     LDA #12
     CLC
     ADC interactiveMenuLoop
-    STA stringwriterDestY
+    STA drawY
 
     ; Set the hardcoded whitespace width of this item name to be 14, that way it will always completely
     ; overwrite the item text that used to be here
@@ -1373,9 +1313,9 @@ DrawItemDescription:
 
     ; Set the position of this item
     LDA #2
-    STA stringwriterDestX
+    STA drawX
     LDA #26
-    STA stringwriterDestY
+    STA drawY
 
     ; Set the generic "print item name" string to be our active one
     LDA #<TEXT_ITEM_DESCRIPTION
@@ -1390,7 +1330,7 @@ DrawItemDescription:
     @RTS:
     RTS
 
-LoadFont:
+UploadFont:
 
 
 
@@ -1522,4 +1462,67 @@ LoadFont:
     STA Var2
     FARCALL UploadCHR
 
+    RTS
+
+UploadNineSliceBorders:
+    LDA #<TILE_BORDER_EDGE
+    STA Var0
+    LDA #>TILE_BORDER_EDGE
+    STA Var1
+    LDA #247
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_CORNER
+    STA Var0
+    LDA #>TILE_BORDER_CORNER
+    STA Var1
+    LDA #251
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_EDGE
+    STA Var0
+    LDA #>TILE_BORDER_EDGE
+    STA Var1
+    LDA #247
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_CONJUNCTION
+    STA Var0
+    LDA #>TILE_BORDER_CONJUNCTION
+    STA Var1
+    LDA #243
+    STA Var2
+    FARCALL UploadCHR
+
+    LDA #<TILE_BORDER_SPLIT
+    STA Var0
+    LDA #>TILE_BORDER_SPLIT
+    STA Var1
+    LDA #239
+    STA Var2
+    FARCALL UploadCHR
+    RTS
+
+RestoreNineSliceBordersToDefault:
+    LDA #$FE
+    STA drawVars+1
+    LDA #$F7
+    STA drawVars+2
+    LDA #$FB
+    STA drawVars+3
+    LDA #$FA
+    STA drawVars+4
+    LDA #$FF
+    STA drawVars+5
+    LDA #$F8
+    STA drawVars+6
+    LDA #$FD
+    STA drawVars+7
+    LDA #$F9
+    STA drawVars+8
+    LDA #$FC
+    STA drawVars+9
     RTS

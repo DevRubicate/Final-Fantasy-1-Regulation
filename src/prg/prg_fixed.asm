@@ -1143,24 +1143,29 @@ LagFrame:
     RTI
 
 OnNMI:
-    SEI
-    PHA
+    SEI                                         ; 2 cycle
+    PHA                                         ; 2 cycle
+
+    LDA #>oam
+    STA OAMDMA                   ; Do OAM DMA
 
     ; if vBlank was not anticipated, do a lagframe update instead
-    LDA vBlankAnticipated
-    BEQ LagFrame
+    LDA vBlankAnticipated                       ; 4 cycle
+    BEQ LagFrame                                ; 2 cycle
+    LDA #0                                      ; 2 cycle
+    STA vBlankAnticipated                       ; 4 cycle
 
-    LDA VideoUpdateCursor
-    BEQ @noVideoUpdate
-    TXA
-    PHA
-    TYA
-    PHA
-    LDA current_bank1
-    PHA
-    LDA #(.bank(VideoUpdate_Start) | %10000000)
-    STA MMC5_PRG_BANK1
-    JSR VideoUpdate_Start
+    LDA VideoUpdateCursor                       ; 4 cycle
+    BEQ @noVideoUpdate                          ; 2 cycle
+    TXA                                         ; 2 cycle
+    PHA                                         ; 2 cycle
+    TYA                                         ; 2 cycle
+    PHA                                         ; 2 cycle
+    LDA current_bank1                           ; 4 cycle
+    PHA                                         ; 2 cycle
+    LDA #(.bank(VideoUpdate_Start) | %10000000) ; 4 cycle
+    STA MMC5_PRG_BANK1                          ; 4 cycle
+    JSR VideoUpdate_Start                       ; 6 cycle
     PLA
     STA MMC5_PRG_BANK1
     PLA
@@ -1170,14 +1175,12 @@ OnNMI:
     @noVideoUpdate:
 
 
-    LDA spriteRAMCursor
-    BEQ :+
-    LDA #>oam
-    STA OAMDMA                   ; Do OAM DMA
+
+
+
+    
+
     FARCALL ClearSprites
-    LDA #0
-    STA spriteRAMCursor
-    :
 
     INC generalCounter
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
@@ -1196,6 +1199,12 @@ OnNMI:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForVBlank:
+    ; Add the terminator to the end of the video stack
+    LDX VideoUpdateCursor
+    LDA #$80
+    STA VideoUpdateStack+0,X
+    STA VideoUpdateStack+1,X
+
     LDA PPUSTATUS      ; check VBlank flag
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit

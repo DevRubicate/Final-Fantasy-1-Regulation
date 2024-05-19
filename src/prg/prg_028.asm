@@ -10,7 +10,7 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import WhitespaceWriter, RenderBox
+.import WhitespaceWriter, DrawNineSlice
 .import Stringify
 .import DrawGameMenu
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
@@ -21,8 +21,11 @@
 .import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
 .import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
+.import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
+
+.import DrawRectangle, DrawNineSlice
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -2276,9 +2279,9 @@ lut_LineupSlots:
 
 DrawLineupMenuNames:
     LDA #$0D
-    STA stringwriterDestX
+    STA drawX
     LDA #$08
-    STA stringwriterDestY
+    STA drawY
     LDX #0
     LDA HeroStringPtrLo, X
     STA Var0
@@ -2289,9 +2292,9 @@ DrawLineupMenuNames:
     FARCALL Stringify
 
     LDA #$0D
-    STA stringwriterDestX
+    STA drawX
     LDA #$0C
-    STA stringwriterDestY
+    STA drawY
     LDX #1
     LDA HeroStringPtrLo, X
     STA Var0
@@ -2302,9 +2305,9 @@ DrawLineupMenuNames:
     FARCALL Stringify
 
     LDA #$0D
-    STA stringwriterDestX
+    STA drawX
     LDA #$10
-    STA stringwriterDestY
+    STA drawY
     LDX #2
     LDA HeroStringPtrLo, X
     STA Var0
@@ -2315,9 +2318,9 @@ DrawLineupMenuNames:
     FARCALL Stringify
 
     LDA #$0D
-    STA stringwriterDestX
+    STA drawX
     LDA #$14
-    STA stringwriterDestY
+    STA drawY
     LDX #3
     LDA HeroStringPtrLo, X
     STA Var0
@@ -2807,9 +2810,9 @@ DoNameInput:
     
 
     LDA #14
-    STA stringwriterDestX
+    STA drawX
     LDA #4
-    STA stringwriterDestY
+    STA drawY
     LDX slotIndex
     LDA HeroStringPtrLo, X
     STA Var0
@@ -3007,24 +3010,24 @@ PtyGen_DrawText:
 PtyGen_DrawOneText:
     LDX slotIndex
     LDA SlotCoordX, X
-    STA stringwriterDestX
+    STA drawX
     LDA SlotCoordY, X
-    STA stringwriterDestY
+    STA drawY
     LDA #10
     STA box_wd
     LDA #10
     STA box_ht
-    FARCALL RenderBox
+    FARCALL DrawNineSlice
 
     LDX slotIndex
     LDA SlotCoordX, X
     CLC
     ADC #1
-    STA stringwriterDestX
+    STA drawX
     LDA SlotCoordY, X
     CLC
     ADC #2
-    STA stringwriterDestY
+    STA drawY
 
 
     LDA partyGenerationClass, X
@@ -3043,11 +3046,11 @@ PtyGen_DrawOneText:
     LDA SlotCoordX, X
     CLC
     ADC #3
-    STA stringwriterDestX
+    STA drawX
     LDA SlotCoordY, X
     CLC
     ADC #8
-    STA stringwriterDestY
+    STA drawY
 
     LDX slotIndex
 
@@ -3167,14 +3170,14 @@ DrawNameInputScreen:
     LDA #0
     STA menustall           ; no menustall (PPU is off at this point)
     
-    POS     13, 2
-    BOX     6, 4
-    POS     4, 8
-    BOX     23, 20
-    POS     6, 10
-    TEXT    TEXT_ALPHABET
-    POS     9, 26
-    TEXT    TEXT_TITLE_SELECT_NAME
+    POS         13, 2
+    NINESLICE   6, 4
+    POS         4, 8
+    NINESLICE   23, 20
+    POS         6, 10
+    TEXT        TEXT_ALPHABET
+    POS         9, 26
+    TEXT        TEXT_TITLE_SELECT_NAME
 RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3316,25 +3319,55 @@ EnterTitleScreen:
     CALL IntroTitlePrepare    ; clear NT, start music, etc
     BIT PPUSTATUS                ;  reset PPU toggle
 
-    POS     11, 10
-    BOX     10, 4
-    POS     12, 12 
-    TEXT    TEXT_TITLE_CONTINUE
+    FARCALL UploadFont
+    FARCALL UploadNineSliceBorders
+    FARCALL RestoreNineSliceBordersToDefault
 
-    POS     11, 15
-    BOX     10, 4
-    POS     12, 17
-    TEXT    TEXT_TITLE_NEW_GAME
+    CALL WaitForVBlank
 
-    POS     8, 20
-    BOX     16, 4
-    POS     9, 22
-    TEXT    TEXT_TITLE_RESPOND_RATE
+    LDA #$FF
+    STA drawValue
+    LDA #1
+    STA drawX
+    LDA #1
+    STA drawY
+    LDA #(27)
+    STA drawWidth
+    LDA #(13)
+    STA drawHeight
+    FARCALL DrawRectangle
 
-    POS     8, 25
-    TEXT    TEXT_TITLE_COPYRIGHT_SQUARE
-    POS     8, 26
-    TEXT    TEXT_TITLE_COPYRIGHT_NINTENDO
+
+    ;LDA #11
+    ;STA drawX
+    ;LDA #11
+    ;STA drawY
+    ;LDA #(10-2)
+    ;STA box_wd
+    ;LDA #(3-2)
+    ;STA box_ht
+    ;FARCALL DrawNineSlice
+
+
+
+;    POS         12, 12 
+;    TEXT        TEXT_TITLE_CONTINUE
+;
+;    POS         11, 16
+;    NINESLICE   10, 3
+;    POS         12, 17
+;    TEXT        TEXT_TITLE_NEW_GAME
+;
+;    POS         8, 21
+;    NINESLICE   16, 3
+;    POS         9, 22
+;    TEXT        TEXT_TITLE_RESPOND_RATE
+;
+;    POS         8, 25
+;    TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
+;    POS         8, 26
+;    TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
+
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
     STA PAPU_EN               ;   will do this automatically)
@@ -3359,8 +3392,8 @@ EnterTitleScreen:
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
 
-    POS     9, 22
-    TEXT    TEXT_TITLE_RESPOND_RATE
+;    POS     9, 22
+    ;TEXT    TEXT_TITLE_RESPOND_RATE
 
     FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
@@ -4869,6 +4902,7 @@ ShopLoop_BuySellExit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopLoop_CharNames:
+
     FARCALL DrawShopHeroList
 
     LDA #4
@@ -5217,9 +5251,9 @@ DrawShopBuyItemConfirm:
     STA shop_curprice+1
 
     LDA tmp
-    STA stringifyVariables+0
+    STA drawVars+0
     LDA tmp+1
-    STA stringifyVariables+1
+    STA drawVars+1
     FARCALL DrawShopItemCostOK
     RTS
 
@@ -5233,9 +5267,9 @@ DrawShopBuyItemConfirm:
 
 DrawInnClinicConfirm:
     LDA item_box+0
-    STA stringifyVariables+0
+    STA drawVars+0
     LDA item_box+1
-    STA stringifyVariables+1
+    STA drawVars+1
     FARCALL DrawShopItemCostOK
     RTS
 
@@ -5274,9 +5308,9 @@ DrawShopSellItemConfirm:
     STA shop_curprice+1      ; copy the price to shop_curprice
 
     LDA tmp
-    STA stringifyVariables+0
+    STA drawVars+0
     LDA tmp+1
-    STA stringifyVariables+1
+    STA drawVars+1
     FARCALL DrawShopItemCostOK
     RTS
 
@@ -7846,95 +7880,7 @@ DrawMagicMenuCursor:
 
 DrawMainMenu:
     CALL ClearNT                    ; start by clearing the NT
-    CALL DrawOrbBox                 ; draw the orb box
     FARCALL DrawGameMenu
-    RTS
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Orb Box   [$B878 :: 0x3B888]
-;;
-;;   Draws the Orb box (and its contents) as seen on the main menu.
-;;
-;;   tmp+7 is used to build the attribute byte
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawOrbBox:
-    LDA #0             ; Draw main menu box ID 0  (the orb box)
-    CALL DrawMainItemBox
-
-      ; Fire Orb
-    LDX #$84           ; dest ppu address       = $2084
-    LDY #$64           ; lit orb tiles start at = $64
-    LDA orb_fire       ; fire orb status
-    CALL @DrawOrb
-
-      ; Water Orb
-    LDX #$86           ; dest ppu address       = $2086
-    LDY #$68           ; lit orb tiles start at = $68
-    LDA orb_water      ; water orb status
-    CALL @DrawOrb
-
-      ; Air Orb
-    LDX #$C4           ; dest ppu address       = $20C4
-    LDY #$6C           ; lit orb tiles start at = $6C
-    LDA orb_air        ; air orb status
-    CALL @DrawOrb
-
-      ; Earth Orb
-    LDX #$C6           ; dest ppu address       = $20C6
-    LDY #$70           ; lit orb tiles start at = $70
-    LDA orb_earth      ; earth orb status
-    CALL @DrawOrb
-
-      ; Attributes for all orbs
-    LDA PPUSTATUS    ; reset PPU toggle
-    LDA #>$23C9
-    STA PPUADDR
-    LDA #<$23C9
-    STA PPUADDR    ; attribute byte at $23C9
-    LDA tmp+7    ; load computed attribute byte
-    STA PPUDATA    ;   and draw it
-    RTS
-
-   ; DrawOrb local subroutine
-   ;  X = low byte of dest PPU address
-   ;  Y = orb tile ID to draw (each lit orb has different graphics)
-   ;  A = orb status.  0 = not lit... nonzero=lit
-
-  @DrawOrb:
-    LSR tmp+7
-    LSR tmp+7     ; shift 2 bits out of computed attribute byte
-    CMP #0        ; check orb status
-    BNE :+        ; if lit, skip ahead
-
-      LDY #$76    ; if orb not lit... replace tile with $76 (unlit orb graphics)
-      LDA #$C0    ; and OR #$C0 to our attribute byte
-      ORA tmp+7   ;  unlit orbs use palette 3
-      STA tmp+7   ;  lit orbs use palette 0 -- so this changes attributes accordingly
-
-:   LDA PPUSTATUS     ; reset PPU toggle
-    LDA #$20
-    STA PPUADDR     ; set high byte of ppu addr to $20
-    STX PPUADDR     ; and low byte to our desired address
-
-    STY PPUDATA     ;  draw the first tile
-    INY
-    STY PPUDATA     ;  then the second
-    INY
-
-    LDA #$20      ; Set PPU address to look 1 row below what we just drew
-    STA PPUADDR     ;  high byte is still $20
-    TXA           ;  but take the low byte
-    CLC
-    ADC #$20      ;  and add #$20 so that it is the next row
-    STA PPUADDR
-
-    STY PPUDATA     ;  draw the 3rd tile
-    INY
-    STY PPUDATA     ;  and lastly the 4th
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

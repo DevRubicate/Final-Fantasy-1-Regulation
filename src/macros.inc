@@ -16,9 +16,9 @@
 ;;  macro for quick page boundary assertions
 ;;
 
-.MACRO VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+.macro VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     .assert (<*) < $FB, error, "Video update subroutine is aligned on page boundary"
-.ENDMACRO
+.endmacro
 
  ; for critical page checks (absolutely should cross page boundary)
 .macro CRITPAGECHECK lbl
@@ -54,33 +54,33 @@
 
 .macro POS _x, _y
     LDA #(_x)
-    STA stringwriterDestX
+    STA drawX
     LDA #(_y)
-    STA stringwriterDestY
+    STA drawY
 .endmacro
 
 .macro POSX _x
     LDA #(_x)
-    STA stringwriterDestX
+    STA drawX
 .endmacro
 
 .macro POSY _y
     LDA #(_y)
-    STA stringwriterDestY
+    STA drawY
 .endmacro
 
 .macro MOVEX _x
-    LDA stringwriterDestX
+    LDA drawX
     CLC
     ADC #(_x)
-    STA stringwriterDestX
+    STA drawX
 .endmacro
 
 .macro MOVEY _y
-    LDA stringwriterDestY
+    LDA drawY
     CLC
     ADC #(_y)
-    STA stringwriterDestY
+    STA drawY
 .endmacro
 
 .macro TEXT _address
@@ -95,14 +95,14 @@
     FARCALL Stringify
 .endmacro
 
-.macro BOX _w, _h
-    .import RenderBox
+.macro NINESLICE _w, _h
+    .import DrawNineSlice
 
     LDA #(_w-2)
     STA box_wd
     LDA #(_h-2)
     STA box_ht
-    FARCALL RenderBox
+    FARCALL DrawNineSlice
 .endmacro
 
 .macro CALL _address
@@ -152,7 +152,6 @@
     LDY #<(_address)
     JSR Impl_NAKEDJUMP
 .endmacro
-
 
 .macro FIXEDCALL _address, _bank
     .assert .bank(_address) = $FF, warning, "FIXEDCALL: Address must be in fixed bank"

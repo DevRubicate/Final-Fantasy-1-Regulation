@@ -6,7 +6,8 @@
 .import WaitForVBlank, MenuCondStall, MusicPlay
 .import VideoUpdate_Inc1_Address, VideoUpdate_Address, VideoUpdate_Inc32_Address, VideoUpdate_Inc1_Address_Set, VideoUpdate_Address_Set, VideoUpdate_Inc32_Address_Set, VideoUpdate_Inc1_Address_Set_Write, VideoUpdate_Address_Set_Write, VideoUpdate_Inc32_Address_Set_Write, VideoUpdate_Inc1_Write_Set, VideoUpdate_Write_Set, VideoUpdate_Inc32_Write_Set, VideoUpdate_Inc1_Set, VideoUpdate_Set, VideoUpdate_Inc32_Set
 .import VideoUpdateWriteStackBytes, VideoUpdateRepeatValue, VideoUpdateRepeatValueSetValueWriteValue
-.import VideoUpdate_MassWrite
+.import VideoUpdate_Address_WriteAttribute, VideoUpdate_WriteAttributeRepeat, VideoUpdate_MassWrite, VideoUpdate_SetFillColor, VideoUpdate_UploadPalette0, VideoUpdate_UploadPalette1, VideoUpdate_UploadPalette2, VideoUpdate_UploadPalette3, VideoUpdate_UploadPalette4, VideoUpdate_UploadPalette5, VideoUpdate_UploadPalette6, VideoUpdate_UploadPalette7
+
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
@@ -14,13 +15,45 @@
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 .import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
 
-.export RenderBox, Stringify, SetTile, DrawRectangle
+.export DrawNineSlice, Stringify, SetTile, DrawRectangle
+.export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
+
+
+VideoUpdateApplySize:
+    TAX
+    CLC
+    ADC VideoUpdateStackTally
+    STA VideoUpdateStackTally
+    BCC :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+    RTS
+
+VideoUpdateApplyCost:
+    CLC
+    ADC VideoUpdateCost
+    STA VideoUpdateCost
+    BCC :+
+        INC VideoUpdateCost+1
+        BNE :+
+        LDX VideoUpdateCursor
+        LDA #$80
+        STA VideoUpdateStack+0,X
+        STA VideoUpdateStack+1,X
+        CALL WaitForVBlank
+    :
+    RTS
+
 
 Stringify:
     LDA #0
     STA stringwriterLineWidth
 
-    LDA stringwriterDestX
+    LDA drawX
     STA stringwriterNewlineOrigin
 
     CALL VideoUpdatePushAddress
@@ -44,19 +77,19 @@ Stringify:
         CLC
         ADC #$60
         CALL VideoUpdatePushData        ; Push this byte
-        LDA stringwriterDestX           ; Increment the dest address by 1
+        LDA drawX           ; Increment the dest address by 1
         CLC
         ADC #1
         AND #$3F                        ; Mask it with $3F so it wraps around both NTs appropriately
-        STA stringwriterDestX
+        STA drawX
         JUMP @Loop
 
         @Newline:
         CALL PadWhitespace
         CALL VideoUpdateSetWriteStackBytes
         LDA stringwriterNewlineOrigin
-        STA stringwriterDestX
-        INC stringwriterDestY
+        STA drawX
+        INC drawY
         STY stringifyCursor
 
         CALL VideoUpdatePushAddress
@@ -1143,8 +1176,8 @@ VideoUpdatePushAddress:
 
     LDA #0
     STA stringifyLength
-    LDX stringwriterDestX         ; get dest_x in X
-    LDY stringwriterDestY         ; and dest_y in Y
+    LDX drawX         ; get dest_x in X
+    LDY drawY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
     BCS @NTB           ;  if it is, to NTB, otherwise, NTA
 
@@ -1220,8 +1253,8 @@ SetTile:
     CALL WaitForVBlank
     @noWait:
 
-    LDX stringwriterDestX         ; get dest_x in X
-    LDY stringwriterDestY         ; and dest_y in Y
+    LDX drawX         ; get dest_x in X
+    LDY drawY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
     BCS @NTB           ;  if it is, to NTB, otherwise, NTA
 
@@ -1266,9 +1299,36 @@ SetTile:
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; RenderBox
+; DrawNineSlice
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-RenderBox:
+DrawNineSlice:
+    LDA #7
+    CALL VideoUpdateApplySize
+
+    LDA drawWidth
+    ASL A
+    ASL A
+    CLC
+    ADC #32
+    ; UPPER SECTION
+    ; VideoUpdate_Inc1_Address_Set              ; 26
+    ; VideoUpdate_Write_Set                     ; 18
+    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
+    ;
+    ; MIDDLE SECTION
+    ; VideoUpdate_Inc1_Address_Set              ; 26
+    ; VideoUpdate_Write_Set                     ; 18
+    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
+    ;
+    ; BOTTOM SECTINO
+    ; VideoUpdate_Inc1_Address_Set              ; 26
+    ; VideoUpdate_Write_Set                     ; 18
+    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
+
+
+    CALL VideoUpdateApplyCost
+
+
     LDA VideoUpdateCursor
     BPL :+
         LDX VideoUpdateCursor
@@ -1278,8 +1338,10 @@ RenderBox:
         CALL WaitForVBlank
     :
 
-    LDX stringwriterDestX         ; get dest_x in X
-    LDY stringwriterDestY         ; and dest_y in Y
+
+    ; TOP SECTION
+    LDX drawX         ; get dest_x in X
+    LDY drawY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
     BCS @NTB           ;  if it is, to NTB, otherwise, NTA
 
@@ -1307,17 +1369,17 @@ RenderBox:
     LDA #>(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+1,X
     PLA
-    STA VideoUpdateStack+3,X
+    STA VideoUpdateStack+3,X        ; Address
     PLA
-    STA VideoUpdateStack+2,X
-    LDA stringwriterTile1
-    STA VideoUpdateStack+4,X
+    STA VideoUpdateStack+2,X        ; Address
+    LDA drawVars+1
+    STA VideoUpdateStack+4,X        ; NineSlice tile 1
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA stringwriterTile2
+    LDA drawVars+2
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1328,14 +1390,86 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA stringwriterTile3
+    LDA drawVars+3
     STA VideoUpdateStack+10,X
-
     TXA
     CLC
     ADC #11
     STA VideoUpdateCursor
 
+    ; Attribute
+    LDA #%00000011
+    STA Var24
+    LDA drawX
+    STA Var25
+    LDA drawY
+    STA Var26
+    LDA box_wd
+    CLC
+    ADC #2
+    STA Var27
+    LDA box_ht
+    CLC
+    ADC #2
+    STA Var28
+
+    :
+            LDA Var25                       ; load the x position
+            LSR A
+            LSR A                           ; rotate the second bit into the carry
+            PHP                             ; save carry
+            LDA Var26                       ; load the y position
+            LSR A                           ; shift to the right
+            PLP                             ; restore carry
+            ROL A                           ; shift to the left while putting carry in bit 0
+            ASL A                           ; shift all bits left
+            ASL A                           ; shift all bits left
+            ORA Var24                       ; OR with the actual 2 bit attribute
+            AND #%00001111                  ; mask out the unrelevant bits
+            TAX                             ; transfer A to X
+            LDY Var26
+            LDA Var25
+            LSR A
+            LSR A
+            CLC
+            ADC LUT_AttributeYPosition,Y
+            TAY
+            LDA attributeTable,Y
+            AND LUT_AttributeMask,X
+            ORA LUT_AttributeMagic,X
+            STA attributeTable,Y
+            INC Var25
+            DEC Var27
+        BNE :-
+        LDA drawX
+        STA Var25
+        LDA box_wd
+        CLC
+        ADC #2
+        STA Var27
+
+        INC Var26
+        DEC Var28
+    BNE :-
+
+
+    ; Order the PPU to update this attribute
+    ;    LDX VideoUpdateCursor
+    ;    LDA #<(VideoUpdate_Address_WriteAttribute-1)
+    ;    STA VideoUpdateStack+0,X
+    ;    LDA #>(VideoUpdate_Address_WriteAttribute-1)
+    ;    STA VideoUpdateStack+1,X
+    ;    ;LDY drawY
+    ;    ;LDA drawX
+    ;    ;LSR A
+    ;    ;LSR A
+    ;    ;CLC
+    ;    ;ADC LUT_AttributeYPosition,Y
+    ;    STA VideoUpdateStack+2,X
+    ;    TXA
+    ;    CLC
+    ;    ADC #3
+    ;    STA VideoUpdateCursor
 
 
     ; MIDDLE SECTION
@@ -1348,10 +1482,10 @@ RenderBox:
         STA VideoUpdateStack+1,X
         CALL WaitForVBlank
     :
-    INC stringwriterDestY
+    INC drawY
 
-    LDX stringwriterDestX         ; get dest_x in X
-    LDY stringwriterDestY         ; and dest_y in Y
+    LDX drawX         ; get dest_x in X
+    LDY drawY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
     BCS @NTB2           ;  if it is, to NTB, otherwise, NTA
 
@@ -1382,14 +1516,14 @@ RenderBox:
     STA VideoUpdateStack+3,X
     PLA
     STA VideoUpdateStack+2,X
-    LDA stringwriterTile4
+    LDA drawVars+4
     STA VideoUpdateStack+4,X
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA stringwriterTile5
+    LDA drawVars+5
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1400,7 +1534,7 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA stringwriterTile6
+    LDA drawVars+6
     STA VideoUpdateStack+10,X
 
     TXA
@@ -1422,10 +1556,10 @@ RenderBox:
         STA VideoUpdateStack+1,X
         CALL WaitForVBlank
     :
-    INC stringwriterDestY
+    INC drawY
 
-    LDX stringwriterDestX         ; get dest_x in X
-    LDY stringwriterDestY         ; and dest_y in Y
+    LDX drawX         ; get dest_x in X
+    LDY drawY         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
     BCS @NTB3           ;  if it is, to NTB, otherwise, NTA
 
@@ -1456,14 +1590,14 @@ RenderBox:
     STA VideoUpdateStack+3,X
     PLA
     STA VideoUpdateStack+2,X
-    LDA stringwriterTile7
+    LDA drawVars+7
     STA VideoUpdateStack+4,X
 
     LDA #<(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+5,X
     LDA #>(VideoUpdate_Write_Set-1)
     STA VideoUpdateStack+6,X
-    LDA stringwriterTile8
+    LDA drawVars+8
     STA VideoUpdateStack+7,X
     
     LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
@@ -1474,7 +1608,7 @@ RenderBox:
     STA VideoUpdateStack+8,X
     LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
     STA VideoUpdateStack+9,X
-    LDA stringwriterTile9
+    LDA drawVars+9
     STA VideoUpdateStack+10,X
 
     TXA
@@ -1493,52 +1627,39 @@ RenderBox:
 ; DrawRectangle
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 DrawRectangle:
-    @LoopMiddleSection:
-    LDA VideoUpdateCursor
-    BPL :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
-        CALL WaitForVBlank
-    :
+    @loop:
 
-    LDX drawX         ; get X
-    LDY drawY         ; and Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB2           ;  if it is, to NTB, otherwise, NTA
+    ; Add 7 to our video stack size
+    LDA #7
+    CALL VideoUpdateApplySize
 
-    @NTA2:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push2
+    ; VideoUpdate_Inc1_Address_Set      13
+    ; VideoUpdate_MassWrite             3 + 2 * width
+    LDA drawWidth
+    ASL A
+    CLC
+    ADC #(13+3)
+    CALL VideoUpdateApplyCost
 
-    @NTB2:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
-
-    @Push2:
     LDX VideoUpdateCursor
     LDA #<(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+0,X
     LDA #>(VideoUpdate_Inc1_Address_Set-1)
     STA VideoUpdateStack+1,X
-    PLA
-    STA VideoUpdateStack+3,X
-    PLA
-    STA VideoUpdateStack+2,X
+
+    ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+    ; that when our video stack is executed it knows where to draw the rectangle.
+    LDY drawY                ; Load y position into register Y
+    LDA lut_NTRowStartHi, Y  ; Get high address offset into nametable for this y position
+    STA VideoUpdateStack+2,X ; Save high address on the video stack
+    LDA drawX                ; Load x position
+    ORA lut_NTRowStartLo, Y  ; bitwise OR with low address for y position
+    STA VideoUpdateStack+3,X ; Save low address on the video stack
+
+    ; Put the tile index we wish to use when drawing our rectangle into the video stack
     LDA drawValue
     STA VideoUpdateStack+4,X
 
-    
     LDA #<(VideoUpdate_MassWrite-1)
     SEC
     SBC drawWidth
@@ -1548,6 +1669,7 @@ DrawRectangle:
     LDA #>(VideoUpdate_MassWrite-1)
     STA VideoUpdateStack+6,X
 
+    ; Advance our video cursor by 7
     TXA
     CLC
     ADC #7
@@ -1555,16 +1677,216 @@ DrawRectangle:
 
     DEC drawHeight
     BEQ :+
-    INC drawY
-    JUMP @LoopMiddleSection
+        INC drawY
+        JUMP @loop
     :
+    RTS
 
-    ; All done
-    LDX VideoUpdateCursor
-    LDA #$80
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadFillColor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadFillColor:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_SetFillColor-1)
     STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_SetFillColor-1)
+    STA VideoUpdateStack+1,X
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette0:
+    LDA VideoUpdateCursor
+    BPL @noWait
+    CALL WaitForVBlank
+    @noWait:
+
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette0-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette0-1)
     STA VideoUpdateStack+1,X
 
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette1:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette1-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette1-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette2:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette2-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette2-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette3
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette3:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette3-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette3-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette4:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette4-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette4-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette5
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette5:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette5-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette5-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette6
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette6:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette6-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette6-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
+    RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadPalette7
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+UploadPalette7:
+    LDA VideoUpdateCursor
+    TAX
+    CLC
+    ADC #2
+    BMI @End
+    STA VideoUpdateCursor
+
+    LDA #<(VideoUpdate_UploadPalette7-1)
+    ; Carry is clear
+    ADC VideoUpdateIncrementMode
+    STA VideoUpdateStack+0,X
+    LDA #>(VideoUpdate_UploadPalette7-1)
+    STA VideoUpdateStack+1,X
+
+    LDA #VIDEOUPDATE_INCREMENT1
+    STA VideoUpdateIncrementMode
+    @End:
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1583,8 +1905,8 @@ DrawRectangle:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CoordToNTAddr:
-    LDY stringwriterDestY                ; put the Y coord (row) in Y.  We'll use it to index the NT lut
-    LDA stringwriterDestX                ; put Y coord (col) in A
+    LDY drawY                ; put the Y coord (row) in Y.  We'll use it to index the NT lut
+    LDA drawX                ; put Y coord (col) in A
     AND #$1F                  ; wrap Y coord
     ORA lut_NTRowStartLo, Y   ; OR Y coord with low byte of row start
     STA ppu_dest              ;  this is the low byte of the addres -- record it
@@ -1783,3 +2105,68 @@ PlotBoxRow_Top:
 
 
 
+SetAttribute:
+    LDA Var25                       ; load the x position
+    ROR A                           ; rotate the 1th bit into the carry
+    LDA Var26                       ; load the y position
+    ROL A                           ; rotate back the bit from the carry
+    ASL A                           ; shift all bits left
+    ASL A                           ; shift all bits left
+    ORA Var24                       ; OR with the actual 2 bit attribute
+    AND #%00001111                  ; mask out the unrelevant bits
+    TAX                             ; transfer A to X
+    LDY Var26
+    LDA Var25
+    LSR A
+    CLC
+    ADC LUT_AttributeYPosition,Y
+    TAY
+    LDA attributeTable,Y
+    AND LUT_AttributeMask,X
+    ORA LUT_AttributeMagic,X
+    STA attributeTable,Y
+    RTS
+
+
+
+LUT_AttributeMagic:
+    .byte %00000000
+    .byte %00000001
+    .byte %00000010
+    .byte %00000011
+    .byte %00000000
+    .byte %00000100
+    .byte %00001000
+    .byte %00001100
+    .byte %00000000
+    .byte %00010000
+    .byte %00100000
+    .byte %00110000
+    .byte %00000000
+    .byte %01000000
+    .byte %10000000
+    .byte %11000000
+
+LUT_AttributeMask:
+    .byte %11111100
+    .byte %11111100
+    .byte %11111100
+    .byte %11111100
+    .byte %11110011
+    .byte %11110011
+    .byte %11110011
+    .byte %11110011
+    .byte %11001111
+    .byte %11001111
+    .byte %11001111
+    .byte %11001111
+    .byte %00111111
+    .byte %00111111
+    .byte %00111111
+    .byte %00111111
+
+
+LUT_AttributeYPosition:
+    .repeat 32, i
+        .byte 8*(i>>2)
+    .endrepeat
