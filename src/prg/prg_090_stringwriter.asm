@@ -4,9 +4,11 @@
 .include "src/lib/yxa2dec.asm"
 
 .import WaitForVBlank, MenuCondStall, MusicPlay
-.import VideoUpdate_Inc1_Address, VideoUpdate_Address, VideoUpdate_Inc32_Address, VideoUpdate_Inc1_Address_Set, VideoUpdate_Address_Set, VideoUpdate_Inc32_Address_Set, VideoUpdate_Inc1_Address_Set_Write, VideoUpdate_Address_Set_Write, VideoUpdate_Inc32_Address_Set_Write, VideoUpdate_Inc1_Write_Set, VideoUpdate_Write_Set, VideoUpdate_Inc32_Write_Set, VideoUpdate_Inc1_Set, VideoUpdate_Set, VideoUpdate_Inc32_Set
-.import VideoUpdateWriteStackBytes, VideoUpdateRepeatValue, VideoUpdateRepeatValueSetValueWriteValue
-.import VideoUpdate_Address_WriteAttribute, VideoUpdate_WriteAttributeRepeat, VideoUpdate_MassWrite, VideoUpdate_SetFillColor, VideoUpdate_UploadPalette0, VideoUpdate_UploadPalette1, VideoUpdate_UploadPalette2, VideoUpdate_UploadPalette3, VideoUpdate_UploadPalette4, VideoUpdate_UploadPalette5, VideoUpdate_UploadPalette6, VideoUpdate_UploadPalette7
+.import Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set
+.import VideoWriteStackBytes, VideoRepeatValue, Video_MassWrite_Value_Write
+.import Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_MassWrite, Video_SetFillColor, Video_UploadPalette0, Video_UploadPalette1, Video_UploadPalette2, Video_UploadPalette3, Video_UploadPalette4, Video_UploadPalette5, Video_UploadPalette6, Video_UploadPalette7
+.import Video_MassWrite_Set_Write_Address_Set_Write_Set
+.import Video_Inc1_ClearNametable0to119, Video_ClearNametable120to239, Video_ClearNametable240to359, Video_ClearNametable360to479, Video_ClearNametable480to599, Video_ClearNametable600to719, Video_ClearNametable720to839, Video_ClearNametable840to959
 
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
@@ -15,38 +17,34 @@
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 .import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
 
-.export DrawNineSlice, Stringify, SetTile, DrawRectangle
+
+.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, ClearScreen
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
 
 
-VideoUpdateApplySize:
-    TAX
+VideoApplySizeAndCost:
+    TAY
     CLC
-    ADC VideoUpdateStackTally
-    STA VideoUpdateStackTally
+    ADC VideoCost
+    STA VideoCost
     BCC :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
+        INC VideoCost+1
+        BNE :+
         CALL WaitForVBlank
+        SEC                 ; Set carry flag to indicate a vblank happened
+        RTS
+    :
+
+    TXA
+    CLC
+    ADC VideoStackTally
+    STA VideoStackTally
+    BCC :+
+        CALL WaitForVBlank
+        SEC                 ; Set carry flag to indicate a vblank happened
     :
     RTS
 
-VideoUpdateApplyCost:
-    CLC
-    ADC VideoUpdateCost
-    STA VideoUpdateCost
-    BCC :+
-        INC VideoUpdateCost+1
-        BNE :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
-        CALL WaitForVBlank
-    :
-    RTS
 
 
 Stringify:
@@ -56,7 +54,7 @@ Stringify:
     LDA drawX
     STA stringwriterNewlineOrigin
 
-    CALL VideoUpdatePushAddress
+    CALL VideoPushAddress
 
     LDY #0
     STY stringifyCursor
@@ -76,7 +74,7 @@ Stringify:
         ; Add CHR offset so this becomes a valid character
         CLC
         ADC #$60
-        CALL VideoUpdatePushData        ; Push this byte
+        CALL VideoPushData        ; Push this byte
         LDA drawX           ; Increment the dest address by 1
         CLC
         ADC #1
@@ -86,13 +84,13 @@ Stringify:
 
         @Newline:
         CALL PadWhitespace
-        CALL VideoUpdateSetWriteStackBytes
+        CALL VideoSetWriteStackBytes
         LDA stringwriterNewlineOrigin
         STA drawX
         INC drawY
         STY stringifyCursor
 
-        CALL VideoUpdatePushAddress
+        CALL VideoPushAddress
 
         LDY stringifyCursor
         JUMP @Loop
@@ -102,7 +100,7 @@ Stringify:
 
         @Terminate:
         CALL PadWhitespace
-        CALL VideoUpdateSetWriteStackBytes
+        CALL VideoSetWriteStackBytes
 
         LDA #0
         STA stringwriterWhitespaceWidth
@@ -131,7 +129,7 @@ PadWhitespace:
 
     @loop:
     LDA #$C1
-    CALL VideoUpdatePushData
+    CALL VideoPushData
     DEY
     BNE @loop
 
@@ -1167,8 +1165,8 @@ FetchValueItemDataSecond:
 FetchValueItemDataThird:
     RTS
 
-VideoUpdatePushAddress:
-    LDA VideoUpdateCursor
+VideoPushAddress:
+    LDA VideoCursor
     BPL @noWait
     CALL WaitForVBlank
     @noWait:
@@ -1199,48 +1197,48 @@ VideoUpdatePushAddress:
     PHA                ;  for our low byte of PPU address
 
     @Push:
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address-1)
-    STA VideoUpdateStack+1,X
+    LDX VideoCursor
+    LDA #<(Video_Inc1_Address-1)
+    STA VideoStack+0,X
+    LDA #>(Video_Inc1_Address-1)
+    STA VideoStack+1,X
     PLA
-    STA VideoUpdateStack+3,X
+    STA VideoStack+3,X
     PLA
-    STA VideoUpdateStack+2,X
+    STA VideoStack+2,X
 
     
     TXA
     CLC
     ADC #4
-    STA VideoUpdateRetroactiveCursor
+    STA VideoRetroactiveCursor
     ADC #2
-    STA VideoUpdateCursor
+    STA VideoCursor
     RTS
-VideoUpdatePushData:
-    LDX VideoUpdateCursor
-    STA VideoUpdateStack,X
+VideoPushData:
+    LDX VideoCursor
+    STA VideoStack,X
     INX
-    STX VideoUpdateCursor
+    STX VideoCursor
     INC stringifyLength
     INC stringwriterLineWidth
     RTS
-VideoUpdateSetWriteStackBytes:
-    LDX VideoUpdateRetroactiveCursor
-    LDA #<(VideoUpdateWriteStackBytes-1)
+VideoSetWriteStackBytes:
+    LDX VideoRetroactiveCursor
+    LDA #<(VideoWriteStackBytes-1)
     SEC
     SBC stringifyLength
     SBC stringifyLength
     SBC stringifyLength
     SBC stringifyLength
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdateWriteStackBytes-1)
-    STA VideoUpdateStack+1,X
+    STA VideoStack+0,X
+    LDA #>(VideoWriteStackBytes-1)
+    STA VideoStack+1,X
 
-    LDX VideoUpdateCursor
+    LDX VideoCursor
     LDA #$80
-    STA VideoUpdateStack+0,X
-    STA VideoUpdateStack+1,X
+    STA VideoStack+0,X
+    STA VideoStack+1,X
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1248,7 +1246,7 @@ VideoUpdateSetWriteStackBytes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 SetTile:
     PHA
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     BPL @noWait
     CALL WaitForVBlank
     @noWait:
@@ -1276,427 +1274,733 @@ SetTile:
     PHA                ;  for our low byte of PPU address
 
     @Push:
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Address_Set_Write-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Address_Set_Write-1)
-    STA VideoUpdateStack+1,X
+    LDX VideoCursor
+    LDA #<(Video_Address_Set_Write-1)
+    STA VideoStack+0,X
+    LDA #>(Video_Address_Set_Write-1)
+    STA VideoStack+1,X
     PLA
-    STA VideoUpdateStack+3,X
+    STA VideoStack+3,X
     PLA
-    STA VideoUpdateStack+2,X
+    STA VideoStack+2,X
     PLA
-    STA VideoUpdateStack+4,X
+    STA VideoStack+4,X
     
     TXA
     CLC
     ADC #5
-    STA VideoUpdateCursor
+    STA VideoCursor
 
     LDA #$80
-    STA VideoUpdateStack+5,X
-    STA VideoUpdateStack+6,X
+    STA VideoStack+5,X
+    STA VideoStack+6,X
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DrawNineSlice
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-DrawNineSlice:
-    LDA #7
-    CALL VideoUpdateApplySize
+    DrawNineSlice:
+        LDA drawWidth
+        SEC
+        SBC #2
+        STA drawWidth
 
-    LDA drawWidth
-    ASL A
-    ASL A
-    CLC
-    ADC #32
-    ; UPPER SECTION
-    ; VideoUpdate_Inc1_Address_Set              ; 26
-    ; VideoUpdate_Write_Set                     ; 18
-    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
-    ;
-    ; MIDDLE SECTION
-    ; VideoUpdate_Inc1_Address_Set              ; 26
-    ; VideoUpdate_Write_Set                     ; 18
-    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
-    ;
-    ; BOTTOM SECTINO
-    ; VideoUpdate_Inc1_Address_Set              ; 26
-    ; VideoUpdate_Write_Set                     ; 18
-    ; VideoUpdateRepeatValueSetValueWriteValue  ; N * 4 + 12
+        LDA drawHeight
+        SEC
+        SBC #2
+        STA drawHeight
 
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address_Set_Write_Set                    13 or 16
+        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 16
+        LDA drawWidth
+        ASL A                       ; Add N * 2
+        ; Carry is clear
+        ADC #(13 + 16)              ; Add 10 + 16 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #13                     ; Add 13 to our video stack size
+        CALL VideoApplySizeAndCost
+        ; If the carry is set it means there was too much vblank work so we had wait a frame to flush the
+        ; video stack. That means that we have to try again now that we are in the next frame.
+        BCS @allocateVideoBuffer    ; Jump back up again
 
-    CALL VideoUpdateApplyCost
+        ; If we are here it means we are ready to fill our video stack with the routines and data needed to
+        ; draw the nineslice.
 
-
-    LDA VideoUpdateCursor
-    BPL :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
-        CALL WaitForVBlank
-    :
-
-
-    ; TOP SECTION
-    LDX drawX         ; get dest_x in X
-    LDY drawY         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
-
-    @NTA:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push
-
-    @NTB:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
-
-    @Push:
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+1,X
-    PLA
-    STA VideoUpdateStack+3,X        ; Address
-    PLA
-    STA VideoUpdateStack+2,X        ; Address
-    LDA drawVars+1
-    STA VideoUpdateStack+4,X        ; NineSlice tile 1
-
-    LDA #<(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+6,X
-    LDA drawVars+2
-    STA VideoUpdateStack+7,X
-    
-    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
-    SEC
-    SBC box_wd
-    SBC box_wd
-    SBC box_wd
-    STA VideoUpdateStack+8,X
-    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
-    STA VideoUpdateStack+9,X
-    LDA drawVars+3
-    STA VideoUpdateStack+10,X
-    TXA
-    CLC
-    ADC #11
-    STA VideoUpdateCursor
-
-    ; Attribute
-    LDA #%00000011
-    STA Var24
-    LDA drawX
-    STA Var25
-    LDA drawY
-    STA Var26
-    LDA box_wd
-    CLC
-    ADC #2
-    STA Var27
-    LDA box_ht
-    CLC
-    ADC #2
-    STA Var28
-
-    :
-            LDA Var25                       ; load the x position
-            LSR A
-            LSR A                           ; rotate the second bit into the carry
-            PHP                             ; save carry
-            LDA Var26                       ; load the y position
-            LSR A                           ; shift to the right
-            PLP                             ; restore carry
-            ROL A                           ; shift to the left while putting carry in bit 0
-            ASL A                           ; shift all bits left
-            ASL A                           ; shift all bits left
-            ORA Var24                       ; OR with the actual 2 bit attribute
-            AND #%00001111                  ; mask out the unrelevant bits
-            TAX                             ; transfer A to X
-            LDY Var26
-            LDA Var25
-            LSR A
-            LSR A
-            CLC
-            ADC LUT_AttributeYPosition,Y
-            TAY
-            LDA attributeTable,Y
-            AND LUT_AttributeMask,X
-            ORA LUT_AttributeMagic,X
-            STA attributeTable,Y
-            INC Var25
-            DEC Var27
-        BNE :-
-        LDA drawX
-        STA Var25
-        LDA box_wd
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address_Set_Write_Set-1)
         CLC
-        ADC #2
-        STA Var27
+        ADC VideoIncrementAddressOffset             ; If we are already in increment mode 1 then this skips over it
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address_Set_Write_Set-1)
+        STA VideoStack+1,X
 
-        INC Var26
-        DEC Var28
-    BNE :-
+        ; Set the video increment mode to 1
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the nineslice.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+2,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+3,X          ; Save low address on the video stack
+
+        LDA drawVars+1
+        STA VideoStack+4,X          ; nineslice tile 1
+
+        LDA drawVars+2              ; nineslice tile 2
+        STA VideoStack+5,X
+        
+        LDA #<(Video_MassWrite_Set_Write_Address_Set_Write_Set-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+6,X
+        LDA #>(Video_MassWrite_Set_Write_Address_Set_Write_Set-1)
+        STA VideoStack+7,X
+
+        LDA drawVars+3              ; nineslice tile 3
+        STA VideoStack+8,X
+
+        INC drawY
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the nineslice.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+9,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+10,X         ; Save low address on the video stack
+
+        LDA drawVars+4              ; nineslice tile 4
+        STA VideoStack+11,X
+
+        LDA drawVars+5              ; nineslice tile 5
+        STA VideoStack+12,X
+
+        TXA
+        CLC
+        ADC #13
+        STA VideoCursor
+    DrawNineSlice_Part2:
+        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 16
+        LDA drawWidth
+        ASL A                       ; Add N * 2 to cost
+        ; Carry is clear
+        ADC #16                     ; Add 16 to cost
+        LDX #7                      ; Add 7 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCC :+
+            ; If the carry flag is set it means there was too much vblank work so we had wait a frame, but
+            ; unlike last time above, we can't just redo it and call it a day. The previous video command
+            ; was actually responsible for setting up both the address and setting a value for us to write.
+            ; All of that is now lost, so it has to be done over again here.
+
+            @allocateVideoBuffer:
+            ; Video_Inc32_Address_Set   10 or 13
+            ADC #(10)                   ; Cost is 10
+            ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDX #5                      ; Add 13 to our video stack size
+            CALL VideoApplySizeAndCost
+            BCS @allocateVideoBuffer    ; If it somehow failed again retry
+
+            LDX VideoCursor
+            LDA #<(Video_Inc32_Address_Set-1)
+            CLC
+            ADC VideoIncrementAddressOffset             ; If we are already in increment mode 1 then this skips over it
+            STA VideoStack+0,X
+            LDA #>(Video_Inc32_Address_Set-1)
+            STA VideoStack+1,X
+
+            ; Set the video increment mode to 1
+            LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+            STA VideoIncrementAddressOffset
+            LDA #VIDEO_INCREMENT_COST_1
+            STA VideoIncrementCost
+
+            ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+            ; that when our video stack is executed it knows where to draw the nineslice.
+            LDY drawY                   ; Load y position into register Y
+            LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+            STA VideoStack+2,X          ; Save high address on the video stack
+            LDA drawX                   ; Load x position
+            CLC
+            ADC #1                      ; But add one since the last command did preemptively draw one tile
+            ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+            STA VideoStack+3,X          ; Save low address on the video stack
+
+            LDA drawVars+5              ; NineSlice tile 5
+            STA VideoStack+4,X
+
+            TXA
+            CLC
+            ADC #5
+            STA VideoCursor
+        :
+
+        ; It's time to draw the middle part of the NineSlice. The address and write value has already been
+        ; decided by the previous video command, so all we do is mass-write as many times as we need (based
+        ; on the width of the NineSlice), and then set up the address and write value of the next video
+        ; command that comes after us.
+
+        LDX VideoCursor
+        LDA #<(Video_MassWrite_Set_Write_Address_Set_Write_Set-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+0,X
+        LDA #>(Video_MassWrite_Set_Write_Address_Set_Write_Set-1)
+        STA VideoStack+1,X
+
+        LDA drawVars+6              ; nineslice tile 6
+        STA VideoStack+2,X
+
+        INC drawY
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the nineslice.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+3,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+4,X          ; Save low address on the video stack
+
+        ; At this point we have to make a decision, is the next video command after this one gonna be
+        ; another middle section, or will it be the bottom section? Which one we need will be based on
+        ; the height of the NineSlice.
+
+        DEC drawHeight                  ; Decrement the height by 1 to act as a loop counter
+        BEQ :+
+            ; drawHeight is still not 0, that means there are more middle sections to be drawn before we can
+            ; move onto the bottom section.
+
+            LDA drawVars+4              ; nineslice tile 4
+            STA VideoStack+5,X
+
+            LDA drawVars+5              ; nineslice tile 5
+            STA VideoStack+6,X
+
+            TXA
+            CLC
+            ADC #7
+            STA VideoCursor
+
+            ; Jump back up and draw another middle section.
+            JUMP DrawNineSlice_Part2
+        :
+
+        ; Time for the last row
+
+        LDA drawVars+7              ; nineslice tile 7
+        STA VideoStack+5,X
+
+        LDA drawVars+8              ; nineslice tile 8
+        STA VideoStack+6,X
+
+        TXA
+        CLC
+        ADC #7
+        STA VideoCursor
+    DrawNineSlice_Part3:
+        ; Video_MassWrite_Value_Write     N * 2 + 6
+        LDA drawWidth
+        ASL A                       ; Add N * 2 to cost
+        ; Carry is clear
+        ADC #6                      ; Add 6 to cost
+        LDX #4                      ; Add 7 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCC :+
+            ; If the carry flag is set it means there was too much vblank work so we had wait a frame, and
+            ; just like last time above, we can't just redo it and call it a day. The previous video command
+            ; was actually responsible for setting up both the address and setting a value for us to write.
+            ; All of that is now lost, so it has to be done over again here.
+
+            @allocateVideoBuffer:
+            ; Video_Inc32_Address_Set   10 or 13
+            ADC #(10)                   ; Cost is 10
+            ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDX #5                      ; Add 13 to our video stack size
+            CALL VideoApplySizeAndCost
+            BCS @allocateVideoBuffer    ; If it somehow failed again retry
+
+            LDX VideoCursor
+            LDA #<(Video_Inc32_Address_Set-1)
+            CLC
+            ADC VideoIncrementAddressOffset             ; If we are already in increment mode 1 then this skips over it
+            STA VideoStack+0,X
+            LDA #>(Video_Inc32_Address_Set-1)
+            STA VideoStack+1,X
+
+            ; Set the video increment mode to 1
+            LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+            STA VideoIncrementAddressOffset
+            LDA #VIDEO_INCREMENT_COST_1
+            STA VideoIncrementCost
+
+            ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+            ; that when our video stack is executed it knows where to draw the nineslice.
+            LDY drawY                   ; Load y position into register Y
+            LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+            STA VideoStack+2,X          ; Save high address on the video stack
+            LDA drawX                   ; Load x position
+            CLC
+            ADC #1                      ; But add one since the last command did preemptively draw one tile
+            ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+            STA VideoStack+3,X          ; Save low address on the video stack
+
+            LDA drawVars+8              ; NineSlice tile 8
+            STA VideoStack+4,X
+
+            TXA
+            CLC
+            ADC #5
+            STA VideoCursor
+        :
 
 
-    ; Order the PPU to update this attribute
-    ;    LDX VideoUpdateCursor
-    ;    LDA #<(VideoUpdate_Address_WriteAttribute-1)
-    ;    STA VideoUpdateStack+0,X
-    ;    LDA #>(VideoUpdate_Address_WriteAttribute-1)
-    ;    STA VideoUpdateStack+1,X
-    ;    ;LDY drawY
-    ;    ;LDA drawX
-    ;    ;LSR A
-    ;    ;LSR A
-    ;    ;CLC
-    ;    ;ADC LUT_AttributeYPosition,Y
-    ;    STA VideoUpdateStack+2,X
-    ;    TXA
-    ;    CLC
-    ;    ADC #3
-    ;    STA VideoUpdateCursor
+        LDX VideoCursor
+        LDA #<(Video_MassWrite_Value_Write-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+0,X
+        LDA #>(Video_MassWrite_Value_Write-1)
+        STA VideoStack+1,X
 
+        LDA drawVars+9              ; nineslice tile 9
+        STA VideoStack+2,X
 
-    ; MIDDLE SECTION
-    @LoopMiddleSection:
-    LDA VideoUpdateCursor
-    BPL :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
-        CALL WaitForVBlank
-    :
-    INC drawY
-
-    LDX drawX         ; get dest_x in X
-    LDY drawY         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB2           ;  if it is, to NTB, otherwise, NTA
-
-    @NTA2:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push2
-
-    @NTB2:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
-
-    @Push2:
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+1,X
-    PLA
-    STA VideoUpdateStack+3,X
-    PLA
-    STA VideoUpdateStack+2,X
-    LDA drawVars+4
-    STA VideoUpdateStack+4,X
-
-    LDA #<(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+6,X
-    LDA drawVars+5
-    STA VideoUpdateStack+7,X
-    
-    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
-    SEC
-    SBC box_wd
-    SBC box_wd
-    SBC box_wd
-    STA VideoUpdateStack+8,X
-    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
-    STA VideoUpdateStack+9,X
-    LDA drawVars+6
-    STA VideoUpdateStack+10,X
-
-    TXA
-    CLC
-    ADC #11
-    STA VideoUpdateCursor
-
-    DEC box_ht
-    BEQ :+
-    JUMP @LoopMiddleSection
-    :
-
-    ; LOWER SECTION
-    LDA VideoUpdateCursor
-    BPL :+
-        LDX VideoUpdateCursor
-        LDA #$80
-        STA VideoUpdateStack+0,X
-        STA VideoUpdateStack+1,X
-        CALL WaitForVBlank
-    :
-    INC drawY
-
-    LDX drawX         ; get dest_x in X
-    LDY drawY         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB3           ;  if it is, to NTB, otherwise, NTA
-
-    @NTA3:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push3
-
-    @NTB3:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
-
-    @Push3:
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+1,X
-    PLA
-    STA VideoUpdateStack+3,X
-    PLA
-    STA VideoUpdateStack+2,X
-    LDA drawVars+7
-    STA VideoUpdateStack+4,X
-
-    LDA #<(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdate_Write_Set-1)
-    STA VideoUpdateStack+6,X
-    LDA drawVars+8
-    STA VideoUpdateStack+7,X
-    
-    LDA #<(VideoUpdateRepeatValueSetValueWriteValue-1)
-    SEC
-    SBC box_wd
-    SBC box_wd
-    SBC box_wd
-    STA VideoUpdateStack+8,X
-    LDA #>(VideoUpdateRepeatValueSetValueWriteValue-1)
-    STA VideoUpdateStack+9,X
-    LDA drawVars+9
-    STA VideoUpdateStack+10,X
-
-    TXA
-    CLC
-    ADC #11
-    STA VideoUpdateCursor
-
-    ; All done
-    LDX VideoUpdateCursor
-    LDA #$80
-    STA VideoUpdateStack+0,X
-    STA VideoUpdateStack+1,X
-    RTS
+        TXA
+        CLC
+        ADC #3
+        STA VideoCursor
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DrawRectangle
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-DrawRectangle:
-    @loop:
+    DrawRectangle:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address_Set      10 or 13 (inc1)
+        ; Video_MassWrite_Address_Set N * 2 + 10
+        LDA drawWidth
+        ASL A                       ; Add N * 2
+        ; Carry is clear
+        ADC #(10 + 10)              ; Add 10 + 10 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #10                     ; Add 10 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    ; Add 7 to our video stack size
-    LDA #7
-    CALL VideoUpdateApplySize
+        ; If we are here it means we are ready to fill our video stack with the routines and data needed to
+        ; draw the rectangle.
 
-    ; VideoUpdate_Inc1_Address_Set      13
-    ; VideoUpdate_MassWrite             3 + 2 * width
-    LDA drawWidth
-    ASL A
-    CLC
-    ADC #(13+3)
-    CALL VideoUpdateApplyCost
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address_Set-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address_Set-1)
+        STA VideoStack+1,X
 
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address_Set-1)
-    STA VideoUpdateStack+1,X
+        ; Set the video increment mode to 1
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
 
-    ; Now we translate our x,y into a nametable address, and store that address on the video stack so
-    ; that when our video stack is executed it knows where to draw the rectangle.
-    LDY drawY                ; Load y position into register Y
-    LDA lut_NTRowStartHi, Y  ; Get high address offset into nametable for this y position
-    STA VideoUpdateStack+2,X ; Save high address on the video stack
-    LDA drawX                ; Load x position
-    ORA lut_NTRowStartLo, Y  ; bitwise OR with low address for y position
-    STA VideoUpdateStack+3,X ; Save low address on the video stack
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the rectangle.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+2,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+3,X          ; Save low address on the video stack
 
-    ; Put the tile index we wish to use when drawing our rectangle into the video stack
-    LDA drawValue
-    STA VideoUpdateStack+4,X
+        ; Put the tile index we wish to use when drawing our rectangle into the video stack
+        LDA drawValue
+        STA VideoStack+4,X
 
-    LDA #<(VideoUpdate_MassWrite-1)
-    SEC
-    SBC drawWidth
-    SBC drawWidth
-    SBC drawWidth
-    STA VideoUpdateStack+5,X
-    LDA #>(VideoUpdate_MassWrite-1)
-    STA VideoUpdateStack+6,X
+        LDA #<(Video_MassWrite_Address_Set-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+5,X
+        LDA #>(Video_MassWrite_Address_Set-1)
+        STA VideoStack+6,X
 
-    ; Advance our video cursor by 7
-    TXA
-    CLC
-    ADC #7
-    STA VideoUpdateCursor
+        ; prep the next one
 
-    DEC drawHeight
-    BEQ :+
         INC drawY
-        JUMP @loop
-    :
-    RTS
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the rectangle.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+7,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+8,X          ; Save low address on the video stack
+
+        ; Put the tile index we wish to use when drawing our rectangle into the video stack
+        LDA drawValue
+        STA VideoStack+9,X
+
+        ; Advance our video cursor by 10
+        TXA
+        CLC
+        ADC #10
+        STA VideoCursor
+
+        DEC drawHeight
+        BNE :+
+            RTS
+        :
+    DrawRectangle_Part2:
+        ; Video_MassWrite_Address_Set N * 2 + 10
+        LDA drawWidth
+        ASL A                       ; Add N * 2
+        ; Carry is clear
+        ADC #(10+3)                 ; Add 10 + 3 to cost
+        LDX #5                      ; Add 5 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCC :+
+            ; If a vblank happened in VideoApplySizeAndCost then we no longer have the right values set up a
+            ; mass write so we'll have to jump back up to DrawRectangle and set up everything again.
+            JUMP DrawRectangle
+        :
+
+        LDX VideoCursor
+        LDA #<(Video_MassWrite_Address_Set-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+0,X
+        LDA #>(Video_MassWrite_Address_Set-1)
+        STA VideoStack+1,X
+
+        ; prep the next one
+
+        INC drawY
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the rectangle.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+2,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+3,X          ; Save low address on the video stack
+
+        ; Put the tile index we wish to use when drawing our rectangle into the video stack
+        LDA drawValue
+        STA VideoStack+4,X
+
+        ; Advance our video cursor by 5
+        TXA
+        CLC
+        ADC #5
+        STA VideoCursor
+
+        LDA drawHeight
+        SEC
+        SBC #1
+        BNE :+
+            RTS
+        :
+        STA drawHeight
+        CMP #1
+        BEQ DrawRectangle_Part3
+        JUMP DrawRectangle_Part2
+    DrawRectangle_Part3:
+        ; Video_MassWrite           N * 2 + 3
+        LDA drawWidth
+        ASL A                       ; Add N * 2
+        ; Carry is clear
+        ADC #(3)                    ; Add 3 to cost
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCC :+
+            ; If a vblank happened in VideoApplySizeAndCost then we no longer have the right values set up a
+            ; mass write so we'll have to jump back up to DrawRectangle and set up everything again.
+            JUMP DrawRectangle
+        :
+
+        LDX VideoCursor
+        LDA #<(Video_MassWrite-1)
+        SEC
+        SBC drawWidth
+        SBC drawWidth
+        SBC drawWidth
+        STA VideoStack+0,X
+        LDA #>(Video_MassWrite-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ColorRectangle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ColorRectangle:
+
+        LDA #%00000011
+        STA Var24
+        LDA drawX
+        STA Var25
+        LDA drawY
+        STA Var26
+        LDA drawWidth
+        CLC
+        ADC #2
+        STA Var27
+        LDA drawHeight
+        CLC
+        ADC #2
+        STA Var28
+        :
+                LDA Var25                       ; load the x position
+                LSR A
+                LSR A                           ; rotate the second bit into the carry
+                PHP                             ; save carry
+                LDA Var26                       ; load the y position
+                LSR A                           ; shift to the right
+                PLP                             ; restore carry
+                ROL A                           ; shift to the left while putting carry in bit 0
+                ASL A                           ; shift all bits left
+                ASL A                           ; shift all bits left
+                ORA Var24                       ; OR with the actual 2 bit attribute
+                AND #%00001111                  ; mask out the unrelevant bits
+                TAX                             ; transfer A to X
+                LDY Var26
+                LDA Var25
+                LSR A
+                LSR A
+                CLC
+                ADC LUT_AttributeYPosition,Y
+                TAY
+                LDA attributeTable,Y
+                AND LUT_AttributeMask,X
+                ORA LUT_AttributeMagic,X
+                STA attributeTable,Y
+                INC Var25
+                DEC Var27
+            BNE :-
+            LDA drawX
+            STA Var25
+            LDA drawWidth
+            CLC
+            ADC #2
+            STA Var27
+            INC Var26
+            DEC Var28
+        BNE :-
+
+
+        ; Order the PPU to update this attribute
+        ;    LDX VideoCursor
+        ;    LDA #<(Video_Address_WriteAttribute-1)
+        ;    STA VideoStack+0,X
+        ;    LDA #>(Video_Address_WriteAttribute-1)
+        ;    STA VideoStack+1,X
+        ;    ;LDY drawY
+        ;    ;LDA drawX
+        ;    ;LSR A
+        ;    ;LSR A
+        ;    ;CLC
+        ;    ;ADC LUT_AttributeYPosition,Y
+        ;    STA VideoStack+2,X
+        ;    TXA
+        ;    CLC
+        ;    ADC #3
+        ;    STA VideoCursor
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; ClearScreen
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ClearScreen:
+        ; Video_Inc1_ClearNametable0to119      249 or 252 (inc1)
+        LDA #249                    ; Cost is 249
+        CLC
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_Inc1_ClearNametable0to119-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_ClearNametable0to119-1)
+        STA VideoStack+1,X
+
+        ; Set the video increment mode to 1
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable120to239      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable120to239-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable120to239-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable240to359      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable240to359-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable240to359-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable360to479      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable360to479-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable360to479-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable480to599      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable480to599-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable480to599-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable600to719      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable600to719-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable600to719-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable720to839      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable720to839-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable720to839-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        ; Video_ClearNametable840to959      250
+        LDA #250                    ; Cost is 250
+        LDX #2                      ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_ClearNametable840to959-1)
+        STA VideoStack+0,X
+        LDA #>(Video_ClearNametable840to959-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadFillColor
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadFillColor:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_SetFillColor-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_SetFillColor-1)
-    STA VideoUpdateStack+1,X
+    LDA #<(Video_SetFillColor-1)
+    STA VideoStack+0,X
+    LDA #>(Video_SetFillColor-1)
+    STA VideoStack+1,X
     @End:
     RTS
 
@@ -1704,27 +2008,30 @@ UploadFillColor:
 ; UploadPalette0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette0:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     BPL @noWait
     CALL WaitForVBlank
     @noWait:
 
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette0-1)
+    LDA #<(Video_UploadPalette0-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette0-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette0-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
+
     @End:
     RTS
 
@@ -1732,22 +2039,24 @@ UploadPalette0:
 ; UploadPalette1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette1:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette1-1)
+    LDA #<(Video_UploadPalette1-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette1-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette1-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1755,22 +2064,24 @@ UploadPalette1:
 ; UploadPalette2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette2:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette2-1)
+    LDA #<(Video_UploadPalette2-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette2-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette2-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1778,22 +2089,24 @@ UploadPalette2:
 ; UploadPalette3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette3:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette3-1)
+    LDA #<(Video_UploadPalette3-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette3-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette3-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1801,22 +2114,24 @@ UploadPalette3:
 ; UploadPalette4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette4:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette4-1)
+    LDA #<(Video_UploadPalette4-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette4-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette4-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1824,22 +2139,24 @@ UploadPalette4:
 ; UploadPalette5
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette5:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette5-1)
+    LDA #<(Video_UploadPalette5-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette5-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette5-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1847,22 +2164,24 @@ UploadPalette5:
 ; UploadPalette6
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette6:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette6-1)
+    LDA #<(Video_UploadPalette6-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette6-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette6-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 
@@ -1870,22 +2189,24 @@ UploadPalette6:
 ; UploadPalette7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadPalette7:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     TAX
     CLC
     ADC #2
     BMI @End
-    STA VideoUpdateCursor
+    STA VideoCursor
 
-    LDA #<(VideoUpdate_UploadPalette7-1)
+    LDA #<(Video_UploadPalette7-1)
     ; Carry is clear
-    ADC VideoUpdateIncrementMode
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_UploadPalette7-1)
-    STA VideoUpdateStack+1,X
+    ADC VideoIncrementAddressOffset
+    STA VideoStack+0,X
+    LDA #>(Video_UploadPalette7-1)
+    STA VideoStack+1,X
 
-    LDA #VIDEOUPDATE_INCREMENT1
-    STA VideoUpdateIncrementMode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
+    LDA #VIDEO_INCREMENT_COST_1
+    STA VideoIncrementCost
     @End:
     RTS
 

@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import VideoUpdate_Inc1_Address, VideoUpdateWriteStackBytes, WaitForVBlank
+.import Video_Inc1_Address, VideoWriteStackBytes, WaitForVBlank
 .import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
 
 
@@ -305,7 +305,7 @@ shorthand_plane_def_table:
 ; UploadCHR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 UploadCHR:
-    LDA VideoUpdateCursor
+    LDA VideoCursor
     BPL @noWait
     CALL WaitForVBlank
     @noWait:
@@ -321,30 +321,30 @@ UploadCHR:
     STA donut_stream_ptr+1
 
     LDY #0
-    LDX VideoUpdateCursor
-    LDA #<(VideoUpdate_Inc1_Address-1)
-    STA VideoUpdateStack+0,X
-    LDA #>(VideoUpdate_Inc1_Address-1)
-    STA VideoUpdateStack+1,X
+    LDX VideoCursor
+    LDA #<(Video_Inc1_Address-1)
+    STA VideoStack+0,X
+    LDA #>(Video_Inc1_Address-1)
+    STA VideoStack+1,X
 
     LDA Var2
     LSR A
     LSR A
     LSR A
     LSR A
-    STA VideoUpdateStack+2,X
+    STA VideoStack+2,X
 
     LDA Var2
     ASL A
     ASL A
     ASL A
     ASL A
-    STA VideoUpdateStack+3,X
+    STA VideoStack+3,X
 
-    LDA #<(VideoUpdateWriteStackBytes-1-(64*4))
-    STA VideoUpdateStack+4,X
-    LDA #>(VideoUpdateWriteStackBytes-1-(64*4))
-    STA VideoUpdateStack+5,X
+    LDA #<(VideoWriteStackBytes-1-(64*4))
+    STA VideoStack+4,X
+    LDA #>(VideoWriteStackBytes-1-(64*4))
+    STA VideoStack+5,X
 
     TXA
     CLC
@@ -352,13 +352,13 @@ UploadCHR:
     TAX
     CLC
     ADC #64
-    STA VideoUpdateCursor
+    STA VideoCursor
 
     LDY #0
     CALL donut_decompress_block
 
-    LDX VideoUpdateCursor
+    LDX VideoCursor
     LDA #$80
-    STA VideoUpdateStack+0,X
-    STA VideoUpdateStack+1,X
+    STA VideoStack+0,X
+    STA VideoStack+1,X
     RTS

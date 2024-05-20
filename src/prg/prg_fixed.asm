@@ -24,7 +24,7 @@
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
-.import VideoUpdate_Start, ClearVideoStack, ClearSprites
+.import Video_Start, ClearVideoStack, ClearSprites
 
 ; prg_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
@@ -1155,24 +1155,24 @@ OnNMI:
     LDA #0                                      ; 2 cycle
     STA vBlankAnticipated                       ; 4 cycle
 
-    LDA VideoUpdateCursor                       ; 4 cycle
-    BEQ @noVideoUpdate                          ; 2 cycle
+    LDA VideoCursor                       ; 4 cycle
+    BEQ @noVideo                          ; 2 cycle
     TXA                                         ; 2 cycle
     PHA                                         ; 2 cycle
     TYA                                         ; 2 cycle
     PHA                                         ; 2 cycle
     LDA current_bank1                           ; 4 cycle
     PHA                                         ; 2 cycle
-    LDA #(.bank(VideoUpdate_Start) | %10000000) ; 4 cycle
+    LDA #(.bank(Video_Start) | %10000000) ; 4 cycle
     STA MMC5_PRG_BANK1                          ; 4 cycle
-    JSR VideoUpdate_Start                       ; 6 cycle
+    JSR Video_Start                       ; 6 cycle
     PLA
     STA MMC5_PRG_BANK1
     PLA
     TAY
     PLA
     TAX
-    @noVideoUpdate:
+    @noVideo:
 
 
 
@@ -1180,7 +1180,7 @@ OnNMI:
 
     
 
-    FARCALL ClearSprites
+    ;FARCALL ClearSprites
 
     INC generalCounter
     LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
@@ -1200,10 +1200,10 @@ OnNMI:
 
 WaitForVBlank:
     ; Add the terminator to the end of the video stack
-    LDX VideoUpdateCursor
+    LDX VideoCursor
     LDA #$80
-    STA VideoUpdateStack+0,X
-    STA VideoUpdateStack+1,X
+    STA VideoStack+0,X
+    STA VideoStack+1,X
 
     LDA PPUSTATUS      ; check VBlank flag
     LDA soft2000   ; Load desired PPU state
@@ -1427,7 +1427,6 @@ OnReset:
         BNE @Loop
 
     FARCALL ResetRAM
-    FARCALL ClearVideoStack
 
     FARCALL DisableAPU
     SWITCH GameStart

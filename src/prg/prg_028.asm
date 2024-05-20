@@ -10,9 +10,9 @@
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
-.import WhitespaceWriter, DrawNineSlice
+.import WhitespaceWriter, DrawNineSlice, DrawRectangle
 .import Stringify
-.import DrawGameMenu
+.import DrawGameMenu, ClearScreen, ColorRectangle
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
 .import DrawShopYouCantCarryAnymore, DrawShopYouCantAffordThat, DrawShopWhoseItemSell
 .import DrawShopYouHaveNothing, DrawShopWhoWillLearnSpell, DrawShopTooBad, DrawShopYouHaveTooMany
@@ -24,8 +24,6 @@
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
-
-.import DrawRectangle, DrawNineSlice
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -1739,7 +1737,7 @@ EnterLineupMenu:
     STA soft2000          ; reset soft2000 to typical setup
 
     FARCALL LoadMenuCHRPal    ; load menu related CHR and palettes
-    CALL ClearNT           ; clear the nametable
+    FARCALL ClearScreen           ; clear the nametable
 
     LDA #$0A              ; box coords = $0A,$05
     STA box_x             ; box dims   = $0E,$13
@@ -2442,25 +2440,12 @@ ClearNT:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NewGamePartyGeneration:
-    LDA #$00                ; turn off the PPU
-    STA PPUMASK
-    LDA #$0F                ; turn ON the audio (it should already be on, though
-    STA PAPU_EN               ;  so this is kind of pointless)
-    
-    FARCALL LoadNewGameCHRPal   ; Load up all the CHR and palettes necessary for the New Game menus
-    
-    LDA cur_pal+$D          ; Do some palette finagling
-    STA cur_pal+$1          ;  Though... these palettes are never drawn, so this seems entirely pointless
-    LDA cur_pal+$F
-    STA cur_pal+$3
-    LDA #$16
-    STA cur_pal+$2
-    
     LDX #$3F                ; Initialize the ptygen buffer!
-    : LDA lut_PtyGenBuf, X  ;  all $40 bytes!  ($10 bytes per character)
-      STA ptygen, X
-      DEX
-      BPL :-
+    : 
+    LDA lut_PtyGenBuf, X  ;  all $40 bytes!  ($10 bytes per character)
+    STA ptygen, X
+    DEX
+    BPL :-
       
     LDA #0
     STA partyGenerationClass
@@ -2514,11 +2499,6 @@ NewGamePartyGeneration:
     
     ; Once all 4 characters have been generated and named...
     CALL PtyGen_DrawScreen       ; Draw the screen one more time
-    FARCALL ClearOAM                ; Clear OAM
-    FARCALL PtyGen_DrawChars        ; Redraw char sprites
-    CALL WaitForVBlank         ; Do a frame
-    LDA #>oam                   ;   with a proper OAM update
-    STA OAMDMA
     
     CALL MenuWaitForBtn_SFX      ; Wait for the user to press A (or B) again, to
     LDA joy                     ;  confirm their party decisions.
@@ -2571,12 +2551,13 @@ PtyGen_DrawScreen:
     STA soft2000          ; set BG/Spr pattern table assignments
     LDA #0
     STA PPUMASK             ; turn off PPU
+    LDA #0
     STA joy_a             ;  clear various joypad catchers
     STA joy_b
     STA joy
     STA joy_prevdir
 
-    CALL ClearNT             ; wipe the screen clean
+    FARCALL ClearScreen
     CALL PtyGen_DrawText     ;  and the text in those boxes
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
@@ -2676,7 +2657,7 @@ DoNameInput:
     STA namecurs_y          ; Y position (0-6)
     
     ; Some local temp vars
-    CALL ClearNT
+    FARCALL ClearScreen
     CALL DrawNameInputScreen
     
     LDA slotIndex
@@ -3008,15 +2989,16 @@ PtyGen_DrawText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_DrawOneText:
+
     LDX slotIndex
     LDA SlotCoordX, X
     STA drawX
     LDA SlotCoordY, X
     STA drawY
     LDA #10
-    STA box_wd
+    STA drawWidth
     LDA #10
-    STA box_ht
+    STA drawHeight
     FARCALL DrawNineSlice
 
     LDX slotIndex
@@ -3170,10 +3152,27 @@ DrawNameInputScreen:
     LDA #0
     STA menustall           ; no menustall (PPU is off at this point)
     
-    POS         13, 2
-    NINESLICE   6, 4
-    POS         4, 8
-    NINESLICE   23, 20
+
+    LDA #13
+    STA drawX
+    LDA #2
+    STA drawY
+    LDA #6
+    STA drawWidth
+    LDA #4
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    LDA #4
+    STA drawX
+    LDA #8
+    STA drawY
+    LDA #23
+    STA drawWidth
+    LDA #20
+    STA drawHeight
+    FARCALL DrawNineSlice
+
     POS         6, 10
     TEXT        TEXT_ALPHABET
     POS         9, 26
@@ -3325,48 +3324,46 @@ EnterTitleScreen:
 
     CALL WaitForVBlank
 
-    LDA #$FF
-    STA drawValue
-    LDA #1
+    LDA #11
     STA drawX
-    LDA #1
+    LDA #11
     STA drawY
-    LDA #(27)
+    LDA #10
     STA drawWidth
-    LDA #(13)
+    LDA #3
     STA drawHeight
-    FARCALL DrawRectangle
+    FARCALL DrawNineSlice
+    POS         12, 12 
+    TEXT        TEXT_TITLE_CONTINUE
 
+    LDA #11
+    STA drawX
+    LDA #16
+    STA drawY
+    LDA #10
+    STA drawWidth
+    LDA #3
+    STA drawHeight
+    FARCALL DrawNineSlice
+    POS         12, 17
+    TEXT        TEXT_TITLE_NEW_GAME
 
-    ;LDA #11
-    ;STA drawX
-    ;LDA #11
-    ;STA drawY
-    ;LDA #(10-2)
-    ;STA box_wd
-    ;LDA #(3-2)
-    ;STA box_ht
-    ;FARCALL DrawNineSlice
+    LDA #8
+    STA drawX
+    LDA #21
+    STA drawY
+    LDA #16
+    STA drawWidth
+    LDA #3
+    STA drawHeight
+    FARCALL DrawNineSlice
+    POS         9, 22
+    TEXT        TEXT_TITLE_RESPOND_RATE
 
-
-
-;    POS         12, 12 
-;    TEXT        TEXT_TITLE_CONTINUE
-;
-;    POS         11, 16
-;    NINESLICE   10, 3
-;    POS         12, 17
-;    TEXT        TEXT_TITLE_NEW_GAME
-;
-;    POS         8, 21
-;    NINESLICE   16, 3
-;    POS         9, 22
-;    TEXT        TEXT_TITLE_RESPOND_RATE
-;
-;    POS         8, 25
-;    TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
-;    POS         8, 26
-;    TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
+    POS         8, 25
+    TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
+    POS         8, 26
+    TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
 
 
     LDA #$0F                ; enable APU (isn't necessary, as the music driver
@@ -3392,8 +3389,8 @@ EnterTitleScreen:
     LDA #>oam               ;  and do Sprite DMA
     STA OAMDMA               ; Then redraw the respond rate
 
-;    POS     9, 22
-    ;TEXT    TEXT_TITLE_RESPOND_RATE
+    POS     9, 22
+    TEXT    TEXT_TITLE_RESPOND_RATE
 
     FARCALL UpdateJoy           ; update joypad data
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
@@ -4606,7 +4603,7 @@ ShopFrameNoCursor:
 
 DrawShop:
     FARCALL LoadShopInventory      ; load up this shop's inventory into the item box
-    CALL ClearNT                ; clear the nametable
+    FARCALL ClearScreen                ; clear the nametable
 
               ; Fill attribute tables
     LDA PPUSTATUS                  ; reset the PPU toggle
@@ -5953,7 +5950,7 @@ EnterMagicMenu:
     STA menustall                  ; clear menustall
     STA descboxopen                ; and mark description box as closed
 
-    CALL ClearNT                    ; clear the nametable
+    FARCALL ClearScreen                    ; clear the nametable
     CALL DrawMagicMenuMainBox       ; draw the big box containing all the spells
     PHP                            ; C is set if char has no spells -- we'll use that later, so PHP for now
 
@@ -6417,7 +6414,7 @@ EnterItemMenu:
     STA PPUMASK           ; turn the PPU off
     STA menustall       ; zero menustall (don't want to stall for drawing the screen for the first time)
     STA descboxopen     ; indicate that the descbox is closed
-    CALL ClearNT         ; wipe the NT clean
+    FARCALL ClearScreen         ; wipe the NT clean
                         ;  then start drawing the item menu
 
 ;; ResumeItemMenu is jumped to to refresh the item box (like after you use a key item and it disappears)
@@ -7023,7 +7020,7 @@ DrawItemTargetMenu:
     LDA #0
     STA PPUMASK            ; turn the PPU off
     STA menustall        ; and disable menu stalling
-    CALL ClearNT          ; wipe the NT clean
+    FARCALL ClearScreen          ; wipe the NT clean
 
     LDA #$0B             ; hardcoded box
     STA box_y            ; x,y   = $01,$0B
@@ -7117,7 +7114,7 @@ EnterStatusMenu:
     STA PPUMASK               ; turn off the PPU
     LDA #0
     STA menustall           ; disable menu stalling
-    CALL ClearNT             ; clear the NT
+    FARCALL ClearScreen             ; clear the NT
 
     LDX #0*4                ; draw status box 0
     CALL @DrawStatusBox
@@ -7879,7 +7876,7 @@ DrawMagicMenuCursor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawMainMenu:
-    CALL ClearNT                    ; start by clearing the NT
+    FARCALL ClearScreen                    ; start by clearing the NT
     FARCALL DrawGameMenu
     RTS
 
@@ -8802,7 +8799,7 @@ CopyEquipFromItemBox:    ; this routine is exactly the same as the above
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawEquipMenu:
-    CALL ClearNT             ; clear the NT
+    FARCALL ClearScreen             ; clear the NT
 
     LDA #0
     CALL @DrawEquipBox           ; draw the title box

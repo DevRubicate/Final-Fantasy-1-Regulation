@@ -98,10 +98,10 @@
 .macro NINESLICE _w, _h
     .import DrawNineSlice
 
-    LDA #(_w-2)
-    STA box_wd
-    LDA #(_h-2)
-    STA box_ht
+    LDA #(_w-0)
+    STA drawWidth
+    LDA #(_h-0)
+    STA drawHeight
     FARCALL DrawNineSlice
 .endmacro
 

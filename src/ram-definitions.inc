@@ -300,8 +300,8 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
 
 SECTION "STACK"
-    RES             VideoUpdateStack,                   200
-    donut_output_buffer = VideoUpdateStack
+    RES             VideoStack,                   200
+    donut_output_buffer = VideoStack
 
 SECTION "OAM"
     ; Sprite memory is laid out in four bytes:
@@ -968,12 +968,13 @@ SECTION "EXTRA" ; $5C00 - $5FFF
 
 
     RES             vBlankCounter,                  1
-    RES             VideoUpdateCursor,              1
-    RES             VideoUpdateStackTally,          1
-    RES             VideoUpdateIncrementMode,       1
-    RES             VideoUpdateCost,                2
+    RES             VideoCursor,                    1
+    RES             VideoStackTally,                1
+    RES             VideoIncrementAddressOffset,    1
+    RES             VideoIncrementCost,             1
+    RES             VideoCost,                      2
     RES             StackPointerBackup,             1
-    RES             VideoUpdateRetroactiveCursor,   1
+    RES             VideoRetroactiveCursor,         1
     RES             vBlankAnticipated,              1
     RES             joy,                            1
     RES             joy_ignore,                     1
