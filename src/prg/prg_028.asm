@@ -1817,9 +1817,6 @@ EnterLineupMenu:
   @MainLoop:
     CALL WaitForVBlank         ; wait for VBlank
 
-    LDA #>oam
-    STA OAMDMA                   ; do sprite DMA
-
     LDA soft2000
     STA PPUCTRL
     LDA #$1E
@@ -2833,8 +2830,6 @@ PtyGen_Frame:
     CALL PtyGen_DrawCursor
 
     CALL WaitForVBlank    ; VBlank and DMA
-    LDA #>oam
-    STA OAMDMA
 
     LDA #BANK_THIS         ; then keep playing music
     STA cur_bank
@@ -2856,8 +2851,6 @@ CharName_Frame:
     CALL CharName_DrawCursor
 
     CALL WaitForVBlank    ; VBlank and DMA
-    LDA #>oam
-    STA OAMDMA
 
     LDA soft2000           ; reset the scroll to zero.
     STA PPUCTRL
@@ -3386,8 +3379,6 @@ EnterTitleScreen:
     CALL JumpDrawCursor
 
     CALL WaitForVBlank     ; Wait for VBlank
-    LDA #>oam               ;  and do Sprite DMA
-    STA OAMDMA               ; Then redraw the respond rate
 
     POS     9, 22
     TEXT    TEXT_TITLE_RESPOND_RATE
@@ -4128,9 +4119,6 @@ EnterShop_Inn:
     FARCALL ClearOAM                ; clear OAM (to remove the cursor)
     CALL DrawShopPartySprites    ; draw the party
     CALL WaitForVBlank         ; then wait for VBlank before
-    LDA #>oam                   ;   performing sprite DMA
-    STA OAMDMA                   ; all of this is to remove the cursor graphic without doing a real frame
-
     FARCALL FadeOutBatSprPalettes   ; and fade the party out
 
   @LoopOne:
@@ -4544,9 +4532,6 @@ ShopFrame:
     CALL DrawShopCursor         ; and the cursor
     CALL WaitForVBlank        ; the wait for VBlank
 
-    LDA #>oam
-    STA OAMDMA                  ; do sprite DMA
-
     LDA #BANK_THIS
     STA cur_bank
     FARCALL MusicPlay          ; set the current bank, and call music play
@@ -4557,8 +4542,6 @@ ShopFrameNoCursor:
     FARCALL ClearOAM               ; do all the same things as above, in the same order
     CALL DrawShopPartySprites   ;  only do not draw the cursor
     CALL WaitForVBlank
-    LDA #>oam
-    STA OAMDMA
     LDA #BANK_THIS
     STA cur_bank
     FARCALL MusicPlay          ; after we FARCALL MusicPlay, proceed to check the buttons
@@ -7453,9 +7436,6 @@ DrawMainMenuCharSprites:
 
 MenuFrame:
     CALL WaitForVBlank    ; wait for VBlank
-    LDA #>oam              ; Do sprite DMA (update the 'real' OAM)
-    STA OAMDMA
-
     LDA soft2000           ; reset scroll and PPU data
     STA PPUCTRL
     LDA #0
@@ -7728,8 +7708,6 @@ TurnMenuScreenOn_ClearOAM:
 
 TurnMenuScreenOn:
     CALL WaitForVBlank      ; wait for VBlank (don't want to turn the screen on midway through the frame)
-    LDA #>oam                ; do Sprite DMA
-    STA OAMDMA
     CALL DrawPalette          ; draw/apply the current palette
 
     LDA #$08
@@ -8569,8 +8547,6 @@ EquipMenu_DROP:
 
 EquipMenuFrame:
     CALL WaitForVBlank     ; wait for VBlank
-    LDA #>oam
-    STA OAMDMA               ; do sprite DMA
 
     LDA soft2000          ; reset scroll
     STA PPUCTRL

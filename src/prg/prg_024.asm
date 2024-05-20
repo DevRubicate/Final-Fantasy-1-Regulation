@@ -1108,8 +1108,6 @@ BattleUpdatePPU:
 BattleFrame:
     FARCALL BattleWaitForVBlank   ; Wait for VBlank 
     LDA PPUSTATUS
-    LDA #>oam
-    STA OAMDMA                   ; Do OAM DMA
     JUMP BattleUpdateAudio       ; Update audio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5130,8 +5128,6 @@ BattleFadeIn:
     
     CALL WaitForVBlank         ; wait for VBlank
     LDA PPUSTATUS
-    LDA #>oam
-    STA OAMDMA                   ; Do DMA (clearing actual PPU OAM)
     LDA #$04
     STA tmp_68b4                   ; loop downcounter.  Looping 4 times -- once for each shade
     CALL BattleUpdateAudio       ; since we just did a frame, keep audio updated
@@ -9515,8 +9511,6 @@ DrawExplosions:
       BNE :-
       
     CALL WaitForVBlank     ; Do one more frame
-    LDA #>oam               ; so we can update sprite data in the PPU
-    STA OAMDMA
     JUMP BattleUpdateAudio   ; update audio since we did a frame
     
     
@@ -9573,8 +9567,6 @@ DrawExplosion_Frame:
       BNE :-
       
     CALL WaitForVBlank         ; do a frame
-    LDA #>oam                   ; where OAM is updated
-    STA OAMDMA
     JUMP BattleUpdateAudio       ; update music/sfx during this frame as well
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

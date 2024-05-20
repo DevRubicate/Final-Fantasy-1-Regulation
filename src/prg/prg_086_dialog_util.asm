@@ -496,9 +496,6 @@ EraseBox:
 
 DialogueBox_Frame:
     FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
-    LDA #>oam          ; do sprite DMA
-    STA OAMDMA          ; after waiting for VBlank and Sprite DMA, the game is roughly 556 cycles into VBlank
-
     LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
     STA PPUCTRL
 

@@ -1708,8 +1708,6 @@ lut_VehicleSprY:
 
 AirshipTransitionFrame:
     CALL WaitForVBlank   ; wait for VBlank
-    LDA #>oam             ; then do sprite DMA
-    STA OAMDMA
 
     LDA framecounter      ; increment the frame counter by 1
     CLC                   ;   (why doesn't it just use INC?)

@@ -1398,6 +1398,7 @@ OnReset:
     STX MMC5_SPLIT_MODE     ; disable split-screen mode
     STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
     STX MMC5_CHR_BANK7      ; Swap in first CHR Page
+    STX current_bank1
     INX                     ; 01
     STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
     INX                     ; 02

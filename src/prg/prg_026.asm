@@ -1045,8 +1045,6 @@ EnterMiniGame:
 
     FARCALL ClearOAM       ; clear OAM
     CALL WaitForVBlank      ; then once in VBlank...
-    LDA #>oam
-    STA OAMDMA                ; do sprite DMA
     CALL DrawPalette        ; and load up the palette
 
     LDA soft2000             ; the load up soft2000 (resets NT scroll)
@@ -1083,8 +1081,6 @@ EnterMiniGame:
 MiniGameLoop:
     INC framecounter              ; increment the frame counter to keep animations working
     CALL WaitForVBlank           ; wait for vblank
-    LDA #>oam
-    STA OAMDMA                     ; do sprite DMA
     CALL MusicPlay               ; keep music playing
     CALL DrawAllPuzzlePieces       ; draw all the puzzle pieces
     CALL MiniGame_ProcessInput     ; and refresh and process input!
@@ -1238,8 +1234,6 @@ MiniGame_CheckVictory:
 
   @Loop:
     CALL WaitForVBlank     ; Wait for VBlank
-    LDA #>oam
-    STA OAMDMA               ; do sprite DMA
     CALL DrawPalette       ; update the palette
     CALL MusicPlay         ; call the music play routine (Probably shouldn't be done until after scroll set -- but doesn't matter)
 
@@ -3067,8 +3061,6 @@ MiniGame_AnimateSlide:
   @AnimateLoop:
     PHA                    ; back up loop counter
     CALL WaitForVBlank    ; wait for VBlank
-    LDA #>oam              ; do sprite DMA
-    STA OAMDMA
     CALL MusicPlay        ; and play the music
 
     LDA mg_slidespr        ; then slide the sprites of each tile being moved 1 pixel

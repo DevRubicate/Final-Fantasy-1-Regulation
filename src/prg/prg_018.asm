@@ -4662,9 +4662,6 @@ lut_MinimapDecorCHRDest_hi:
 
 MinimapFrame:
     CALL WaitForVBlank    ; wait for VBlank
-    LDA #>oam              ; Sprite DMA
-    STA OAMDMA
-
     CALL DrawPalette      ; draw the palette
     LDA #$1E               ; turn PPU on
     STA PPUMASK
@@ -4988,9 +4985,6 @@ Minimap_FillNTPal:
    ;
 
     CALL WaitForVBlank   ; wait for VBlank
-    LDA #>oam             ; then do sprite DMA
-    STA OAMDMA
-
     CALL DrawPalette     ; draw the palette
 
     LDA soft2000

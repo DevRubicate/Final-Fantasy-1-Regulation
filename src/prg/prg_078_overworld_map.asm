@@ -65,9 +65,6 @@ EnterOverworldLoop:
 
   @Loop:  
     CALL WaitForVBlank        ; wait for VBlank
-    LDA #>oam                  ; and do sprite DMA
-    STA OAMDMA
-
     FARCALL OverworldMovement      ; do any pending movement animations and whatnot
                                ;   also does any required map drawing and updates
                                ;   the scroll appropriately

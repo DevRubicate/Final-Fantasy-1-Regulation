@@ -137,9 +137,6 @@ LUT_CombatBoxes:
 
 EnterBattle:
     CALL WaitForVBlank       ; wait for VBlank and do Sprite DMA
-    LDA #>oam                 ;  this seems incredibly pointless as the screen is turned
-    STA OAMDMA                 ;  off at this point
-
     ;; Load formation data to buffer in RAM
 
     FARCALL LoadBattleFormationInto_btl_formdata

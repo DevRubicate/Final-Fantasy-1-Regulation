@@ -24,8 +24,6 @@ StartScreenWipe:
       BNE @Loop
 
     CALL WaitForVBlank   ; then wait for VBlank
-    LDA #>oam             ; and do sprite DMA
-    STA OAMDMA
 
     LDA #$01              ; silence all channels except for square 1
     STA PAPU_EN             ;   this stops all music.  Square 1 is used for the wipe sound effect
@@ -149,9 +147,6 @@ ScreenWipe_Finalize:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScreenWipeFrame_Prep:
-    LDA #>oam           ; do sprite DMA
-    STA OAMDMA           ;  (friendly reminder:  sprite DMA burns 513 cycles)
-
     CALL DrawMapPalette  ; draw the palette
 
     LDA mapflags        ; see if we're on the overworld or standard map

@@ -39,8 +39,6 @@ AltarFrame:
                       ;  you can't time the writes to the exact pixel no matter how careful you are)
 
     CALL WaitForVBlank    ; wait for VBlank.  This returns ~37 cycles into VBlank
-    LDA #>oam         ; Do sprite DMA.  This burns another 513+2+4 cycles -- currently ~556 into VBl
-    STA OAMDMA
 
     LDY #6            ; do a bit more stalling to get the time right where we want it (+2 cycs for LDY)
   @Loop:

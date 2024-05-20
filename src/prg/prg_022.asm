@@ -1643,8 +1643,6 @@ Battle_FlipAllChars:
       CALL Battle_FlipCharSprite ; flip this character sprite
       
       CALL WaitForVBlank       ; wait for a frame
-      LDA #>oam                 ;  so we can update OAM
-      STA OAMDMA
       CALL StartMusicPlay             ; update music (since we waited a frame)
       
       LDA #15

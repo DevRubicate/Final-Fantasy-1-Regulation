@@ -316,8 +316,6 @@ DoStandardMap:
 
 StandardMapLoop:
     CALL WaitForVBlank        ; wait for VBlank
-    LDA #>oam                  ; and do Sprite DMA
-    STA OAMDMA
     FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing) this also sets the scroll
     LDA framecounter
     CLC                        ; increment the two byte frame counter
@@ -457,8 +455,6 @@ ProcessSMInput:
     @DialogueBox:
     FARCALL DrawDialogueBox     ; draw the dialogue box and containing text
     CALL WaitForVBlank       ; wait a frame
-    LDA #>oam                 ;   (this is all typical frame stuff -- set scroll, play music, etc)
-    STA OAMDMA
     CALL SetSMScroll
     LDA #$1E
     STA PPUMASK
