@@ -1146,8 +1146,8 @@ OnNMI:
     SEI                                         ; 2 cycle
     PHA                                         ; 2 cycle
 
-    LDA #>oam
-    STA OAMDMA                   ; Do OAM DMA
+    LDA #>oam                                   ; 2 cycle
+    STA OAMDMA                                  ; 4 cycles + 514 cycles
 
     ; if vBlank was not anticipated, do a lagframe update instead
     LDA vBlankAnticipated                       ; 4 cycle
@@ -1155,17 +1155,17 @@ OnNMI:
     LDA #0                                      ; 2 cycle
     STA vBlankAnticipated                       ; 4 cycle
 
-    LDA VideoCursor                       ; 4 cycle
-    BEQ @noVideo                          ; 2 cycle
+    LDA VideoCursor                             ; 4 cycle
+    BEQ @noVideo                                ; 2 cycle
     TXA                                         ; 2 cycle
     PHA                                         ; 2 cycle
     TYA                                         ; 2 cycle
     PHA                                         ; 2 cycle
     LDA current_bank1                           ; 4 cycle
     PHA                                         ; 2 cycle
-    LDA #(.bank(Video_Start) | %10000000) ; 4 cycle
+    LDA #(.bank(Video_Start) | %10000000)       ; 4 cycle
     STA MMC5_PRG_BANK1                          ; 4 cycle
-    JSR Video_Start                       ; 6 cycle
+    JSR Video_Start                             ; 6 cycle
     PLA
     STA MMC5_PRG_BANK1
     PLA
