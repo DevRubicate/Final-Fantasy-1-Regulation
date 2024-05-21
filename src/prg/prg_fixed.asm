@@ -11,7 +11,7 @@
 .import EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .import PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .import TalkToObject, EnterLineupMenu, NewGamePartyGeneration
-.import EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
+.import EnterMainMenu, EnterShop, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeNT
 .import EnvironmentStartupRoutine
 .import BattleRNG, GetSMTargetCoords, CanTalkToMapObject

@@ -3317,6 +3317,8 @@ EnterTitleScreen:
 
     CALL WaitForVBlank
 
+
+
     LDA #11
     STA drawX
     LDA #11

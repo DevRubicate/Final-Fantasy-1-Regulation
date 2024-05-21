@@ -50,11 +50,11 @@ VideoApplySizeAndCost:
 Stringify:
     LDA #0
     STA stringwriterLineWidth
+    STA stringwriterAddressReady
+    STA stringifyLength
 
     LDA drawX
     STA stringwriterNewlineOrigin
-
-    CALL VideoPushAddress
 
     LDY #0
     STY stringifyCursor
@@ -89,12 +89,6 @@ Stringify:
         STA drawX
         INC drawY
         STY stringifyCursor
-
-        CALL VideoPushAddress
-
-        LDY stringifyCursor
-        JUMP @Loop
-
         @Void:
         JUMP @Loop
 
@@ -1166,46 +1160,33 @@ FetchValueItemDataThird:
     RTS
 
 VideoPushAddress:
-    LDA VideoCursor
-    BPL @noWait
-    CALL WaitForVBlank
-    @noWait:
+    ;LDA VideoCursor
+    ;BPL @noWait
+    ;CALL WaitForVBlank
+    ;@noWait:
 
 
-    LDA #0
-    STA stringifyLength
-    LDX drawX         ; get dest_x in X
-    LDY drawY         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
 
-    @NTA:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push
-
-    @NTB:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
-
-    @Push:
     LDX VideoCursor
     LDA #<(Video_Inc1_Address-1)
     STA VideoStack+0,X
     LDA #>(Video_Inc1_Address-1)
     STA VideoStack+1,X
-    PLA
-    STA VideoStack+3,X
-    PLA
-    STA VideoStack+2,X
+
+    ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+    ; that when our video stack is executed it knows where to draw the rectangle.
+    LDY drawY                   ; Load y position into register Y
+    LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+    STA VideoStack+2,X          ; Save high address on the video stack
+    LDA drawX                   ; Load x position
+    ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+    STA VideoStack+3,X          ; Save low address on the video stack
+
+
+
+
+
+
 
     
     TXA
@@ -1216,6 +1197,17 @@ VideoPushAddress:
     STA VideoCursor
     RTS
 VideoPushData:
+    LDX stringwriterAddressReady
+    BNE :+
+        PHA
+        STY stringifyCursor
+        CALL VideoPushAddress
+        LDY stringifyCursor
+        LDA #1
+        STA stringwriterAddressReady
+        PLA
+    :
+
     LDX VideoCursor
     STA VideoStack,X
     INX
@@ -1235,10 +1227,16 @@ VideoSetWriteStackBytes:
     LDA #>(VideoWriteStackBytes-1)
     STA VideoStack+1,X
 
+    LDA #0
+    STA stringifyLength
+    STA stringwriterAddressReady
+
     LDX VideoCursor
     LDA #$80
     STA VideoStack+0,X
     STA VideoStack+1,X
+
+
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

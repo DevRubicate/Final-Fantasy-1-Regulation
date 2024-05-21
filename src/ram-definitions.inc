@@ -1020,6 +1020,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringifyCursor,                1
     RES             stringifyLength,                1
     RES             stringifyActiveItem,            2
+    RES             stringwriterAddressReady,       1
     RES             stringwriterNewlineOrigin,      1
     RES             stringwriterSetHero,            1
     RES             stringwriterTargetSize,         1
