@@ -7,7 +7,7 @@
 .import TEXT_ITEM_DESCRIPTION, TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
 .import DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
 
-.import UploadCHR
+.import UploadCHR, FillAttributeTable, FillNametable, UploadPalette0
 
 
 
@@ -16,10 +16,25 @@
 
 DrawGameMenu:
 
+    LDA #$0
+    STA palette0+0
+    LDA #$1
+    STA palette0+1
+    LDA #$30
+    STA palette0+2
+    FARCALL UploadPalette0
+
+    LDA #0
+    STA Var0
+    FARCALL FillAttributeTable
+
+    LDA #0
+    STA Var0
+    FARCALL FillNametable                ; clear the nametable
+
     CALL UploadFont
     CALL UploadNineSliceBorders
     CALL RestoreNineSliceBordersToDefault
-
 
     POS         11, 1
     NINESLICE   10, 14
@@ -69,9 +84,6 @@ DrawGameMenu:
 
     CALL DrawGameMenuGoldBox
     CALL DrawGameMenuSelection
-
-
-
     RTS
 
 DrawMainMenuHeroData:
@@ -101,6 +113,25 @@ DrawGameMenuSelection:
 EnterItemsMenu:
 
 
+    LDA #$0
+    STA palette0+0
+    LDA #$1
+    STA palette0+1
+    LDA #$30
+    STA palette0+2
+    FARCALL UploadPalette0
+
+    LDA #0
+    STA Var0
+    FARCALL FillAttributeTable
+    
+    LDA #0
+    STA Var0
+    FARCALL FillNametable                ; clear the nametable
+
+    CALL UploadFont
+    CALL UploadNineSliceBorders
+    CALL RestoreNineSliceBordersToDefault
 
 
     LDA #1
@@ -168,9 +199,6 @@ EnterItemsMenu:
 
     POS         1, 25
     NINESLICE   31, 5
-
-
-
 
 
     LDA #$F6

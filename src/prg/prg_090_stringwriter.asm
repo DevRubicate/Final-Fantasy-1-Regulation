@@ -6,10 +6,10 @@
 .import WaitForVBlank, MenuCondStall, MusicPlay
 .import Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set
 .import Video_MassWriteStack, VideoRepeatValue, Video_MassWrite_Value_Write
-.import Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_MassWrite, Video_SetFillColor, Video_UploadPalette0, Video_UploadPalette1, Video_UploadPalette2, Video_UploadPalette3, Video_UploadPalette4, Video_UploadPalette5, Video_UploadPalette6, Video_UploadPalette7
+.import Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_MassWrite, Video_SetFillColor, Video_Inc1_UploadPalette0, Video_Inc1_UploadPalette1, Video_Inc1_UploadPalette2, Video_Inc1_UploadPalette3, Video_Inc1_UploadPalette4, Video_Inc1_UploadPalette5, Video_Inc1_UploadPalette6, Video_Inc1_UploadPalette7
 .import Video_MassWrite_Set_Write_Address_Set_Write_Set
-.import Video_Inc1_ClearNametable0to119, Video_ClearNametable120to239, Video_ClearNametable240to359, Video_ClearNametable360to479, Video_ClearNametable480to599, Video_ClearNametable600to719, Video_ClearNametable720to839, Video_ClearNametable840to959
-
+.import Video_Inc1_Set_FillNametable0to119, Video_Set_FillNametable120to239, Video_Set_FillNametable240to359, Video_Set_FillNametable360to479, Video_Set_FillNametable480to599, Video_Set_FillNametable600to719, Video_Set_FillNametable720to839, Video_Set_FillNametable840to959
+.import Video_Inc1_Set_FillAttributeTable
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
@@ -18,7 +18,7 @@
 .import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
 
 
-.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, ClearScreen
+.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
 
 
@@ -1920,22 +1920,22 @@ SetTile:
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ClearScreen
+; FillNametable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ClearScreen:
-        ; Video_Inc1_ClearNametable0to119      249 or 252 (inc1)
-        LDA #249                    ; Cost is 249
+    FillNametable:
+        ; Video_Inc1_ClearNametable0to119      250 or 253 (inc1)
+        LDA #250                    ; Cost is 250
         CLC
         ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_Inc1_ClearNametable0to119-1)
+        LDA #<(Video_Inc1_Set_FillNametable0to119-1)
         CLC
         ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_ClearNametable0to119-1)
+        LDA #>(Video_Inc1_Set_FillNametable0to119-1)
         STA VideoStack+1,X
 
         ; Set the video increment mode to 1
@@ -1944,131 +1944,199 @@ SetTile:
         LDA #VIDEO_INCREMENT_COST_1
         STA VideoIncrementCost
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable120to239      250
+        ; Video_Set_FillNametable120to239      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable120to239-1)
+        LDA #<(Video_Set_FillNametable120to239-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable120to239-1)
+        LDA #>(Video_Set_FillNametable120to239-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable240to359      250
+        ; Video_Set_FillNametable240to359      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable240to359-1)
+        LDA #<(Video_Set_FillNametable240to359-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable240to359-1)
+        LDA #>(Video_Set_FillNametable240to359-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable360to479      250
+        ; Video_Set_FillNametable360to479      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable360to479-1)
+        LDA #<(Video_Set_FillNametable360to479-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable360to479-1)
+        LDA #>(Video_Set_FillNametable360to479-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable480to599      250
+        ; Video_Set_FillNametable480to599      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable480to599-1)
+        LDA #<(Video_Set_FillNametable480to599-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable480to599-1)
+        LDA #>(Video_Set_FillNametable480to599-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable600to719      250
+        ; Video_Set_FillNametable600to719      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable600to719-1)
+        LDA #<(Video_Set_FillNametable600to719-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable600to719-1)
+        LDA #>(Video_Set_FillNametable600to719-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable720to839      250
+        ; Video_Set_FillNametable720to839      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable720to839-1)
+        LDA #<(Video_Set_FillNametable720to839-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable720to839-1)
+        LDA #>(Video_Set_FillNametable720to839-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
-        ; Video_ClearNametable840to959      250
+        ; Video_Set_FillNametable840to959      250
         LDA #250                    ; Cost is 250
-        LDX #2                      ; Add 2 to our video stack size
+        LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
 
         LDX VideoCursor
-        LDA #<(Video_ClearNametable840to959-1)
+        LDA #<(Video_Set_FillNametable840to959-1)
         STA VideoStack+0,X
-        LDA #>(Video_ClearNametable840to959-1)
+        LDA #>(Video_Set_FillNametable840to959-1)
         STA VideoStack+1,X
 
-        ; Advance our video cursor by 2
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
         TXA
         CLC
-        ADC #2
+        ADC #3
         STA VideoCursor
 
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; FillAttributeTable
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    FillAttributeTable:
+        ; Video_Inc1_Set_FillAttributeTable      138 or 141 (inc1)
+        LDA #138                    ; Cost is 138
+        CLC
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #3                      ; Add 3 to our video stack size
+        CALL VideoApplySizeAndCost
+
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Set_FillAttributeTable-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Set_FillAttributeTable-1)
+        STA VideoStack+1,X
+
+        ; Set the video increment mode to 1
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Set the fill value
+        LDA Var0
+        STA VideoStack+2,X
+
+        ; Advance our video cursor by 3
+        TXA
+        CLC
+        ADC #3
+        STA VideoCursor
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2092,208 +2160,266 @@ UploadFillColor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette0:
-    LDA VideoCursor
-    BPL @noWait
-    CALL WaitForVBlank
-    @noWait:
+    UploadPalette0:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette0-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette0-1)
+        STA VideoStack+1,X
 
-    LDA #<(Video_UploadPalette0-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette0-1)
-    STA VideoStack+1,X
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
 
-    @End:
-    RTS
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette1:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette1:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette1-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette1-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette1-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette1-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette2:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette2:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette2-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette2-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette2-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette2-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette3:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette3:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette3-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette3-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette3-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette3-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette4:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette4:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette4-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette4-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette4-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette4-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette5
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette5:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette5:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette5-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette5-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette5-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette5-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette6
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette6:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette6:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette6-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette6-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette6-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette6-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadPalette7:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadPalette7:
+        @allocateVideoBuffer:
+        ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
+        LDA #21                         ; Cost is 21
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_UploadPalette7-1)
-    ; Carry is clear
-    ADC VideoIncrementAddressOffset
-    STA VideoStack+0,X
-    LDA #>(Video_UploadPalette7-1)
-    STA VideoStack+1,X
+        LDX VideoCursor
+        LDA #<(Video_Inc1_UploadPalette7-1)
+        ; Carry is clear
+        ADC VideoIncrementAddressOffset
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_UploadPalette7-1)
+        STA VideoStack+1,X
 
-    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
-    STA VideoIncrementAddressOffset
-    LDA #VIDEO_INCREMENT_COST_1
-    STA VideoIncrementCost
-    @End:
-    RTS
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

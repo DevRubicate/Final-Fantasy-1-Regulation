@@ -12,7 +12,7 @@
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
 .import WhitespaceWriter, DrawNineSlice, DrawRectangle
 .import Stringify, UploadPalette0
-.import DrawGameMenu, ClearScreen, ColorRectangle
+.import DrawGameMenu, FillNametable, ColorRectangle
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
 .import DrawShopYouCantCarryAnymore, DrawShopYouCantAffordThat, DrawShopWhoseItemSell
 .import DrawShopYouHaveNothing, DrawShopWhoWillLearnSpell, DrawShopTooBad, DrawShopYouHaveTooMany
@@ -21,7 +21,7 @@
 .import DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
 .import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
-.import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
+.import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 
@@ -1737,7 +1737,7 @@ EnterLineupMenu:
     STA soft2000          ; reset soft2000 to typical setup
 
     FARCALL LoadMenuCHRPal    ; load menu related CHR and palettes
-    FARCALL ClearScreen           ; clear the nametable
+    FARCALL FillNametable           ; clear the nametable
 
     LDA #$0A              ; box coords = $0A,$05
     STA box_x             ; box dims   = $0E,$13
@@ -2554,7 +2554,7 @@ PtyGen_DrawScreen:
     STA joy
     STA joy_prevdir
 
-    FARCALL ClearScreen
+    FARCALL FillNametable
     CALL PtyGen_DrawText     ;  and the text in those boxes
     JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
@@ -2654,7 +2654,7 @@ DoNameInput:
     STA namecurs_y          ; Y position (0-6)
     
     ; Some local temp vars
-    FARCALL ClearScreen
+    FARCALL FillNametable
     CALL DrawNameInputScreen
     
     LDA slotIndex
@@ -3318,15 +3318,23 @@ EnterTitleScreen:
     STA cursor
     STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
-    FARCALL ClearScreen                ; clear the nametable
 
-    LDA #1
+
+    LDA #$0
     STA palette0+0
-    LDA #1
+    LDA #$1
     STA palette0+1
-    LDA #1
+    LDA #$30
     STA palette0+2
     FARCALL UploadPalette0
+
+    LDA #0
+    STA Var0
+    FARCALL FillAttributeTable
+ 
+    LDA #0
+    STA Var0
+    FARCALL FillNametable                ; clear the nametable
 
     FARCALL UploadFont
     FARCALL UploadNineSliceBorders
@@ -4581,7 +4589,7 @@ ShopFrameNoCursor:
 
 DrawShop:
     FARCALL LoadShopInventory      ; load up this shop's inventory into the item box
-    FARCALL ClearScreen                ; clear the nametable
+    FARCALL FillNametable                ; clear the nametable
 
               ; Fill attribute tables
     LDA PPUSTATUS                  ; reset the PPU toggle
@@ -5762,8 +5770,16 @@ ResumeMainMenu:
     LDA #0
     STA menustall                   ; and disable menu stalling
 
-    CALL DrawMainMenu                ; draw the main menu
-    CALL TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the screen on
+    FARCALL DrawGameMenu
+
+    LDA #$1E
+    STA PPUMASK                ; enable BG and sprite rendering
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL                ; reset scroll
+    LDA #$08
+    STA soft2000             ; set PPUCTRL and soft2000 appropriately
+    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
     LDA #0
     STA cursor                      ; flush cursor, joypad, and prev joy directions
@@ -5928,7 +5944,7 @@ EnterMagicMenu:
     STA menustall                  ; clear menustall
     STA descboxopen                ; and mark description box as closed
 
-    FARCALL ClearScreen                    ; clear the nametable
+    FARCALL FillNametable                    ; clear the nametable
     CALL DrawMagicMenuMainBox       ; draw the big box containing all the spells
     PHP                            ; C is set if char has no spells -- we'll use that later, so PHP for now
 
@@ -6392,7 +6408,7 @@ EnterItemMenu:
     STA PPUMASK           ; turn the PPU off
     STA menustall       ; zero menustall (don't want to stall for drawing the screen for the first time)
     STA descboxopen     ; indicate that the descbox is closed
-    FARCALL ClearScreen         ; wipe the NT clean
+    FARCALL FillNametable         ; wipe the NT clean
                         ;  then start drawing the item menu
 
 ;; ResumeItemMenu is jumped to to refresh the item box (like after you use a key item and it disappears)
@@ -6998,7 +7014,7 @@ DrawItemTargetMenu:
     LDA #0
     STA PPUMASK            ; turn the PPU off
     STA menustall        ; and disable menu stalling
-    FARCALL ClearScreen          ; wipe the NT clean
+    FARCALL FillNametable          ; wipe the NT clean
 
     LDA #$0B             ; hardcoded box
     STA box_y            ; x,y   = $01,$0B
@@ -7092,7 +7108,7 @@ EnterStatusMenu:
     STA PPUMASK               ; turn off the PPU
     LDA #0
     STA menustall           ; disable menu stalling
-    FARCALL ClearScreen             ; clear the NT
+    FARCALL FillNametable             ; clear the NT
 
     LDX #0*4                ; draw status box 0
     CALL @DrawStatusBox
@@ -7837,21 +7853,6 @@ DrawMagicMenuCursor:
     STA spr_y             ; htis is our Y coord
 
     JUMP JumpDrawCursor        ; Draw it!  and exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Main Menu   [$B83A :: 0x3B84A]
-;;
-;;    Does all BG drawing for the main menu
-;;   Does not draw sprites
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawMainMenu:
-    FARCALL ClearScreen                    ; start by clearing the NT
-    FARCALL DrawGameMenu
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8770,7 +8771,7 @@ CopyEquipFromItemBox:    ; this routine is exactly the same as the above
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawEquipMenu:
-    FARCALL ClearScreen             ; clear the NT
+    FARCALL FillNametable             ; clear the NT
 
     LDA #0
     CALL @DrawEquipBox           ; draw the title box
