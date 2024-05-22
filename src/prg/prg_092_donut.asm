@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import Video_Inc1_Address, VideoWriteStackBytes, WaitForVBlank
+.import Video_Inc1_Address, Video_MassWriteStack, WaitForVBlank
 .import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
 
 
@@ -341,9 +341,9 @@ UploadCHR:
     ASL A
     STA VideoStack+3,X
 
-    LDA #<(VideoWriteStackBytes-1-(64*4))
+    LDA #<(Video_MassWriteStack-1-(64*4))
     STA VideoStack+4,X
-    LDA #>(VideoWriteStackBytes-1-(64*4))
+    LDA #>(Video_MassWriteStack-1-(64*4))
     STA VideoStack+5,X
 
     TXA

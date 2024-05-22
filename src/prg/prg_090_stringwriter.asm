@@ -5,7 +5,7 @@
 
 .import WaitForVBlank, MenuCondStall, MusicPlay
 .import Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set
-.import VideoWriteStackBytes, VideoRepeatValue, Video_MassWrite_Value_Write
+.import Video_MassWriteStack, VideoRepeatValue, Video_MassWrite_Value_Write
 .import Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_MassWrite, Video_SetFillColor, Video_UploadPalette0, Video_UploadPalette1, Video_UploadPalette2, Video_UploadPalette3, Video_UploadPalette4, Video_UploadPalette5, Video_UploadPalette6, Video_UploadPalette7
 .import Video_MassWrite_Set_Write_Address_Set_Write_Set
 .import Video_Inc1_ClearNametable0to119, Video_ClearNametable120to239, Video_ClearNametable240to359, Video_ClearNametable360to479, Video_ClearNametable480to599, Video_ClearNametable600to719, Video_ClearNametable720to839, Video_ClearNametable840to959
@@ -23,7 +23,6 @@
 
 
 VideoApplySizeAndCost:
-    TAY
     CLC
     ADC VideoCost
     STA VideoCost
@@ -45,6 +44,25 @@ VideoApplySizeAndCost:
     :
     RTS
 
+VideoTestSizeAndCost:
+    CLC
+    ADC VideoCost
+    BCC :+
+        LDA VideoCost+1
+        ; carry is clear
+        ADC #1
+        BNE :+
+        SEC                 ; Set carry flag to indicate a vblank happened
+        RTS
+    :
+
+    TXA
+    CLC
+    ADC VideoStackTally
+    BCC :+
+        SEC                 ; Set carry flag to indicate a vblank happened
+    :
+    RTS
 
 
 Stringify:
@@ -84,7 +102,7 @@ Stringify:
 
         @Newline:
         CALL PadWhitespace
-        CALL VideoSetWriteStackBytes
+        CALL StringifyFlush
         LDA stringwriterNewlineOrigin
         STA drawX
         INC drawY
@@ -94,11 +112,160 @@ Stringify:
 
         @Terminate:
         CALL PadWhitespace
-        CALL VideoSetWriteStackBytes
+        CALL StringifyFlush
 
         LDA #0
         STA stringwriterWhitespaceWidth
         RTS
+
+
+
+
+VideoPushData:
+    PHA
+    LDA stringwriterAddressReady
+    BNE :+
+        STY stringifyCursor
+
+        ; We will now allocate into the video buffer to push this data to the PPU. However this is tricky
+        ; because we don't actually know how much data we will be pushing just yet. The text could be done
+        ; three characters into the future, or five, or ten. One solution to this would have been to write
+        ; the text out to a temporary buffer, count the length, and gain surety that way. But to avoid that
+        ; additional overhead, we do some clever planning ahead so we can write the text directly into our
+        ; video buffer.
+        ;
+        ; To work in the video buffer directly we will first place a Video_Inc1_Address command to set the
+        ; incremental mode and address, then we leave a gap of two unused bytes that will later become the
+        ; Video_MassWriteStack command, and lastly we just start filling in text bytes.
+
+        @allocateVideoBuffer:
+
+        ; VBLANK COST
+        ; Video_Inc1_Address        9 or 12 (inc1)
+        ; Video_MassWriteStack      N(1) * 3
+
+        ; BUFFER SPACE
+        ; Video_Inc1_Address        2
+        ; Video_MassWriteStack      2
+        ; byte                      1
+
+        LDA #12                     ; Add 9+3 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #5                      ; Add 5 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+        LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+        STA VideoIncrementAddressOffset
+        LDA #VIDEO_INCREMENT_COST_1
+        STA VideoIncrementCost
+
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1) ; Video_Inc1_Address
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1) ; Video_Inc1_Address
+        STA VideoStack+1,X
+
+        ; Now we translate our x,y into a nametable address, and store that address on the video stack so
+        ; that when our video stack is executed it knows where to draw the rectangle.
+        LDY drawY                   ; Load y position into register Y
+        LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
+        STA VideoStack+2,X          ; Save high address on the video stack
+        LDA drawX                   ; Load x position
+        ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
+        STA VideoStack+3,X          ; Save low address on the video stack
+
+        ; These are left intentionally empty for the Video_MassWriteStack later
+        ; VideoStack+4
+        ; VideoStack+5
+        TXA
+        CLC
+        ADC #4
+        STA VideoRetroactiveCursor
+
+        ; Place the character byte into the buffer
+        PLA
+        STA VideoStack+6,X
+        TXA
+        CLC
+        ADC #7
+        STA VideoCursor
+
+        ; restore
+        LDY stringifyCursor
+        LDA #1
+        STA stringifyLength
+        STA stringwriterAddressReady
+        RTS
+    :
+
+
+    ; If we are here, it means there is already a Video_Inc1_Address command on the video stack, two
+    ; bytes empty for a later Video_MassWriteStack, and least one byte of character data. We have 
+    ; another byte of character data we wish to append, but before we can do that we have to make sure
+    ; there is actually room both in terms of vblank cost and buffer space.
+
+    ; VBLANK COST
+    ; Video_MassWriteStack      N(1) * 3
+
+    ; BUFFER SPACE
+    ; byte                      1
+
+    LDA #3                      ; 3 vblank cost
+    LDX #1                      ; 1 buffer size
+    CALL VideoTestSizeAndCost
+    BCC :+
+        ; Ouch, there wasn't room for even one more character. Time to flush to free up space.
+        CALL StringifyFlush
+        ; This means we have to start over with our attempt to push data
+        PLA
+        JUMP VideoPushData
+    :
+    ; Actually allocate this time
+    LDA #3                      ; 3 vblank cost
+    LDX #1                      ; 1 buffer size
+    CALL VideoApplySizeAndCost
+
+    ; Put the byte on the queue
+    LDX VideoCursor
+    PLA
+    STA VideoStack,X
+    INX
+    STX VideoCursor
+
+    INC stringifyLength
+    INC stringwriterLineWidth
+    RTS
+
+StringifyFlush:
+    LDA stringwriterAddressReady
+    BNE :+
+        RTS
+    :
+
+    LDA stringifyLength
+    BNE :+
+        DEBUG
+    :
+
+    LDX VideoRetroactiveCursor
+    LDA #<(Video_MassWriteStack-1) ; Video_MassWriteStack
+    SEC
+    SBC stringifyLength
+    SBC stringifyLength
+    SBC stringifyLength
+    SBC stringifyLength
+    STA VideoStack+0,X
+    LDA #>(Video_MassWriteStack-1) ; Video_MassWriteStack
+    STA VideoStack+1,X
+
+    LDA #0
+    STA stringifyLength
+    STA stringwriterAddressReady
+    RTS
+
+
+
 
 SaveStringifyStack:
     LDX stringwriterStackIndex
@@ -1157,86 +1324,6 @@ FetchValueItemDataFirst:
 FetchValueItemDataSecond:
     RTS
 FetchValueItemDataThird:
-    RTS
-
-VideoPushAddress:
-    ;LDA VideoCursor
-    ;BPL @noWait
-    ;CALL WaitForVBlank
-    ;@noWait:
-
-
-
-    LDX VideoCursor
-    LDA #<(Video_Inc1_Address-1)
-    STA VideoStack+0,X
-    LDA #>(Video_Inc1_Address-1)
-    STA VideoStack+1,X
-
-    ; Now we translate our x,y into a nametable address, and store that address on the video stack so
-    ; that when our video stack is executed it knows where to draw the rectangle.
-    LDY drawY                   ; Load y position into register Y
-    LDA lut_NTRowStartHi, Y     ; Get high address offset into nametable for this y position
-    STA VideoStack+2,X          ; Save high address on the video stack
-    LDA drawX                   ; Load x position
-    ORA lut_NTRowStartLo, Y     ; bitwise OR with low address for y position
-    STA VideoStack+3,X          ; Save low address on the video stack
-
-
-
-
-
-
-
-    
-    TXA
-    CLC
-    ADC #4
-    STA VideoRetroactiveCursor
-    ADC #2
-    STA VideoCursor
-    RTS
-VideoPushData:
-    LDX stringwriterAddressReady
-    BNE :+
-        PHA
-        STY stringifyCursor
-        CALL VideoPushAddress
-        LDY stringifyCursor
-        LDA #1
-        STA stringwriterAddressReady
-        PLA
-    :
-
-    LDX VideoCursor
-    STA VideoStack,X
-    INX
-    STX VideoCursor
-    INC stringifyLength
-    INC stringwriterLineWidth
-    RTS
-VideoSetWriteStackBytes:
-    LDX VideoRetroactiveCursor
-    LDA #<(VideoWriteStackBytes-1)
-    SEC
-    SBC stringifyLength
-    SBC stringifyLength
-    SBC stringifyLength
-    SBC stringifyLength
-    STA VideoStack+0,X
-    LDA #>(VideoWriteStackBytes-1)
-    STA VideoStack+1,X
-
-    LDA #0
-    STA stringifyLength
-    STA stringwriterAddressReady
-
-    LDX VideoCursor
-    LDA #$80
-    STA VideoStack+0,X
-    STA VideoStack+1,X
-
-
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -11,7 +11,7 @@
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
 .import WhitespaceWriter, DrawNineSlice, DrawRectangle
-.import Stringify
+.import Stringify, UploadPalette0
 .import DrawGameMenu, ClearScreen, ColorRectangle
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
 .import DrawShopYouCantCarryAnymore, DrawShopYouCantAffordThat, DrawShopWhoseItemSell
@@ -3308,16 +3308,29 @@ EnterIntroStory:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterTitleScreen:
-    CALL IntroTitlePrepare    ; clear NT, start music, etc
-    BIT PPUSTATUS                ;  reset PPU toggle
+    LDA #$41
+    STA music_track        ; Start up the crystal theme music
+
+    LDA #0
+    STA joy_a              ; clear A, B, Start button catchers
+    STA joy_b
+    STA joy_start
+    STA cursor
+    STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
+
+    FARCALL ClearScreen                ; clear the nametable
+
+    LDA #1
+    STA palette0+0
+    LDA #1
+    STA palette0+1
+    LDA #1
+    STA palette0+2
+    FARCALL UploadPalette0
 
     FARCALL UploadFont
     FARCALL UploadNineSliceBorders
     FARCALL RestoreNineSliceBordersToDefault
-
-    CALL WaitForVBlank
-
-
 
     LDA #11
     STA drawX
@@ -3331,6 +3344,8 @@ EnterTitleScreen:
     POS         12, 12 
     TEXT        TEXT_TITLE_CONTINUE
 
+
+
     LDA #11
     STA drawX
     LDA #16
@@ -3342,6 +3357,8 @@ EnterTitleScreen:
     FARCALL DrawNineSlice
     POS         12, 17
     TEXT        TEXT_TITLE_NEW_GAME
+
+
 
     LDA #8
     STA drawX
@@ -3355,17 +3372,19 @@ EnterTitleScreen:
     POS         9, 22
     TEXT        TEXT_TITLE_RESPOND_RATE
 
+
+
     POS         8, 25
     TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
     POS         8, 26
     TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
 
 
-    LDA #$0F                ; enable APU (isn't necessary, as the music driver
-    STA PAPU_EN               ;   will do this automatically)
-    CALL TurnMenuScreenOn_ClearOAM  ; turn on the screen and clear OAM
-                                   ;  and continue on to the logic loop
-
+    LDA #$1E
+    STA PPUMASK                ; enable BG and sprite rendering
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL                ; reset scroll
 
 
   ;; This is the main logic loop for the Title screen.
@@ -3459,32 +3478,6 @@ IntroTitlePrepare:
     STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
     JUMP ClearNT            ; then wipe the nametable clean and exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  TitleScreen_DrawRespondRate  [$A238 :: 0x3A248]
-;;
-;;    Draws the respond rate on the title screen.  Called every frame
-;;  because the respond rate can change via the user.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TitleScreen_DrawRespondRate:
-    LDA #>$22D6        ; Respond rate is drawn at address $22D6
-    STA PPUADDR
-    LDA #<$22D6
-    STA PPUADDR
-
-    LDA respondrate    ; get the current respond rate (which is zero based)
-    CLC                ;  add $80+1 to it.  $80 to convert it to the coresponding tile
-    ADC #$80+1         ;  for the desired digit to print, and +1 to convert it from zero
-    STA PPUDATA          ;  based to 1 based (so it's printed as 1-8 instead of 0-7)
-
-    LDA #0             ; then reset the scroll.
-    STA PPUSCROLL
-    STA PPUSCROLL
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

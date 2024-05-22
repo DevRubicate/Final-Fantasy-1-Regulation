@@ -4,7 +4,7 @@
 
 .export Video_Start
 .export Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set, Video_MassWrite
-.export VideoWriteStackBytes, Video_MassWrite_Value_Write, Video_MassWrite_Set_Write_Address_Set_Write_Set
+.export Video_MassWriteStack, Video_MassWrite_Value_Write, Video_MassWrite_Set_Write_Address_Set_Write_Set
 
 .export Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_SetFillColor, Video_UploadPalette0, Video_UploadPalette1, Video_UploadPalette2, Video_UploadPalette3, Video_UploadPalette4, Video_UploadPalette5, Video_UploadPalette6, Video_UploadPalette7
 .export Video_Inc1_ClearNametable0to119, Video_ClearNametable120to239, Video_ClearNametable240to359, Video_ClearNametable360to479, Video_ClearNametable480to599, Video_ClearNametable600to719, Video_ClearNametable720to839, Video_ClearNametable840to959
@@ -49,17 +49,21 @@ Video_Start:
 
 
 
-
-VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
-Video_Inc1_Address:
-    LDA #%10000000
-    STA PPU_CTL1
-Video_Address:
-    PLA
-    STA PPUADDR      
-    PLA
-    STA PPUADDR      
-    RTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Inc1_Address
+; Cycles:       18 or 24 (inc1)
+; Cost:         9 or 12 (inc1)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+    Video_Inc1_Address:
+        LDA #%10000000                  ; 2 cycle
+        STA PPU_CTL1                    ; 4 cycle
+    Video_Address:
+        PLA                             ; 2 cycle
+        STA PPUADDR                     ; 4 cycle    
+        PLA                             ; 2 cycle
+        STA PPUADDR                     ; 4 cycle   
+        RTS                             ; 6 cycle
 
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
@@ -229,22 +233,18 @@ Video_Inc32_Set:
         PLA                             ; 2 cycle
         RTS                             ; 6 cycles
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; VideoWriteStackBytes
+; Video_MassWriteStack
+; Cycles: N * 6
+; Cost: N * 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-.align 256
-    .repeat 64, i
-        PLA
-        STA PPUDATA
-    .endrepeat
-VideoWriteStackBytes:
-    RTS
-
-
-
-
-
+    .align 256
+        .repeat 64, i
+            PLA             ; 2 cycles
+            STA PPUDATA     ; 4 cycles
+        .endrepeat
+    Video_MassWriteStack:
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_ClearNametable0to119
