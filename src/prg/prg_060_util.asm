@@ -2,9 +2,9 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, DrawPalette, MusicPlay, SetBattlePPUAddr, Battle_WritePPUData
+.import WaitForVBlank, DrawPalette, MusicPlay, SetBattlePPUAddr, Battle_WritePPUData, ClearSprites
 
-.export ResetRAM, SetRandomSeed, GetRandom, ClearOAM, ClearZeroPage, DisableAPU
+.export ResetRAM, SetRandomSeed, GetRandom, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
 .export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData, WriteAttributesToPPU
 .export WaitVBlank_NoSprites, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
@@ -69,34 +69,6 @@ GetRandom:
     sta rng_seed+0
     cmp #0     ; reload flags
     rts
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Clear OAM   [$C43C :: 0x3C44C]
-;;
-;;    Fills Shadow OAM with $F8 (which effectively clears it so no sprites are visible)
-;;  also resets the sprite index to zero, so that the next sprite drawn will
-;;  have top priority.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearOAM:
-    LDX #$3F       ; use X as loop counter (looping $40 times)
-    LDA #$F8       ; we'll be clearing to $F8
-
-    @Loop:
-        STA oam, X ; clear 4 bytes of OAM
-        STA oam + $40, X
-        STA oam + $80, X
-        STA oam + $C0, X
-        DEX          ; and continue looping until X expires
-        BPL @Loop
-
-    LDA #0         ; set sprite index to 0
-    STA sprindex
-    RTS            ; and exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -756,7 +728,7 @@ WriteAttributesToPPU:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitVBlank_NoSprites:
-    CALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites              ; clear OAM
     CALL WaitForVBlank       ; wait for VBlank
     RTS                       ; exit
 

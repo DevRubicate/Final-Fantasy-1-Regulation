@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import WaitScanline, DrawMapPalette, WaitForVBlank, SetOWScroll, SetSMScroll
+.import WaitScanline, DrawMapPalette, WaitForVBlank, SetOWScroll, SetSMScroll, ClearSprites
 
 .export ScreenWipe_Open, ScreenWipe_Close
 
@@ -16,13 +16,7 @@
 
 
 StartScreenWipe:
-    LDA #$F8           ; clears OAM to hide sprites during the screen wipe
-    LDX #0             ;   why on earth doesn't this just CALL to ClearOAM?  x_x
-  @Loop:
-      STA oam, X
-      INX
-      BNE @Loop
-
+    FARCALL ClearSprites
     CALL WaitForVBlank   ; then wait for VBlank
 
     LDA #$01              ; silence all channels except for square 1

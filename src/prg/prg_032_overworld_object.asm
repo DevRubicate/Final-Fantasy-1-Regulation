@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, ClearOAM, MusicPlay_NoSwap, ReadFarByte
+.import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites
 .import DoMapDrawJob, BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
 .import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy, OpenTreasureChest
 
@@ -1715,7 +1715,7 @@ AirshipTransitionFrame:
     STA framecounter
 
     CALL SetOWScroll_PPUOn     ; Set Scroll
-    FARCALL ClearOAM              ; Clear OAM
+    FARCALL ClearSprites
     FARCALL MusicPlay  ; And call music play
 
     LDA #$70

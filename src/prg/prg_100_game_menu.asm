@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import Stringify, WhitespaceWriter, PlotBox, WriteClassNameByIndex, WriteHeroNameByIndex, MusicPlay
-.import WaitForVBlank, ClearOAM
+.import WaitForVBlank
 .import TEXT_ITEM_DESCRIPTION, TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
 .import DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
 

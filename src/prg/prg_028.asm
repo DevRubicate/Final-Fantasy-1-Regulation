@@ -2,10 +2,10 @@
 
 .include "src/global-import.inc"
 
-.import GameStart
+.import GameStart, ClearSprites
 .import lut_IntroStoryText
 .import DoOverworld, PlaySFX_Error, AddGPToParty, DrawComplexString_New
-.import ClearOAM, DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy, HideMapObject
+.import DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy, HideMapObject
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
@@ -1797,7 +1797,7 @@ EnterLineupMenu:
     STA PPUSCROLL
     STA PPUSCROLL
 
-    FARCALL ClearOAM                ; clear OAM
+    FARCALL ClearSprites
 
     FARCALL UpdateJoy               ; update joy data
     LDA joy                     ;  so we can fill our lu_joyprev
@@ -1830,7 +1830,7 @@ EnterLineupMenu:
     STA cur_bank
     FARCALL MusicPlay           ; call music routine
 
-    FARCALL ClearOAM                     ; clear OAM
+    FARCALL ClearSprites
     CALL LineupMenu_DrawCharSprites   ; draw the character sprites
     CALL LineupMenu_DrawCursor        ; draw the cursor
     CALL LineupMenu_UpdateJoy         ; update joypad info
@@ -2825,7 +2825,7 @@ DoNameInput:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_Frame:
-    FARCALL ClearOAM           ; wipe OAM then draw all sprites
+    FARCALL ClearSprites
     FARCALL PtyGen_DrawChars
     CALL PtyGen_DrawCursor
 
@@ -2847,7 +2847,7 @@ PtyGen_Frame:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CharName_Frame:
-    FARCALL ClearOAM           ; wipe OAM then draw the cursor
+    FARCALL ClearSprites
     CALL CharName_DrawCursor
 
     CALL WaitForVBlank    ; VBlank and DMA
@@ -3398,7 +3398,7 @@ EnterTitleScreen:
   ;; This is the main logic loop for the Title screen.
 
   @Loop:
-    FARCALL ClearOAM            ; Clear OAM
+    FARCALL ClearSprites
 
     LDX cursor              ; Draw the cursor sprite using a fixed X coord of $48
     LDA #$48                ;  and using the current cursor position to get the Y coord
@@ -4119,7 +4119,7 @@ EnterShop_Inn:
     CALL LoadShopBoxDims         ; erase shop box 3 (command box)
     FARCALL EraseBox
 
-    FARCALL ClearOAM                ; clear OAM (to remove the cursor)
+    FARCALL ClearSprites
     CALL DrawShopPartySprites    ; draw the party
     CALL WaitForVBlank         ; then wait for VBlank before
     FARCALL FadeOutBatSprPalettes   ; and fade the party out
@@ -4530,7 +4530,7 @@ ClinicBuildNameString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ShopFrame:
-    FARCALL ClearOAM               ; clear OAM
+    FARCALL ClearSprites
     CALL DrawShopPartySprites   ; draw the party sprites
     CALL DrawShopCursor         ; and the cursor
     CALL WaitForVBlank        ; the wait for VBlank
@@ -4542,7 +4542,7 @@ ShopFrame:
     JUMP _ShopFrame_CheckBtns   ; the jump ahead to check the buttons
 
 ShopFrameNoCursor:
-    FARCALL ClearOAM               ; do all the same things as above, in the same order
+    FARCALL ClearSprites
     CALL DrawShopPartySprites   ;  only do not draw the cursor
     CALL WaitForVBlank
     LDA #BANK_THIS
@@ -5792,7 +5792,7 @@ ResumeMainMenu:
 
 
 MainMenuLoop:
-    FARCALL ClearOAM                  ; clear OAM (erasing all existing sprites)
+    FARCALL ClearSprites
     CALL DrawMainMenuCursor        ; draw the cursor
     CALL DrawMainMenuCharSprites   ; draw the character sprites
     CALL MenuFrame                 ; Do a frame
@@ -5905,7 +5905,7 @@ MainMenuSubTarget:
     STA cursor
 
   @Loop:
-    FARCALL ClearOAM                 ; clear OAM
+    FARCALL ClearSprites
     CALL DrawMainMenuCharSprites  ; draw the main menu battle sprite
     CALL DrawMainMenuSubCursor    ; draw the sub target cursor
     CALL MenuFrame                ; do a frame
@@ -5963,7 +5963,7 @@ EnterMagicMenu:
     STA joy_prevdir           ; and previous joy directions
 
 MagicMenu_Loop:
-    FARCALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites
     CALL DrawMagicMenuCursor   ; draw the cursor
     CALL MenuFrame             ; and do a frame
 
@@ -6180,7 +6180,7 @@ UseMagic_HealFamily:
     STA hp_recovery         ; store HP recovery for future use
     LDA #$2C
     CALL DrawItemDescBox     ; draw the relevent description text
-    FARCALL ClearOAM            ; clear OAM (no sprites)
+    FARCALL ClearSprites
     CALL MenuWaitForBtn      ; wait for the user to press a button
 
     LDA joy                 ; see whether the user pressed A or B
@@ -6433,7 +6433,7 @@ ResumeItemMenu:
     STA joy_prevdir    ; and previous joy directionals
 
 ItemMenu_Loop:
-    FARCALL ClearOAM            ; clear OAM
+    FARCALL ClearSprites
     CALL DrawItemMenuCursor  ; draw the cursor where it needs to be
     CALL MenuFrame           ; do a frame
 
@@ -6756,7 +6756,7 @@ UseItem_House:
 
 MenuSaveConfirm:
     CALL DrawItemDescBox       ; draw the description box
-    FARCALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites
     CALL MenuWaitForBtn        ; then wait for player to press A or B
 
     LDA joy                   ; see if they pressed A or B
@@ -6932,7 +6932,7 @@ ItemTargetMenuLoop:
     STA joy_a       ; clear joy_a and joy_b so that a button press
     STA joy_b       ;  will be recognized
 
-    FARCALL ClearOAM               ; clear OAM
+    FARCALL ClearSprites
     CALL DrawItemTargetCursor   ; draw the cursor for this menu
     CALL MenuFrame              ; do a frame
 
@@ -7140,7 +7140,7 @@ EnterStatusMenu:
     LDA #$28
     CALL DrawCharMenuString  ; 6th and final box drawn
 
-    FARCALL ClearOAM            ; clear OAM
+    FARCALL ClearSprites
 
     LDA #$58                ; set sprite coords to $58,$20
     STA spr_x
@@ -7707,14 +7707,11 @@ CloseDescBox:
 ;;
 ;;    This is called to switch on the PPU once all the drawing for the menus is complete
 ;;
-;;   Comes in 2 flavors... normal, and 'ClearOAM' -- both of which are the same, only
-;;   the ClearOAM version, as the name implies, clears OAM (clearing all sprites).
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 TurnMenuScreenOn_ClearOAM:
-    FARCALL ClearOAM             ; clear OAM
+    FARCALL ClearSprites
                              ;  then just do the normal stuff
 
 TurnMenuScreenOn:
@@ -8337,7 +8334,7 @@ EnterEquipMenu:
     STA eq_modecurs               ; reset the mode cursor to 0  ("Equip")
 
   @Loop:
-    FARCALL ClearOAM                  ; clear OAM
+    FARCALL ClearSprites
     CALL DrawEquipMenuModeCurs     ; draw the mode cursor
     CALL EquipMenuFrame            ; then do an Equip Menu Frame
 
@@ -8380,7 +8377,7 @@ EnterEquipMenu:
 ;;
 
 EquipMenu_TRADE:              ; "TRADE" option selected
-    FARCALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites
     FARCALL DrawEquipMenuCurs     ; draw the cursor (primary cursor only)
     CALL EquipMenuFrame        ; do a frame
 
@@ -8400,7 +8397,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
     STA cursor2               ; copy the primary cursor to the secondary cursor
                               ; then proceed to the Trade subloop
     @SubLoop:
-      FARCALL ClearOAM                      ; clear OAM
+      FARCALL ClearSprites
       FARCALL DrawEquipMenuCursSecondary    ; draw both primary+secondary cursors
       CALL EquipMenuFrame                ; do a frame
 
@@ -8433,7 +8430,7 @@ EquipMenu_TRADE:              ; "TRADE" option selected
 ;;
 
 EquipMenu_EQUIP:
-    FARCALL ClearOAM             ; clear OAM
+    FARCALL ClearSprites
     FARCALL DrawEquipMenuCurs    ; draw the primary cursor
     CALL EquipMenuFrame       ; do a frame
 
@@ -8477,7 +8474,7 @@ EquipMenu_EQUIP:
 ;;
 
 EquipMenu_DROP:
-    FARCALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites
     FARCALL DrawEquipMenuCurs     ; draw the primary cursor
     CALL EquipMenuFrame        ; do a frame
 
@@ -8500,7 +8497,7 @@ EquipMenu_DROP:
       JUMP EquipMenu_DROP      ;      and continue looping
 
   @ConfirmLoop:
-    FARCALL ClearOAM              ; clear OAM
+    FARCALL ClearSprites
 
     LDA framecounter          ; for confirmation, the cursor is to flicker.  Use the frame counter
     LSR A                     ;   and put bit 1 in C  (but remember that framecounter is INC'd by 2

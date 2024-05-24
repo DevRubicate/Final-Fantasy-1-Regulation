@@ -29,7 +29,7 @@
 ; prg_10_overworld_object
 .import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
 ; prg_1E_util
-.import DisableAPU, ClearOAM, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
+.import DisableAPU, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
 ; prg_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
 ; prg_16_overworld_tileset

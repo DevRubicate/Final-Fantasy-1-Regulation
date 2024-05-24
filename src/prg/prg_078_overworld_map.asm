@@ -3,8 +3,8 @@
 .include "src/global-import.inc"
 
 .import LoadOWBGCHR, LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
-.import MusicPlay, PrepAttributePos, ProcessOWInput
-.import ClearOAM, DrawOWSprites, VehicleSFX, ScreenWipe_Open
+.import MusicPlay, PrepAttributePos, ProcessOWInput, ClearSprites
+.import DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
 .import CyclePalettes, LoadBridgeSceneGFX, EnterBridgeScene, CyclePalettes, CyclePalettes, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
 
@@ -91,7 +91,7 @@ EnterOverworldLoop:
         CALL DoOWTransitions      ; check for any transitions that need to be done
         FARCALL ProcessOWInput       ; process overworld input
     :
-    FARCALL ClearOAM           ; clear OAM
+    FARCALL ClearSprites
     FARCALL DrawOWSprites      ; and draw all overworld sprites
     FARCALL VehicleSFX
 

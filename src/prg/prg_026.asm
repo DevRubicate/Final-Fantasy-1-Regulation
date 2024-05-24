@@ -8,7 +8,7 @@
 .import DrawComplexString, DrawComplexString_New, DrawBox, UpdateJoy, DrawPalette
 .import WaitForVBlank
 .import GetRandom
-.import ClearOAM
+.import ClearSprites
 
 BANK_THIS = $0D
 
@@ -1043,7 +1043,7 @@ EnterMiniGame:
    ;   on... and begin the main loop
    ;
 
-    FARCALL ClearOAM       ; clear OAM
+    FARCALL ClearSprites
     CALL WaitForVBlank      ; then once in VBlank...
     CALL DrawPalette        ; and load up the palette
 
@@ -2916,7 +2916,7 @@ lut_CreditsText:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawAllPuzzlePieces:
-    FARCALL ClearOAM     ; clear OAM
+    FARCALL ClearSprites
 
     LDA #$48         ; set sprite coords to $48, $2F
     STA spr_x        ;  this is where we start drawing the puzzle pieces

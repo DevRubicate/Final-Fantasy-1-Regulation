@@ -4,9 +4,9 @@
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 .import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
-.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, ClearOAM, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
+.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 .import GetSMTargetCoords, CanTalkToMapObject, DrawMapObjectsNoUpdate, TalkToObject, TalkToSMTile, DrawDialogueBox, ShowDialogueBox, EnterMainMenu, EnterLineupMenu, UpdateJoy
-.import CanPlayerMoveSM, StartMapMove, EnterShopMenu
+.import CanPlayerMoveSM, StartMapMove, EnterShopMenu, ClearSprites
 
 .export PrepStandardMap, RedrawDoor, ProcessSMInput
 .export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects, DoStandardMap
@@ -343,7 +343,7 @@ StandardMapLoop:
     BNE @TeleOrBattle
         CALL ProcessSMInput    ; if none of those things -- process input, and continue
         @Continue:
-        FARCALL ClearOAM            ; clear OAM
+        FARCALL ClearSprites
         FARCALL DrawSMSprites       ; and draw all sprites
         JUMP StandardMapLoop     ; then keep looping
 
