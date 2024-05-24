@@ -111,7 +111,7 @@ DrawGameMenuSelection:
     RTS
 
 EnterItemsMenu:
-
+    FARCALL ClearSprites
 
     LDA #$0
     STA palette0+0
@@ -129,9 +129,10 @@ EnterItemsMenu:
     STA Var0
     FARCALL FillNametable                ; clear the nametable
 
-    CALL UploadFont
-    CALL UploadNineSliceBorders
-    CALL RestoreNineSliceBordersToDefault
+    ; Todo: Make sure these PPU affecting subroutines respects the new rules
+;    CALL UploadFont
+;    CALL UploadNineSliceBorders
+;    CALL RestoreNineSliceBordersToDefault
 
 
     LDA #1
@@ -211,6 +212,8 @@ EnterItemsMenu:
     POS         1, 10
     NINESLICE   16, 16
 
+
+
     LDA #$F3
     STA drawVars+1
 
@@ -240,7 +243,12 @@ EnterItemsMenu:
 
     CALL DrawHeroInventory
     CALL DrawInventory
+
+
+
     CALL EnterEquipMenu
+
+
 
     RTS
 
@@ -965,7 +973,7 @@ DrawHeroInventory:
     LDX #3
     STX drawX
 
-    ; Set the hardcoded whitespace width of this item name to be 14, that way it will always completely
+    ; Set the hardcoded whitespace width of this item name to be 13, that way it will always completely
     ; overwrite the item text that used to be here
     LDA #13
     STA stringwriterWhitespaceWidth

@@ -22,14 +22,6 @@ Video_Terminate:
     LDX StackPointerBackup
     TXS
 
-    LDA #(256 - 96) ; Save 96 bytes for the normal stack
-    STA VideoStackTally
-
-    LDA #$B2
-    STA VideoCost
-    LDA #$FC
-    STA VideoCost+1
-
     ; We have to restore the scroll as this is messed up by our writing to the PPU
     LDA scrollX
     STA PPUSCROLL
@@ -37,6 +29,8 @@ Video_Terminate:
     STA PPUSCROLL
     RTS
 
+
+; Vblank time is 20 lines or 2273 cycles. I mentally subtract 73 cycles when quoting how much time is available for transfers. The first 13 of those 73 cycles are up to 6 cycles for the previous instruction to finish and the 7 cycles of the interrupt sequence. (The other 60 are an estimate for setup and teardown of the transfer routine.) 
 ; We have 2273 cycle of safe time, 50 spent before here, 20 spent here, so that leave 2203 cycle
 ; left. But we need 513 for OAM DAMA, so 1690.
 Video_Start:
@@ -47,23 +41,22 @@ Video_Start:
     TXS                     ; 2 cycle
     RTS                     ; 6 cycle
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_Address
-; Cycles:       18 or 24 (inc1)
-; Cost:         9 or 12 (inc1)
+; Cost:         11 or 14 (inc1)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     Video_Inc1_Address:
         LDA #%10000000                  ; 2 cycle
         STA PPU_CTL1                    ; 4 cycle
     Video_Address:
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle    
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle   
         RTS                             ; 6 cycle
+
+
     Video_Inc32_Address:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000100                          ; 2 cycle
@@ -76,19 +69,18 @@ Video_Start:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_Address_Set
-; Cycles:       20 or 26 (inc1)
-; Cost:         10 or 13 (inc1)
+; Cost:         13 or 16 (inc1)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Address_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000                  ; 2 cycle
         STA PPU_CTL1                    ; 4 cycle
     Video_Address_Set:
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
@@ -131,12 +123,10 @@ Video_Inc32_Address_Set_Write:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_Write_Set
-; Cycles: 18
-; Cost: 9
+; Cost: 10
 ;
 ; Video_Write_Set
-; Cycles: 12
-; Cost: 6
+; Cost: 7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Write_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
@@ -144,25 +134,24 @@ Video_Inc32_Address_Set_Write:
         STA PPU_CTL1                    ; 4 cycle
     Video_Write_Set:
         STA PPUDATA                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_Address_Set_Write_Set
-; Cycles: 26 or 32
-; Cost: 13 or 16
+; Cost: 17 or 20
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Address_Set_Write_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000                  ; 2 cycle
         STA PPU_CTL1                    ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUDATA                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
@@ -190,7 +179,6 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_MassWrite
-; Cycles: N * 4 + 6
 ; Cost: N * 2 + 3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
@@ -203,29 +191,27 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_MassWrite_Address_Set
-; Cycles: N * 4 + 20
-; Cost: N * 2 + 10
+; Cost: N * 2 + 13
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 85, i
             STA PPUDATA                 ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Address_Set:
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_MassWriteStack
-; Cycles: N * 6
-; Cost: N * 3
+; Cost: N * 4
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .repeat 64, i
-            PLA             ; 2 cycle
+            PLA             ; 4 cycle
             STA PPUDATA     ; 4 cycle
         .endrepeat
     Video_MassWriteStack:
@@ -233,8 +219,7 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_Set_FillNametable0to119
-; Cycles: 500 or 506 (inc1)
-; Cost: 250 or 253 (inc1)
+; Cost: 251 or 254 (inc1)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Set_FillNametable0to119:
         LDA #%10000000                  ; 2 cycle
@@ -243,7 +228,7 @@ Video_Inc32_Set:
         STA PPUADDR                     ; 4 cycle
         LDA #$00                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -251,15 +236,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable120to239
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable120to239:
         LDA #$20                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$78                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -267,15 +251,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable240to359
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable240to359:
         LDA #$20                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$F0                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -283,15 +266,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable360to479
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable360to479:
         LDA #$21                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$68                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -299,15 +281,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable480to599
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable480to599:
         LDA #$21                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$E0                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -315,15 +296,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable600to719
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable600to719:
         LDA #$22                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$58                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -331,15 +311,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable720to839
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable720to839:
         LDA #$22                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$D0                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -347,15 +326,14 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Set_FillNametable840to959
-; Cycles: 500
-; Cost: 250
+; Cost: 251
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable840to959:
         LDA #$23                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
         LDA #$48                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 120, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -363,8 +341,7 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_FillAttributeTable
-; Cycles: 276 or 282
-; Cost: 138 or 141
+; Cost: 139 or 142
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Set_FillAttributeTable:
         LDA #%10000000                  ; 2 cycle
@@ -373,7 +350,7 @@ Video_Inc32_Set:
         STA PPUADDR                     ; 4 cycle
         LDA #$C0                        ; 2 cycle
         STA PPUADDR                     ; 4 cycle
-        PLA                             ; 2 cycle
+        PLA                             ; 4 cycle
         .repeat 64, i
             STA PPUDATA                 ; 4 cycle
         .endrepeat
@@ -381,37 +358,35 @@ Video_Inc32_Set:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_MassWrite_Value_Write
-; Cycles: N * 4 + 12
-; Cost: N * 2 + 6
+; Cost: N * 2 + 7
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 64, i
             STA PPUDATA             ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Value_Write:
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         STA PPUDATA                 ; 4 cycle
         RTS                         ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_MassWrite_Set_Write_Address_Set_Write_Set
-; Cycles: N * 4 + 32
-; Cost: N * 2 + 16
+; Cost: N * 2 + 21
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 64, i
             STA PPUDATA             ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Set_Write_Address_Set_Write_Set:
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         STA PPUDATA                 ; 4 cycle
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         STA PPUADDR                 ; 4 cycle
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         STA PPUADDR                 ; 4 cycle
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         STA PPUDATA                 ; 4 cycle
-        PLA                         ; 2 cycle
+        PLA                         ; 4 cycle
         RTS                         ; 6 cycle
 
 
@@ -427,7 +402,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette0
-; Cycles: 42 or 58
 ; Cost: 21 or 24
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette0:
@@ -448,7 +422,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette1
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette1:
@@ -470,7 +443,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette2
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette2:
@@ -492,7 +464,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette3
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette3:
@@ -514,7 +485,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette4
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette4:
@@ -536,7 +506,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette5
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette5:
@@ -558,7 +527,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette6
-; Cycles: 46 or 52
 ; Cost: 23 or 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette6:
@@ -580,7 +548,6 @@ Video_SetFillColor:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette7
-; Cycles: 52
 ; Cost: 26
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_UploadPalette7:

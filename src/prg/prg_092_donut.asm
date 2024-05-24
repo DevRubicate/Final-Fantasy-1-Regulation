@@ -3,8 +3,6 @@
 .include "src/global-import.inc"
 
 .import Video_Inc1_Address, Video_MassWriteStack, WaitForVBlank
-.import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
-
 
 
 ; donut-nes v2023-12-21 - public domain (details at end of file)
@@ -23,7 +21,7 @@
 ; following function prototype in a .c or .h file:
 ;   void __fastcall__ donut_bulk_load(const char * data);
 
-.export donut_decompress_block, UploadCHR
+.export donut_decompress_block
 
 ; donut_stream_ptr could also be aliased to some generic "input data pointer"
 ; but keep in mind decompress_block won't automaticaly advance
@@ -301,64 +299,3 @@ do_rotated_pb8_plane:
 shorthand_plane_def_table:
     .byte $00, $55, $aa, $ff
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UploadCHR
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadCHR:
-    LDA VideoCursor
-    BPL @noWait
-    CALL WaitForVBlank
-    @noWait:
-
-    LDA #TextBank(LUT_TILE_CHR)
-    CLC
-    ADC Var1
-    STA MMC5_PRG_BANK2
-    LDX Var0
-    LDA LUT_TILE_CHR,X
-    STA donut_stream_ptr
-    LDA LUT_TILE_CHR_SIBLING2,X
-    STA donut_stream_ptr+1
-
-    LDY #0
-    LDX VideoCursor
-    LDA #<(Video_Inc1_Address-1)
-    STA VideoStack+0,X
-    LDA #>(Video_Inc1_Address-1)
-    STA VideoStack+1,X
-
-    LDA Var2
-    LSR A
-    LSR A
-    LSR A
-    LSR A
-    STA VideoStack+2,X
-
-    LDA Var2
-    ASL A
-    ASL A
-    ASL A
-    ASL A
-    STA VideoStack+3,X
-
-    LDA #<(Video_MassWriteStack-1-(64*4))
-    STA VideoStack+4,X
-    LDA #>(Video_MassWriteStack-1-(64*4))
-    STA VideoStack+5,X
-
-    TXA
-    CLC
-    ADC #6
-    TAX
-    CLC
-    ADC #64
-    STA VideoCursor
-
-    LDY #0
-    CALL donut_decompress_block
-
-    LDX VideoCursor
-    LDA #$80
-    STA VideoStack+0,X
-    STA VideoStack+1,X
-    RTS

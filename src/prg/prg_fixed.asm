@@ -1175,7 +1175,13 @@ OnNMI:
     @noVideo:
 
 
+    LDA #(256 - 96) ; Save 96 bytes for the normal stack
+    STA VideoStackTally
 
+    LDA #$B2
+    STA VideoCost
+    LDA #$FC
+    STA VideoCost+1
 
 
     

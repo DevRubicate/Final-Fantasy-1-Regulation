@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 .include "src/lib/yxa2dec.asm"
 
-.import WaitForVBlank, MenuCondStall, MusicPlay
+.import WaitForVBlank, MenuCondStall, MusicPlay, donut_decompress_block
 .import Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set
 .import Video_MassWriteStack, VideoRepeatValue, Video_MassWrite_Value_Write
 .import Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Address_WriteAttribute, Video_WriteAttributeRepeat, Video_MassWrite, Video_SetFillColor, Video_Inc1_UploadPalette0, Video_Inc1_UploadPalette1, Video_Inc1_UploadPalette2, Video_Inc1_UploadPalette3, Video_Inc1_UploadPalette4, Video_Inc1_UploadPalette5, Video_Inc1_UploadPalette6, Video_Inc1_UploadPalette7
@@ -16,10 +16,11 @@
 .import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 .import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
+.import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
 
-
-.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable
+.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable, UploadCHR
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
+
 
 
 VideoApplySizeAndCost:
@@ -196,6 +197,7 @@ VideoPushData:
         LDA #1
         STA stringifyLength
         STA stringwriterAddressReady
+        INC stringwriterLineWidth
         RTS
     :
 
@@ -1396,12 +1398,12 @@ SetTile:
         STA drawHeight
 
         @allocateVideoBuffer:
-        ; Video_Inc1_Address_Set_Write_Set                    13 or 16
-        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 16
+        ; Video_Inc1_Address_Set_Write_Set                    17 or 20
+        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 21
         LDA drawWidth
         ASL A                       ; Add N * 2
         ; Carry is clear
-        ADC #(13 + 16)              ; Add 10 + 16 to cost
+        ADC #38                     ; Add 17 + 21 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
         LDX #13                     ; Add 13 to our video stack size
         CALL VideoApplySizeAndCost
@@ -1475,11 +1477,11 @@ SetTile:
         ADC #13
         STA VideoCursor
     DrawNineSlice_Part2:
-        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 16
+        ; Video_MassWrite_Set_Write_Address_Set_Write_Set     N * 2 + 21
         LDA drawWidth
         ASL A                       ; Add N * 2 to cost
         ; Carry is clear
-        ADC #16                     ; Add 16 to cost
+        ADC #21                     ; Add 21 to cost
         LDX #7                      ; Add 7 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1489,19 +1491,19 @@ SetTile:
             ; All of that is now lost, so it has to be done over again here.
 
             @allocateVideoBuffer:
-            ; Video_Inc32_Address_Set   10 or 13
-            ADC #(10)                   ; Cost is 10
+            ; Video_Inc1_Address_Set   13 or 16
+            ADC #13                     ; Cost is 13
             ADC VideoIncrementCost      ; Potentially add 3 to cost
-            LDX #5                      ; Add 13 to our video stack size
+            LDX #5                      ; Add 5 to our video stack size
             CALL VideoApplySizeAndCost
             BCS @allocateVideoBuffer    ; If it somehow failed again retry
 
             LDX VideoCursor
-            LDA #<(Video_Inc32_Address_Set-1)
+            LDA #<(Video_Inc1_Address_Set-1)
             CLC
             ADC VideoIncrementAddressOffset             ; If we are already in increment mode 1 then this skips over it
             STA VideoStack+0,X
-            LDA #>(Video_Inc32_Address_Set-1)
+            LDA #>(Video_Inc1_Address_Set-1)
             STA VideoStack+1,X
 
             ; Set the video increment mode to 1
@@ -1596,11 +1598,11 @@ SetTile:
         ADC #7
         STA VideoCursor
     DrawNineSlice_Part3:
-        ; Video_MassWrite_Value_Write     N * 2 + 6
+        ; Video_MassWrite_Value_Write     N * 2 + 7
         LDA drawWidth
         ASL A                       ; Add N * 2 to cost
         ; Carry is clear
-        ADC #6                      ; Add 6 to cost
+        ADC #7                      ; Add 7 to cost
         LDX #4                      ; Add 7 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1610,19 +1612,19 @@ SetTile:
             ; All of that is now lost, so it has to be done over again here.
 
             @allocateVideoBuffer:
-            ; Video_Inc32_Address_Set   10 or 13
-            ADC #(10)                   ; Cost is 10
+            ; Video_Inc1_Address_Set   13 or 16
+            ADC #13                     ; Cost is 13
             ADC VideoIncrementCost      ; Potentially add 3 to cost
-            LDX #5                      ; Add 13 to our video stack size
+            LDX #5                      ; Add 5 to our video stack size
             CALL VideoApplySizeAndCost
             BCS @allocateVideoBuffer    ; If it somehow failed again retry
 
             LDX VideoCursor
-            LDA #<(Video_Inc32_Address_Set-1)
+            LDA #<(Video_Inc1_Address_Set-1)
             CLC
             ADC VideoIncrementAddressOffset             ; If we are already in increment mode 1 then this skips over it
             STA VideoStack+0,X
-            LDA #>(Video_Inc32_Address_Set-1)
+            LDA #>(Video_Inc1_Address_Set-1)
             STA VideoStack+1,X
 
             ; Set the video increment mode to 1
@@ -1676,12 +1678,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     DrawRectangle:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address_Set      10 or 13 (inc1)
-        ; Video_MassWrite_Address_Set N * 2 + 10
+        ; Video_Inc1_Address_Set      13 or 16 (inc1)
+        ; Video_MassWrite_Address_Set N * 2 + 13
         LDA drawWidth
         ASL A                       ; Add N * 2
         ; Carry is clear
-        ADC #(10 + 10)              ; Add 10 + 10 to cost
+        ADC #26                     ; Add 13 + 13 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
         LDX #10                     ; Add 10 to our video stack size
         CALL VideoApplySizeAndCost
@@ -1754,11 +1756,11 @@ SetTile:
             RTS
         :
     DrawRectangle_Part2:
-        ; Video_MassWrite_Address_Set N * 2 + 10
+        ; Video_MassWrite_Address_Set N * 2 + 13
         LDA drawWidth
         ASL A                       ; Add N * 2
         ; Carry is clear
-        ADC #(10+3)                 ; Add 10 + 3 to cost
+        ADC #13                     ; Add 13 to cost
         LDX #5                      ; Add 5 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1815,7 +1817,7 @@ SetTile:
         LDA drawWidth
         ASL A                       ; Add N * 2
         ; Carry is clear
-        ADC #(3)                    ; Add 3 to cost
+        ADC #3                      ; Add 3 to cost
         LDX #2                      ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1843,7 +1845,7 @@ SetTile:
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; ColorRectangle
+; ColorRectangle_incomplete
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ColorRectangle:
 
@@ -1923,12 +1925,14 @@ SetTile:
 ; FillNametable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     FillNametable:
-        ; Video_Inc1_ClearNametable0to119      250 or 253 (inc1)
-        LDA #250                    ; Cost is 250
-        CLC
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Inc1_Set_FillNametable0to119      251 or 254 (inc1)
+            LDA #251                    ; Cost is 251
+            CLC
+            ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Inc1_Set_FillNametable0to119-1)
@@ -1954,10 +1958,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable120to239      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable120to239      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable120to239-1)
@@ -1975,10 +1981,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable240to359      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable240to359      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable240to359-1)
@@ -1996,10 +2004,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable360to479      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable360to479      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable360to479-1)
@@ -2017,10 +2027,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable480to599      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable480to599      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable480to599-1)
@@ -2038,10 +2050,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable600to719      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable600to719      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable600to719-1)
@@ -2059,10 +2073,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable720to839      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable720to839      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable720to839-1)
@@ -2080,10 +2096,12 @@ SetTile:
         ADC #3
         STA VideoCursor
 
-        ; Video_Set_FillNametable840to959      250
-        LDA #250                    ; Cost is 250
-        LDX #3                      ; Add 3 to our video stack size
-        CALL VideoApplySizeAndCost
+        :
+            ; Video_Set_FillNametable840to959      251
+            LDA #251                    ; Cost is 251
+            LDX #3                      ; Add 3 to our video stack size
+            CALL VideoApplySizeAndCost
+        BCS :-
 
         LDX VideoCursor
         LDA #<(Video_Set_FillNametable840to959-1)
@@ -2107,8 +2125,8 @@ SetTile:
 ; FillAttributeTable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     FillAttributeTable:
-        ; Video_Inc1_Set_FillAttributeTable      138 or 141 (inc1)
-        LDA #138                    ; Cost is 138
+        ; Video_Inc1_Set_FillAttributeTable      139 or 142 (inc1)
+        LDA #139                    ; Cost is 139
         CLC
         ADC VideoIncrementCost      ; Potentially add 3 to cost
         LDX #3                      ; Add 3 to our video stack size
@@ -2422,37 +2440,66 @@ UploadFillColor:
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Convert Coords to NT Addr   [$DCAB :: 0x3DCBB]
-;;
-;;   Converts a X,Y coord pair to a Nametable address
-;;
-;;   Y remains unchanged
-;;
-;;   IN:    dest_x
-;;          dest_y
-;;
-;;   OUT:   ppu_dest, ppu_dest+1
-;;
+; UploadCHR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadCHR:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(64) * 4
+        LDA #75                     ; Add 11 + 64 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDX #68                     ; Add 68 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-CoordToNTAddr:
-    LDY drawY                ; put the Y coord (row) in Y.  We'll use it to index the NT lut
-    LDA drawX                ; put Y coord (col) in A
-    AND #$1F                  ; wrap Y coord
-    ORA lut_NTRowStartLo, Y   ; OR Y coord with low byte of row start
-    STA ppu_dest              ;  this is the low byte of the addres -- record it
-    LDA lut_NTRowStartHi, Y   ; fetch high byte based on row
-    STA ppu_dest+1            ;  and record it
-    RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  [$DCF4 :: 0x3DD04]
-;;
-;;  These LUTs are used by routines to find the NT address of the start of each row
-;;    Really, they just shortcut a multiplication by $20 ($20 tiles per row)
-;;
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+5,X
+
+        TXA
+        CLC
+        ADC #6
+        TAX             ; set X for donut_decompress_block
+        CLC
+        ADC #64
+        STA VideoCursor
+
+        LDY #0
+        FARCALL donut_decompress_block
+        RTS
 
 lut_NTRowStartLo:
   .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
@@ -2465,201 +2512,6 @@ lut_NTRowStartHi:
   .byte $21,$21,$21,$21,$21,$21,$21,$21
   .byte $22,$22,$22,$22,$22,$22,$22,$22
   .byte $23,$23,$23,$23,$23,$23,$23,$23
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;   Draw Box  [$E063 :: 0x3E073]
-;;
-;;    Draws a box of given size, to given coords.  NT changes only, no attribute changes
-;;   The box CANNOT cross an NT boundary (ie:  this routine isn't used for the dialog box
-;;   which often does cross NT boundaries)
-;;
-;;   Y remains unchanged
-;;
-;;   IN:   menustall = Nonzero if the box is to be drawn 1 row per frame (stall between rows)
-;;                      or zero if box is to be drawn immediately with no stalling
-;;         box_x,y   = Desired Coords of box
-;;         box_wd,ht = Desired width/height of box (must be at least 3x3 tiles)
-;;         cur_bank  = Bank number to swap to (only used if stalling between rows)
-;;
-;;   OUT:  dest_x,y  = X,Y coords of inner box body (ie:  where you start drawing text or whatever)
-;;
-;;   TMP:  tmp+10 and tmp+11 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PlotBox:
-    CALL CoordToNTAddr ; convert those coords to an NT address (placed in ppu_dest)
-    LDA box_wd        ; Get width of box
-    SEC
-    SBC #$02          ; subtract 2 to get width of "innards" (minus left and right borders)
-    STA tmp+10        ;  put this new width in temp ram
-    LDA box_ht        ; Do same with box height
-    SEC
-    SBC #$02
-    STA tmp+11        ;  put new height in temp ram
-
-    CALL WaitForVBlank   ; wait for VBlank
-    CALL PlotBoxRow_Top    ; Draw the top row of the box
-    @Loop:                    ; Loop to draw all inner rows
-      CALL PlotBoxRow_Mid  ;   draw inner row
-      DEC tmp+11          ;   decrement our adjusted height
-      BNE @Loop           ;   loop until expires
-    CALL PlotBoxRow_Bot    ; Draw bottom row
-
-    LDA soft2000          ; reset some PPU info
-    STA PPUCTRL
-    LDA #0
-    STA PPUSCROLL             ; and scroll information
-    STA PPUSCROLL
-
-
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw middle row of a box (used by PlotBox)   [$E0A5 :: 0x3E0B5]
-;;
-;;   IN:  tmp+10   = width of innards (overall box width - 2)
-;;        ppu_dest = the PPU address of the start of this row
-;;
-;;   OUT: ppu_dest = set to the PPU address of the start of the NEXT row
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PlotBoxRow_Mid:
-    FARCALL MenuCondStall  ; do the conditional stall
-    LDA PPUSTATUS          ; reset PPU toggle
-    LDA ppu_dest+1
-    STA PPUADDR          ; Load up desired PPU address
-    LDA ppu_dest
-    STA PPUADDR
-    LDX tmp+10         ; Load adjusted width into X (for loop counter)
-    LDA #$FA           ; FA = L border tile
-    STA PPUDATA          ;   draw left border
-
-    LDA #$FF           ; FF = inner box body tile
-    @Loop:
-      STA PPUDATA        ;  draw box body tile
-      DEX              ;    until X expires
-      BNE @Loop
-
-    LDA #$FB           ; FB = R border tile
-    STA PPUDATA          ;  draw right border
-
-    LDA ppu_dest       ; Add #$20 to PPU address so that it points to the next row
-    CLC
-    ADC #$20
-    STA ppu_dest
-    LDA ppu_dest+1
-    ADC #0             ; Add 0 to catch carry
-    STA ppu_dest+1
-
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw bottom row of a box (used by PlotBox)   [$E0D7 :: 0x3E0E7]
-;;
-;;   IN:  tmp+10   = width of innards (overall box width - 2)
-;;        ppu_dest = the PPU address of the start of this row
-;;
-;;   ppu_dest is not adjusted for output like it is for other box row drawing routines
-;;   since this is the bottom row, no rows will have to be drawn after this one, so it'd
-;;   be pointless
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PlotBoxRow_Bot:
-    FARCALL MenuCondStall   ; Do the conditional stall
-    LDA PPUSTATUS           ; Reset PPU Toggle
-    LDA ppu_dest+1      ;  and load up PPU Address
-    STA PPUADDR
-    LDA ppu_dest
-    STA PPUADDR
-
-    LDX tmp+10          ; put adjusted width in X (for loop counter)
-    LDA #$FC            ;  FC = DL border tile
-    STA PPUDATA
-
-    LDA #$FD            ;  FD = bottom border tile
-    @Loop:
-      STA PPUDATA         ;  Draw it
-      DEX               ;   until X expires
-      BNE @Loop
-
-    LDA #$FE            ;  FE = DR border tile
-    STA PPUDATA
-
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw top row of a box (used by PlotBox)   [$E0FC :: 0x3E10C]
-;;
-;;   IN:  tmp+10   = width of innards (overall box width - 2)
-;;        ppu_dest = the PPU address of the start of this row
-;;
-;;   OUT: ppu_dest = set to the PPU address of the start of the NEXT row
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PlotBoxRow_Top:
-    FARCALL MenuCondStall   ; Do the conditional stall
-    LDA PPUSTATUS           ; reset PPU toggle
-    LDA ppu_dest+1
-    STA PPUADDR           ; set PPU Address appropriately
-    LDA ppu_dest
-    STA PPUADDR
-
-    LDX tmp+10          ; load the adjusted width into X (our loop counter)
-    LDA #$F7            ; F7 = UL border tile
-    STA PPUDATA           ;   draw UL border
-
-    LDA #$F8            ; F8 = U border tile
-    @Loop:
-      STA PPUDATA         ;   draw U border
-      DEX               ;     until X expires
-      BNE @Loop
-
-    LDA #$F9            ; F9 = UR border tile
-    STA PPUDATA           ;   draw it
-
-    LDA ppu_dest        ; Add #$20 to our input PPU address so that it
-    CLC                 ;  points to the next row
-    ADC #$20
-    STA ppu_dest
-    LDA ppu_dest+1
-    ADC #0              ; Add 0 to catch the carry
-    STA ppu_dest+1
-
-    RTS
-
-
-
-SetAttribute:
-    LDA Var25                       ; load the x position
-    ROR A                           ; rotate the 1th bit into the carry
-    LDA Var26                       ; load the y position
-    ROL A                           ; rotate back the bit from the carry
-    ASL A                           ; shift all bits left
-    ASL A                           ; shift all bits left
-    ORA Var24                       ; OR with the actual 2 bit attribute
-    AND #%00001111                  ; mask out the unrelevant bits
-    TAX                             ; transfer A to X
-    LDY Var26
-    LDA Var25
-    LSR A
-    CLC
-    ADC LUT_AttributeYPosition,Y
-    TAY
-    LDA attributeTable,Y
-    AND LUT_AttributeMask,X
-    ORA LUT_AttributeMagic,X
-    STA attributeTable,Y
-    RTS
-
-
 
 LUT_AttributeMagic:
     .byte %00000000
@@ -2696,7 +2548,6 @@ LUT_AttributeMask:
     .byte %00111111
     .byte %00111111
     .byte %00111111
-
 
 LUT_AttributeYPosition:
     .repeat 32, i
