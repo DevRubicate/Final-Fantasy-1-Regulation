@@ -27,9 +27,10 @@ VideoApplySizeAndCost:
     CLC
     ADC VideoCost
     STA VideoCost
+    TYA                 ; High byte cost
+    ADC VideoCost+1     ; Add potentially with carry
+    STA VideoCost+1
     BCC :+
-        INC VideoCost+1
-        BNE :+
         CALL WaitForVBlank
         SEC                 ; Set carry flag to indicate a vblank happened
         RTS
@@ -49,10 +50,9 @@ VideoTestSizeAndCost:
     CLC
     ADC VideoCost
     BCC :+
-        LDA VideoCost+1
-        ; carry is clear
-        ADC #1
-        BNE :+
+        TYA
+        ADC VideoCost+1     ; Add with carry
+        BCC :+
         SEC                 ; Set carry flag to indicate a vblank happened
         RTS
     :
@@ -123,11 +123,10 @@ Stringify:
 
 
 VideoPushData:
+    STY stringifyCursor
     PHA
     LDA stringwriterAddressReady
     BNE :+
-        STY stringifyCursor
-
         ; We will now allocate into the video buffer to push this data to the PPU. However this is tricky
         ; because we don't actually know how much data we will be pushing just yet. The text could be done
         ; three characters into the future, or five, or ten. One solution to this would have been to write
@@ -152,6 +151,7 @@ VideoPushData:
 
         LDA #12                     ; Add 9+3 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #5                      ; Add 5 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -201,7 +201,6 @@ VideoPushData:
         RTS
     :
 
-
     ; If we are here, it means there is already a Video_Inc1_Address command on the video stack, two
     ; bytes empty for a later Video_MassWriteStack, and least one byte of character data. We have 
     ; another byte of character data we wish to append, but before we can do that we have to make sure
@@ -214,9 +213,11 @@ VideoPushData:
     ; byte                      1
 
     LDA #3                      ; 3 vblank cost
+    LDY #0                      ; Cost high-byte is 0
     LDX #1                      ; 1 buffer size
     CALL VideoTestSizeAndCost
     BCC :+
+        LDY stringifyCursor
         ; Ouch, there wasn't room for even one more character. Time to flush to free up space.
         CALL StringifyFlush
         ; This means we have to start over with our attempt to push data
@@ -224,9 +225,11 @@ VideoPushData:
         JUMP VideoPushData
     :
     ; Actually allocate this time
-    LDA #3                      ; 3 vblank cost
+    LDA #3                      ; Cost is 3 
+    LDY #0                      ; Cost high-byte is 0
     LDX #1                      ; 1 buffer size
     CALL VideoApplySizeAndCost
+    ; We don't check the carry flag here because we know it cannot fail
 
     ; Put the byte on the queue
     LDX VideoCursor
@@ -237,6 +240,7 @@ VideoPushData:
 
     INC stringifyLength
     INC stringwriterLineWidth
+    LDY stringifyCursor
     RTS
 
 StringifyFlush:
@@ -247,7 +251,7 @@ StringifyFlush:
 
     LDA stringifyLength
     BNE :+
-        DEBUG
+        ERROR
     :
 
     LDX VideoRetroactiveCursor
@@ -1405,6 +1409,7 @@ SetTile:
         ; Carry is clear
         ADC #38                     ; Add 17 + 21 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #13                     ; Add 13 to our video stack size
         CALL VideoApplySizeAndCost
         ; If the carry is set it means there was too much vblank work so we had wait a frame to flush the
@@ -1482,6 +1487,7 @@ SetTile:
         ASL A                       ; Add N * 2 to cost
         ; Carry is clear
         ADC #21                     ; Add 21 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #7                      ; Add 7 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1494,6 +1500,7 @@ SetTile:
             ; Video_Inc1_Address_Set   13 or 16
             ADC #13                     ; Cost is 13
             ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDY #0                      ; Cost high-byte is 0
             LDX #5                      ; Add 5 to our video stack size
             CALL VideoApplySizeAndCost
             BCS @allocateVideoBuffer    ; If it somehow failed again retry
@@ -1603,6 +1610,7 @@ SetTile:
         ASL A                       ; Add N * 2 to cost
         ; Carry is clear
         ADC #7                      ; Add 7 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #4                      ; Add 7 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1615,6 +1623,7 @@ SetTile:
             ; Video_Inc1_Address_Set   13 or 16
             ADC #13                     ; Cost is 13
             ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDY #0                      ; Cost high-byte is 0
             LDX #5                      ; Add 5 to our video stack size
             CALL VideoApplySizeAndCost
             BCS @allocateVideoBuffer    ; If it somehow failed again retry
@@ -1685,6 +1694,7 @@ SetTile:
         ; Carry is clear
         ADC #26                     ; Add 13 + 13 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #10                     ; Add 10 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -1761,6 +1771,7 @@ SetTile:
         ASL A                       ; Add N * 2
         ; Carry is clear
         ADC #13                     ; Add 13 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #5                      ; Add 5 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1818,6 +1829,7 @@ SetTile:
         ASL A                       ; Add N * 2
         ; Carry is clear
         ADC #3                      ; Add 3 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #2                      ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCC :+
@@ -1930,6 +1942,7 @@ SetTile:
             LDA #251                    ; Cost is 251
             CLC
             ADC VideoIncrementCost      ; Potentially add 3 to cost
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -1961,6 +1974,7 @@ SetTile:
         :
             ; Video_Set_FillNametable120to239      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -1984,6 +1998,7 @@ SetTile:
         :
             ; Video_Set_FillNametable240to359      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2007,6 +2022,7 @@ SetTile:
         :
             ; Video_Set_FillNametable360to479      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2030,6 +2046,7 @@ SetTile:
         :
             ; Video_Set_FillNametable480to599      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2053,6 +2070,7 @@ SetTile:
         :
             ; Video_Set_FillNametable600to719      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2076,6 +2094,7 @@ SetTile:
         :
             ; Video_Set_FillNametable720to839      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2099,6 +2118,7 @@ SetTile:
         :
             ; Video_Set_FillNametable840to959      251
             LDA #251                    ; Cost is 251
+            LDY #0                      ; Cost high-byte is 0
             LDX #3                      ; Add 3 to our video stack size
             CALL VideoApplySizeAndCost
         BCS :-
@@ -2125,12 +2145,17 @@ SetTile:
 ; FillAttributeTable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     FillAttributeTable:
-        ; Video_Inc1_Set_FillAttributeTable      139 or 142 (inc1)
+
+        @allocateVideoBuffer:
+        ; Video_Inc1_Set_FillAttributeTable      139 or 142(inc1)
         LDA #139                    ; Cost is 139
         CLC
         ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Cost high-byte is 0
         LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
 
         LDX VideoCursor
         LDA #<(Video_Inc1_Set_FillAttributeTable-1)
@@ -2183,6 +2208,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2216,6 +2242,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2249,6 +2276,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2282,6 +2310,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2315,6 +2344,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2348,6 +2378,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2381,6 +2412,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2414,6 +2446,7 @@ UploadFillColor:
         ; Video_Inc1_UploadPalette0     21 or 24 (inc1)
         LDA #21                         ; Cost is 21
         ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Cost high-byte is 0
         LDX #2                          ; Add 2 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
@@ -2445,9 +2478,10 @@ UploadFillColor:
     UploadCHR:
         @allocateVideoBuffer:
         ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(64) * 4
-        LDA #75                     ; Add 11 + 64 to cost
+        ; Video_MassWriteStack      N(64) * 4 = 256
+        LDA #11                     ; Add 11 to cost
         ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #1                      ; Add 256 to cost
         LDX #68                     ; Add 68 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer

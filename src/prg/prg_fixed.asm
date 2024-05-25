@@ -1178,13 +1178,10 @@ OnNMI:
     LDA #(256 - 96) ; Save 96 bytes for the normal stack
     STA VideoStackTally
 
-    LDA #$B2
+    LDA #(256 - (<(1690/2)))
     STA VideoCost
-    LDA #$FC
+    LDA #(255 - (>(1690/2)))
     STA VideoCost+1
-
-
-    
 
     ;FARCALL ClearSprites
 
