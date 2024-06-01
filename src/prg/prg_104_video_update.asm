@@ -13,14 +13,14 @@
 .res $81
 
 Video_Terminate:
-    ;LDA #>(Video_Terminate-1)
-    ;.REPEAT 129, i
-    ;    STA VideoStack + i
-    ;.ENDREPEAT
     LDA #0
     STA VideoCursor
     LDX StackPointerBackup
     TXS
+
+    ; Reset VideoIncrementAddressOffset to start as Inc1 mode
+    LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
+    STA VideoIncrementAddressOffset
 
     ; We have to restore the scroll as this is messed up by our writing to the PPU
     LDA scrollX
@@ -31,10 +31,13 @@ Video_Terminate:
 
 
 ; Vblank time is 20 lines or 2273 cycles. I mentally subtract 73 cycles when quoting how much time is available for transfers. The first 13 of those 73 cycles are up to 6 cycles for the previous instruction to finish and the 7 cycles of the interrupt sequence. (The other 60 are an estimate for setup and teardown of the transfer routine.) 
-; We have 2273 cycle of safe time, 50 spent before here, 20 spent here, so that leave 2203 cycle
-; left. But we need 513 for OAM DAMA, so 1690.
+; We have 2273 cycle of safe time, 50 spent before here, 26 spent here, so that leave 2197 cycle
+; left. But we need 513 for OAM DAMA, so 1684.
 Video_Start:
-    LDA PPU_STATUS            ; 4 cycle
+    ; Always start in Inc1 mode
+    LDA #%10000000          ; 2 cycle
+    STA PPU_CTRL            ; 4 cycle
+
     TSX                     ; 2 cycle
     STX StackPointerBackup  ; 4 cycle
     LDX #$FF                ; 2 cycle

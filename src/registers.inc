@@ -2,7 +2,7 @@
 ; PPU I/O regs (CPU side)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;   PPU_CTL1:
+;   PPU_CTRL:
 ;   0-1: Name table address, changes between the four name tables at $2000 (0), $2400 (1), $2800 (2) and $2C00 (3).
 ;   2: Clear, PPU incs by 1 ("horizontal"); Set, PPU incs by 32 ("vertical")
 ;   3: Which pattern table holds for sprites; 0 for PT1 ($0000) or 1 for PT2 ($1000)
@@ -11,7 +11,7 @@
 ;   7: Set to generate VBlank NMIs
 PPU_CTRL            := $2000     ; Write only
 
-;   PPU_CTL2:
+;   PPU_MASK:
 ;   0: Clear for color, set for mono
 ;   1: Clear to clip 8 left pixels of BG
 ;   2: Clear to clip 8 left pixels of sprites
@@ -20,7 +20,7 @@ PPU_CTRL            := $2000     ; Write only
 ;   5-7: BG color in mono mode, "color intensity" in color mode (??)
 PPU_MASK            := $2001     ; Write only
 
-;   PPU_STAT:
+;   PPU_STATUS:
 ;   4: if set, can write to VRAM, else writes ignored
 ;   5: if set, sprite overflow occurred on scanline
 ;   6: Set if any non-transparent pixel of sprite 0 is overlapping a non-transparent pixel of BG

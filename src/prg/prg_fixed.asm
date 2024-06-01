@@ -1180,12 +1180,10 @@ OnNMI:
     LDA #(256 - 96) ; Save 96 bytes for the normal stack
     STA VideoStackTally
 
-    LDA #(256 - (<(1690/2)))
+    LDA #(256 - (<(1684/2)))
     STA VideoCost
-    LDA #(255 - (>(1690/2)))
+    LDA #(255 - (>(1684/2)))
     STA VideoCost+1
-
-    ;FARCALL ClearSprites
 
     INC generalCounter
     LDA PPU_STATUS      ; clear VBlank flag and reset 2005/2006 toggle
