@@ -75,14 +75,14 @@ OverworldMovement:
 
 SetOWScroll_PPUOn:
     LDA #$1E
-    STA PPUMASK           ; turn the PPU on!
+    STA PPU_MASK           ; turn the PPU on!
 
 SetOWScroll:
     LDA NTsoft2000      ; get the NT scroll bits
     STA soft2000        ; and record them in both soft2000
-    STA PPUCTRL           ; and the actual PPUCTRL
+    STA PPU_CTRL           ; and the actual PPU_CTRL
 
-    LDA PPUSTATUS           ; reset PPU toggle
+    LDA PPU_STATUS           ; reset PPU toggle
 
     LDA ow_scroll_x     ; get the overworld scroll position (use this as a scroll_x,
     ASL A               ;    since there is no scroll_x)
@@ -90,7 +90,7 @@ SetOWScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels wide)
     ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA PPUSCROLL           ; write this as our X scroll
+    STA PPU_SCROLL           ; write this as our X scroll
 
     LDA scroll_y        ; get scroll_y
     ASL A
@@ -98,7 +98,7 @@ SetOWScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels tall)
     ORA move_ctr_y      ; OR with move counter
-    STA PPUSCROLL           ; and set as Y scroll
+    STA PPU_SCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
 
@@ -348,7 +348,7 @@ OWMove_Right:
     ADC #$01
     STA ow_scroll_x
 
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPUCTRL)
+    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPU_CTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -379,7 +379,7 @@ OWMove_Left:
     SBC #$01
     STA ow_scroll_x
 
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPUCTRL)
+    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPU_CTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -1768,11 +1768,11 @@ AirshipTransitionFrame:
 
 StandardMapMovement:
     LDA #$1E
-    STA PPUMASK             ; turn the PPU on
+    STA PPU_MASK             ; turn the PPU on
 
     FARCALL RedrawDoor        ; redraw an opening/closing door if necessary
 
-    LDA PPUSTATUS             ; reset PPU toggle (seems unnecessary, here)
+    LDA PPU_STATUS             ; reset PPU toggle (seems unnecessary, here)
 
     LDA move_speed        ; see if the player is moving
     BNE @noSetScroll       ; if not, just skip ahead and set the scroll
@@ -1817,7 +1817,7 @@ MapTileDamage:
     LDA framecounter      ; get the frame counter
     AND #$01              ; isolate low bit and use as a quick monochrome toggle
     ORA #$1E              ; OR with typical PPU flags
-    STA PPUMASK             ; and write to PPU reg.  This results in a rapid toggle between
+    STA PPU_MASK             ; and write to PPU reg.  This results in a rapid toggle between
                           ;  normal/monochrome mode (toggles every frame).  This produces the flashy effect
 
     LDA #$0F              ; set noise to slowest decay rate (starts full volume, decays slowly)
@@ -2264,7 +2264,7 @@ SMMove_Door:
     LDA tmp+4            ; get the X coord of the tile the player is moving to
     AND #$1F             ; mask out the low bits (column to draw on the nametables)
     CMP #$10             ; see if the high bit is set.  If it is, we're drawing to the NT at $2400
-    BCS @NT2400          ;  otherwise we draw to the NT at PPUCTRL
+    BCS @NT2400          ;  otherwise we draw to the NT at PPU_CTRL
 
   @NT2000:
     ASL A                      ; double the column to get the PPU dest X coord (2 ppu tiles per map tile)
@@ -2280,7 +2280,7 @@ SMMove_Door:
     ORA lut_2xNTRowStartLo, X
     STA doorppuaddr
     LDA lut_2xNTRowStartHi, X
-    ORA #$04                   ; and OR the high byte of the address with $04 ($2400 -- instead of PPUCTRL)
+    ORA #$04                   ; and OR the high byte of the address with $04 ($2400 -- instead of PPU_CTRL)
     STA doorppuaddr+1
 
 
@@ -3248,7 +3248,7 @@ SMMove_Right:
     AND #$3F               ; and wrap at 64 tiles
     STA sm_scroll_x
 
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPUCTRL)
+    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPU_CTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
@@ -3280,7 +3280,7 @@ SMMove_Left:
     AND #$3F               ; and wrap at 64 tiles
     STA sm_scroll_x
 
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPUCTRL)
+    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPU_CTRL)
     LSR NTsoft2000         ; shift out and discard old NTX scroll bit
     CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
     ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)

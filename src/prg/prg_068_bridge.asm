@@ -217,7 +217,7 @@ BridgeNT:
 
 LoadBridgeSceneGFX:
     LDA #0
-    STA PPUMASK                ; turn off PPU
+    STA PPU_MASK                ; turn off PPU
     STA PAPU_EN                ; and APU
 
     LDA #<BridgeCHR     ; load a pointer to the bridge scene graphics (CHR first)
@@ -225,14 +225,14 @@ LoadBridgeSceneGFX:
     LDA #>BridgeCHR
     STA tmp+1
     LDX #$08                 ; load 8 rows of tiles ($800 bytes)
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$00
-    STA PPUADDR   ; write high byte of dest address
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop0:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to CHR-RAM
+    STA PPU_DATA         ; and write it to CHR-RAM
     INY               ; inc our source index
     BNE @loop0  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -245,15 +245,15 @@ LoadBridgeSceneGFX:
     STA tmp+1
     LDX #$04                 ; load 4 rows of tiles ($400 bytes)
     LDA #$00                 ; destination address = ppu $0000
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$20
-    STA PPUADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write high byte of dest address
     LDA #$00
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop1:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to NT
+    STA PPU_DATA         ; and write it to NT
     INY               ; inc our source index
     BNE @loop1  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -267,15 +267,15 @@ LoadBridgeSceneGFX:
     STA tmp+1
     LDX #$04                 ; load 4 rows of tiles ($400 bytes)
     LDA #$00                 ; destination address = ppu $0000
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$24
-    STA PPUADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write high byte of dest address
     LDA #$00
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop2:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to NT
+    STA PPU_DATA         ; and write it to NT
     INY               ; inc our source index
     BNE @loop2  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer

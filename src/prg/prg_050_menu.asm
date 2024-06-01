@@ -82,11 +82,11 @@ LoadNewGameCHRPal:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadBatSprCHRPalettes_NewGame:
-    LDA PPUSTATUS      ; Reset PPU Addr Toggle
+    LDA PPU_STATUS      ; Reset PPU Addr Toggle
     LDA #$10
-    STA PPUADDR      ;  set dest PPU Addr to $1000
+    STA PPU_ADDR      ;  set dest PPU Addr to $1000
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDA #<LUT_BatSprCHR
     STA tmp
@@ -126,11 +126,11 @@ LoadBatSprCHRPalettes_NewGame:
 LoadBatSprCHRPalettes:
     ;LDA #BANK_BTLCHR
     ;CALL SwapPRG  ; swap to bank 9
-    LDA PPUSTATUS      ; reset ppu addr toggle
+    LDA PPU_STATUS      ; reset ppu addr toggle
     LDA #$10
-    STA PPUADDR      ; set dest ppu addr to $1000
+    STA PPU_ADDR      ; set dest ppu addr to $1000
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDA ch_class      ; get character 1's class
     CALL @LoadClass    ;  load it
@@ -178,10 +178,10 @@ MenuCondStall:
     BEQ @Exit              ; if zero, we're not to stall, so just exit
 
       LDA soft2000         ;  we're stalling... so reset the scroll
-      STA PPUCTRL
+      STA PPU_CTRL
       LDA #0
-      STA PPUSCROLL            ;  scroll inside menus is always 0
-      STA PPUSCROLL
+      STA PPU_SCROLL            ;  scroll inside menus is always 0
+      STA PPU_SCROLL
 
       FARCALL MusicPlay    ;  Keep the music playing
       CALL WaitForVBlank  ; then wait a frame

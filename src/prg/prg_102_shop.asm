@@ -649,7 +649,7 @@ LUTShopInventoryBank:
 
 EnterShopMenu:
 	LDA #$1E
-	STA PPUMASK                ; enable BG and sprite rendering
+	STA PPU_MASK                ; enable BG and sprite rendering
 
 	FARCALL RestoreNineSliceBordersToDefault
 	FARCALL UploadFont

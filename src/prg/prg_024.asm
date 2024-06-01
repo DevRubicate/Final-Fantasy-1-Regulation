@@ -1089,10 +1089,10 @@ SetAllNaturalPose:
 
 BattleUpdatePPU:
     LDA btl_soft2001
-    STA PPUMASK               ; copy over soft2001
+    STA PPU_MASK               ; copy over soft2001
     LDA #$00
-    STA PPUSCROLL               ; reset scroll
-    STA PPUSCROLL
+    STA PPU_SCROLL               ; reset scroll
+    STA PPU_SCROLL
     RTS
     
     
@@ -1107,7 +1107,7 @@ BattleUpdatePPU:
 
 BattleFrame:
     FARCALL BattleWaitForVBlank   ; Wait for VBlank 
-    LDA PPUSTATUS
+    LDA PPU_STATUS
     JUMP BattleUpdateAudio       ; Update audio
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4899,7 +4899,7 @@ DrawCharacterStatus:
     STA btl_tmpvar2                     ; put the target PPU address at temporary_3,temporary_4
     
     CALL WaitForVBlank         ; since we're about to do some drawing, wait for VBlank
-    LDA PPUSTATUS                   ; clear toggle
+    LDA PPU_STATUS                   ; clear toggle
     
             ; remember at this point, btl_stringoutputbuf contains our "<name><ailment>" string
     LDY #$00                    ; draw top row of char's name (all blank spaces)
@@ -4967,14 +4967,14 @@ DrawCharacterStatus:
 
 DrawStatusRow:
     LDA btl_tmpvar2         ; set PPU addr
-    STA PPUADDR
+    STA PPU_ADDR
     LDA temporary_3
-    STA PPUADDR
+    STA PPU_ADDR
     
     LDX #$04        ; draw 4 tiles from the btl_stringoutputbuf
   @Loop:
       LDA btl_stringoutputbuf, Y    ; (using Y to index)
-      STA PPUDATA
+      STA PPU_DATA
       INY                           ; draw every other source character (rows are interleaved)
       INY
       DEX
@@ -5070,24 +5070,24 @@ DoFrame_UpdatePalette:
     FARCALL BattleWaitForVBlank       ; wait for VBlank
     
     LDA #$3F            ; set PPU addr to point to palettes
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
     
     LDY #$00                ; draw the usepalette to the PPU
   @Loop:
       LDA btl_usepalette, Y
-      STA PPUDATA
+      STA PPU_DATA
       INY
       CPY #$20
       BNE @Loop
       
     LDA #$3F                ; reset PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
-    STA PPUADDR
-    STA PPUADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
     
     CALL BattleUpdatePPU     ; reset scroll & apply soft2001
     JUMP BattleUpdateAudio   ; update audio and exit
@@ -5123,11 +5123,11 @@ BattleFadeIn:
     CALL BattleClearOAM          ; Clear OAM
     LDA #$00
     STA a:soft2000              ; clear other PPU settings
-    STA PPUMASK                   ; including disabling rendering, though since btl_soft2001 has
+    STA PPU_MASK                   ; including disabling rendering, though since btl_soft2001 has
                                 ;   rendering enabled, rendering will be re-enabled when palettes are updated
     
     CALL WaitForVBlank         ; wait for VBlank
-    LDA PPUSTATUS
+    LDA PPU_STATUS
     LDA #$04
     STA tmp_68b4                   ; loop downcounter.  Looping 4 times -- once for each shade
     CALL BattleUpdateAudio       ; since we just did a frame, keep audio updated
@@ -9131,9 +9131,9 @@ DrawEnemyEffect:
   @EraseLoop:
       CALL WaitForVBlank           ; Vblank
       LDA tmp_6d16                     ; Set PPU Addr
-      STA PPUADDR
+      STA PPU_ADDR
       LDA tmp_6d15
-      STA PPUADDR
+      STA PPU_ADDR
       
       LDA #$00
       CALL WriteAToPPU6Times         ; clear 12 tiles in this row
@@ -9168,9 +9168,9 @@ VBlank_SetPPUAddr:
     PHA                         ; backup A
     CALL WaitForVBlank         ; VBlank
     LDA btltmp+$B               ; set ppu addr
-    STA PPUADDR
+    STA PPU_ADDR
     LDA btltmp+$A
-    STA PPUADDR
+    STA PPU_ADDR
     PLA                         ; restore A
     RTS
     
@@ -9285,8 +9285,8 @@ WriteAToPPU4Times:
     CALL WriteAToPPU2Times
     
 WriteAToPPU2Times:
-    STA PPUDATA
-    STA PPUDATA
+    STA PPU_DATA
+    STA PPU_DATA
     RTS
     
 

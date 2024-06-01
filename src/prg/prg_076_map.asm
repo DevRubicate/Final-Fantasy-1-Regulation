@@ -104,8 +104,8 @@ BattleTransition:
                      ; this will switch to a new emphasis mode every 4 frames
                      ; and will cycle through all 8 emphasis modes a total of 4 times
 
-    ORA #$0A         ; OR emphasis bits with other info for PPUMASK (enable BG rendering, disable sprites)
-    STA PPUMASK        ; write set emphasis
+    ORA #$0A         ; OR emphasis bits with other info for PPU_MASK (enable BG rendering, disable sprites)
+    STA PPU_MASK        ; write set emphasis
 
     LDA #$0F         ; enable volume decay for the noise channel
     STA PAPU_NCTL1        ;   and set it to decay at slowest speed -- but since the decay gets restarted every
@@ -126,7 +126,7 @@ BattleTransition:
     BCC @Loop        ; and keep looping until it reaches $41
 
     LDA #$00         ; at which point
-    STA PPUMASK        ; turn off the PPU
+    STA PPU_MASK        ; turn off the PPU
     STA PAPU_EN        ;  and APU
 
     FARJUMP WaitVBlank_NoSprites   ; then wait for another VBlank before exiting
@@ -349,24 +349,24 @@ DrawMapAttributes:
     :
     STX tmp+1       ; dump X to tmp+1.  This is our upper-bound
     LDX #$00        ; clear X (source index)
-    LDA PPUSTATUS       ; reset PPU toggle
+    LDA PPU_STATUS       ; reset PPU toggle
 
     @Loop:
     LDA draw_buf_at_hi, X  ; set our PPU addr to desired value
-    STA PPUADDR
+    STA PPU_ADDR
     LDA draw_buf_at_lo, X
-    STA PPUADDR
-    LDA PPUDATA              ; dummy PPU read to fill read buffer
-    LDA PPUDATA              ; read the attribute byte at the desired address
+    STA PPU_ADDR
+    LDA PPU_DATA              ; dummy PPU read to fill read buffer
+    LDA PPU_DATA              ; read the attribute byte at the desired address
     STA tmp                ; back it up in temp ram
     EOR draw_buf_attr, X   ; EOR with attribute byte to make attribute bits inversed (so that the next EOR will correct them)
     AND draw_buf_at_msk, X ; mask out desired attribute bits
     EOR tmp                ; EOR again with original byte, correcting desired attribute bits, and restoring other bits
     LDY draw_buf_at_hi, X  ; reload desired PPU address with Y (so not to disrupt A)
-    STY PPUADDR
+    STY PPU_ADDR
     LDY draw_buf_at_lo, X
-    STY PPUADDR
-    STA PPUDATA              ; write new attribute byte back to attribute tables
+    STY PPU_ADDR
+    STA PPU_DATA              ; write new attribute byte back to attribute tables
     INX                    ; inc our source index
     CPX tmp+1              ; and loop until it reaches our upper-bound
     BCC @Loop
@@ -388,7 +388,7 @@ DrawMapAttributes:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DoMapDrawJob:
-    LDA PPUSTATUS           ; reset PPU toggle  (seems odd to do here...)
+    LDA PPU_STATUS           ; reset PPU toggle  (seems odd to do here...)
 
     LDA mapdraw_job     ; find which job we're to do
     SEC
@@ -549,9 +549,9 @@ DrawMapRowCol:
     STA tmp+1                 ; (tmp) now dest address
     LDA mapdraw_ntx           ; get target column to draw to
     CMP #$10
-    BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at PPUCTRL
+    BCS @UseNT2400            ; if column >= $10, we need to switch to NT at $2400, otherwise, use NT at PPU_CTRL
 
-              ; if column < $10 (use NT PPUCTRL)
+              ; if column < $10 (use NT PPU_CTRL)
     TAX                 ; back up column to X
     ASL A               ; double column number
     ORA tmp             ; OR with low byte of dest pointer.  Dest pointer now points to NT start of desired tile
@@ -565,12 +565,12 @@ DrawMapRowCol:
     ASL A               ; double column number
     ORA tmp             ; OR with low byte of dest pointer.
     STA tmp
-    LDA tmp+1           ; add 4 to high byte (changing NT from PPUCTRL to $2400)
+    LDA tmp+1           ; add 4 to high byte (changing NT from PPU_CTRL to $2400)
     CLC
     ADC #$04            ; Dest pointer is now prepped
     STA tmp+1
 
-       ; no matter which NT (PPUCTRL/$2400) is being drawn to, both forks reconnect here
+       ; no matter which NT (PPU_CTRL/$2400) is being drawn to, both forks reconnect here
     @DetermineRowOrCol:
 
     LDA mapflags          ; find out if we're moving drawing a row or column
@@ -591,28 +591,28 @@ DrawMapRowCol:
     INX              ; This creates a down-counter:  it is '16 - column_number', indicating the number of
     STX tmp+2        ;   columns that must be drawn until we reach the NT boundary
     LDY #$00         ; zero Y -- our source index
-    LDA PPUSTATUS        ; reset PPU toggle
+    LDA PPU_STATUS        ; reset PPU toggle
     LDA tmp+1
-    STA PPUADDR        ; set PPU addr to previously calculated dest addr
+    STA PPU_ADDR        ; set PPU addr to previously calculated dest addr
     LDA tmp
-    STA PPUADDR
+    STA PPU_ADDR
 
     @RowLoop_U:
 
     LDA draw_buf_ul, Y ; load 2 tiles from drawing buffer and draw them
-    STA PPUDATA          ;   first UL
+    STA PPU_DATA          ;   first UL
     LDA draw_buf_ur, Y ;   then UR
-    STA PPUDATA
+    STA PPU_DATA
     INY              ; inc source index (to look at next tile)
     DEX              ; dec down counter
     BNE :+           ; if it expired, we've reached NT boundary
 
       LDA tmp+1      ; at NT boundary... so load high byte
       EOR #$04       ;  toggle NT bit
-      STA PPUADDR      ;  and write back as the new high byte
+      STA PPU_ADDR      ;  and write back as the new high byte
       LDA tmp        ; then get low byte
       AND #$E0       ;  snap it to start of the row
-      STA PPUADDR      ;  and write back as the new low byte
+      STA PPU_ADDR      ;  and write back as the new low byte
 
     :   
     CPY #$10         ; see if we've drawn 16 tiles yet (one full row)
@@ -623,28 +623,28 @@ DrawMapRowCol:
     ADC #$20         ;  it points it to the next row of NT tiles
     STA tmp
     LDA tmp+1
-    STA PPUADDR        ; then re-copy the dest addr to set the PPU address
+    STA PPU_ADDR        ; then re-copy the dest addr to set the PPU address
     LDA tmp
-    STA PPUADDR
+    STA PPU_ADDR
     LDY #$00         ; zero our source index again
     LDX tmp+2        ; restore X to our down counter
 
     @RowLoop_D:
 
     LDA draw_buf_dl, Y ; repeat same tile copying work done above,
-    STA PPUDATA          ;   but this time we're drawing the bottom half of the tiles
+    STA PPU_DATA          ;   but this time we're drawing the bottom half of the tiles
     LDA draw_buf_dr, Y ;   first DL
-    STA PPUDATA          ;   then DR
+    STA PPU_DATA          ;   then DR
     INY                ; inc source index (next tile)
     DEX                ; dec down counter (for NT boundary)
     BNE :+
     
       LDA tmp+1      ; at NT boundary again.. same deal.  load high byte of dest
       EOR #$04       ;   toggle NT bit
-      STA PPUADDR      ;   and write back
+      STA PPU_ADDR      ;   and write back
       LDA tmp        ; load low byte
       AND #$E0       ;   snap to start of row
-      STA PPUADDR      ;   write back
+      STA PPU_ADDR      ;   write back
 
     :   
     CPY #$10
@@ -664,29 +664,29 @@ DrawMapRowCol:
     TAX              ; put downcounter in X for immediate use
     STX tmp+2        ; and back it up in tmp+2 for future use
     LDY #$00         ; zero Y -- our source index
-    LDA PPUSTATUS        ; clear PPU toggle
+    LDA PPU_STATUS        ; clear PPU toggle
     LDA tmp+1
-    STA PPUADDR        ; set PPU addr to previously calculated dest address
+    STA PPU_ADDR        ; set PPU addr to previously calculated dest address
     LDA tmp
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$04
-    STA PPUCTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
+    STA PPU_CTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
 
     @ColLoop_L:
 
     LDA draw_buf_ul, Y ; draw the left two tiles that form this map tile
-    STA PPUDATA          ;   first UL
+    STA PPU_DATA          ;   first UL
     LDA draw_buf_dl, Y ;   then DL
-    STA PPUDATA
+    STA PPU_DATA
     DEX              ; dec our down counter.
     BNE :+           ;   once it expires, we've reach the NT boundary
 
       LDA tmp+1      ; at NT boundary.. get high byte of dest
       AND #$24       ;   snap to top of NT
-      STA PPUADDR      ;   and write back
+      STA PPU_ADDR      ;   and write back
       LDA tmp        ; get low byte
       AND #$1F       ;   snap to top, while retaining current column
-      STA PPUADDR      ;   and write back
+      STA PPU_ADDR      ;   and write back
 
     :   
     INY              ; inc our source index
@@ -697,30 +697,30 @@ DrawMapRowCol:
                      ; now that the left-hand tiles are drawn, draw the right-hand tiles
     LDY #$00         ; clear our source index
     LDA tmp+1        ; restore dest address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA tmp          ; but add 1 to the low byte (to move to right-hand column)
     CLC              ;   note:  the game does not write back to tmp -- why not?!!
     ADC #$01
-    STA PPUADDR
+    STA PPU_ADDR
     LDX tmp+2        ; restore down counter into X
 
     @ColLoop_R:
 
     LDA draw_buf_ur, Y ; load right-hand tiles and draw...
-    STA PPUDATA          ;   first UR
+    STA PPU_DATA          ;   first UR
     LDA draw_buf_dr, Y ;   then DR
-    STA PPUDATA
+    STA PPU_DATA
     DEX                ; dec down counter
     BNE :+             ; if it expired, we're at the NT boundary
 
       LDA tmp+1      ; at NT boundary, get high byte of dest
       AND #$24       ;   snap to top of NT
-      STA PPUADDR      ;   and write back
+      STA PPU_ADDR      ;   and write back
       LDA tmp        ; get low byte of dest
       CLC            ;   and add 1 (this could've been avoided if it wrote back to tmp above)
       ADC #$01       ;   anyway -- adding 1 move to right-hand column (again)
       AND #$1F       ;   snap to top of NT, while retaining current column
-      STA PPUADDR      ;   and write to low byte of PPU address
+      STA PPU_ADDR      ;   and write to low byte of PPU address
 
     :   
     INY              ; inc our source index

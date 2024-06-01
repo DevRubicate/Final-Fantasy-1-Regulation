@@ -33,7 +33,7 @@ AltarFrame:
 
     AND #$01          ; also use the low bit of lines/8 as a scroll adjustment
     EOR tmp+15        ; OR with desired X scroll
-    STA PPUSCROLL         ; and record this as the scroll for the next frame.  This causes
+    STA PPU_SCROLL         ; and record this as the scroll for the next frame.  This causes
                       ;  the screen to "shake" by 1 pixel every 8 frames.  This hides
                       ;  the unavoidable inperfection of the monochrome effect (unavoidable because
                       ;  you can't time the writes to the exact pixel no matter how careful you are)
@@ -74,7 +74,7 @@ DoAltarScanline:
       CRITPAGECHECK @Loop
 
     LDA #$1F        ; +2 = 59
-    STA PPUMASK       ; +4 = 63 -- monochrome turned on 63 cycs in
+    STA PPU_MASK       ; +4 = 63 -- monochrome turned on 63 cycs in
 
     LDY #$1E        ; +2 = 65
     NOP             ; +2 = 67
@@ -84,7 +84,7 @@ DoAltarScanline:
     NOP             ; +2 = 95
     NOP             ; +2 = 97
     NOP             ; +2 = 99
-    STY PPUMASK       ; +4 = 103 -- monochrome turned off 103 cycs in
+    STY PPU_MASK       ; +4 = 103 -- monochrome turned off 103 cycs in
                     ;   following RTS makes this routine 109 cycles long
 
   @Burn12:          ; the routine JSRs here to burn 12 cycles (CALL+RTS = 12 cycs)
@@ -112,7 +112,7 @@ DoAltarScanline:
 ;;    tmp+2  = 0 when the 'beam' is expanding upward from the player sprite to the UL corner
 ;;             1 when the 'beam' has reached the UL corner and begins retracting to the UL corner
 ;;              (moving away from the player sprite)
-;;    tmp+15 = desired X scroll for the screen (as it needs to be written to PPUSCROLL)
+;;    tmp+15 = desired X scroll for the screen (as it needs to be written to PPU_SCROLL)
 ;;
 ;;    "Illuminated" scanlines just have the monochrome effect switched on for part of them.  There
 ;;  are no palette changes involved in this effect.
@@ -122,14 +122,14 @@ DoAltarScanline:
 
 DoAltarEffect:
     LDA sm_scroll_x      ; get the X scroll for the map
-    ASL A                ; multiply it by 16 to get the value need to be written to PPUSCROLL
+    ASL A                ; multiply it by 16 to get the value need to be written to PPU_SCROLL
     ASL A
     ASL A
     ASL A
     STA tmp+15           ; record it for future use in the routine
 
     LDA NTsoft2000       ; copy the NT scroll to the main soft2000 var
-    STA soft2000         ; 'soft2000' is written to PPUCTRL automatically every frame (in OnNMI)
+    STA soft2000         ; 'soft2000' is written to PPU_CTRL automatically every frame (in OnNMI)
                          ; This ensures that the NT scroll will be correct during this routine
 
     LDA #0
@@ -157,7 +157,7 @@ DoAltarEffect:
     LDA #$05             ; again it isn't immediately audible, but will be as soon as its vol is changed
     STA PAPU_CT2
 
-    LDA PPUSTATUS            ; reset PPU toggle (seems unnecessary here?)
+    LDA PPU_STATUS            ; reset PPU toggle (seems unnecessary here?)
 
     @MainLoop:
 
@@ -214,7 +214,7 @@ DoAltarEffect:
     NOP
 
     LDA tmp+15          ; restore the desired X scroll (to undo the possible shaking)
-    STA PPUSCROLL
+    STA PPU_SCROLL
 
     LDA #$00            ; restart sq1, sq2, and tri so they can resume playing the music track
     STA PAPU_CT2           ;  however note that sq2 is currently playing the wrong note (freq was changed for

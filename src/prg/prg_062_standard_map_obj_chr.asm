@@ -787,11 +787,11 @@ LUT_Standard_Map_Obj_CHR:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadMapObjCHR:
-    LDA PPUSTATUS      ; reset PPU toggle
+    LDA PPU_STATUS      ; reset PPU toggle
     LDA #$11
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR      ; set PPU Addr to $1100 (start of map object CHR)
+    STA PPU_ADDR      ; set PPU Addr to $1100 (start of map object CHR)
 
     LDA #0
     STA tmp+5      ; 0 -> tmp+5
@@ -846,7 +846,7 @@ LoadMapObjCHR:
     LDY #0           ; clear Y for upcoming CHR loading loop
   @CHRLoop:
       LDA (tmp), Y   ; load 256 bytes of CHR (16 tiles -- 1 row)
-      STA PPUDATA
+      STA PPU_DATA
       INY
       BNE @CHRLoop
     PLA              ; pull obj source index from stack

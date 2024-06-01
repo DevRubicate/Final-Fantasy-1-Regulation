@@ -256,12 +256,12 @@ LoadBattleAttributeTable:
     LDX #>$23C0
     LDA #<$23C0
     ; set PPU Address to $23C0 (start of attribute table)
-    STX PPUADDR   ; write X as high byte
-    STA PPUADDR   ; A as low byte
+    STX PPU_ADDR   ; write X as high byte
+    STA PPU_ADDR   ; A as low byte
     LDX #0
     @AttrLoop:
         LDA LUT_BtlAttrTbl, X   ; copy over attribute bytes
-        STA PPUDATA
+        STA PPU_DATA
         INX
         CPX #$40
         BNE @AttrLoop           ; loop until all $40 bytes copied
@@ -294,10 +294,10 @@ LoadBattleBackdropCHR:
     ADC MMC5_MULTI_1
     STA tmp+1
 
-    LDY PPUSTATUS ; reset PPU Addr toggle
+    LDY PPU_STATUS ; reset PPU Addr toggle
     LDA #$00      ; Dest address = $0000
-    STA PPUADDR   ; write high byte of dest address
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write low byte:  0
 
     LDA #.bank(LUT_Battle_Backdrop_0) | %10000000
     LDY #$E0
@@ -318,10 +318,10 @@ LoadBattleBackdropCHR:
     ADC MMC5_MULTI_1
     STA tmp+1
 
-    LDY PPUSTATUS ; reset PPU Addr toggle
+    LDY PPU_STATUS ; reset PPU Addr toggle
     LDA #$00      ; Dest address = $0000
-    STA PPUADDR   ; write high byte of dest address
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write low byte:  0
 
     LDA #.bank(LUT_Battle_Backdrop_1) | %10000000
     LDY #$E0
@@ -385,11 +385,11 @@ LoadBattleFormationCHR:
     ADC MMC5_MULTI_1
     STA tmp+1
     INC tmp+1                      ; increment high byte of pointer (enemy CHR starts 1 row in, before that is battle backdrop)
-    LDY PPUSTATUS ; reset PPU Addr toggle
+    LDY PPU_STATUS ; reset PPU Addr toggle
     LDA #$01      ; Dest address = $0120
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$20
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #.bank(LUT_Battle_Backdrop_0) | %10000000
     LDY #$20
     LDX #7                  ; load 7 rows
@@ -407,11 +407,11 @@ LoadBattleFormationCHR:
     ADC MMC5_MULTI_1
     STA tmp+1
     INC tmp+1                      ; increment high byte of pointer (enemy CHR starts 1 row in, before that is battle backdrop)
-    LDY PPUSTATUS ; reset PPU Addr toggle
+    LDY PPU_STATUS ; reset PPU Addr toggle
     LDA #$01      ; Dest address = $0120
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$20
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #.bank(LUT_Battle_Backdrop_1) | %10000000
     LDY #$20
     LDX #7                  ; load 7 rows              
@@ -525,16 +525,16 @@ LoadBattlePalette:
 
 DrawBattleBackdropRow:
     LDX #$20
-    STX PPUADDR   ; write X as high byte
-    STA PPUADDR   ; A as low byte
+    STX PPU_ADDR   ; write X as high byte
+    STA PPU_ADDR   ; A as low byte
 
     STY btltmp+10        ; record tile additive for future use
     LDY #14
     STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
     CALL @Section         ; draw first section
 
-    LDA PPUDATA            ; inc the PPU address by 2 to skip over those two bars of
-    LDA PPUDATA            ;  the box boundaries.
+    LDA PPU_DATA            ; inc the PPU address by 2 to skip over those two bars of
+    LDA PPU_DATA            ;  the box boundaries.
 
     LDY #6               ; do 6 columns for the second section
     STY btltmp+11
@@ -547,7 +547,7 @@ DrawBattleBackdropRow:
       LDA @lut_BackdropLayout, X   ; get the tile to draw in this column
       CLC
       ADC btltmp+10                ; add to that our additive (to draw the right row)
-      STA PPUDATA                    ; draw the tile
+      STA PPU_DATA                    ; draw the tile
       INX                          ; inc our loop counter
       CPX btltmp+11                ; and loop until we've drawn the desired number of columns
       BNE @Loop

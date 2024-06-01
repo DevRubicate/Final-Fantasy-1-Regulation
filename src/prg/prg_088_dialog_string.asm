@@ -168,7 +168,7 @@ DrawDialogueString:
 
     @SingleTile:
     
-    STA PPUDATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
+    STA PPU_DATA            ; otherwise ($7A-$FF), it's a normal single tile.  Draw it
 
     LDA dest_x           ; increment the dest address by 1
     CLC
@@ -189,13 +189,13 @@ DrawDialogueString:
     PHA                ; and push it to back it up (will need it again later)
 
     LDA lut_DTE1, X    ; get the first byte in the DTE pair
-    STA PPUDATA          ; and draw it
+    STA PPU_DATA          ; and draw it
     CALL @IncDest       ; update PPU dest address
 
     PLA                ; restore DTE code
     TAX                ; and put it in X again (X was corrupted by @IncDest call)
     LDA lut_DTE2, X    ; get second byte in DTE pair
-    STA PPUDATA          ; draw it
+    STA PPU_DATA          ; draw it
     CALL @IncDest       ; and update PPU address again
 
     DEC tmp+7            ; decrement cautionary counter

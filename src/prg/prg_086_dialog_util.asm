@@ -441,24 +441,24 @@ EraseBox:
     BEQ @NoStall       ; if not, skip over this stalling code
 
     LDA soft2000         ; reset scroll
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     FARCALL MusicPlay    ; call music play routine
     CALL WaitForVBlank  ; and wait for vblank
 
     @NoStall:
-    LDA PPUSTATUS          ; reset PPU toggle
+    LDA PPU_STATUS          ; reset PPU toggle
     LDA ppu_dest+1     ; set the desired PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX box_wd         ; get box width in X (downcounter for upcoming loop)
     LDA #0             ; zero A
     @ColLoop:
-    STA PPUDATA        ; draw tile 0 (blank tile)
+    STA PPU_DATA        ; draw tile 0 (blank tile)
     DEX              ; decrement X
     BNE @ColLoop     ; loop until X expires (box_wd iterations)
 
@@ -476,10 +476,10 @@ EraseBox:
 
 
     LDA soft2000    ; otherwise, we're done.  Reset the scroll
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     RTS             ; and exit!
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -497,7 +497,7 @@ EraseBox:
 DialogueBox_Frame:
     FARCALL Dialogue_CoverSprites_VBl   ; modify OAM to cover sprites behind the dialogue box, then wait for VBlank
     LDA tmp+10         ; set NT scroll to draw the "offscreen" NT (the one with the dialogue box)
-    STA PPUCTRL
+    STA PPU_CTRL
 
         ; now the game loops to burn VBlank time, so that it can start doing raster effects to split the screen
 
@@ -533,7 +533,7 @@ DialogueBox_Frame:
       ; so we don't want it to be visible any more for the rest of this frame
 
     LDA soft2000                   ; so get the normal "onscreen" NT
-    STA PPUCTRL                      ; and set it
+    STA PPU_CTRL                      ; and set it
     FARJUMP MusicPlay       ; then call the Music Play routine and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

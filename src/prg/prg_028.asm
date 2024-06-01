@@ -1700,7 +1700,7 @@ lut_MapObjTalkData:
 
 EnterLineupMenu:
     LDA #0
-    STA PPUMASK             ; turn off the PPU
+    STA PPU_MASK             ; turn off the PPU
     STA PAPU_EN             ; silence APU
     LDA #$08
     STA soft2000          ; reset soft2000 to typical setup
@@ -1761,10 +1761,10 @@ EnterLineupMenu:
     STA music_track             ; switch to music track $55  (crystal theme)
 
     LDA soft2000
-    STA PPUCTRL                   ; reset scroll
+    STA PPU_CTRL                   ; reset scroll
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
 
     FARCALL ClearSprites
 
@@ -1787,13 +1787,13 @@ EnterLineupMenu:
     CALL WaitForVBlank         ; wait for VBlank
 
     LDA soft2000
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #$1E
-    STA PPUMASK                   ; set PPU state (and turn PPU on)
+    STA PPU_MASK                   ; set PPU state (and turn PPU on)
 
     LDA #0                      ; reset scroll
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
 
     LDA #BANK_THIS
     STA cur_bank
@@ -2428,7 +2428,7 @@ NewGamePartyGeneration:
     
     ;;  Otherwise, they've pressed A!  Party confirmed!
     LDA #$00
-    STA PPUMASK                   ; shut the PPU off
+    STA PPU_MASK                   ; shut the PPU off
     
     LDX #$00                    ; Move class and name selection
     CALL @RecordClassAndName     ;  out of the ptygen buffer and into the actual character stats
@@ -2575,7 +2575,7 @@ DoPartyGen_OnCharacter:
 
 DoNameInput:
     LDA #$00                ; Turn off the PPU (for drawing)
-    STA PPUMASK
+    STA PPU_MASK
     
     STA menustall           ; zero a bunch of misc vars being used here
     STA joy_a
@@ -2787,10 +2787,10 @@ CharName_Frame:
     CALL WaitForVBlank    ; VBlank and DMA
 
     LDA soft2000           ; reset the scroll to zero.
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
 
     LDA #BANK_THIS         ; keep playing music
     STA cur_bank
@@ -3039,16 +3039,16 @@ Invoke_DrawComplexString:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawNameInputScreen:
-    LDA PPUSTATUS               ; clear PPU toggle
+    LDA PPU_STATUS               ; clear PPU toggle
     
     LDA #>$23C0             ; set PPU addr to the attribute table
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #<$23C0
-    STA PPUADDR
+    STA PPU_ADDR
     
     LDA #$00                ; set $10 bytes of the attribute table to use palette 0
     LDX #$10                ;  $10 bytes = 8 rows of tiles (32 pixels)
-    : STA PPUDATA             ; This makes the top box the orangish color instead of the normal blue
+    : STA PPU_DATA             ; This makes the top box the orangish color instead of the normal blue
       DEX
       BNE :-
 
@@ -3137,14 +3137,14 @@ lut_PtyGenBuf:
 
 EnterIntroStory:
     LDA #$08
-    STA soft2000             ; set PPUCTRL and soft2000 appropriately
-    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
+    STA soft2000             ; set PPU_CTRL and soft2000 appropriately
+    STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
     LDA #$1E
-    STA PPUMASK                ; enable BG and sprite rendering
+    STA PPU_MASK                ; enable BG and sprite rendering
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL                ; reset scroll
+    STA PPU_SCROLL
+    STA PPU_SCROLL                ; reset scroll
 
     FARCALL UploadFont
 
@@ -3563,17 +3563,17 @@ IntroStory_AnimateRow:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IntroStory_WriteAttr:
-    LDA PPUSTATUS            ; reset PPU toggle
+    LDA PPU_STATUS            ; reset PPU toggle
 
     LDA #$23             ; set PPU addr to $23xx (where xx is intro_ataddr)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA intro_ataddr
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX #$08
     LDA intro_atbyte     ; write intro_atbyte 8 times
   @Loop:
-      STA PPUDATA
+      STA PPU_DATA
       DEX
       BNE @Loop
 
@@ -3604,8 +3604,8 @@ IntroStory_Frame:
     CALL IntroStory_WriteAttr   ; then do the attribute updates
 
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL                ; reset scroll
+    STA PPU_SCROLL
+    STA PPU_SCROLL                ; reset scroll
 
     FARCALL UploadPalette2
     FARCALL MusicPlay          ; Then call music play to keep music playing!
@@ -3652,7 +3652,7 @@ lut_ShopEntryJump:
 
 EnterShop:
     LDA #0
-    STA PPUMASK              ; turn off PPU
+    STA PPU_MASK              ; turn off PPU
     STA PAPU_EN              ; silence audio
     STA joy_b              ; erase joypad A and B buttons
     STA joy_a
@@ -4500,16 +4500,16 @@ DrawShop:
     FARCALL FillNametable                ; clear the nametable
 
               ; Fill attribute tables
-    LDA PPUSTATUS                  ; reset the PPU toggle
+    LDA PPU_STATUS                  ; reset the PPU toggle
     LDA #>$2300                ; set the ppu addr to $23C0  (attribute tables)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #<$23C0
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX #$00                     ; loop $40 time to copy our attribute LUT to the on-screen attribute tables
   @AttribLoop:
       LDA lut_ShopAttributes, X  ; fetch a byte from the lut
-      STA PPUDATA                  ; draw it
+      STA PPU_DATA                  ; draw it
       INX
       CPX #$40                   ; repeat until X=$40
       BCC @AttribLoop
@@ -4579,11 +4579,11 @@ DrawImageRect:
     STA tmp              ;  and store it in tmp (this will be our row loop down counter)
 
   @RowLoop:
-    LDA PPUSTATUS            ; reset PPU toggle
+    LDA PPU_STATUS            ; reset PPU toggle
     LDA ppu_dest+1       ; load up desired PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX dest_wd          ; load width into X (column down counter)
    @ColLoop:
@@ -4592,7 +4592,7 @@ DrawImageRect:
         CLC
         ADC tmp+2         ; ...add our modifier to it
     :     
-    STA PPUDATA           ; draw it
+    STA PPU_DATA           ; draw it
     INY                 ; inc source index
     DEX                 ; dec our col loop counter
     BNE @ColLoop        ; continue looping until X expires
@@ -5657,7 +5657,7 @@ EnterMainMenu:
     STA music_track     ; set music track $51 (menu music)
 
     LDA #0
-    STA PPUMASK           ; turn off the PPU (we need to do some drawing)     
+    STA PPU_MASK           ; turn off the PPU (we need to do some drawing)     
     STA PAPU_EN           ; and silence the APU.  Music sill start next time MusicPlay is called.
 
     FARCALL LoadMenuCHRPal        ; load menu related CHR and palettes
@@ -5674,20 +5674,20 @@ EnterMainMenu:
 
 ResumeMainMenu:
     LDA #0
-    STA PPUMASK                       ; turn off the PPU
+    STA PPU_MASK                       ; turn off the PPU
     LDA #0
     STA menustall                   ; and disable menu stalling
 
     FARCALL DrawGameMenu
 
     LDA #$1E
-    STA PPUMASK                ; enable BG and sprite rendering
+    STA PPU_MASK                ; enable BG and sprite rendering
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL                ; reset scroll
+    STA PPU_SCROLL
+    STA PPU_SCROLL                ; reset scroll
     LDA #$08
-    STA soft2000             ; set PPUCTRL and soft2000 appropriately
-    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
+    STA soft2000             ; set PPU_CTRL and soft2000 appropriately
+    STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
     LDA #0
     STA cursor                      ; flush cursor, joypad, and prev joy directions
@@ -5714,7 +5714,7 @@ MainMenuLoop:
 
   @B_Pressed:
     LDA #0            ; turn PPU off
-    STA PPUMASK
+    STA PPU_MASK
     STA joy_a         ; flush A, B, and Start joypad recordings
     STA joy_b
     STA joy_start
@@ -5848,7 +5848,7 @@ MainMenuSubTarget:
 
 EnterMagicMenu:
     LDA #0
-    STA PPUMASK                      ; turn off PPU
+    STA PPU_MASK                      ; turn off PPU
     STA menustall                  ; clear menustall
     STA descboxopen                ; and mark description box as closed
 
@@ -6230,7 +6230,7 @@ UseMagic_WARP:
     TXS                  ;                    CALL to Main Menu
                          ;                and CALL to Standard Map loop
     LDA #0               ; turn off PPU and APU
-    STA PPUMASK
+    STA PPU_MASK
     STA PAPU_EN
 
     RTS                  ; and RTS.  See notes below
@@ -6313,7 +6313,7 @@ UseMagic_GetRequiredMP:
 
 EnterItemMenu:
     LDA #0
-    STA PPUMASK           ; turn the PPU off
+    STA PPU_MASK           ; turn the PPU off
     STA menustall       ; zero menustall (don't want to stall for drawing the screen for the first time)
     STA descboxopen     ; indicate that the descbox is closed
     FARCALL FillNametable         ; wipe the NT clean
@@ -6920,7 +6920,7 @@ DrawItemTargetCursor:
 
 DrawItemTargetMenu:
     LDA #0
-    STA PPUMASK            ; turn the PPU off
+    STA PPU_MASK            ; turn the PPU off
     STA menustall        ; and disable menu stalling
     FARCALL FillNametable          ; wipe the NT clean
 
@@ -7013,7 +7013,7 @@ DrawItemTargetMenu:
 
 EnterStatusMenu:
     LDA #0
-    STA PPUMASK               ; turn off the PPU
+    STA PPU_MASK               ; turn off the PPU
     LDA #0
     STA menustall           ; disable menu stalling
     FARCALL FillNametable             ; clear the NT
@@ -7356,10 +7356,10 @@ DrawMainMenuCharSprites:
 MenuFrame:
     CALL WaitForVBlank    ; wait for VBlank
     LDA soft2000           ; reset scroll and PPU data
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
 
     LDA music_track        ; if no music track is playing...
     BPL :+
@@ -7627,14 +7627,14 @@ TurnMenuScreenOn:
     CALL DrawPalette          ; draw/apply the current palette
 
     LDA #$08
-    STA soft2000             ; set PPUCTRL and soft2000 appropriately
-    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
+    STA soft2000             ; set PPU_CTRL and soft2000 appropriately
+    STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
     LDA #$1E
-    STA PPUMASK                ; enable BG and sprite rendering
+    STA PPU_MASK                ; enable BG and sprite rendering
     LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL                ; reset scroll
+    STA PPU_SCROLL
+    STA PPU_SCROLL                ; reset scroll
 
     LDA #BANK_THIS           ; record current bank and MusicPlay
     STA cur_bank
@@ -8222,7 +8222,7 @@ EnterEquipMenu:
     STA equipoffset       ; record the equipoffset to indicate weapon or armor menu
 
     LDA #0
-    STA PPUMASK             ; turn off the PPU
+    STA PPU_MASK             ; turn off the PPU
     STA joy_a             ; clear joy_a and joy_b counters
     STA joy_b
     STA menustall         ; and turn off menu stalling (since the PPU is off)
@@ -8450,10 +8450,10 @@ EquipMenuFrame:
     CALL WaitForVBlank     ; wait for VBlank
 
     LDA soft2000          ; reset scroll
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #$00
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
 
     LDA #BANK_THIS
     STA cur_bank          ; set cur_bank to this bank
@@ -8724,9 +8724,9 @@ DrawEquipMenu:
     LDA #$C0
     CALL SetPPUAddrTo_23aa       ; PPU Address = $23C0  (start of attribute tables)
     LDA #$7F                    ; some useless attribute changes...
-    STA PPUDATA                   ;  this sets a paticular square to use palette 1 instead of the normal palette 3
+    STA PPU_DATA                   ;  this sets a paticular square to use palette 1 instead of the normal palette 3
     LDA #$DF                    ; and this sets another square to use palette 1
-    STA PPUDATA                   ;  but palettes 1 and 3 are identical for this menu!
+    STA PPU_DATA                   ;  but palettes 1 and 3 are identical for this menu!
                                 ;  These attributes changes *almost* change the palette used for the title text
                                 ;  .. the problem is that they only change the palettes for the first 4 tiles
                                 ;  leaving the "N" in weapon and the "R" in armor using palette 3.  My guess is this
@@ -8798,10 +8798,10 @@ DrawEquipMenuModeCurs:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddrTo_23aa:
-    BIT PPUSTATUS       ; clear PPU toggle
+    BIT PPU_STATUS       ; clear PPU toggle
     LDY #$23
-    STY PPUADDR       ; set PPU address
-    STA PPUADDR
+    STY PPU_ADDR       ; set PPU address
+    STA PPU_ADDR
     RTS             ; and exit
 
 

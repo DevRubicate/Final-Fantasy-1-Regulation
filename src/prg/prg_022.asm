@@ -1853,21 +1853,21 @@ ChaosDeath:
         LDA #$00
         CALL @SetPpuAddr         ; set ppu addr to low bitplane
         LDA #$00
-        STA PPUDATA               ; erase it
+        STA PPU_DATA               ; erase it
         
         LDA #$01
         CALL @SetPpuAddr         ; set ppu addr to high bitplane
         LDA #$00
-        STA PPUDATA               ; erase it
+        STA PPU_DATA               ; erase it
         
         LDA chaosdeath_rvalprev           ; load *another* random value
         AND #$03
-        STA PPUSCROLL               ; use it as X scroll to shake the screen
+        STA PPU_SCROLL               ; use it as X scroll to shake the screen
         
         LDA chaosdeath_rval               ; use tile ID as random number for Y scroll
         STA chaosdeath_rvalprev           ;  (and use it as X scroll next iteration)
         AND #$03
-        STA PPUSCROLL
+        STA PPU_SCROLL
         
         DEC chaosdeath_innerctr           ; loop 256 times!
         BNE @InnerLoop
@@ -1915,12 +1915,12 @@ ChaosDeath:
     ASL A
     CLC
     ADC chaosdeath_ppuaddr    ; Add to ppu addr
-    PHA             ; (push low byte, since PPUADDR needs high byte written first)
+    PHA             ; (push low byte, since PPU_ADDR needs high byte written first)
     LDA #$00
     ADC chaosdeath_ppuaddr+1  ; Resume addition to high byte
-    STA PPUADDR       ; write high byte
+    STA PPU_ADDR       ; write high byte
     PLA             ; then pull and write low byte
-    STA PPUADDR
+    STA PPU_ADDR
     
     RTS
     
@@ -3244,9 +3244,9 @@ DrawSmallEnemy:
 
 SetPpuAddr_BtlTmp:
     LDA btltmp+1
-    STA PPUADDR
+    STA PPU_ADDR
     LDA btltmp+0
-    STA PPUADDR
+    STA PPU_ADDR
     RTS
     
     
@@ -3328,19 +3328,19 @@ DrawLargeEnemy:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 Draw6TilesFromX:
-    STX PPUDATA
+    STX PPU_DATA
     INX
-    STX PPUDATA
+    STX PPU_DATA
     INX
     
 Draw4TilesFromX:
-    STX PPUDATA
+    STX PPU_DATA
     INX
-    STX PPUDATA
+    STX PPU_DATA
     INX
-    STX PPUDATA
+    STX PPU_DATA
     INX
-    STX PPUDATA
+    STX PPU_DATA
     INX
     RTS
     

@@ -64,8 +64,8 @@ LUT_Tilesets:
 
 PrepStandardMap:
     LDA #0
-    STA PPUCTRL               ; disable NMIs
-    STA PPUMASK               ; turn off the PPU
+    STA PPU_CTRL               ; disable NMIs
+    STA PPU_MASK               ; turn off the PPU
     STA PAPU_NCTL1               ; ??  tries to silence noise?  This doesn't really accomplish that.
 
     STA joy_select          ; zero a bunch of other map and input related stuff
@@ -96,7 +96,7 @@ PrepStandardMap:
     CALL SetSMScroll         ; set the scroll
 
     LDA #0                  ; turn PPU off (but it's already off!)
-    STA PPUMASK
+    STA PPU_MASK
 
     LDX cur_tileset               ; get the tileset
     LDA LUT_TilesetMusicTrack, X ; use it to get the music track tied to this tileset
@@ -178,26 +178,26 @@ RedrawDoor:
 
   @Redraw:
     STA inroom             ; record new inroom status (previously stuffed in A)
-    LDA PPUSTATUS              ; reset PPU toggle
+    LDA PPU_STATUS              ; reset PPU toggle
 
     LDA doorppuaddr+1      ; load the target PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA doorppuaddr
-    STA PPUADDR
+    STA PPU_ADDR
     LDA tsa_ul, X          ; and redraw upper two TSA tiles using the current tileset tsa data in RAM
-    STA PPUDATA
+    STA PPU_DATA
     LDA tsa_ur, X
-    STA PPUDATA
+    STA PPU_DATA
 
     LDA doorppuaddr+1      ; reload target PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA doorppuaddr
     ORA #$20               ; but add $20 to it to put it on the second row of the tile (bottom half)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA tsa_dl, X          ; and redraw lower two TSA tiles
-    STA PPUDATA
+    STA PPU_DATA
     LDA tsa_dr, X
-    STA PPUDATA
+    STA PPU_DATA
 
     JUMP DrawMapPalette     ; then redraw the map palette (since inroom changed, so did the palette)
                            ;  and exit
@@ -243,8 +243,8 @@ LoadStandardMapAndObjects:
     STA mapflags          ; set the standard map flag
 
     LDA #0
-    STA PPUCTRL             ; disable NMIs
-    STA PPUMASK             ; turn off PPU
+    STA PPU_CTRL             ; disable NMIs
+    STA PPU_MASK             ; turn off PPU
 
     FORCEDFARCALL LoadStandardMap   ; decompress the map
     FORCEDFARCALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
@@ -366,7 +366,7 @@ StandardMapLoop:
         STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
         FARCALL BattleTransition    ; do the battle transition effect
         LDA #0                  ; then kill PPU, APU
-        STA PPUMASK
+        STA PPU_MASK
         STA PAPU_EN
         FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
         LDA btlformation
@@ -457,7 +457,7 @@ ProcessSMInput:
     CALL WaitForVBlank       ; wait a frame
     CALL SetSMScroll
     LDA #$1E
-    STA PPUMASK
+    STA PPU_MASK
     FARCALL MusicPlay
     FARCALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
     LDA dlgflg_reentermap     ; check the reenter map flag

@@ -24,9 +24,9 @@ Video_Terminate:
 
     ; We have to restore the scroll as this is messed up by our writing to the PPU
     LDA scrollX
-    STA PPUSCROLL
+    STA PPU_SCROLL
     LDA scrollY
-    STA PPUSCROLL
+    STA PPU_SCROLL
     RTS
 
 
@@ -34,7 +34,7 @@ Video_Terminate:
 ; We have 2273 cycle of safe time, 50 spent before here, 20 spent here, so that leave 2203 cycle
 ; left. But we need 513 for OAM DAMA, so 1690.
 Video_Start:
-    LDA PPU_STAT            ; 4 cycle
+    LDA PPU_STATUS            ; 4 cycle
     TSX                     ; 2 cycle
     STX StackPointerBackup  ; 4 cycle
     LDX #$FF                ; 2 cycle
@@ -48,23 +48,23 @@ Video_Start:
     VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     Video_Inc1_Address:
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
     Video_Address:
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle    
+        STA PPU_ADDR                     ; 4 cycle    
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle   
+        STA PPU_ADDR                     ; 4 cycle   
         RTS                             ; 6 cycle
 
 
     Video_Inc32_Address:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000100                          ; 2 cycle
-        STA PPU_CTL1                            ; 4 cycle
+        STA PPU_CTRL                            ; 4 cycle
         PLA                                     ; 2 cycle
-        STA PPUADDR                             ; 4 cycle
+        STA PPU_ADDR                             ; 4 cycle
         PLA                                     ; 2 cycle
-        STA PPUADDR                             ; 4 cycle
+        STA PPU_ADDR                             ; 4 cycle
         RTS                                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,37 +74,37 @@ Video_Start:
     Video_Inc1_Address_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
     Video_Address_Set:
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Address_Set:
     LDA #%10000100                  ; 2 cycle
-    STA PPU_CTL1                    ; 4 cycle
+    STA PPU_CTRL                    ; 4 cycle
     PLA                             ; 2 cycle
-    STA PPUADDR                     ; 4 cycle   
+    STA PPU_ADDR                     ; 4 cycle   
     PLA                             ; 2 cycle
-    STA PPUADDR                     ; 4 cycle
+    STA PPU_ADDR                     ; 4 cycle
     PLA                             ; 2 cycle
     RTS                             ; 6 cycle
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc1_Address_Set_Write:
     LDA #%10000000
-    STA PPU_CTL1
+    STA PPU_CTRL
 Video_Address_Set_Write:
     PLA
-    STA PPUADDR      
+    STA PPU_ADDR      
     PLA
-    STA PPUADDR      
+    STA PPU_ADDR      
     PLA
-    STA PPUDATA
+    STA PPU_DATA
     RTS
 
 .res 4
@@ -112,13 +112,13 @@ Video_Address_Set_Write:
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Address_Set_Write:
     LDA #%10000100
-    STA PPU_CTL1
+    STA PPU_CTRL
     PLA
-    STA PPUADDR      
+    STA PPU_ADDR      
     PLA
-    STA PPUADDR      
+    STA PPU_ADDR      
     PLA
-    STA PPUDATA
+    STA PPU_DATA
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -131,9 +131,9 @@ Video_Inc32_Address_Set_Write:
     Video_Inc1_Write_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
     Video_Write_Set:
-        STA PPUDATA                     ; 4 cycle
+        STA PPU_DATA                     ; 4 cycle
         PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
@@ -144,28 +144,28 @@ Video_Inc32_Address_Set_Write:
     Video_Inc1_Address_Set_Write_Set:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
-        STA PPUDATA                     ; 4 cycle
+        STA PPU_DATA                     ; 4 cycle
         PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Write_Set:
     LDA #%10000100
-    STA PPU_CTL1
-    STA PPUDATA
+    STA PPU_CTRL
+    STA PPU_DATA
     PLA
     RTS
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc1_Set:
     LDA #%10000000
-    STA PPU_CTL1
+    STA PPU_CTRL
 Video_Set:
     PLA
     RTS
@@ -173,7 +173,7 @@ Video_Set:
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Set:
     LDA #%10000100
-    STA PPU_CTL1
+    STA PPU_CTRL
     PLA
     RTS
 
@@ -184,7 +184,7 @@ Video_Inc32_Set:
     .align 256
         ; TODO: Verify you can actually use this 85 times
         .REPEAT 85, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .ENDREPEAT
     Video_MassWrite:
         RTS                             ; 6 cycle
@@ -195,13 +195,13 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 85, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Address_Set:
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
@@ -212,7 +212,7 @@ Video_Inc32_Set:
     .align 256
         .repeat 64, i
             PLA             ; 4 cycle
-            STA PPUDATA     ; 4 cycle
+            STA PPU_DATA     ; 4 cycle
         .endrepeat
     Video_MassWriteStack:
         RTS
@@ -223,14 +223,14 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Set_FillNametable0to119:
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
         LDA #$20                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$00                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -240,12 +240,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable120to239:
         LDA #$20                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$78                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -255,12 +255,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable240to359:
         LDA #$20                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$F0                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -270,12 +270,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable360to479:
         LDA #$21                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$68                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -285,12 +285,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable480to599:
         LDA #$21                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$E0                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -300,12 +300,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable600to719:
         LDA #$22                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$58                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -315,12 +315,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable720to839:
         LDA #$22                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$D0                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -330,12 +330,12 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Set_FillNametable840to959:
         LDA #$23                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$48                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 120, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -345,14 +345,14 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc1_Set_FillAttributeTable:
         LDA #%10000000                  ; 2 cycle
-        STA PPU_CTL1                    ; 4 cycle
+        STA PPU_CTRL                    ; 4 cycle
         LDA #$23                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         LDA #$C0                        ; 2 cycle
-        STA PPUADDR                     ; 4 cycle
+        STA PPU_ADDR                     ; 4 cycle
         PLA                             ; 4 cycle
         .repeat 64, i
-            STA PPUDATA                 ; 4 cycle
+            STA PPU_DATA                 ; 4 cycle
         .endrepeat
         RTS                             ; 6 cycle
 
@@ -362,11 +362,11 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 64, i
-            STA PPUDATA             ; 4 cycle
+            STA PPU_DATA             ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Value_Write:
         PLA                         ; 4 cycle
-        STA PPUDATA                 ; 4 cycle
+        STA PPU_DATA                 ; 4 cycle
         RTS                         ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -375,17 +375,17 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     .align 256
         .REPEAT 64, i
-            STA PPUDATA             ; 4 cycle
+            STA PPU_DATA             ; 4 cycle
         .ENDREPEAT
     Video_MassWrite_Set_Write_Address_Set_Write_Set:
         PLA                         ; 4 cycle
-        STA PPUDATA                 ; 4 cycle
+        STA PPU_DATA                 ; 4 cycle
         PLA                         ; 4 cycle
-        STA PPUADDR                 ; 4 cycle
+        STA PPU_ADDR                 ; 4 cycle
         PLA                         ; 4 cycle
-        STA PPUADDR                 ; 4 cycle
+        STA PPU_ADDR                 ; 4 cycle
         PLA                         ; 4 cycle
-        STA PPUDATA                 ; 4 cycle
+        STA PPU_DATA                 ; 4 cycle
         PLA                         ; 4 cycle
         RTS                         ; 6 cycle
 
@@ -395,11 +395,11 @@ Video_Inc32_Set:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_SetFillColor:
       LDA #$3F                  ; 2 cycle
-      STA PPUADDR               ; 4 cycle
+      STA PPU_ADDR               ; 4 cycle
       LDA #$00                  ; 2 cycle
-      STA PPUADDR               ; 4 cycle
+      STA PPU_ADDR               ; 4 cycle
       LDA fillColor             ; 4 cycle
-      STA PPUDATA               ; 4 cycle  
+      STA PPU_DATA               ; 4 cycle  
       RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -409,17 +409,17 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette0:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$01                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette0+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette0+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette0+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -429,18 +429,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette1:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$05                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette1+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette1+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette1+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -450,18 +450,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette2:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$09                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette2+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette2+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette2+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -471,18 +471,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette3:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$0D                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette3+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette3+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette3+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -492,18 +492,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette4:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$11                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette4+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette4+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette4+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -513,18 +513,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette5:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$15                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette5+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette5+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette5+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -534,18 +534,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette6:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$19                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette6+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette6+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette6+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -555,18 +555,18 @@ Video_Inc32_Set:
     Video_Inc1_UploadPalette7:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10000000          ; 2 cycle
-        STA PPU_CTL1            ; 4 cycle
-        LDA PPU_STAT            ; 4 cycle
+        STA PPU_CTRL            ; 4 cycle
+        LDA PPU_STATUS            ; 4 cycle
         LDA #$3F                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA #$1D                ; 2 cycle
-        STA PPUADDR             ; 4 cycle
+        STA PPU_ADDR             ; 4 cycle
         LDA palette7+0          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette7+1          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         LDA palette7+2          ; 4 cycle
-        STA PPUDATA             ; 4 cycle
+        STA PPU_DATA             ; 4 cycle
         RTS                     ; 6 cycle
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -577,7 +577,7 @@ Video_Inc32_Set:
         ; TODO: remove this INX in favor of using +i
         INX
         LDA attributeTable,X
-        STA PPUDATA
+        STA PPU_DATA
     .ENDREPEAT
 Video_WriteAttributeRepeat:
     RTS

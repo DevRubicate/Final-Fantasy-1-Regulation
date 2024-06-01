@@ -213,7 +213,7 @@ EpilogueNT:
 
 LoadEpilogueSceneGFX:
     LDA #$00                ; This routine is 100% identical to 
-    STA PPUMASK               ;   LoadBridgeSceneGFX below, except it loads CHR from
+    STA PPU_MASK               ;   LoadBridgeSceneGFX below, except it loads CHR from
     STA PAPU_EN               ;   a different address.
    
     LDA #<EpilogueCHR     ; load a pointer to the bridge scene graphics (CHR first)
@@ -221,14 +221,14 @@ LoadEpilogueSceneGFX:
     LDA #>EpilogueCHR
     STA tmp+1
     LDX #$08                 ; load 8 rows of tiles ($800 bytes)
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$00
-    STA PPUADDR   ; write high byte of dest address
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop0:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to CHR-RAM
+    STA PPU_DATA         ; and write it to CHR-RAM
     INY               ; inc our source index
     BNE @loop0  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -241,15 +241,15 @@ LoadEpilogueSceneGFX:
     STA tmp+1
     LDX #$04                 ; load 4 rows of tiles ($400 bytes)
     LDA #$00                 ; destination address = ppu $0000
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$20
-    STA PPUADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write high byte of dest address
     LDA #$00
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop1:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to NT
+    STA PPU_DATA         ; and write it to NT
     INY               ; inc our source index
     BNE @loop1  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -262,15 +262,15 @@ LoadEpilogueSceneGFX:
     STA tmp+1
     LDX #$04                 ; load 4 rows of tiles ($400 bytes)
     LDA #$00                 ; destination address = ppu $0000
-    LDY PPUSTATUS   ; reset PPU Addr toggle
+    LDY PPU_STATUS   ; reset PPU Addr toggle
     LDA #$24
-    STA PPUADDR   ; write high byte of dest address
+    STA PPU_ADDR   ; write high byte of dest address
     LDA #$00
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write low byte:  0
     LDY #$00
     @loop2:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to NT
+    STA PPU_DATA         ; and write it to NT
     INY               ; inc our source index
     BNE @loop2  ; if it didn't wrap, continue looping
     INC tmp+1         ; if it did wrap, inc the high byte of our source pointer

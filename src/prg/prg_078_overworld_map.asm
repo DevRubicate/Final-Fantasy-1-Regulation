@@ -108,8 +108,8 @@ EnterOverworldLoop:
 
 PrepOverworld:
     LDA #0
-    STA PPUCTRL           ; disable NMIs
-    STA PPUMASK           ; turn off PPU
+    STA PPU_CTRL           ; disable NMIs
+    STA PPU_MASK           ; turn off PPU
     STA PAPU_EN           ; silence APU
 
     STA scroll_y        ; zero a whole bunch of other things:
@@ -142,7 +142,7 @@ PrepOverworld:
     CALL DrawMapPalette        ; before drawing the palette
     FARCALL SetOWScroll_PPUOn     ; the setting the scroll and turning PPU on
     LDA #0                    ;  .. but then immediately turn PPU off!
-    STA PPUMASK                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
+    STA PPU_MASK                 ;     (stupid -- why doesn't it just call the other SetOWScroll that doesn't turn PPU on)
 
     LDX vehicle
     LDA @lut_VehicleMusic, X  ; use the current vehicle as an index
@@ -274,7 +274,7 @@ DoOWTransitions:
         FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
         FARCALL BattleTransition   ; Do the flashy transition effect
         LDA #$00
-        STA PPUMASK              ; turn off the PPU
+        STA PPU_MASK              ; turn off the PPU
         STA PAPU_EN              ; and APU
         FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
         LDA btlformation

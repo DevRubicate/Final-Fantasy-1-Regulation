@@ -146,17 +146,17 @@ EnterBattle:
     LDA #0
     STA menustall           ; disable menu stalling
     CALL Battle_PPUOff         ; turn PPU off
-    LDA PPUSTATUS                 ; reset PPU toggle
+    LDA PPU_STATUS                 ; reset PPU toggle
 
-    LDX #>PPUCTRL
-    LDA #<PPUCTRL
-    CALL SetPPUAddr_XA         ; set PPU address to PPUCTRL (start of nametable)
+    LDX #>PPU_CTRL
+    LDA #<PPU_CTRL
+    CALL SetPPUAddr_XA         ; set PPU address to PPU_CTRL (start of nametable)
 
     LDY #8                    ; loops to clear $0800 bytes of NT data (both nametables)
     @ClearNT_OuterLoop:
         LDX #0
         @ClearNT_InnerLoop:         ; inner loop clears $100 bytes
-            STA PPUDATA
+            STA PPU_DATA
             DEX
             BNE @ClearNT_InnerLoop
         DEY                       ; outer loop runs inner loop 8 times
@@ -232,7 +232,7 @@ EnterBattle:
     LDA #0
     LDX #$10
   @ClearFFLoop:
-      STA PPUDATA             ; write $10 zeros to clear the tile
+      STA PPU_DATA             ; write $10 zeros to clear the tile
       DEX
       BNE @ClearFFLoop
 
@@ -261,10 +261,10 @@ BattleScreenShake:
       
       FARCALL BattleRNG
       AND #$03          ; get a random number betwee 0-3
-      STA PPUSCROLL         ; use as X scroll
+      STA PPU_SCROLL         ; use as X scroll
       FARCALL BattleRNG
       AND #$03          ; another random number
-      STA PPUSCROLL         ; for Y scroll
+      STA PPU_SCROLL         ; for Y scroll
       
       DEC loop_counter
       BNE @Loop
@@ -290,7 +290,7 @@ BattleScreenShake:
 ;;
 ;;  Battle_UpdatePPU_UpdateAudio_FixedBank  [$F485 :: 0x3F495]
 ;;
-;;  Resets scroll and PPUMASK, then updates audio.
+;;  Resets scroll and PPU_MASK, then updates audio.
 ;;
 ;;  Used by only a few routines in the fixed bank.
 ;;
@@ -298,10 +298,10 @@ BattleScreenShake:
 
 Battle_UpdatePPU_UpdateAudio_FixedBank:
     LDA btl_soft2001
-    STA PPUMASK
+    STA PPU_MASK
     LDA #$00            ; reset scroll
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     NOJUMP BattleUpdateAudio_FixedBank
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -575,8 +575,8 @@ BattleBox_vAXY:
 Battle_PPUOff:
     LDA #0
     STA soft2000     ; clear soft2000
-    STA PPUCTRL          ; disable NMIs
-    STA PPUMASK          ; and turn off PPU
+    STA PPU_CTRL          ; disable NMIs
+    STA PPU_MASK          ; and turn off PPU
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1656,13 +1656,13 @@ Battle_WritePPUData:
         ORA #$80    ; Turn on the high bit to indicate we want ROM and not RAM
         STA Var2
         CALL ReadFarByte
-        STA PPUDATA
+        STA PPU_DATA
         INY
         DEX
         BNE @Loop
           
     LDA #$00                    ; reset scroll before exiting
-    STA PPUMASK
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_MASK
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     RTS

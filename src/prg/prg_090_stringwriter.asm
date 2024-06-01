@@ -1410,7 +1410,7 @@ SetTile:
 
     @NTB:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
+    ORA #$04                 ; OR with $04 ($2400 instead of PPU_CTRL)
     PHA                ; write as high byte of PPU address
     TXA                      ; put column in A
     AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)

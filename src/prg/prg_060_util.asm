@@ -263,8 +263,8 @@ PaletteFrame:
     CALL WaitForVBlank        ; Wait for VBlank
     CALL DrawPalette          ; then update the palette
     LDA #0                   ; reset the scroll
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     FARJUMP MusicPlay       ; update music engine, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -609,7 +609,7 @@ PrepAttributePos:
     CMP #$10        ; see if column >= $10... if it is, we need the right-hand attribute table
     BCC :+
        AND #$0F     ;   need right-hand attribute, mask column to low 4 bits
-       LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of PPUCTRL)
+       LDX #$27     ;   X=$27 to indicate right-hand attribute  (NT at $2400 instead of PPU_CTRL)
 
     :   
     STX tmp+2       ; put the high byte of the dest ppu address in tmp+2
@@ -681,11 +681,11 @@ PrepAttributePos:
 Battle_ReadPPUData:
     CALL WaitForVBlank         ; Wait for VBlank
     CALL SetBattlePPUAddr        ; Set given PPU Address to read from
-    LDA PPUDATA                   ; Throw away buffered byte
+    LDA PPU_DATA                   ; Throw away buffered byte
     LDY #$00
     LDX btltmp+8                ; btltmp+8 is number of bytes to read
     @Loop:
-        LDA PPUDATA
+        LDA PPU_DATA
         STA (btltmp+4), Y           ; write to (btltmp+4)
         INY
         DEX
@@ -748,7 +748,7 @@ WaitVBlank_NoSprites:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddrToDest_Bank:
-    LDA PPUSTATUS          ; reset PPU toggle
+    LDA PPU_STATUS          ; reset PPU toggle
     LDX dest_x         ; get dest_x in X
     LDY dest_y         ; and dest_y in Y
     CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
@@ -756,20 +756,20 @@ SetPPUAddrToDest_Bank:
 
  @NTA:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    STA PPUADDR                ; write it
+    STA PPU_ADDR                ; write it
     TXA                      ; put column/X coord in A
     ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    STA PPUADDR                ; and write as low byte
+    STA PPU_ADDR                ; and write as low byte
     RTS
 
  @NTB:
     LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPUCTRL)
-    STA PPUADDR                ; write as high byte of PPU address
+    ORA #$04                 ; OR with $04 ($2400 instead of PPU_CTRL)
+    STA PPU_ADDR                ; write as high byte of PPU address
     TXA                      ; put column in A
     AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
     ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    STA PPUADDR                ;  for our low byte of PPU address
+    STA PPU_ADDR                ;  for our low byte of PPU address
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

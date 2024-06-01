@@ -1,16 +1,3 @@
-PPUCTRL     := $2000 ;   VPHB SINN   NMI enable (V), PPU master/slave (P), sprite height (H), background tile select (B), sprite tile select (S), increment mode (I), nametable select (NN)
-PPUMASK     := $2001 ;   BGRs bMmG   color emphasis (BGR), sprite enable (s), background enable (b), sprite left column enable (M), background left column enable (m), greyscale (G)
-PPUSTATUS   := $2002 ;   VSO- ----   vblank (V), sprite 0 hit (S), sprite overflow (O); read resets write pair for $2005/$2006
-OAMADDR     := $2003 ;   aaaa aaaa   OAM read/write address
-OAMDATA     := $2004 ;   dddd dddd   OAM data read/write
-PPUSCROLL   := $2005 ;   xxxx xxxx   fine scroll position (two writes: X scroll, Y scroll)
-PPUADDR     := $2006 ;   aaaa aaaa   PPU read/write address (two writes: most significant byte, least significant byte)
-PPUDATA     := $2007 ;   dddd dddd   PPU data read/write
-OAMDMA      := $4014 ;   aaaa aaaa   OAM DMA high address
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; PPU I/O regs (CPU side)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -22,7 +9,7 @@ OAMDMA      := $4014 ;   aaaa aaaa   OAM DMA high address
 ;   4: Which pattern table holds for BG; 0 for PT1 ($0000) or 1 for PT2 ($1000)
 ;   5: Set to use 8x16 sprites instead of 8x8
 ;   7: Set to generate VBlank NMIs
-PPU_CTL1            := $2000     ; Write only
+PPU_CTRL            := $2000     ; Write only
 
 ;   PPU_CTL2:
 ;   0: Clear for color, set for mono
@@ -31,14 +18,14 @@ PPU_CTL1            := $2000     ; Write only
 ;   3: If clear, BG hidden
 ;   4: If clear, sprites hidden
 ;   5-7: BG color in mono mode, "color intensity" in color mode (??)
-PPU_CTL2            := $2001     ; Write only
+PPU_MASK            := $2001     ; Write only
 
 ;   PPU_STAT:
 ;   4: if set, can write to VRAM, else writes ignored
 ;   5: if set, sprite overflow occurred on scanline
 ;   6: Set if any non-transparent pixel of sprite 0 is overlapping a non-transparent pixel of BG
 ;   7: VBlank is occurring (cleared after read)
-PPU_STAT            := $2002
+PPU_STATUS          := $2002
 
 ; Sprites: 256 bytes, each sprite takes 4, so 64 sprites total
 ; Only 8 sprites per scanline, sprite 0 is drawn on top (thus highest priority)
@@ -51,12 +38,13 @@ PPU_STAT            := $2002
 ;   * Bit 6 - Indicates whether to flip the sprite horizontally.
 ;   * Bit 7 - Indicates whether to flip the sprite vertically.
 ; * Byte 3 - X coordinate
-PPU_SPR_ADDR        := $2003     ; Set address sprite data
-PPU_SPR_DATA        := $2004     ; Read or write this sprite byte
+OAM_ADDR        := $2003     ; Set address sprite data
+OAM_DATA        := $2004     ; Read or write this sprite byte
+OAM_DMA         := $4014     ; Sprite DMA Register -- DMA from CPU memory at $100 x n to SPR-RAM (256 bytes)
 
-PPU_SCROLL          := $2005     ; Scroll register; read PPU_STAT, then write horiz/vert scroll
-PPU_VRAM_ADDR       := $2006     ; VRAM address (first write is high, next write is low)
-PPU_VRAM_DATA       := $2007     ; Data to read/write at this address
+PPU_SCROLL     := $2005     ; Scroll register; read PPU_STAT, then write horiz/vert scroll
+PPU_ADDR       := $2006     ; VRAM address (first write is high, next write is low)
+PPU_DATA       := $2007     ; Data to read/write at this address
 
 ; Note that all transparent colors ($3F04, $3F08, $3F0C, $3F10, $3F14, $3F18 and $3F1C) are mirrored from 3F00
 PPU_BG_PAL          := $3F00     ; 3F00-3F0F
@@ -178,9 +166,6 @@ PAPU_EN             := $4015 ; R/W pAPU Sound Enable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; OTHER I/O regs
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SPR_DMA             := $4014 ; Sprite DMA Register -- DMA from CPU memory at $100 x n to SPR-RAM (256 bytes)
-
 
 ; Read / Write Joypad 1/2:
 ;                   *  Bit 0 - Reads data from joypad or causes joypad strobe

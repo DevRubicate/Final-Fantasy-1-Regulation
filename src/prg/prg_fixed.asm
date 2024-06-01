@@ -169,7 +169,7 @@ EnterOW_PalCyc:
 SetSMScroll:
     LDA NTsoft2000      ; get the NT scroll bits
     STA soft2000        ; and record them in both soft2000
-    STA PPUCTRL           ; and the actual PPUCTRL
+    STA PPU_CTRL           ; and the actual PPU_CTRL
 
     LDA sm_scroll_x     ; get the standard map scroll position
     ASL A
@@ -177,7 +177,7 @@ SetSMScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels wide)
     ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA PPUSCROLL           ; write this as our X scroll
+    STA PPU_SCROLL           ; write this as our X scroll
 
     LDA scroll_y        ; get scroll_y
     ASL A
@@ -185,7 +185,7 @@ SetSMScroll:
     ASL A
     ASL A               ; *16 (tiles are 16 pixels tall)
     ORA move_ctr_y      ; OR with move counter
-    STA PPUSCROLL           ; and set as Y scroll
+    STA PPU_SCROLL           ; and set as Y scroll
 
     RTS                 ; then exit
 
@@ -383,45 +383,45 @@ DecompressMap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawPalette:
-    LDA PPUSTATUS       ; Reset PPU toggle
+    LDA PPU_STATUS       ; Reset PPU toggle
     LDA #$3F        ; set PPU Address to $3F00 (start of palettes)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
     LDX #$00        ; set X to zero (our source index)
     JUMP _DrawPalette_Norm   ; and copy the normal palette
 
 DrawMapPalette:
-    LDA PPUSTATUS       ; Reset PPU Toggle
+    LDA PPU_STATUS       ; Reset PPU Toggle
     LDA #$3F        ; set PPU Address to $3F00 (start of palettes)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
     LDX #$00        ; clear X (our source index)
     LDA inroom      ; check in-room flag
     BEQ _DrawPalette_Norm   ; if we're not in a room, copy normal palette...otherwise...
 
     @InRoomLoop:
       LDA inroom_pal, X ; if we're in a room... the BG palette (first $10 colors) come from
-      STA PPUDATA         ;   $03E0 instead
+      STA PPU_DATA         ;   $03E0 instead
       INX
       CPX #$10          ; loop $10 times to copy the whole BG palette
       BCC @InRoomLoop   ;   once the BG palette is drawn, continue drawing the sprite palette per normal
 
     _DrawPalette_Norm:
     LDA cur_pal, X     ; get normal palette
-    STA PPUDATA          ;  and draw it
+    STA PPU_DATA          ;  and draw it
     INX
     CPX #$20           ; loop until $20 colors have been drawn (full palette)
     BCC _DrawPalette_Norm
 
-    LDA PPUSTATUS          ; once done, do the weird thing NES games do
+    LDA PPU_STATUS          ; once done, do the weird thing NES games do
     LDA #$3F           ;  reset PPU address to start of palettes ($3F00)
-    STA PPUADDR          ;  and then to $0000.  Most I can figure is that they do this
+    STA PPU_ADDR          ;  and then to $0000.  Most I can figure is that they do this
     LDA #$00           ;  to avoid a weird color from being displayed when the PPU is off
-    STA PPUADDR
-    STA PPUADDR
-    STA PPUADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
     RTS
 
 SetPPUAddrToDest:
@@ -459,10 +459,10 @@ CoordToNTAddr:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CHRLoadToA:
-    LDY PPUSTATUS   ; reset PPU Addr toggle
-    STA PPUADDR   ; write high byte of dest address
+    LDY PPU_STATUS   ; reset PPU Addr toggle
+    STA PPU_ADDR   ; write high byte of dest address
     LDA #0
-    STA PPUADDR   ; write low byte:  0
+    STA PPU_ADDR   ; write low byte:  0
     NOJUMP CHRLoad
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -488,7 +488,7 @@ CHRLoad:
 
 CHRLoad_Cont:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPUDATA         ; and write it to CHR-RAM
+    STA PPU_DATA         ; and write it to CHR-RAM
     INY               ; inc our source index
     BNE CHRLoad_Cont  ; if it didn't wrap, continue looping
 
@@ -507,9 +507,9 @@ CHRLoad_Cont:
 
 SetBattlePPUAddr:
     LDA btltmp+7
-    STA PPUADDR
+    STA PPU_ADDR
     LDA btltmp+6
-    STA PPUADDR
+    STA PPU_ADDR
     RTS
 
 
@@ -537,8 +537,8 @@ BattleCrossPageJump:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetPPUAddr_XA:
-    STX PPUADDR   ; write X as high byte
-    STA PPUADDR   ; A as low byte
+    STX PPU_ADDR   ; write X as high byte
+    STA PPU_ADDR   ; A as low byte
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -559,13 +559,13 @@ Battle_DrawMessageRow_VBlank:
     
 Battle_DrawMessageRow:
     LDA btl_tmpvar4
-    STA PPUADDR           ; set provided PPU address
+    STA PPU_ADDR           ; set provided PPU address
     LDA btl_tmpvar3
-    STA PPUADDR
+    STA PPU_ADDR
     LDY #$00
   @Loop:
       LDA (btl_varI), Y      ; read $19 bytes from source pointer
-      STA PPUDATA         ;  and draw them
+      STA PPU_DATA         ;  and draw them
       INY
       CPY #$19
       BNE @Loop
@@ -1136,7 +1136,7 @@ Copy256:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 LagFrame:
-    LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
+    LDA PPU_STATUS      ; clear VBlank flag and reset 2005/2006 toggle
     INC vBlankCounter
     PLA
     CLI
@@ -1147,7 +1147,7 @@ OnNMI:
     PHA                                         ; 2 cycle
 
     LDA #>oam                                   ; 2 cycle
-    STA OAMDMA                                  ; 4 cycles + 514 cycles
+    STA OAM_DMA                                  ; 4 cycles + 514 cycles
 
     ; if vBlank was not anticipated, do a lagframe update instead
     LDA vBlankAnticipated                       ; 4 cycle
@@ -1188,7 +1188,7 @@ OnNMI:
     ;FARCALL ClearSprites
 
     INC generalCounter
-    LDA PPUSTATUS      ; clear VBlank flag and reset 2005/2006 toggle
+    LDA PPU_STATUS      ; clear VBlank flag and reset 2005/2006 toggle
     INC vBlankCounter
 
     PLA
@@ -1210,10 +1210,10 @@ WaitForVBlank:
     STA VideoStack+0,X
     STA VideoStack+1,X
 
-    LDA PPUSTATUS      ; check VBlank flag
+    LDA PPU_STATUS      ; check VBlank flag
     LDA soft2000   ; Load desired PPU state
     ORA #$80       ; flip on the Enable NMI bit
-    STA PPUCTRL      ; and write it to PPU status reg
+    STA PPU_CTRL      ; and write it to PPU status reg
     INC vBlankAnticipated
     LDA vBlankCounter
     @LoopForever:
@@ -1260,7 +1260,7 @@ Impl_FARPPUCOPY:
     STA MMC5_PRG_BANK1
     @loop:
             LDA (tmp), Y      ; read a byte from source pointer
-            STA PPUDATA       ; and write it to CHR-RAM
+            STA PPU_DATA       ; and write it to CHR-RAM
             INY               ; inc our source index
         BNE @loop         ; if it didn't wrap, continue looping
         INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -1417,17 +1417,17 @@ OnReset:
 
     LDA #0
     STA PAPU_MODCTL         ; disble DMC IRQs
-    STA PPUCTRL             ; Disable NMIs
+    STA PPU_CTRL             ; Disable NMIs
     LDA #$C0
     STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
 
     LDA #$06
-    STA PPUMASK             ; disable Spr/BG rendering (shut off PPU)
+    STA PPU_MASK             ; disable Spr/BG rendering (shut off PPU)
     CLD                     ; clear Decimal flag (just a formality, doesn't really do anything)
 
     LDX #$02                ; wait for 2 vblanks to occurs (2 full frames)
     @Loop: 
-        BIT PPUSTATUS         ;  This is necessary because the PPU requires some time to "warm up"
+        BIT PPU_STATUS         ;  This is necessary because the PPU requires some time to "warm up"
         BPL @Loop             ;  failure to do this will result in the PPU basically not working
         DEX
         BNE @Loop

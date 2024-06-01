@@ -9,8 +9,8 @@
 
 DrawComplexString_Exit:
     LDA #$00       ; reset scroll to 0
-    STA PPUSCROLL
-    STA PPUSCROLL
+    STA PPU_SCROLL
+    STA PPU_SCROLL
     RTS
 
 
@@ -35,11 +35,11 @@ DrawComplexString_New:
     CMP #$1A          ; values below $1A are control codes.  See if this is a control code
     BCC @ControlCode  ;   if it is, jump ahead
 
-    LDX PPUSTATUS         ; reset PPU toggle
+    LDX PPU_STATUS         ; reset PPU toggle
     LDX ppu_dest+1    ;  load and set desired PPU address
-    STX PPUADDR         ;  do this with X, as to not disturb A, which is still our character
+    STX PPU_ADDR         ;  do this with X, as to not disturb A, which is still our character
     LDX ppu_dest
-    STX PPUADDR
+    STX PPU_ADDR
 
     CMP #$7A          ; see if this is a DTE character
     BCS @noDTE        ;  if < #$7A, it is DTE  (even though it probably should be #$6A)
@@ -48,13 +48,13 @@ DrawComplexString_New:
     SBC #$1A        ; subtract #$1A to get a zero-based index
     TAX             ; put the index in X
     LDA lut_DTE1, X ;  load and draw the first character in DTE
-    STA PPUDATA
+    STA PPU_DATA
     LDA lut_DTE2, X ;  load the second DTE character to be drawn in a bit
     INC ppu_dest    ;  increment the destination PPU address
 
     @noDTE:
 
-    STA PPUDATA         ; draw the character as-is
+    STA PPU_DATA         ; draw the character as-is
     INC ppu_dest      ; increment dest PPU address
     JUMP @Draw_NoStall ; and repeat the process until terminated
 
@@ -305,27 +305,27 @@ DrawComplexString_New:
     LDY #$C2         ; and Y to the "-" tile
     :
 
-    LDA PPUSTATUS       ; both equipped and nonequipped code meet up here
+    LDA PPU_STATUS       ; both equipped and nonequipped code meet up here
     LDA ppu_dest+1  ; reset PPU toggle
-    STA PPUADDR       ; and set desired PPU address
+    STA PPU_ADDR       ; and set desired PPU address
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDA #$FF
-    STA PPUDATA       ; draw a space (why??? -- screws up result!)
-    STX PPUDATA       ; then the "E" (if equipped) or another space (if not)
+    STA PPU_DATA       ; draw a space (why??? -- screws up result!)
+    STX PPU_DATA       ; then the "E" (if equipped) or another space (if not)
 
     INC ppu_dest    ; inc dest address
 
-    LDA PPUSTATUS       ; reset toggle again
+    LDA PPU_STATUS       ; reset toggle again
     LDA ppu_dest+1  ; and set desired PPU address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDA #$FF        ; draw a space.  Again.. why?  This only makes sense if you're in inc-by-32 mode
-    STA PPUDATA       ;  otherwise this space will overwrite the "E" we just drew.  But if you're in inc-by-32 mode...
-    STY PPUDATA       ;  the "E-" will draw 1 line below the item name (makes no sense).
+    STA PPU_DATA       ;  otherwise this space will overwrite the "E" we just drew.  But if you're in inc-by-32 mode...
+    STY PPU_DATA       ;  the "E-" will draw 1 line below the item name (makes no sense).
                     ; but anyway yeah.. after that space, draw the "-" or another space
 
     INC ppu_dest    ; inc dest PPU address

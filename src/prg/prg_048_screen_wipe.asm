@@ -117,7 +117,7 @@ ScreenWipe_Close:
  ;;
 
 ScreenWipe_Finalize:
-    STA PPUMASK          ; turn on/off the PPU (Close turns it off, Open turns it on)
+    STA PPU_MASK          ; turn on/off the PPU (Close turns it off, Open turns it on)
     LDA #0
     STA PAPU_FT1          ; then silence the Sq1 sound effect by setting its F-value to zero
     STA PAPU_CT1
@@ -205,7 +205,7 @@ ScreenWipeFrame:
                              ;  to attempt to realign the timing.
 
     LDA #$10                 ; turn BG rendering off
-    STA PPUMASK
+    STA PPU_MASK
     LDX tmp+4                ; wait for tmp+4 scanlines
     @WaitLines_Off:
       CALL WaitScanline
@@ -214,7 +214,7 @@ ScreenWipeFrame:
     PAGECHECK @WaitLines_Off
 
     LDA #$1E                 ; turn BG rendering on
-    STA PPUMASK
+    STA PPU_MASK
     LDX tmp+5                ; wait for tmp+5 scanlines
     @WaitLines_On:
       CALL WaitScanline
@@ -223,7 +223,7 @@ ScreenWipeFrame:
     PAGECHECK @WaitLines_On
 
     LDA #$10                 ; then turn BG rendering back off.  Leave it off for the rest of the frame
-    STA PPUMASK
+    STA PPU_MASK
 
     LDA tmp+5           ; check the number of visible scanlines
     AND #$0C            ; mask out bits 2,3

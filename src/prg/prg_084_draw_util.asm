@@ -52,10 +52,10 @@ DrawBox:
     CALL DrawBoxRow_Bot    ; Draw bottom row
 
     LDA soft2000          ; reset some PPU info
-    STA PPUCTRL
+    STA PPU_CTRL
     LDA #0
-    STA PPUSCROLL             ; and scroll information
-    STA PPUSCROLL
+    STA PPU_SCROLL             ; and scroll information
+    STA PPU_SCROLL
 
     LDA dest_x        ; get dest X coord
     CLC
@@ -82,23 +82,23 @@ DrawBox:
 
 DrawBoxRow_Mid:
     FARCALL MenuCondStall  ; do the conditional stall
-    LDA PPUSTATUS          ; reset PPU toggle
+    LDA PPU_STATUS          ; reset PPU toggle
     LDA ppu_dest+1
-    STA PPUADDR          ; Load up desired PPU address
+    STA PPU_ADDR          ; Load up desired PPU address
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
     LDX tmp+10         ; Load adjusted width into X (for loop counter)
     LDA #$FA           ; FA = L border tile
-    STA PPUDATA          ;   draw left border
+    STA PPU_DATA          ;   draw left border
 
     LDA #$FF           ; FF = inner box body tile
     @Loop:
-      STA PPUDATA        ;  draw box body tile
+      STA PPU_DATA        ;  draw box body tile
       DEX              ;    until X expires
       BNE @Loop
 
     LDA #$FB           ; FB = R border tile
-    STA PPUDATA          ;  draw right border
+    STA PPU_DATA          ;  draw right border
 
     LDA ppu_dest       ; Add #$20 to PPU address so that it points to the next row
     CLC
@@ -125,24 +125,24 @@ DrawBoxRow_Mid:
 
 DrawBoxRow_Bot:
     FARCALL MenuCondStall   ; Do the conditional stall
-    LDA PPUSTATUS           ; Reset PPU Toggle
+    LDA PPU_STATUS           ; Reset PPU Toggle
     LDA ppu_dest+1      ;  and load up PPU Address
-    STA PPUADDR
+    STA PPU_ADDR
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX tmp+10          ; put adjusted width in X (for loop counter)
     LDA #$FC            ;  FC = DL border tile
-    STA PPUDATA
+    STA PPU_DATA
 
     LDA #$FD            ;  FD = bottom border tile
     @Loop:
-      STA PPUDATA         ;  Draw it
+      STA PPU_DATA         ;  Draw it
       DEX               ;   until X expires
       BNE @Loop
 
     LDA #$FE            ;  FE = DR border tile
-    STA PPUDATA
+    STA PPU_DATA
 
     RTS
 
@@ -159,24 +159,24 @@ DrawBoxRow_Bot:
 
 DrawBoxRow_Top:
     FARCALL MenuCondStall   ; Do the conditional stall
-    LDA PPUSTATUS           ; reset PPU toggle
+    LDA PPU_STATUS           ; reset PPU toggle
     LDA ppu_dest+1
-    STA PPUADDR           ; set PPU Address appropriately
+    STA PPU_ADDR           ; set PPU Address appropriately
     LDA ppu_dest
-    STA PPUADDR
+    STA PPU_ADDR
 
     LDX tmp+10          ; load the adjusted width into X (our loop counter)
     LDA #$F7            ; F7 = UL border tile
-    STA PPUDATA           ;   draw UL border
+    STA PPU_DATA           ;   draw UL border
 
     LDA #$F8            ; F8 = U border tile
     @Loop:
-      STA PPUDATA         ;   draw U border
+      STA PPU_DATA         ;   draw U border
       DEX               ;     until X expires
       BNE @Loop
 
     LDA #$F9            ; F9 = UR border tile
-    STA PPUDATA           ;   draw it
+    STA PPU_DATA           ;   draw it
 
     LDA ppu_dest        ; Add #$20 to our input PPU address so that it
     CLC                 ;  points to the next row
@@ -258,7 +258,7 @@ CyclePalettes:
     LSR A                       ; check 'reverse' bit
     BCS :+                      ; if NOT doing reverse....
         LDA #0                  ; ... then turn PPU off
-        STA PPUMASK
+        STA PPU_MASK
     :   
     RTS
 
@@ -283,14 +283,14 @@ PalCyc_SetScroll:
 
   @Do_Zero:              ; otherwise, do zero scroll
     LDA soft2000
-    STA PPUCTRL            ; set NT bits
+    STA PPU_CTRL            ; set NT bits
 
     LDA #$0A
-    STA PPUMASK            ; disable sprite rendering
+    STA PPU_MASK            ; disable sprite rendering
 
     LDA #$00
-    STA PPUSCROLL
-    STA PPUSCROLL            ; zero scroll
+    STA PPU_SCROLL
+    STA PPU_SCROLL            ; zero scroll
 
     RTS                  ; exit
 
@@ -302,13 +302,13 @@ PalCyc_SetScroll:
   @Do_OW:
     FARCALL SetOWScroll_PPUOn  ; set overworld scroll
     LDA #$0A
-    STA PPUMASK              ; disable sprites
+    STA PPU_MASK              ; disable sprites
     RTS                    ; exit
 
   @Do_SM:
     CALL SetSMScroll      ; set standard map scroll
     LDA #$0A
-    STA PPUMASK            ; disable sprites
+    STA PPU_MASK            ; disable sprites
     RTS                  ; exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -469,29 +469,29 @@ PalCyc_Step:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PalCyc_DrawPalette:
-    LDA PPUSTATUS          ; reset PPU toggle
+    LDA PPU_STATUS          ; reset PPU toggle
     LDX #0             ; X will be our loop counter.  Zero it
 
     LDA #$3F           ; set PPU addr to $3F00 (palettes)
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
+    STA PPU_ADDR
 
   @Loop:
       LDA tmp_pal, X   ; get color from tmp_pal
-      STA PPUDATA        ; draw it
+      STA PPU_DATA        ; draw it
       INX
       CPX #$10         ; and keep looping ($10 iterations)
       BCC @Loop
 
-    LDA PPUSTATUS          ; reset PPU toggle
+    LDA PPU_STATUS          ; reset PPU toggle
 
     LDA #$3F           ; move PPU addr off of palettes
-    STA PPUADDR
+    STA PPU_ADDR
     LDA #$00
-    STA PPUADDR
-    STA PPUADDR
-    STA PPUADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
+    STA PPU_ADDR
 
     RTS                ; and exit
 
