@@ -1415,7 +1415,8 @@ OnReset:
 
     LDA #0
     STA PAPU_MODCTL         ; disble DMC IRQs
-    STA PPU_CTRL             ; Disable NMIs
+    LDA #%00100000
+    STA PPU_CTRL            ; Disable NMIs
     LDA #$C0
     STA FRAMECTR_CTL        ; set alternative pAPU frame counter method, reset the frame counter, and disable APU IRQs
 

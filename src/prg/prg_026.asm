@@ -66,7 +66,7 @@ Story_OpenShutters:
             ; once counters are prepped -- start doing frames of animation
 
   @Frame:
-    LDA #$01             ; set soft2000 to use the closed NT ($2400 -- the one with closed shutter
+    LDA #%00100001              ; set soft2000 to use the closed NT ($2400 -- the one with closed shutter
     STA soft2000         ;  graphics).  This leaves the shutter closed for the remainder of the previous
                          ;  frame.
 
@@ -121,7 +121,7 @@ Story_OpenShutters:
       DEX
       BNE @ClosedLoop   ; (each loop iteration = 105 cycles)
 
-    LDA #$00         ; then switch the PPU over to the "open" NT
+    LDA #%00100000         ; then switch the PPU over to the "open" NT
     STA PPU_CTRL
 
     LDX shutter_b       ; load number of not-quite-scanlines shutters are to be opened
@@ -130,7 +130,7 @@ Story_OpenShutters:
       DEX
       BNE @OpenLoop
 
-    LDA #$01         ; then close the shutters again by switching
+    LDA #%00101000      ; then close the shutters again by switching
     STA PPU_CTRL        ;  the PPU over to the "closed" NT
 
     PLA              ; pull the loop counter from the stack
@@ -161,7 +161,7 @@ Story_OpenShutters:
   ;; once the number of closed scanlines reaches zero... shutter animation is complete,
   ;;  and shutters are fully opened.
 
-    LDA #0             ; set the PPU to use the "open" NT
+    LDA #%00100000              ; set the PPU to use the "open" NT
     STA PPU_CTRL
     STA soft2000
 
@@ -314,12 +314,12 @@ data_TheEndDrawData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawFancyTheEndGraphic:
-    LDA #$00
+    LDA #%00100000
     STA soft2000
-    
-    
+
     ; Clear CHR at $0800 to $0EFF  (tiles $80-EF)
     ;   clearing $80 bytes per frame (1 loop iteration = 1 frame)
+    LDA #0
     STA theend_ppuaddr            ;
     LDA #>$0800
     STA theend_ppuaddr+1          ; set @ppu addr to $0800
@@ -925,7 +925,7 @@ EnterMiniGame:
     STA PPU_MASK             ; turn off PPU
     STA PAPU_EN             ; and APU
 
-    LDA #$08              ; clear NT scroll
+    LDA #%00101000              ; clear NT scroll
     STA soft2000
 
     LDA #BANK_THIS        ; set cur bank for music playback
@@ -2293,7 +2293,7 @@ EnterBridgeScene:
       SBC #1
       BNE @StallLoop      ; and loop until it expires
 
-    LDA #$01              ; then move the PPU over to the "closed" NT (even though it should be there
+    LDA #%00100001               ; then move the PPU over to the "closed" NT (even though it should be there
     STA soft2000          ;  already!)
     STA PPU_CTRL
 
@@ -2333,7 +2333,7 @@ Story_FillSecAttrib:
       CPX #$20
       BCC @Loop           ; loop until $20 bytes copied (top half of attribute table)
 
-    LDA #0             ; reset NT scroll to zero (seems weird to do here)
+    LDA #%00100000              ; reset NT scroll to zero (seems weird to do here)
     STA soft2000
     STA PPU_CTRL
 
@@ -2394,10 +2394,11 @@ Bridge_StartPPU:
 
 
 Story_DoPage:
-    LDA #$01             ; switch to "closed" NT (shutters closed)
+    LDA #%00100001              ; switch to "closed" NT (shutters closed)
     STA soft2000
     STA PPU_CTRL
 
+    LDA #1
     STA menustall        ; enable menu stalling (drawing is going to be done while PPU on)
 
     LDA #BANK_THIS       ; set current and return banks -- needed for
@@ -2486,7 +2487,7 @@ Story_CloseShutters:
     STA shutter_b    ; shutter_b is the number of closed scanline
 
   @Frame:
-    LDA #$00         ; set soft2000 so remainder of previous frame has shutters opened
+    LDA #%00100000          ; set soft2000 so remainder of previous frame has shutters opened
     STA soft2000
 
     CALL WaitForVBlank
@@ -2536,7 +2537,7 @@ Story_CloseShutters:
     DEC shutter_a   ; decrement number of open scanlines
     BNE @Frame
 
-    LDA #$01        ; once complete, switch to closed NT
+    LDA #%00100001         ; once complete, switch to closed NT
     STA PPU_CTRL       ;  so shutters remain closed.
     STA soft2000
 

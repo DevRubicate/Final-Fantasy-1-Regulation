@@ -107,8 +107,10 @@ EnterOverworldLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrepOverworld:
-    LDA #0
+    LDA #%00100000
     STA PPU_CTRL           ; disable NMIs
+
+    LDA #0
     STA PPU_MASK           ; turn off PPU
     STA PAPU_EN           ; silence APU
 
@@ -134,7 +136,7 @@ PrepOverworld:
     CMP #$10             ; move it to C (C set if we're to use NT @ $2400)
     ROL A                ; roll that bit into bit 0
     AND #$01             ; isolate it
-    ORA #$08             ; OR with 8 (sprites use right-hand pattern table)
+    ORA #%00101000       ; OR with 8 (sprites use right-hand pattern table) and 8x16 sprite
     STA NTsoft2000       ; record this as our soft2000
     STA soft2000
 

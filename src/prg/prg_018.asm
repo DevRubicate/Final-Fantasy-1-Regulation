@@ -5048,7 +5048,7 @@ Minimap_YouAreHere:
       INX
       BNE @Loop       ; $100 iterations (all of OAM)
 
-    LDA #$08
+    LDA #%00101000 
     STA soft2000      ; clear NT scroll (seems inapporpriate to do it here, but I guess it doesn't hurt)
 
     LDA #$80

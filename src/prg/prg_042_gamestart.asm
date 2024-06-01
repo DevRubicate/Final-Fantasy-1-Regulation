@@ -16,7 +16,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GameStart:
-    LDA #$08                    ; Sprites use pattern table at $1xxx
+    LDA #%00101000                    ; Sprites use pattern table at $1xxx
     STA soft2000
     STA NTsoft2000
         

@@ -63,11 +63,11 @@ LUT_Tilesets:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PrepStandardMap:
-    LDA #0
+    LDA #%00100000
     STA PPU_CTRL               ; disable NMIs
-    STA PPU_MASK               ; turn off the PPU
-    STA PAPU_NCTL1               ; ??  tries to silence noise?  This doesn't really accomplish that.
 
+    LDA #0
+    STA PPU_MASK               ; turn off the PPU
     STA joy_select          ; zero a bunch of other map and input related stuff
     STA joy_start
     STA joy_a
@@ -87,7 +87,7 @@ PrepStandardMap:
     CMP #$10                ; move it into C
     ROL A                   ; then rotate it into bit 0
     AND #$01                ; and isolate it again (low bit this time)
-    ORA #$08                ; combine with Spr-pattern-page bit
+    ORA #%00101000          ; combine with Spr-pattern-page bit and 8x16 sprite
     STA NTsoft2000          ; and record as soft2000
     STA soft2000
 
@@ -242,8 +242,9 @@ LoadStandardMapAndObjects:
     LDA #$01
     STA mapflags          ; set the standard map flag
 
-    LDA #0
+    LDA #%00100000
     STA PPU_CTRL             ; disable NMIs
+    LDA #0
     STA PPU_MASK             ; turn off PPU
 
     FORCEDFARCALL LoadStandardMap   ; decompress the map

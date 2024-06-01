@@ -8,6 +8,7 @@
 ;   3: Which pattern table holds for sprites; 0 for PT1 ($0000) or 1 for PT2 ($1000)
 ;   4: Which pattern table holds for BG; 0 for PT1 ($0000) or 1 for PT2 ($1000)
 ;   5: Set to use 8x16 sprites instead of 8x8
+;   6:
 ;   7: Set to generate VBlank NMIs
 PPU_CTRL            := $2000     ; Write only
 

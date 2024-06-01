@@ -5121,8 +5121,8 @@ ResetUsePalette:
 
 BattleFadeIn:
     CALL BattleClearOAM          ; Clear OAM
-    LDA #$00
-    STA a:soft2000              ; clear other PPU settings
+    LDA #%00100000
+    STA soft2000                ; clear other PPU settings
     STA PPU_MASK                   ; including disabling rendering, though since btl_soft2001 has
                                 ;   rendering enabled, rendering will be re-enabled when palettes are updated
     

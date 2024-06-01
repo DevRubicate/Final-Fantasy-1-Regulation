@@ -573,7 +573,7 @@ BattleBox_vAXY:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_PPUOff:
-    LDA #0
+    LDA #%00100000
     STA soft2000     ; clear soft2000
     STA PPU_CTRL          ; disable NMIs
     STA PPU_MASK          ; and turn off PPU

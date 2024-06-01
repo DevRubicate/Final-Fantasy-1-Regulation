@@ -669,7 +669,7 @@ DrawMapRowCol:
     STA PPU_ADDR        ; set PPU addr to previously calculated dest address
     LDA tmp
     STA PPU_ADDR
-    LDA #$04
+    LDA #%00100100
     STA PPU_CTRL        ; set PPU to "inc-by-32" mode -- for drawing columns of tiles at a time
 
     @ColLoop_L:

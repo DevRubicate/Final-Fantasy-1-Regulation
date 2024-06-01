@@ -1702,7 +1702,7 @@ EnterLineupMenu:
     LDA #0
     STA PPU_MASK             ; turn off the PPU
     STA PAPU_EN             ; silence APU
-    LDA #$08
+    LDA #%00101000
     STA soft2000          ; reset soft2000 to typical setup
 
     FARCALL LoadMenuCHRPal    ; load menu related CHR and palettes
@@ -3136,7 +3136,7 @@ lut_PtyGenBuf:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterIntroStory:
-    LDA #$08
+    LDA #%00101000
     STA soft2000             ; set PPU_CTRL and soft2000 appropriately
     STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
@@ -5685,7 +5685,7 @@ ResumeMainMenu:
     LDA #0
     STA PPU_SCROLL
     STA PPU_SCROLL                ; reset scroll
-    LDA #$08
+    LDA #%00101000
     STA soft2000             ; set PPU_CTRL and soft2000 appropriately
     STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
@@ -7626,7 +7626,7 @@ TurnMenuScreenOn:
     CALL WaitForVBlank      ; wait for VBlank (don't want to turn the screen on midway through the frame)
     CALL DrawPalette          ; draw/apply the current palette
 
-    LDA #$08
+    LDA #%00101000
     STA soft2000             ; set PPU_CTRL and soft2000 appropriately
     STA PPU_CTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
