@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.export DrawCursorSprite, DrawBlinkingCursorSprite, ClearSprites
+.export DrawCursorSprite, DrawBlinkingCursorSprite, ClearSprites, AllocateSprites
 
 
 

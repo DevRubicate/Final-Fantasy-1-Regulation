@@ -1173,7 +1173,9 @@ OnNMI:
     PLA
     TAX
     @noVideo:
-
+    
+    LDA #0
+    STA spriteRAMCursor
 
     LDA #(256 - 96) ; Save 96 bytes for the normal stack
     STA VideoStackTally

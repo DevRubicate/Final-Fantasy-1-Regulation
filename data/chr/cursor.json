@@ -1,0 +1,14 @@
+{
+    "tile": [
+        {
+            "name": "CURSOR_0",
+            "source": "data/chr/cursor.png",
+            "index": 0
+        },
+        {
+            "name": "CURSOR_1",
+            "source": "data/chr/cursor.png",
+            "index": 1
+        }
+    ]
+}

@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites
+.import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites, AllocateSprites
 .import DoMapDrawJob, BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
 .import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy, OpenTreasureChest
 
@@ -1103,8 +1103,12 @@ DrawMMV_OnFoot:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Draw2x2Sprite:
+
+    LDA #4
+    FARCALL AllocateSprites
+
     LDY #0           ; zero Y (will be our index to the given buffer
-    LDX sprindex     ; get the sprite index in X
+    ;LDX sprindex     ; get the sprite index in X
 
     LDA spr_y        ; load up desired Y coord
     STA oam+$0, X    ;  set UL and UR sprite Y coords

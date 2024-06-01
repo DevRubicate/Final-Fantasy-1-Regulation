@@ -1533,8 +1533,6 @@ UploadNineSliceBorders:
     STA Var2
     FARCALL UploadCHR
 
-
-
     LDA #<TILE_BORDER_SPLIT
     STA Var0
     LDA #>TILE_BORDER_SPLIT

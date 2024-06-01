@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, NewGamePartyGeneration, ClearZeroPage, DoOverworld
+.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, NewGamePartyGeneration, ClearZeroPage, DoOverworld, UploadFillColor
 
 .export GameStart
 
@@ -16,10 +16,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GameStart:
-    LDA #0                      ; Turn off the PPU
-    STA PPUCTRL
-    STA PPUMASK
-    
     LDA #$08                    ; Sprites use pattern table at $1xxx
     STA soft2000
     STA NTsoft2000
@@ -58,13 +54,12 @@ GameStart:
     LDA #$01                        ; start on foot
     STA unsram_vehicle
     
-    LDA startintrocheck             ; check a random spot in memory.  This value is not inialized as powerup,
-    CMP #$4D                        ;    and will be semi-random.
-    BEQ :+                          ; if it is any value other than $4D, we can assume we just powered on...
-      LDA #$4D                      ; ... so initilize it to $4D.  From this point forward, it will always be initlialized.
-      STA startintrocheck           ; This is how the game makes the distinction between cold boot and warm reset
-      FARCALL EnterIntroStory       ; And do the intro story!
-    : 
+    FARCALL EnterIntroStory       ; And do the intro story!
+
+
+    LDA #$0F
+    STA fillColor
+    FARCALL UploadFillColor
 
     FARCALL EnterTitleScreen
     

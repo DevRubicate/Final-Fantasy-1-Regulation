@@ -18,9 +18,62 @@
 .import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
 .import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
 
-.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable, UploadCHR
+.export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable 
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
+.export UploadCHR, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
 
+lut_NTRowStartLo:
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+
+lut_NTRowStartHi:
+  .byte $20,$20,$20,$20,$20,$20,$20,$20
+  .byte $21,$21,$21,$21,$21,$21,$21,$21
+  .byte $22,$22,$22,$22,$22,$22,$22,$22
+  .byte $23,$23,$23,$23,$23,$23,$23,$23
+
+LUT_AttributeMagic:
+    .byte %00000000
+    .byte %00000001
+    .byte %00000010
+    .byte %00000011
+    .byte %00000000
+    .byte %00000100
+    .byte %00001000
+    .byte %00001100
+    .byte %00000000
+    .byte %00010000
+    .byte %00100000
+    .byte %00110000
+    .byte %00000000
+    .byte %01000000
+    .byte %10000000
+    .byte %11000000
+
+LUT_AttributeMask:
+    .byte %11111100
+    .byte %11111100
+    .byte %11111100
+    .byte %11111100
+    .byte %11110011
+    .byte %11110011
+    .byte %11110011
+    .byte %11110011
+    .byte %11001111
+    .byte %11001111
+    .byte %11001111
+    .byte %11001111
+    .byte %00111111
+    .byte %00111111
+    .byte %00111111
+    .byte %00111111
+
+LUT_AttributeYPosition:
+    .repeat 32, i
+        .byte 8*(i>>2)
+    .endrepeat
 
 
 VideoApplySizeAndCost:
@@ -2185,20 +2238,28 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadFillColor
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-UploadFillColor:
-    LDA VideoCursor
-    TAX
-    CLC
-    ADC #2
-    BMI @End
-    STA VideoCursor
+    UploadFillColor:
+        @allocateVideoBuffer:
+        ; Video_SetFillColor            10
+        LDA #10                         ; Cost is 10
+        LDY #0                          ; Cost high-byte is 0
+        LDX #2                          ; Add 2 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-    LDA #<(Video_SetFillColor-1)
-    STA VideoStack+0,X
-    LDA #>(Video_SetFillColor-1)
-    STA VideoStack+1,X
-    @End:
-    RTS
+        LDX VideoCursor
+        LDA #<(Video_SetFillColor-1)
+        STA VideoStack+0,X
+        LDA #>(Video_SetFillColor-1)
+        STA VideoStack+1,X
+
+        ; Advance our video cursor by 2
+        TXA
+        CLC
+        ADC #2
+        STA VideoCursor
+
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadPalette0
@@ -2522,68 +2583,596 @@ UploadFillColor:
         STA VideoStack+4,X
         LDA #>(Video_MassWriteStack-1-(64*4))
         STA VideoStack+5,X
+        STX VideoCursor
 
-        TXA
+        LDX #0
+        LDY #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
         CLC
         ADC #6
-        TAX             ; set X for donut_decompress_block
+        TAX
         CLC
         ADC #64
         STA VideoCursor
-
-        LDY #0
-        FARCALL donut_decompress_block
+        CALL PushDonutData64
         RTS
 
-lut_NTRowStartLo:
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
-  .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadBackgroundCHR1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadBackgroundCHR1:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(16) * 4 = 64
+        LDA #75                     ; Add 11+64 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #22                     ; Add 22 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
 
-lut_NTRowStartHi:
-  .byte $20,$20,$20,$20,$20,$20,$20,$20
-  .byte $21,$21,$21,$21,$21,$21,$21,$21
-  .byte $22,$22,$22,$22,$22,$22,$22,$22
-  .byte $23,$23,$23,$23,$23,$23,$23,$23
 
-LUT_AttributeMagic:
-    .byte %00000000
-    .byte %00000001
-    .byte %00000010
-    .byte %00000011
-    .byte %00000000
-    .byte %00000100
-    .byte %00001000
-    .byte %00001100
-    .byte %00000000
-    .byte %00010000
-    .byte %00100000
-    .byte %00110000
-    .byte %00000000
-    .byte %01000000
-    .byte %10000000
-    .byte %11000000
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
 
-LUT_AttributeMask:
-    .byte %11111100
-    .byte %11111100
-    .byte %11111100
-    .byte %11111100
-    .byte %11110011
-    .byte %11110011
-    .byte %11110011
-    .byte %11110011
-    .byte %11001111
-    .byte %11001111
-    .byte %11001111
-    .byte %11001111
-    .byte %00111111
-    .byte %00111111
-    .byte %00111111
-    .byte %00111111
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
 
-LUT_AttributeYPosition:
-    .repeat 32, i
-        .byte 8*(i>>2)
-    .endrepeat
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #16
+        STA VideoCursor
+        CALL PushDonutData16
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadBackgroundCHR2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadBackgroundCHR2:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(32) * 4 = 128
+        LDA #139                    ; Add 11+128 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #38                     ; Add 38 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #32
+        STA VideoCursor
+        CALL PushDonutData32
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadBackgroundCHR3
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadBackgroundCHR3:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(48) * 4 = 192
+        LDA #203                    ; Add 11+192 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #52                     ; Add 52 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #48
+        STA VideoCursor
+        CALL PushDonutData48
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadBackgroundCHR4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadBackgroundCHR4:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(64) * 4 = 256
+        LDA #11                     ; Add 11 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #1                      ; Add 256 to cost
+        LDX #70                     ; Add 70 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #64
+        STA VideoCursor
+        CALL PushDonutData64
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadSpriteCHR1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadSpriteCHR1:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(16) * 4 = 64
+        LDA #75                     ; Add 11+64 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #22                     ; Add 22 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        ORA #$10
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #16
+        STA VideoCursor
+        CALL PushDonutData16
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadSpriteCHR2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadSpriteCHR2:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(32) * 4 = 128
+        LDA #139                    ; Add 11+128 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #38                     ; Add 38 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        ORA #$10
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #32
+        STA VideoCursor
+        CALL PushDonutData32
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadSpriteCHR3
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadSpriteCHR3:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(48) * 4 = 192
+        LDA #203                    ; Add 11+192 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #0                      ; Set high byte to 0
+        LDX #52                     ; Add 52 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        ORA #$10
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #48
+        STA VideoCursor
+        CALL PushDonutData48
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadSpriteCHR4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadSpriteCHR4:
+        @allocateVideoBuffer:
+        ; Video_Inc1_Address        11 or 14 (inc1)
+        ; Video_MassWriteStack      N(64) * 4 = 256
+        LDA #11                     ; Add 11 to cost
+        ADC VideoIncrementCost      ; Potentially add 3 to cost
+        LDY #1                      ; Add 256 to cost
+        LDX #70                     ; Add 70 to our video stack size
+        CALL VideoApplySizeAndCost
+        BCS @allocateVideoBuffer
+
+
+        LDA #TextBank(LUT_TILE_CHR)
+        CLC
+        ADC Var1
+        STA MMC5_PRG_BANK2
+        LDX Var0
+        LDA LUT_TILE_CHR,X
+        STA donut_stream_ptr
+        LDA LUT_TILE_CHR_SIBLING2,X
+        STA donut_stream_ptr+1
+
+        LDY #0
+        LDX VideoCursor
+        LDA #<(Video_Inc1_Address-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Inc1_Address-1)
+        STA VideoStack+1,X
+
+        LDA Var2
+        LSR A
+        LSR A
+        LSR A
+        LSR A
+        ORA #$10
+        STA VideoStack+2,X
+
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
+        STA VideoStack+3,X
+
+        LDA #<(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+4,X
+        LDA #>(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+5,X
+        STX VideoCursor
+
+        LDY #0
+        LDX #0
+        FARCALL donut_decompress_block
+
+        LDA VideoCursor
+        CLC
+        ADC #6
+        TAX
+        CLC
+        ADC #64
+        STA VideoCursor
+        CALL PushDonutData64
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PushDonutData16
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    PushDonutData16:
+        .repeat 16, i
+            LDA donut_output_buffer+i
+            STA VideoStack+i,X
+        .endrepeat
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PushDonutData32
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    PushDonutData32:
+        .repeat 32, i
+            LDA donut_output_buffer+i
+            STA VideoStack+i,X
+        .endrepeat
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PushDonutData48
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    PushDonutData48:
+        .repeat 48, i
+            LDA donut_output_buffer+i
+            STA VideoStack+i,X
+        .endrepeat
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; PushDonutData64
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    PushDonutData64:
+        .repeat 64, i
+            LDA donut_output_buffer+i
+            STA VideoStack+i,X
+        .endrepeat
+        RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; AllocateSprite
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    AllocateSprite:
+    
+    RTS

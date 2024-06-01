@@ -3,7 +3,6 @@
 .include "src/global-import.inc"
 
 .import GameStart, ClearSprites
-.import lut_IntroStoryText
 .import DoOverworld, PlaySFX_Error, AddGPToParty, DrawComplexString_New
 .import DrawPalette, FindEmptyWeaponSlot, MusicPlay, UpdateJoy, HideMapObject
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
@@ -11,8 +10,8 @@
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
 .import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
 .import WhitespaceWriter, DrawNineSlice, DrawRectangle
-.import Stringify, UploadPalette0
-.import DrawGameMenu, FillNametable, ColorRectangle
+.import Stringify, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadFillColor
+.import DrawGameMenu, FillNametable, ColorRectangle, DrawSprite
 .import DrawShopWelcome, DrawShopWhatDoYouWant, DrawShopWhoWillTakeIt, DrawShopThankYouWhatElse
 .import DrawShopYouCantCarryAnymore, DrawShopYouCantAffordThat, DrawShopWhoseItemSell
 .import DrawShopYouHaveNothing, DrawShopWhoWillLearnSpell, DrawShopTooBad, DrawShopYouHaveTooMany
@@ -22,8 +21,12 @@
 .import DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
+.import UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4
+
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
+.import TEXT_INTRO_STORY_1, TEXT_INTRO_STORY_2, TEXT_INTRO_STORY_3, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_5, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_8, TEXT_INTRO_STORY_9, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_11
+
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
@@ -46,40 +49,6 @@ lut_ShopStrings:
 lut_ShopData:
   .incbin "bin/0E_8300_shopdata.bin"
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  IntroStory_Joy  [$84CA :: 0x384DA]
-;;
-;;    Updates joypad data and forces a game restart when the Start button is pressed
-;;  (which brings up the title screen).
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IntroStory_Joy:
-    LDA #0                ; reset the respond rate to zero
-    STA a:respondrate     ;  (why do this here?  Very out of place)
-
-    FARCALL UpdateJoy         ; Update joypad data
-    LDA joy
-    AND #BTN_START        ; see if start was pressed
-    BNE :+                ;  if not, just exit
-      RTS
-    :   
-    FARJUMP GameStart       ; if it was pressed, restart game (brings up title screen)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  TitleScreen_Music  [$84DC :: 0x384EC]
-;;
-;;    Very strange little routine that calls the music driver and then
-;;  loads the A button catcher before exiting.  Is called by the title screen.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TitleScreen_Music:
-    FARCALL MusicPlay
-    LDA joy_a
-    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -87,7 +56,7 @@ TitleScreen_Music:
 ;;
 ;;    This is a table of complex strings used in menus.
 
-.align $100
+;.align $100
 
 lut_MenuText:
   .incbin "bin/0E_8500_menutext.bin"
@@ -2213,7 +2182,7 @@ LineupMenu_DrawCursor:
     ADC #$08               ; +8
     STA spr_y              ; and that's the cursor Y coord
 
-    JUMP JumpDrawCursor         ; draw the cursor and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 
 
@@ -2386,50 +2355,6 @@ LineupMenu_Finalize:
 
     RTS                      ; then exit!
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Clear Nametable  [$9C02 :: 0x39C12]
-;;
-;;    This clears the full nametable (ppuPPUCTRL) to 00, as well as filling
-;;   the attribute table with FF.  This provides a "clean slate" on which
-;;   menu boxes and stuff can be drawn to.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearNT:
-    LDA PPUSTATUS     ; reset PPU toggle
-    LDA #$20
-    STA PPUADDR
-    LDA #$00
-    STA PPUADDR     ; set PPU addr to PPUCTRL (start of NT)
-    LDY #$00      ; zero out A and Y
-    TYA           ;   Y will be the low byte of our counter
-    LDX #$03      ; X=3 -- this is the high byte of our counter (loop $0300 times)
-
-@Loop:            ; first loop clears the first $0300 bytes of the NT
-      STA PPUDATA
-      INY
-      BNE @Loop      ; once Y wraps
-        DEX          ;  decrement X
-        BNE @Loop    ;  and stop looping once X expires (total $0300 iterations)
-
-@Loop2:           ; next loop clears the next $00C0 (up to the attribute table)
-      STA PPUDATA
-      INY
-      CPY #$C0       ; loop until Y reaches #$C0
-      BCC @Loop2
-
-
-    LDA #$FF      ; A=FF (this is what we will fill attribute table with
-@Loop3:           ;  3rd and final loop fills the last $40 bytes (attribute table) with FF
-      STA PPUDATA
-      INY
-      BNE @Loop3
-
-    RTS
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  NewGamePartyGeneration  [$9C54 :: 0x39C64]
@@ -2493,7 +2418,6 @@ NewGamePartyGeneration:
     CALL DoPartyGen_OnCharacter
     BCS @Char_2
     
-    
     ; Once all 4 characters have been generated and named...
     CALL PtyGen_DrawScreen       ; Draw the screen one more time
     
@@ -2544,20 +2468,30 @@ NewGamePartyGeneration:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PtyGen_DrawScreen:
-    LDA #$08
-    STA soft2000          ; set BG/Spr pattern table assignments
-    LDA #0
-    STA PPUMASK             ; turn off PPU
     LDA #0
     STA joy_a             ;  clear various joypad catchers
     STA joy_b
     STA joy
     STA joy_prevdir
 
+    STA Var0
     FARCALL FillNametable
-    CALL PtyGen_DrawText     ;  and the text in those boxes
-    JUMP TurnMenuScreenOn_ClearOAM   ; then clear OAM and turn the PPU On
 
+    LDA #0
+    STA slotIndex
+    LDA #0             ; start loop counter at zero
+    @MainLoop:
+    PHA                ; push loop counter to back it up
+    CALL @DrawOne       ; draw one character's strings
+    INC slotIndex
+    PLA                ;  pull loop counter
+    CLC                ; and increase it to point to next character's data
+    ADC #$10           ;  ($10 bytes per char in 'ptygen')
+    CMP #$40
+    BCC @MainLoop      ;  loop until all 4 chars drawn
+    RTS
+    @DrawOne:
+    JUMP PtyGen_DrawOneText
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2934,31 +2868,6 @@ PtyGen_DrawBoxes:
     FARJUMP DrawBox          ;  draw the box, and exit
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawText  [$9EBC :: 0x39ECC]
-;;
-;;    Draws the text for all 4 character boxes in the Party Generation screen.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawText:
-    LDA #0
-    STA slotIndex
-    LDA #0             ; start loop counter at zero
-    @MainLoop:
-    PHA                ; push loop counter to back it up
-    CALL @DrawOne       ; draw one character's strings
-    INC slotIndex
-    PLA                ;  pull loop counter
-    CLC                ; and increase it to point to next character's data
-    ADC #$10           ;  ($10 bytes per char in 'ptygen')
-    CMP #$40
-    BCC @MainLoop      ;  loop until all 4 chars drawn
-    RTS
-    @DrawOne:
-    NOJUMP PtyGen_DrawOneText
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -2983,6 +2892,8 @@ PtyGen_DrawText:
 
 PtyGen_DrawOneText:
 
+    FARCALL RestoreNineSliceBordersToDefault
+
     LDX slotIndex
     LDA SlotCoordX, X
     STA drawX
@@ -3003,7 +2914,6 @@ PtyGen_DrawOneText:
     CLC
     ADC #2
     STA drawY
-
 
     LDA partyGenerationClass, X
     TAX
@@ -3071,7 +2981,7 @@ PtyGen_DrawCursor:
     STA spr_x
     LDA ptygen_curs_y, X
     STA spr_y
-    JUMP JumpDrawCursor          ; and draw the cursor there
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3100,7 +3010,7 @@ CharName_DrawCursor:
     ADC #$50
     STA spr_y
     
-    JUMP JumpDrawCursor
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 
 
@@ -3225,66 +3135,88 @@ lut_PtyGenBuf:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 EnterIntroStory:
-    CALL IntroTitlePrepare      ; load CHR, start music, other prepwork
+    LDA #$08
+    STA soft2000             ; set PPUCTRL and soft2000 appropriately
+    STA PPUCTRL                ;  (no NT scroll, BG uses left pattern table, sprites use right, etc)
 
-    LDA PPUSTATUS           ; reset PPU toggle and set PPU address to PPUCTRL
-    LDA #>PPUCTRL         ;   (start of nametable)
-    STA PPUADDR
-    LDA #<PPUCTRL
-    STA PPUADDR
+    LDA #$1E
+    STA PPUMASK                ; enable BG and sprite rendering
+    LDA #0
+    STA PPUSCROLL
+    STA PPUSCROLL                ; reset scroll
 
-    LDX #($03C0 / 4)    ; Fill the nametable with tile $FF (blank space)
-    LDA #$FF            ;  this loop does a full $03C0 writes
-  @NTLoop:
-      STA PPUDATA
-      STA PPUDATA
-      STA PPUDATA
-      STA PPUDATA
-      DEX
-      BNE @NTLoop
+    FARCALL UploadFont
 
-    LDX #$40            ; Next, fill the attribute table so that all tiles use
-    LDA #%01010101      ;  palette %01.  This palette will be used for fully
-  @AttrLoop:            ;  faded-out text (ie:  text using this palette is
-      STA PPUDATA         ;  invisible)
-      DEX
-      BNE @AttrLoop
+    LDA #$01
+    STA fillColor
+    FARCALL UploadFillColor
 
-    LDA #$01            ; fill palettes %01 (faded out) and %10 (animating) with 
-    STA cur_pal + $6    ;  $01 blue.
-    STA cur_pal + $7
-    STA cur_pal + $A
-    STA cur_pal + $B
+    LDA #$01
+    STA palette1+0
+    LDA #$01
+    STA palette1+1
+    LDA #$01
+    STA palette1+2
+    FARCALL UploadPalette1
 
-    ; now that the NT is cleared and palettes are prepped -- time to draw
-    ;  the intro story text.  This is accomplished by drawing a single
-    ;  Complex String
+    LDA #$00
+    STA palette2+0
+    LDA #$01
+    STA palette2+1
+    LDA #$20
+    STA palette2+2
+    FARCALL UploadPalette2
 
-    LDA #<lut_IntroStoryText  ; load up the pointer to the intro story text
+    LDA #$00
+    STA palette3+0
+    LDA #$01
+    STA palette3+1
+    LDA #$20
+    STA palette3+2
+    FARCALL UploadPalette3
+
+    LDA #%01010101
     STA Var0
-    LDA #>lut_IntroStoryText
-    STA Var1
-    LDA #(BANK_INTROTEXT * 2) | %10000000
-    STA Var2
+    FARCALL FillAttributeTable
 
-    LDA #0               ; disable menu stalling (PPU is off)
-    STA menustall
+    LDA #$FF
+    STA Var0
+    FARCALL FillNametable
 
-    LDA #BANK_INTROTEXT  ; select bank containing text
-    STA cur_bank
-    LDA #BANK_THIS       ; and record this bank to return to
-    STA ret_bank
+    POS         5, 3
+    TEXT        TEXT_INTRO_STORY_1
+    POS         4, 5
+    TEXT        TEXT_INTRO_STORY_2
+    POS         9, 7
+    TEXT        TEXT_INTRO_STORY_3
+    POS         2, 9
+    TEXT        TEXT_INTRO_STORY_4
+    POS         9, 11
+    TEXT        TEXT_INTRO_STORY_5
+    POS         2, 13
+    TEXT        TEXT_INTRO_STORY_6
+    POS         1, 16
+    TEXT        TEXT_INTRO_STORY_7
+    POS         3, 18
+    TEXT        TEXT_INTRO_STORY_8
+    POS         3, 21
+    TEXT        TEXT_INTRO_STORY_9
+    POS         5, 23
+    TEXT        TEXT_INTRO_STORY_10
+    POS         6, 25
+    TEXT        TEXT_INTRO_STORY_11
 
-    LDA #3               ; draw text at coords 1,3
-    STA dest_y
-    LDA #1
-    STA dest_x
+    LDA #$41
+    STA music_track        ; Start up the crystal theme music
 
-    CALL Invoke_DrawComplexString
+    LDA #0
+    STA joy_a              ; clear A, B, Start button catchers
+    STA joy_b
+    STA joy_start
+    STA cursor
+    STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
-    CALL TurnMenuScreenOn_ClearOAM  ; turn on the PPU
     CALL IntroStory_MainLoop        ; and run the main loop of the intro story
 
     LDA #0              ; once the intro story exits, shut off the PPU
@@ -3318,8 +3250,6 @@ EnterTitleScreen:
     STA cursor
     STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
-
-
     LDA #$0
     STA palette0+0
     LDA #$1
@@ -3349,10 +3279,9 @@ EnterTitleScreen:
     LDA #3
     STA drawHeight
     FARCALL DrawNineSlice
+
     POS         12, 12 
     TEXT        TEXT_TITLE_CONTINUE
-
-
 
     LDA #11
     STA drawX
@@ -3363,10 +3292,9 @@ EnterTitleScreen:
     LDA #3
     STA drawHeight
     FARCALL DrawNineSlice
+
     POS         12, 17
     TEXT        TEXT_TITLE_NEW_GAME
-
-
 
     LDA #8
     STA drawX
@@ -3380,34 +3308,56 @@ EnterTitleScreen:
     POS         9, 22
     TEXT        TEXT_TITLE_RESPOND_RATE
 
-
-
     POS         8, 25
     TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
     POS         8, 26
     TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
 
+    LDA #<TILE_CURSOR_0
+    STA Var0
+    LDA #>TILE_CURSOR_0
+    STA Var1
+    LDA #$0
+    STA Var2
+    FARCALL UploadSpriteCHR3
 
-    LDA #$1E
-    STA PPUMASK                ; enable BG and sprite rendering
-    LDA #0
-    STA PPUSCROLL
-    STA PPUSCROLL                ; reset scroll
+    LDA #<TILE_CURSOR_1
+    STA Var0
+    LDA #>TILE_CURSOR_1
+    STA Var1
+    LDA #$3
+    STA Var2
+    FARCALL UploadSpriteCHR3
+
+    LDA #$0F
+    STA palette4+0
+    LDA #$10
+    STA palette4+1
+    LDA #$20
+    STA palette4+2
+    FARCALL UploadPalette4
 
 
   ;; This is the main logic loop for the Title screen.
-
-  @Loop:
     FARCALL ClearSprites
-
-    LDX cursor              ; Draw the cursor sprite using a fixed X coord of $48
-    LDA #$48                ;  and using the current cursor position to get the Y coord
-    STA spr_x               ;  from a LUT
-    LDA lut_TitleCursor_Y, X
-    STA spr_y
-    CALL JumpDrawCursor
+  @Loop:
 
     CALL WaitForVBlank     ; Wait for VBlank
+
+    LDA #60
+    STA drawX
+    LDX cursor
+    LDA lut_TitleCursor_Y, X
+    STA drawY
+    LDA #0
+    STA drawVars+0
+    LDA #0
+    STA drawVars+1
+    LDA #1
+    STA drawHeight
+    LDA #2
+    STA drawWidth
+    FARCALL DrawSprite
 
     POS     9, 22
     TEXT    TEXT_TITLE_RESPOND_RATE
@@ -3416,7 +3366,9 @@ EnterTitleScreen:
     LDA #BANK_THIS          ;  set cur_bank to this bank (for MusicPlay)
     STA cur_bank
 
-    CALL TitleScreen_Music   ; call music playback, AND get joy_a (weird little routine)
+    FARCALL MusicPlay   ; call music playback, AND get joy_a (weird little routine)
+
+    LDA joy_a
     ORA joy_start           ; OR with joy_start to see if either A or Start pressed
     BNE @OptionChosen       ; if either pressed, a menu option was chosen.
 
@@ -3446,7 +3398,8 @@ EnterTitleScreen:
     BNE :+
        @Left:
          LDA #-1            ; or -1 if left
-:   CLC
+    :   
+    CLC
     ADC respondrate         ; add/subtract 1 from respond rate
     AND #7                  ; mask to wrap it from 0<->7
     STA respondrate
@@ -3461,40 +3414,11 @@ EnterTitleScreen:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  IntroTitlePrepare  [$A219 :: 0x3A229]
-;;
-;;    Does various preparation things for the intro story and title screen.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IntroTitlePrepare:
-    LDA #$08               ; set soft2000 so that sprites use right pattern
-    STA soft2000           ;   table while BG uses left
-    LDA #0
-    STA PPUMASK              ; turn off the PPU
-
-    FARCALL LoadMenuCHRPal     ; Load necessary CHR and palettes
-
-    LDA #$41
-    STA music_track        ; Start up the crystal theme music
-
-    LDA #0
-    STA joy_a              ; clear A, B, Start button catchers
-    STA joy_b
-    STA joy_start
-    STA cursor
-    STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
-
-    JUMP ClearNT            ; then wipe the nametable clean and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;  Small LUT for the Y position of the title screen cursor  [$A272 :: 0x3A282]
 
 lut_TitleCursor_Y:
-  .byte $58   ; to point at "Continue"
-  .byte $80   ; to point at "New Game"
-
+  .byte 96   ; to point at "Continue"
+  .byte 136   ; to point at "New Game"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3510,7 +3434,27 @@ IntroStory_MainLoop:
     STA intro_ataddr           ; table ($23C0)
 
   @Loop:
-    CALL IntroStory_AnimateBlock  ; animate a block
+    LDA #%01011010          ; set desired attribute byte.  This sets the top row of the block to use
+    STA intro_atbyte        ;  palette %10 (the animating palette), and the bottom row to use
+                            ;  palette %01 (faded-out / invisible palette)
+    CALL IntroStory_AnimateRow  ; animate the top row of text
+    BCS @RTS
+
+    LDA intro_ataddr        ; Check to see if this is the very last block ($23F8).  If it is, there's
+    CMP #<$23F8             ;  no bottom row to animate -- the last block is really only half a block
+    BEQ @Done               ; so if last block .. just exit now
+                            ; However since this routine never gets called for the last block -- this
+                            ;  is pointless
+
+    LDA #%10101111             ; otherwise, set attribute so that top row uses %11 (fully faded in)
+    STA intro_atbyte           ;  and bottom row uses %10 (animating)
+    CALL IntroStory_AnimateRow  ;  animate the bottom row
+    BCS @RTS
+
+    @Done:
+    LDA #%11111111          ; lastly, set attribute byte so that the entire block uses %11
+    STA intro_atbyte        ;  this prevents the bottom row from animating further
+    CALL IntroStory_Frame    ;  Do a frame to update the actual attribute tables, then exit
 
     LDA intro_ataddr             ; then add 8 to animate the next block (8 bytes of
     CLC                          ;   attribute per block)
@@ -3526,51 +3470,13 @@ IntroStory_MainLoop:
      ;  escape this routine altogether if the user presses start, so this infinite
      ;  loop isn't really all that infinite.  See IntroStory_Frame for details.
 
-  @InfiniteLoop:
+    @InfiniteLoop:
     CALL IntroStory_Frame
+    BCC :+
+    @RTS:
+        RTS
+    :
     JUMP @InfiniteLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  IntroStory_AnimateBlock  [$A28C :: 0x3A29C]
-;;
-;;    Animates a "block" (8 bytes of attribute data, 2 rows of text) for
-;;  the intro story.  Not to be confused with the below _AnimateRow routine,
-;;  which animates a single row within a block.
-;;
-;;    This routine updates intro_atbyte, which in turn updates onscreen
-;;  attributes so that different rows of text become animated.
-;;
-;;    Note this routine calls IntroStory_Frame directly.. and with a JUMP no less!
-;;  IntroStory_Frame can double-RTS (see that routine for details), which means
-;;  it is theoretically possible for the intro story to be prematurely exited
-;;  if you happen to press A or B at *exactly* the wrong time (there's only a very
-;;  slim 1 frame window where it could happen -- but still).  This could be considered
-;;  BUGGED -- with the appropriate fix being to change the JUMP IntroStory_Frame into
-;;  CALL IntroStory_Frame, RTS.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IntroStory_AnimateBlock:
-    LDA #%01011010          ; set desired attribute byte.  This sets the top row of the block to use
-    STA intro_atbyte        ;  palette %10 (the animating palette), and the bottom row to use
-                            ;  palette %01 (faded-out / invisible palette)
-    CALL IntroStory_AnimateRow  ; animate the top row of text
-
-    LDA intro_ataddr        ; Check to see if this is the very last block ($23F8).  If it is, there's
-    CMP #<$23F8             ;  no bottom row to animate -- the last block is really only half a block
-    BEQ @Done               ; so if last block .. just exit now
-                            ; However since this routine never gets called for the last block -- this
-                            ;  is pointless
-
-    LDA #%10101111             ; otherwise, set attribute so that top row uses %11 (fully faded in)
-    STA intro_atbyte           ;  and bottom row uses %10 (animating)
-    CALL IntroStory_AnimateRow  ;  animate the bottom row
-
-  @Done:
-    LDA #%11111111          ; lastly, set attribute byte so that the entire block uses %11
-    STA intro_atbyte        ;  this prevents the bottom row from animating further
-    JUMP IntroStory_Frame    ;  Do a frame to update the actual attribute tables, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3609,10 +3515,13 @@ IntroStory_AnimateRow:
 
   @MainLoop:
     LDA intro_color        ; use the "main" intro color
-    STA cur_pal + $B       ;   by copying it to the palette
+    STA palette2+2          ;   by copying it to the palette
 
   @SubLoop:
     CALL IntroStory_Frame   ; Do a frame
+    BCC :+
+        RTS
+    :
     INC framecounter       ; and update the frame counter
 
     LDA framecounter       ; see if we're on a 16th frame
@@ -3625,18 +3534,20 @@ IntroStory_AnimateRow:
       STA intro_color
       CMP #$40             ; then check to see if we're done.  Done when the color was brightened
       BCC @MainLoop        ; from full white ($30) -- which would mean it's >= $40 after
+      CLC
       RTS                  ;  brightening.  If not done (< $40), continue loop.  Otherwise, exit
 
   @Alternate:
     LSR A                ; move the low bit of the frame counter into C to see if this is an even
     BCC @MainLoop        ;  or odd frame.  If even frame, use the main color next frame (@MainLoop)
 
-    LDA cur_pal + $B     ; if an odd frame, get the previously used color (the main color)
+    LDA palette2+2       ; if an odd frame, get the previously used color (the main color)
     SEC                  ;  subtract $10 to make it one shade darker.
     SBC #$10
     BPL :+               ; if that caused it to wrap below 0
       LDA #$01           ;  use $01 blue instead
-:   STA cur_pal + $B     ; and use this color (the sub color) next frame
+    :   
+    STA palette2+2          ; and use this color (the sub color) next frame
     JUMP @SubLoop         ; and continue looping
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3691,30 +3602,27 @@ IntroStory_WriteAttr:
 IntroStory_Frame:
     CALL WaitForVBlank        ; wait for VBlank
     CALL IntroStory_WriteAttr   ; then do the attribute updates
-    CALL DrawPalette            ; and draw the animating palette
 
-    ;LDA soft2000
-    ;STA PPUCTRL
     LDA #0
     STA PPUSCROLL
-    STA PPUSCROLL                  ; then reset the scroll to zero
+    STA PPUSCROLL                ; reset scroll
 
+    FARCALL UploadPalette2
+    FARCALL MusicPlay          ; Then call music play to keep music playing!
+
+    LDA #0
     STA joy_a                  ; clear A and B button catchers
     STA joy_b
 
-    LDA #BANK_THIS             ; set current bank (needed when calling MusicPlay from
-    STA cur_bank               ;   a swappable bank)
-    FARCALL MusicPlay          ; Then call music play to keep music playing!
-
-    CALL IntroStory_Joy         ; update joypad
-
+    FARCALL UpdateJoy         ; Update joypad data
     LDA joy_a             ; check to see if either A
     ORA joy_b             ;  or B were pressed
+    ora joy_start
     BNE :+                ; if not...
-      RTS                 ; ... exit normally
-
-:   PLA                   ; if either A or B pressed, PLA to drop the last
-    PLA                   ;  return address, then exit (does a double-RTS)
+        CLC
+        RTS                 ; ... exit normally
+    :   
+    SEC
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -5071,7 +4979,7 @@ DrawShopCursor:
     STA spr_x
     LDA shopcurs_y
     STA spr_y
-    JUMP JumpDrawCursor     ; then draw it, and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -6995,7 +6903,7 @@ DrawItemTargetCursor:
     STA spr_x            ; that lut is the X coord for cursor
     LDA #$68
     STA spr_y            ; Y coord is always $68
-    JUMP JumpDrawCursor       ; draw it, and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
   @lut:
     .byte $10,$48,$80,$B8
@@ -7750,7 +7658,7 @@ DrawMainMenuSubCursor:
     STA spr_x
     LDA lut_MainMenuSubCursor+1, X
     STA spr_y
-    JUMP JumpDrawCursor                  ; then draw the cursor and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7768,7 +7676,7 @@ DrawMainMenuCursor:
     STA spr_y                     ;  write the Y coord
     LDA #8                      ; X coord for main menu cursor is always 8
     STA spr_x
-    JUMP JumpDrawCursor                ; draw it!  and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7788,7 +7696,7 @@ DrawItemMenuCursor:
     LDA lut_ItemMenuCursor+1, X
     STA spr_y
 
-    JUMP JumpDrawCursor               ; then draw the cursor
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7849,7 +7757,7 @@ DrawMagicMenuCursor:
     ADC #$28              ; add $28  (row*16 + $28)
     STA spr_y             ; htis is our Y coord
 
-    JUMP JumpDrawCursor        ; Draw it!  and exit
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -8875,21 +8783,10 @@ DrawEquipMenuModeCurs:
     STA spr_x                ; set it
     LDA #$14
     STA spr_y                ; y coord fixed at $14
-    JUMP JumpDrawCursor           ; draw the cursor and return
+    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
   @lut_CursorX:
      .byte $48,  $80,  $B8
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Cursor  [$EC95 :: 0x3ECA5]
-;;
-;;    Draws the cursor at given X,Y coords (spr_x,spr_y)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-JumpDrawCursor:
-    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

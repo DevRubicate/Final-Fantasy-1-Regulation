@@ -301,7 +301,6 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
 
 SECTION "STACK"
     RES             VideoStack,                   200
-    donut_output_buffer = VideoStack
 
 SECTION "OAM"
     ; Sprite memory is laid out in four bytes:
@@ -1070,4 +1069,4 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             interactiveMenuOutcome,         1
     RES             interactiveMenuActiveHero,      1
 
-
+    RES             donut_output_buffer,            64

@@ -3,7 +3,6 @@
 .include "src/global-import.inc"
 
 .export EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
-.export lut_IntroStoryText
 
 .import DrawComplexString, DrawComplexString_New, DrawBox, UpdateJoy, DrawPalette
 .import WaitForVBlank
@@ -3143,14 +3142,3 @@ lut_BridgeBGPal:
 
 lut_EndingBGPal:
   .byte $0F,$00,$01,$30,  $0F,$32,$21,$30,  $0F,$2C,$2A,$1A,  $0F,$00,$0F,$30
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Intro Story Text  [$BF20 :: 0x37F30]
-;;
-;;    Processed as a Complex String.  Output during the intro story
-;;  (first screen visible when starting the game)
-
-lut_IntroStoryText:
-  .incbin "bin/0D_BF20_introtext.bin"

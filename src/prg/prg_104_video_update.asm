@@ -389,16 +389,18 @@ Video_Inc32_Set:
         PLA                         ; 4 cycle
         RTS                         ; 6 cycle
 
-
-Video_SetFillColor:
-  LDA PPU_STAT
-  LDA #$3F
-  STA PPUADDR        
-  LDA #$00
-  STA PPUADDR        
-  LDA fillColor
-  STA PPUDATA      
-  RTS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_SetFillColor
+; Cost: 10
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_SetFillColor:
+      LDA #$3F                  ; 2 cycle
+      STA PPUADDR               ; 4 cycle
+      LDA #$00                  ; 2 cycle
+      STA PPUADDR               ; 4 cycle
+      LDA fillColor             ; 4 cycle
+      STA PPUDATA               ; 4 cycle  
+      RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Inc1_UploadPalette0
