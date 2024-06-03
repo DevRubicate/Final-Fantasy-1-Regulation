@@ -9,9 +9,6 @@
 .export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData, WriteAttributesToPPU
 .export WaitVBlank_NoSprites, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 
-
-
-
 ResetRAM:
     LDA #0    
     LDX #0
@@ -33,7 +30,6 @@ ResetRAM:
 
 
     RTS
-
 
 SetRandomSeed:
     lda #16

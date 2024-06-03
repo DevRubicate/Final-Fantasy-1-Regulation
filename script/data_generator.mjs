@@ -654,78 +654,79 @@ class Preprocessor {
     }
     compileText(input) {
         const dict = {
-            '/': 26,
-            '0': 32,
-            '1': 33,
-            '2': 34,
-            '3': 35,
-            '4': 36,
-            '5': 37,
-            '6': 38,
-            '7': 39,
-            '8': 40,
-            '9': 41,
-            'A': 42,
-            'B': 43,
-            'C': 44,
-            'D': 45,
-            'E': 46,
-            'F': 47,
-            'G': 48,
-            'H': 49,
-            'I': 50,
-            'J': 51,
-            'K': 52,
-            'L': 53,
-            'M': 54,
-            'N': 55,
-            'O': 56,
-            'P': 57,
-            'Q': 58,
-            'R': 59,
-            'S': 60,
-            'T': 61,
-            'U': 62,
-            'V': 63,
-            'W': 64,
-            'X': 65,
-            'Y': 66,
-            'Z': 67,
-            'a': 68,
-            'b': 69,
-            'c': 70,
-            'd': 71,
-            'e': 72,
-            'f': 73,
-            'g': 74,
-            'h': 75,
-            'i': 76,
-            'j': 77,
-            'k': 78,
-            'l': 79,
-            'm': 80,
-            'n': 81,
-            'o': 82,
-            'p': 83,
-            'q': 84,
-            'r': 85,
-            's': 86,
-            't': 87,
-            'u': 88,
-            'v': 89,
-            'w': 90,
-            'x': 91,
-            'y': 92,
-            'z': 93,
-            '\'':94,
-            ',': 95,
-            '.': 96,
-            ' ': 94,
-            '-': 98,
-            '"': 99,
-            '!': 100,
-            '?': 101,
-            '%': 101,
+            '0': 1,
+            '1': 2,
+            '2': 3,
+            '3': 4,
+            '4': 5,
+            '5': 6,
+            '6': 7,
+            '7': 8,
+            '8': 9,
+            '9': 10,
+            'A': 11,
+            'B': 12,
+            'C': 13,
+            'D': 14,
+            'E': 15,
+            'F': 16,
+            'G': 17,
+            'H': 18,
+            'I': 19,
+            'J': 20,
+            'K': 21,
+            'L': 22,
+            'M': 23,
+            'N': 24,
+            'O': 25,
+            'P': 26,
+            'Q': 27,
+            'R': 28,
+            'S': 29,
+            'T': 30,
+            'U': 31,
+            'V': 32,
+            'W': 33,
+            'X': 34,
+            'Y': 35,
+            'Z': 36,
+            'a': 37,
+            'b': 38,
+            'c': 39,
+            'd': 40,
+            'e': 41,
+            'f': 42,
+            'g': 43,
+            'h': 44,
+            'i': 45,
+            'j': 46,
+            'k': 47,
+            'l': 48,
+            'm': 49,
+            'n': 50,
+            'o': 51,
+            'p': 52,
+            'q': 53,
+            'r': 54,
+            's': 55,
+            't': 56,
+            'u': 57,
+            'v': 58,
+            'w': 59,
+            'x': 60,
+            'y': 61,
+            'z': 62,
+            ',': 63,
+            '.': 64,
+            '-': 65,
+            '?': 66,
+            '!': 67,
+            '%': 68,
+            '"': 69,
+            '\'':70,
+            ':': 71,
+            '/': 72,
+            ' ': 126,
             '\n': 127,
         };
 
@@ -1098,13 +1099,6 @@ class Preprocessor {
     }
 }
 
-
-
-
-
-
-
-
 class Main {
     // Main function
     static async main() {
@@ -1151,7 +1145,18 @@ class Main {
 
     static async readPNGFile(filePath, output) {
         try {
-            const data = await Main.runDonut(filePath, ['-i', '-l']);
+            if(filePath.includes('.sprite.png')) {
+                const test = await Main.runPNGTOCHR([`--image=${filePath}`, `--output=${filePath}.chr`, `-H 16`]);
+            } else if(filePath.includes('.background.png')) {
+                const test = await Main.runPNGTOCHR([`--image=${filePath}`, `--output=${filePath}.chr`]);
+            } else {
+                throw new Error(`Invalid "${filePath}", lacking .sprite.png or .background.png naming`);
+            }
+
+            
+
+
+            const data = await Main.runDonut(`${filePath}.chr`, ['-l']);
 
             const sizes = [];
             for(let i=data.length-2; i>=0; --i) {
@@ -1177,7 +1182,7 @@ class Main {
             }
 
             output.chr = output.chr ?? [];
-            output.chr.push({name: filePath.split(path.sep).join('/'), tile: tileEntries});
+            output.chr.push({name: `${filePath.split(path.sep).join('/')}.chr`, tile: tileEntries});
         } catch (err) {
             console.error(`Error reading file ${filePath}: ${err}`);
         }
@@ -1191,6 +1196,19 @@ class Main {
                     reject(error);
                 } else {
                     resolve(Array.from(Buffer.from(stdout, 'binary')));
+                }
+            });
+        });
+    }
+
+    static runPNGTOCHR(options) {
+        return new Promise((resolve, reject) => {
+            execFile('script/pngtochr.exe', options, {encoding: 'binary'}, (error, stdout, stderr) => {
+                if(error) {
+                    reject(error);
+                } else {
+
+                    resolve();
                 }
             });
         });

@@ -1070,3 +1070,16 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             interactiveMenuActiveHero,      1
 
     RES             donut_output_buffer,            64
+
+    RES             backgroundCHRBank0,             1
+    RES             backgroundCHRBank1,             1
+    RES             backgroundCHRBank2,             1
+    RES             backgroundCHRBank3,             1
+    RES             spriteCHRBank0,                 1
+    RES             spriteCHRBank1,                 1
+    RES             spriteCHRBank2,                 1
+    RES             spriteCHRBank3,                 1
+    RES             spriteCHRBank4,                 1
+    RES             spriteCHRBank5,                 1
+    RES             spriteCHRBank6,                 1
+    RES             spriteCHRBank7,                 1

@@ -2,52 +2,56 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_SHOP_YOUCANTLEARNTHAT, TEXT_SHOP_THISSPELLFULL, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_INTRO_STORY_8, TEXT_SHOP_THANKYOUWHATELSE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_MASTER, TEXT_SHOP_TITLECLINIC, SHOP_WHITEMAGIC_CONERIA, SHOP_WHITEMAGIC_CONERIA_SIBLING2
+.export TEXT_SHOP_YOUCANTLEARNTHAT, TEXT_SHOP_THISSPELLFULL, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_SHOP_RETURNLIFE, TEXT_SHOP_THANKYOUWHATELSE, TEXT_INTRO_STORY_5, TEXT_TITLE_CONTINUE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_SHOP_TITLEWEAPON, TEXT_HERO_0_NAME, SHOP_BLACKMAGIC_CONERIA, SHOP_BLACKMAGIC_CONERIA_SIBLING2
 
 ; address 0 - 43 (bytes 0 - 43)
 TEXT_SHOP_YOUCANTLEARNTHAT:
-.byte $3c, $52, $55, $55, $5c, $5f, $7f, $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $4f, $48, $44, $55, $51, $7f, $57, $4b, $44, $57, $60, $7f, $3c, $52, $50, $48, $52, $51, $48, $7f, $48, $4f, $56, $48, $65, $00
+.byte $1d, $33, $36, $36, $3d, $3f, $7f, $23, $33, $39, $7f, $27, $25, $32, $46, $38, $7f, $30, $29, $25, $36, $32, $7f, $38, $2c, $25, $38, $40, $7f, $1d, $33, $31, $29, $33, $32, $29, $7f, $29, $30, $37, $29, $42, $00
 
 ; address 43 - 83 (bytes 0 - 40)
 TEXT_SHOP_THISSPELLFULL:
-.byte $3d, $4b, $4c, $56, $7f, $4f, $48, $59, $48, $4f, $7f, $56, $53, $48, $4f, $4f, $7f, $4c, $56, $5e, $49, $58, $4f, $4f, $7f, $7f, $3c, $52, $50, $48, $52, $51, $48, $7f, $48, $4f, $56, $48, $65, $00
+.byte $1e, $2c, $2d, $37, $7f, $30, $29, $3a, $29, $30, $7f, $37, $34, $29, $30, $30, $7f, $2d, $37, $7e, $2a, $39, $30, $30, $7f, $7f, $1d, $33, $31, $29, $33, $32, $29, $7f, $29, $30, $37, $29, $42, $00
 
 ; address 83 - 111 (bytes 0 - 28)
 TEXT_EQUIP_OPTIMIZE_REMOVE:
-.byte $5e, $5e, $2e, $3a, $3e, $32, $39, $5e, $5e, $5e, $38, $39, $3d, $32, $36, $32, $43, $2e, $5e, $5e, $5e, $3b, $2e, $36, $38, $3f, $2e, $00
+.byte $7e, $7e, $0f, $1b, $1f, $13, $1a, $7e, $7e, $7e, $19, $1a, $1e, $13, $17, $13, $24, $0f, $7e, $7e, $7e, $1c, $0f, $17, $19, $20, $0f, $00
 
-; address 111 - 135 (bytes 0 - 24)
-TEXT_INTRO_STORY_8:
-.byte $2f, $52, $58, $55, $5e, $40, $44, $55, $55, $4c, $52, $55, $56, $5e, $5a, $4c, $4f, $4f, $5e, $46, $52, $50, $48, $00
+; address 111 - 136 (bytes 0 - 25)
+TEXT_SHOP_RETURNLIFE:
+.byte $21, $0b, $1c, $1c, $13, $19, $1c, $7f, $7f, $1c, $29, $38, $39, $36, $32, $7f, $38, $33, $7f, $30, $2d, $2a, $29, $43, $00
 
-; address 135 - 157 (bytes 0 - 22)
+; address 136 - 158 (bytes 0 - 22)
 TEXT_SHOP_THANKYOUWHATELSE:
-.byte $3d, $4b, $44, $51, $4e, $7f, $5c, $52, $58, $64, $7f, $40, $4b, $44, $57, $7f, $48, $4f, $56, $48, $65, $00
+.byte $1e, $2c, $25, $32, $2f, $7f, $3d, $33, $39, $43, $7f, $21, $2c, $25, $38, $7f, $29, $30, $37, $29, $42, $00
 
-; address 157 - 173 (bytes 0 - 16)
-TEXT_TITLE_COPYRIGHT_SQUARE:
-.byte $2c, $5e, $21, $29, $28, $27, $5e, $3c, $3a, $3e, $2a, $3b, $2e, $5e, $5e, $00
+; address 158 - 174 (bytes 0 - 16)
+TEXT_INTRO_STORY_5:
+.byte $1e, $2c, $29, $7e, $34, $29, $33, $34, $30, $29, $7e, $3b, $25, $2d, $38, $00
 
-; address 173 - 181 (bytes 0 - 8)
-TEXT_CLASS_NAME_FIGHTER:
-.byte $2f, $32, $30, $31, $3d, $2e, $3b, $00
+; address 174 - 183 (bytes 0 - 9)
+TEXT_TITLE_CONTINUE:
+.byte $0d, $19, $18, $1e, $13, $18, $1f, $0f, $00
 
-; address 181 - 188 (bytes 0 - 7)
-TEXT_CLASS_NAME_MASTER:
-.byte $36, $2a, $3c, $3d, $2e, $3b, $00
+; address 183 - 191 (bytes 0 - 8)
+TEXT_CLASS_NAME_WHITE_MAGE:
+.byte $21, $2c, $40, $17, $0b, $11, $0f, $00
 
-; address 188 - 195 (bytes 0 - 7)
-TEXT_SHOP_TITLECLINIC:
-.byte $2c, $35, $32, $37, $32, $2c, $00
+; address 191 - 198 (bytes 0 - 7)
+TEXT_SHOP_TITLEWEAPON:
+.byte $21, $0f, $0b, $1a, $19, $18, $00
 
-; address 195 - 200 (bytes 0 - 5)
-SHOP_WHITEMAGIC_CONERIA:
-.byte $60, $62, $61, $63, $00
+; address 198 - 203 (bytes 0 - 5)
+TEXT_HERO_0_NAME:
+.byte $90, $80, $00, $91, $00
 
-; address 200 - 205 (bytes 0 - 5)
-SHOP_WHITEMAGIC_CONERIA_SIBLING2:
+; address 203 - 208 (bytes 0 - 5)
+SHOP_BLACKMAGIC_CONERIA:
+.byte $41, $43, $42, $40, $00
+
+; address 208 - 213 (bytes 0 - 5)
+SHOP_BLACKMAGIC_CONERIA_SIBLING2:
 .byte $00, $00, $00, $00, $00
 
-; 205 - 8192
-.res 7987
+; 213 - 8192
+.res 7979
 

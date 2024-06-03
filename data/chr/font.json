@@ -2,83 +2,93 @@
     "tile": [
         {
             "name": "FONT_PART_0",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 0
         },
         {
             "name": "FONT_PART_1",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 1
         },
         {
             "name": "FONT_PART_2",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 2
         },
         {
             "name": "FONT_PART_3",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 3
         },
         {
             "name": "FONT_PART_4",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 4
         },
         {
             "name": "FONT_PART_5",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 5
         },
         {
             "name": "FONT_PART_6",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 6
         },
         {
             "name": "FONT_PART_7",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 7
         },
         {
             "name": "FONT_PART_8",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 8
         },
         {
             "name": "FONT_PART_9",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 9
         },
         {
             "name": "FONT_PART_10",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 10
         },
         {
             "name": "FONT_PART_11",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 11
         },
         {
             "name": "FONT_PART_12",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 12
         },
         {
             "name": "FONT_PART_13",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 13
         },
         {
             "name": "FONT_PART_14",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 14
         },
         {
             "name": "FONT_PART_15",
-            "source": "data/chr/font.png",
+            "source": "data/chr/font.background.png.chr",
             "index": 15
+        },
+        {
+            "name": "FONT_PART_16",
+            "source": "data/chr/font.background.png.chr",
+            "index": 16
+        },
+        {
+            "name": "FONT_PART_17",
+            "source": "data/chr/font.background.png.chr",
+            "index": 17
         }
     ]
 }

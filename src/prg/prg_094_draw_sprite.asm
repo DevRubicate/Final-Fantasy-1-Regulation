@@ -183,8 +183,8 @@ LUT_FullDrawJumpTableHi:
     .repeat _height, h
         .repeat _width, w
             .if w <> 0 || h <> 0
-                CLC
-                ADC #$01
+                ;CLC
+                ;ADC #$01
             .endif
             STA a:spriteRAM + (h * _width + w) * 4 + 1,X
         .endrepeat

@@ -22,7 +22,7 @@
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
 .import UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4
-
+.import DrawTitleScreen
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import TEXT_INTRO_STORY_1, TEXT_INTRO_STORY_2, TEXT_INTRO_STORY_3, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_5, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_8, TEXT_INTRO_STORY_9, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_11
@@ -3146,8 +3146,6 @@ EnterIntroStory:
     STA PPU_SCROLL
     STA PPU_SCROLL                ; reset scroll
 
-    FARCALL UploadFont
-
     LDA #$01
     STA fillColor
     FARCALL UploadFillColor
@@ -3180,7 +3178,7 @@ EnterIntroStory:
     STA Var0
     FARCALL FillAttributeTable
 
-    LDA #$FF
+    LDA #1
     STA Var0
     FARCALL FillNametable
 
@@ -3250,96 +3248,9 @@ EnterTitleScreen:
     STA cursor
     STA joy_prevdir        ; as well as resetting the cursor and previous joy direction
 
-    LDA #$0
-    STA palette0+0
-    LDA #$1
-    STA palette0+1
-    LDA #$30
-    STA palette0+2
-    FARCALL UploadPalette0
-
-    LDA #0
-    STA Var0
-    FARCALL FillAttributeTable
- 
-    LDA #0
-    STA Var0
-    FARCALL FillNametable                ; clear the nametable
-
-    FARCALL UploadFont
-    FARCALL UploadNineSliceBorders
-    FARCALL RestoreNineSliceBordersToDefault
-
-    LDA #11
-    STA drawX
-    LDA #11
-    STA drawY
-    LDA #10
-    STA drawWidth
-    LDA #3
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    POS         12, 12 
-    TEXT        TEXT_TITLE_CONTINUE
-
-    LDA #11
-    STA drawX
-    LDA #16
-    STA drawY
-    LDA #10
-    STA drawWidth
-    LDA #3
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    POS         12, 17
-    TEXT        TEXT_TITLE_NEW_GAME
-
-    LDA #8
-    STA drawX
-    LDA #21
-    STA drawY
-    LDA #16
-    STA drawWidth
-    LDA #3
-    STA drawHeight
-    FARCALL DrawNineSlice
-    POS         9, 22
-    TEXT        TEXT_TITLE_RESPOND_RATE
-
-    POS         8, 25
-    TEXT        TEXT_TITLE_COPYRIGHT_SQUARE
-    POS         8, 26
-    TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
-
-    LDA #<TILE_CURSOR_0
-    STA Var0
-    LDA #>TILE_CURSOR_0
-    STA Var1
-    LDA #$0
-    STA Var2
-    FARCALL UploadSpriteCHR3
-
-    LDA #<TILE_CURSOR_1
-    STA Var0
-    LDA #>TILE_CURSOR_1
-    STA Var1
-    LDA #$3
-    STA Var2
-    FARCALL UploadSpriteCHR3
-
-    LDA #$0F
-    STA palette4+0
-    LDA #$10
-    STA palette4+1
-    LDA #$20
-    STA palette4+2
-    FARCALL UploadPalette4
-
+    FARCALL DrawTitleScreen
 
   ;; This is the main logic loop for the Title screen.
-    FARCALL ClearSprites
   @Loop:
 
     CALL WaitForVBlank     ; Wait for VBlank
@@ -3351,9 +3262,9 @@ EnterTitleScreen:
     STA drawY
     LDA #0
     STA drawVars+0
-    LDA #0
-    STA drawVars+1
     LDA #1
+    STA drawVars+1
+    LDA #0
     STA drawHeight
     LDA #2
     STA drawWidth
@@ -3401,7 +3312,7 @@ EnterTitleScreen:
     :   
     CLC
     ADC respondrate         ; add/subtract 1 from respond rate
-    AND #7                  ; mask to wrap it from 0<->7
+    ;AND #7                  ; mask to wrap it from 0<->7
     STA respondrate
 
     CALL PlaySFX_MenuMove    ; play the move sound effect, and continue looping!

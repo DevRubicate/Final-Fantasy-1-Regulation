@@ -3,12 +3,12 @@
 .include "src/global-import.inc"
 
 .export Video_Start
-.export Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set, Video_MassWrite
+.export Video_Set, Video_Inc1_Address_Set_Write_Set, Video_MassWrite_Address_Set, Video_Inc1_Address, Video_Address, Video_Inc32_Address, Video_Inc1_Address_Set, Video_Address_Set, Video_Inc32_Address_Set, Video_Inc1_Address_Set_Write, Video_Address_Set_Write, Video_Inc32_Address_Set_Write, Video_Inc1_Write_Set, Video_Write_Set, Video_Inc32_Write_Set, Video_Inc1_Set, Video_Set, Video_Inc32_Set, Video_MassWrite
 .export Video_MassWriteStack, Video_MassWrite_Value_Write, Video_MassWrite_Set_Write_Address_Set_Write_Set
 
-.export Video_WriteAttributeRepeat, Video_SetFillColor, Video_Inc1_UploadPalette0, Video_Inc1_UploadPalette1, Video_Inc1_UploadPalette2, Video_Inc1_UploadPalette3, Video_Inc1_UploadPalette4, Video_Inc1_UploadPalette5, Video_Inc1_UploadPalette6, Video_Inc1_UploadPalette7
+.export Video_Inc1_CHRBank_Address_Set, Video_WriteAttributeRepeat, Video_SetFillColor, Video_Inc1_UploadPalette0, Video_Inc1_UploadPalette1, Video_Inc1_UploadPalette2, Video_Inc1_UploadPalette3, Video_Inc1_UploadPalette4, Video_Inc1_UploadPalette5, Video_Inc1_UploadPalette6, Video_Inc1_UploadPalette7
 .export Video_Inc1_Set_FillNametable0to119, Video_Set_FillNametable120to239, Video_Set_FillNametable240to359, Video_Set_FillNametable360to479, Video_Set_FillNametable480to599, Video_Set_FillNametable600to719, Video_Set_FillNametable720to839, Video_Set_FillNametable840to959
-.export Video_Inc1_Set_FillAttributeTable
+.export Video_Inc1_Set_FillAttributeTable, Video_Inc1_CHRBank_Address
 
 .res $81
 
@@ -21,6 +21,32 @@ Video_Terminate:
     ; Reset VideoIncrementAddressOffset to start as Inc1 mode
     LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
     STA VideoIncrementAddressOffset
+
+    LDA spriteCHRBank0
+    STA MMC5_SPRITE_CHR_BANK0
+    LDA spriteCHRBank1
+    STA MMC5_SPRITE_CHR_BANK1
+    LDA spriteCHRBank2
+    STA MMC5_SPRITE_CHR_BANK2
+    LDA spriteCHRBank3
+    STA MMC5_SPRITE_CHR_BANK3
+    LDA spriteCHRBank4
+    STA MMC5_SPRITE_CHR_BANK4
+    LDA spriteCHRBank5
+    STA MMC5_SPRITE_CHR_BANK5
+    LDA spriteCHRBank6
+    STA MMC5_SPRITE_CHR_BANK6
+    LDA spriteCHRBank7
+    STA MMC5_SPRITE_CHR_BANK7
+
+    LDA backgroundCHRBank0
+    STA MMC5_BACKGROUND_CHR_BANK0
+    LDA backgroundCHRBank1
+    STA MMC5_BACKGROUND_CHR_BANK1
+    LDA backgroundCHRBank2
+    STA MMC5_BACKGROUND_CHR_BANK2
+    LDA backgroundCHRBank3
+    STA MMC5_BACKGROUND_CHR_BANK3
 
     ; We have to restore the scroll as this is messed up by our writing to the PPU
     LDA scrollX
@@ -48,10 +74,15 @@ Video_Start:
 ; Video_Inc1_Address
 ; Cost:         11 or 14 (inc1)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     Video_Inc1_Address:
+        VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10100000                  ; 2 cycle
         STA PPU_CTRL                    ; 4 cycle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Address
+; Cost:         11
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Address:
         PLA                             ; 4 cycle
         STA PPU_ADDR                    ; 4 cycle    
@@ -59,14 +90,36 @@ Video_Start:
         STA PPU_ADDR                    ; 4 cycle   
         RTS                             ; 6 cycle
 
+.res 1
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Inc1_Set
+; Cost:         8
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_Inc1_Set:
+        VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+            LDA #%10100100                      ; 2 cycle
+            STA PPU_CTRL                        ; 4 cycle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Set
+; Cost:         5
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_Set:
+        PLA                                     ; 4 cycle
+        RTS                                     ; 6 cycle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Inc32_Address
+; Cost:         11 or 14 (inc1)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Inc32_Address:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10100100                          ; 2 cycle
         STA PPU_CTRL                            ; 4 cycle
-        PLA                                     ; 2 cycle
+        PLA                                     ; 4 cycle
         STA PPU_ADDR                            ; 4 cycle
-        PLA                                     ; 2 cycle
+        PLA                                     ; 4 cycle
         STA PPU_ADDR                            ; 4 cycle
         RTS                                     ; 6 cycle
 
@@ -78,6 +131,11 @@ Video_Start:
         VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
         LDA #%10100000                  ; 2 cycle
         STA PPU_CTRL                    ; 4 cycle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Address_Set
+; Cost:         13
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     Video_Address_Set:
         PLA                             ; 4 cycle
         STA PPU_ADDR                    ; 4 cycle
@@ -86,8 +144,41 @@ Video_Start:
         PLA                             ; 4 cycle
         RTS                             ; 6 cycle
 
-VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Inc1_CHRBank_Address
+; Cost:         15 or 18 (inc1)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_Inc1_CHRBank_Address:
+        VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+        LDA #%10100000                  ; 2 cycle
+        STA PPU_CTRL                    ; 4 cycle
+        PLA                             ; 4 cycle
+        STA MMC5_BACKGROUND_CHR_BANK0   ; 4 cycle
+        PLA                             ; 4 cycle
+        STA PPU_ADDR                    ; 4 cycle
+        PLA                             ; 4 cycle
+        STA PPU_ADDR                    ; 4 cycle
+        RTS                             ; 6 cycle
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_Inc1_CHRBank_Address_Set
+; Cost:         17 or 20 (inc1)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_Inc1_CHRBank_Address_Set:
+        VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+        LDA #%10100000                  ; 2 cycle
+        STA PPU_CTRL                    ; 4 cycle
+        PLA                             ; 4 cycle
+        STA MMC5_BACKGROUND_CHR_BANK0   ; 4 cycle
+        PLA                             ; 4 cycle
+        STA PPU_ADDR                    ; 4 cycle
+        PLA                             ; 4 cycle
+        STA PPU_ADDR                    ; 4 cycle
+        PLA                             ; 4 cycle
+        RTS                             ; 6 cycle
+
 Video_Inc32_Address_Set:
+    VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     LDA #%10100100                  ; 2 cycle
     STA PPU_CTRL                    ; 4 cycle
     PLA                             ; 2 cycle
@@ -97,8 +188,9 @@ Video_Inc32_Address_Set:
     PLA                             ; 2 cycle
     RTS                             ; 6 cycle
 
-VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
+
 Video_Inc1_Address_Set_Write:
+    VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
     LDA #%10100000
     STA PPU_CTRL
 Video_Address_Set_Write:
@@ -110,7 +202,6 @@ Video_Address_Set_Write:
     STA PPU_DATA
     RTS
 
-.res 4
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Address_Set_Write:
@@ -165,13 +256,7 @@ Video_Inc32_Write_Set:
     PLA
     RTS
 
-VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
-Video_Inc1_Set:
-    LDA #%10100000
-    STA PPU_CTRL
-Video_Set:
-    PLA
-    RTS
+
 
 VIDEO_UPDATE_SUBROUTINE_PAGE_CHECK
 Video_Inc32_Set:

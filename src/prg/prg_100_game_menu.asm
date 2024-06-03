@@ -7,12 +7,12 @@
 .import TEXT_ITEM_DESCRIPTION, TEXT_DASH, TEXT_HERO_0_NAME, TEXT_INVENTORY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_GOLD, TEXT_MENU_SELECTION, TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_EXAMPLE_ITEM_LIST, TEXT_EXAMPLE_EQUIP_LIST, TEXT_ITEM_NAME
 .import DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
 
-.import UploadCHR, FillAttributeTable, FillNametable, UploadPalette0
+.import UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, FillAttributeTable, FillNametable, UploadPalette0
 
 
 
 
-.export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu, UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
+.export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu, RestoreNineSliceBordersToDefault
 
 DrawGameMenu:
 
@@ -32,8 +32,6 @@ DrawGameMenu:
     STA Var0
     FARCALL FillNametable                ; clear the nametable
 
-    CALL UploadFont
-    CALL UploadNineSliceBorders
     CALL RestoreNineSliceBordersToDefault
 
     POS         11, 1
@@ -130,7 +128,6 @@ EnterItemsMenu:
     FARCALL FillNametable                ; clear the nametable
 
     ; Todo: Make sure these PPU affecting subroutines respects the new rules
-;    CALL UploadFont
 ;    CALL UploadNineSliceBorders
 ;    CALL RestoreNineSliceBordersToDefault
 
@@ -1366,199 +1363,24 @@ DrawItemDescription:
     @RTS:
     RTS
 
-UploadFont:
-
-
-
-    LDA #<TILE_FONT_PART_0
-    STA Var0
-    LDA #>TILE_FONT_PART_0
-    STA Var1
-    LDA #128
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_1
-    STA Var0
-    LDA #>TILE_FONT_PART_1
-    STA Var1
-    LDA #132
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_2
-    STA Var0
-    LDA #>TILE_FONT_PART_2
-    STA Var1
-    LDA #136
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_3
-    STA Var0
-    LDA #>TILE_FONT_PART_3
-    STA Var1
-    LDA #140
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_4
-    STA Var0
-    LDA #>TILE_FONT_PART_4
-    STA Var1
-    LDA #144
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_5
-    STA Var0
-    LDA #>TILE_FONT_PART_5
-    STA Var1
-    LDA #148
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_6
-    STA Var0
-    LDA #>TILE_FONT_PART_6
-    STA Var1
-    LDA #152
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_7
-    STA Var0
-    LDA #>TILE_FONT_PART_7
-    STA Var1
-    LDA #156
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_8
-    STA Var0
-    LDA #>TILE_FONT_PART_8
-    STA Var1
-    LDA #160
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_9
-    STA Var0
-    LDA #>TILE_FONT_PART_9
-    STA Var1
-    LDA #164
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_10
-    STA Var0
-    LDA #>TILE_FONT_PART_10
-    STA Var1
-    LDA #168
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_11
-    STA Var0
-    LDA #>TILE_FONT_PART_11
-    STA Var1
-    LDA #172
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_12
-    STA Var0
-    LDA #>TILE_FONT_PART_12
-    STA Var1
-    LDA #176
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_13
-    STA Var0
-    LDA #>TILE_FONT_PART_13
-    STA Var1
-    LDA #180
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_14
-    STA Var0
-    LDA #>TILE_FONT_PART_14
-    STA Var1
-    LDA #184
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_FONT_PART_15
-    STA Var0
-    LDA #>TILE_FONT_PART_15
-    STA Var1
-    LDA #188
-    STA Var2
-    FARCALL UploadCHR
-
-    RTS
-
-UploadNineSliceBorders:
-    LDA #<TILE_BORDER_EDGE
-    STA Var0
-    LDA #>TILE_BORDER_EDGE
-    STA Var1
-    LDA #247
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_CORNER
-    STA Var0
-    LDA #>TILE_BORDER_CORNER
-    STA Var1
-    LDA #251
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_EDGE
-    STA Var0
-    LDA #>TILE_BORDER_EDGE
-    STA Var1
-    LDA #247
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_CONJUNCTION
-    STA Var0
-    LDA #>TILE_BORDER_CONJUNCTION
-    STA Var1
-    LDA #243
-    STA Var2
-    FARCALL UploadCHR
-
-    LDA #<TILE_BORDER_SPLIT
-    STA Var0
-    LDA #>TILE_BORDER_SPLIT
-    STA Var1
-    LDA #239
-    STA Var2
-    FARCALL UploadCHR
-    RTS
 
 RestoreNineSliceBordersToDefault:
-    LDA #$FE
+    LDA #$60
     STA drawVars+1
-    LDA #$F7
+    LDA #$61
     STA drawVars+2
-    LDA #$FB
+    LDA #$5D
     STA drawVars+3
-    LDA #$FA
+    LDA #$64
     STA drawVars+4
-    LDA #$FF
+    LDA #$01
     STA drawVars+5
-    LDA #$F8
+    LDA #$62
     STA drawVars+6
-    LDA #$FD
+    LDA #$5F
     STA drawVars+7
-    LDA #$F9
+    LDA #$63
     STA drawVars+8
-    LDA #$FC
+    LDA #$5E
     STA drawVars+9
     RTS

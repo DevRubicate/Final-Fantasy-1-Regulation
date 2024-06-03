@@ -403,14 +403,14 @@ DrawMapPalette:
 
     @InRoomLoop:
       LDA inroom_pal, X ; if we're in a room... the BG palette (first $10 colors) come from
-      STA PPU_DATA         ;   $03E0 instead
+      ;STA PPU_DATA         ;   $03E0 instead
       INX
       CPX #$10          ; loop $10 times to copy the whole BG palette
       BCC @InRoomLoop   ;   once the BG palette is drawn, continue drawing the sprite palette per normal
 
     _DrawPalette_Norm:
     LDA cur_pal, X     ; get normal palette
-    STA PPU_DATA          ;  and draw it
+    ;STA PPU_DATA          ;  and draw it
     INX
     CPX #$20           ; loop until $20 colors have been drawn (full palette)
     BCC _DrawPalette_Norm
@@ -488,7 +488,7 @@ CHRLoad:
 
 CHRLoad_Cont:
     LDA (tmp), Y      ; read a byte from source pointer
-    STA PPU_DATA         ; and write it to CHR-RAM
+    ;STA PPU_DATA         ; and write it to CHR-RAM
     INY               ; inc our source index
     BNE CHRLoad_Cont  ; if it didn't wrap, continue looping
 
@@ -565,7 +565,7 @@ Battle_DrawMessageRow:
     LDY #$00
   @Loop:
       LDA (btl_varI), Y      ; read $19 bytes from source pointer
-      STA PPU_DATA         ;  and draw them
+      ;STA PPU_DATA         ;  and draw them
       INY
       CPY #$19
       BNE @Loop
@@ -1258,7 +1258,7 @@ Impl_FARPPUCOPY:
     STA MMC5_PRG_BANK1
     @loop:
             LDA (tmp), Y      ; read a byte from source pointer
-            STA PPU_DATA       ; and write it to CHR-RAM
+            ;STA PPU_DATA       ; and write it to CHR-RAM
             INY               ; inc our source index
         BNE @loop         ; if it didn't wrap, continue looping
         INC tmp+1         ; if it did wrap, inc the high byte of our source pointer
@@ -1399,8 +1399,6 @@ OnReset:
     STX MMC5_UPPER_CHR_BANK ; Check doc on MMC5 to see what this does
     STX MMC5_RAM_BANK       ; swap battery-backed PRG RAM into $6000 page.     
     STX MMC5_SPLIT_MODE     ; disable split-screen mode
-    STX MMC5_CHR_MODE       ; 8k CHR swap mode (no swapping)
-    STX MMC5_CHR_BANK7      ; Swap in first CHR Page
     STX current_bank1
     INX                     ; 01
     STX MMC5_RAM_PROTECT_2  ; Allow writing to PRG-RAM B  
@@ -1412,6 +1410,9 @@ OnReset:
     STX MMC5_MIRROR         ; Vertical mirroring
     LDX #$FF        
     STX MMC5_PRG_BANK3
+
+    LDX #3
+    STX MMC5_CHR_MODE       ; 1k CHR swap mode
 
     LDA #0
     STA PAPU_MODCTL         ; disble DMC IRQs
@@ -1432,6 +1433,15 @@ OnReset:
         BNE @Loop
 
     FARCALL ResetRAM
+
+    LDA #(256 - 96) ; Save 96 bytes for the normal stack
+    STA VideoStackTally
+
+    LDA #(256 - (<(1684/2)))
+    STA VideoCost
+    LDA #(255 - (>(1684/2)))
+    STA VideoCost+1
+
 
     FARCALL DisableAPU
     SWITCH GameStart

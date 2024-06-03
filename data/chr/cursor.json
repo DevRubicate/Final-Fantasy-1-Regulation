@@ -2,12 +2,12 @@
     "tile": [
         {
             "name": "CURSOR_0",
-            "source": "data/chr/cursor.png",
+            "source": "data/chr/cursor.sprite.png.chr",
             "index": 0
         },
         {
             "name": "CURSOR_1",
-            "source": "data/chr/cursor.png",
+            "source": "data/chr/cursor.sprite.png.chr",
             "index": 1
         }
     ]

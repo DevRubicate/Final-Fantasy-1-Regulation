@@ -10,6 +10,8 @@
 .import Video_MassWrite_Set_Write_Address_Set_Write_Set
 .import Video_Inc1_Set_FillNametable0to119, Video_Set_FillNametable120to239, Video_Set_FillNametable240to359, Video_Set_FillNametable360to479, Video_Set_FillNametable480to599, Video_Set_FillNametable600to719, Video_Set_FillNametable720to839, Video_Set_FillNametable840to959
 .import Video_Inc1_Set_FillAttributeTable
+.import Video_Inc1_CHRBank_Address, Video_Inc1_CHRBank_Address_Set
+
 
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
@@ -20,7 +22,7 @@
 
 .export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable 
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
-.export UploadCHR, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
+.export UploadCHRSolids,UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
 
 lut_NTRowStartLo:
   .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
@@ -143,9 +145,12 @@ Stringify:
         BEQ @Terminate
         CMP #127
         BEQ @Newline
+        CMP #126
+        BEQ @Whitespace
         ; Add CHR offset so this becomes a valid character
         CLC
-        ADC #$60
+        ADC #3
+        @Push:
         CALL VideoPushData        ; Push this byte
         LDA drawX           ; Increment the dest address by 1
         CLC
@@ -153,6 +158,11 @@ Stringify:
         AND #$3F                        ; Mask it with $3F so it wraps around both NTs appropriately
         STA drawX
         JUMP @Loop
+
+        @Whitespace:
+        LDA #1
+        JUMP @Push
+
 
         @Newline:
         CALL PadWhitespace
@@ -466,7 +476,7 @@ FetchCharacterDigit1:
     CALL IncrementStringifyAdvance
     CALL FetchValue
     CLC
-    ADC #32
+    ADC #1
     LDY stringifyCursor
     RTS
 FetchCharacterDigit2L:
@@ -787,7 +797,7 @@ ClearDigit:
 TrimDigit8:
     LDA yxa2decOutput+0
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -796,7 +806,7 @@ TrimDigit8:
 TrimDigit7:
     LDA yxa2decOutput+1
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -805,7 +815,7 @@ TrimDigit7:
 TrimDigit6:
     LDA yxa2decOutput+2
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -814,7 +824,7 @@ TrimDigit6:
 TrimDigit5:
     LDA yxa2decOutput+3
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -823,7 +833,7 @@ TrimDigit5:
 TrimDigit4:
     LDA yxa2decOutput+4
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -832,7 +842,7 @@ TrimDigit4:
 TrimDigit3:
     LDA yxa2decOutput+5
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -841,7 +851,7 @@ TrimDigit3:
 TrimDigit2:
     LDA yxa2decOutput+6
     BEQ :+
-        LDX #32
+        LDX #1
         STX Var10
     :
     CLC
@@ -850,7 +860,7 @@ TrimDigit2:
 TrimDigit1:
     LDA yxa2decOutput+7
     CLC
-    ADC #32
+    ADC #1
     STA yxa2decOutput+7
     RTS
 
@@ -2534,69 +2544,85 @@ SetTile:
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; UploadCHR
+; UploadCHRSolids
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    UploadCHR:
+    UploadCHRSolids:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(64) * 4 = 256
-        LDA #11                     ; Add 11 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #1                      ; Add 256 to cost
-        LDX #68                     ; Add 68 to our video stack size
+        ; Video_Inc1_CHRBank_Address_Set    ; 17 or 20 (inc1)
+        ; Video_MassWrite                   ; N(24) * 2 + 3 = 51
+        ; Video_Set                         ; 5
+        ; Video_MassWrite                   ; N(32) * 2 + 3 = 67
+        ; Video_Set                         ; 5
+        ; Video_MassWrite                   ; N(8) * 2 + 3 = 19
+
+        LDA #164                            ; Add 164 to cost
+        CLC
+        ADC VideoIncrementCost              ; Potentially add 3 to cost
+        LDY #0                              ; Add 0 to cost
+        LDX #18                             ; Add 18 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
-        CLC
-        ADC Var1
-        STA MMC5_PRG_BANK2
-        LDX Var0
-        LDA LUT_TILE_CHR,X
-        STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
-        STA donut_stream_ptr+1
 
-        LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address_Set-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address_Set-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(64*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(64*4))
+
+        LDA #%00000000
         STA VideoStack+5,X
-        STX VideoCursor
+        LDA #<(Video_MassWrite-1-(24*3))
+        STA VideoStack+6,X
+        LDA #>(Video_MassWrite-1-(24*3))
+        STA VideoStack+7,X
 
-        LDX #0
-        LDY #0
-        FARCALL donut_decompress_block
+        LDA #<(Video_Set-1)
+        STA VideoStack+8,X
+        LDA #>(Video_Set-1)
+        STA VideoStack+9,X
+        LDA #%11111111
+        STA VideoStack+10,X
+        LDA #<(Video_MassWrite-1-(32*3))
+        STA VideoStack+11,X
+        LDA #>(Video_MassWrite-1-(32*3))
+        STA VideoStack+12,X
 
-        LDA VideoCursor
+        LDA #<(Video_Set-1)
+        STA VideoStack+13,X
+        LDA #>(Video_Set-1)
+        STA VideoStack+14,X
+        LDA #%00000000
+        STA VideoStack+15,X
+        LDA #<(Video_MassWrite-1-(8*3))
+        STA VideoStack+16,X
+        LDA #>(Video_MassWrite-1-(8*3))
+        STA VideoStack+17,X
+
+        TXA
         CLC
-        ADC #6
-        TAX
-        CLC
-        ADC #64
+        ADC #18
         STA VideoCursor
-        CALL PushDonutData64
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2604,12 +2630,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadBackgroundCHR1:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(16) * 4 = 64
-        LDA #75                     ; Add 11+64 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #22                     ; Add 22 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack       ; N(16) * 4 = 64
+        LDA #79                      ; Add 15+64 to cost
+        ADC VideoIncrementCost       ; Potentially add 3 to cost
+        LDY #0                       ; Set high byte to 0
+        LDX #23                      ; Add 23 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -2626,29 +2652,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(16*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(16*4))
+
+        LDA #<(Video_MassWriteStack-1-(16*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2657,7 +2688,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #16
@@ -2670,15 +2701,14 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadBackgroundCHR2:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(32) * 4 = 128
-        LDA #139                    ; Add 11+128 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #38                     ; Add 38 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack       ; N(32) * 4 = 128
+        LDA #143                     ; Add 15+128 to cost
+        ADC VideoIncrementCost       ; Potentially add 3 to cost
+        LDY #0                       ; Set high byte to 0
+        LDX #39                      ; Add 39 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
-
 
         LDA #TextBank(LUT_TILE_CHR)
         CLC
@@ -2692,29 +2722,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(32*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(32*4))
+
+        LDA #<(Video_MassWriteStack-1-(32*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2723,7 +2758,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #32
@@ -2736,12 +2771,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadBackgroundCHR3:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(48) * 4 = 192
-        LDA #203                    ; Add 11+192 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #52                     ; Add 52 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack       ; N(48) * 4 = 192
+        LDA #207                     ; Add 15+192 to cost
+        ADC VideoIncrementCost       ; Potentially add 3 to cost
+        LDY #0                       ; Set high byte to 0
+        LDX #53                      ; Add 53 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -2758,29 +2793,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(48*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(48*4))
+
+        LDA #<(Video_MassWriteStack-1-(48*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2789,7 +2829,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #48
@@ -2802,12 +2842,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadBackgroundCHR4:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(64) * 4 = 256
-        LDA #11                     ; Add 11 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #1                      ; Add 256 to cost
-        LDX #70                     ; Add 70 to our video stack size
+        ; Video_Inc1_CHRBank_Address        ; 15 or 18 (inc1)
+        ; Video_MassWriteStack              ; N(64) * 4 = 256
+        LDA #15                             ; Add 15 to cost
+        ADC VideoIncrementCost              ; Potentially add 3 to cost
+        LDY #1                              ; Add 256 to cost
+        LDX #71                             ; Add 71 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -2824,29 +2864,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(64*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(64*4))
+
+        LDA #<(Video_MassWriteStack-1-(64*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2855,7 +2900,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #64
@@ -2868,12 +2913,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadSpriteCHR1:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(16) * 4 = 64
-        LDA #75                     ; Add 11+64 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #22                     ; Add 22 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack          ; N(16) * 4 = 64
+        LDA #79                         ; Add 15+64 to cost
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Set high byte to 0
+        LDX #23                         ; Add 23 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -2889,30 +2934,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
-        ORA #$10
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(16*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(16*4))
+
+        LDA #<(Video_MassWriteStack-1-(16*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(16*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2921,7 +2970,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #16
@@ -2934,12 +2983,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadSpriteCHR2:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(32) * 4 = 128
-        LDA #139                    ; Add 11+128 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #38                     ; Add 38 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack          ; N(32) * 4 = 128
+        LDA #143                        ; Add 15+128 to cost
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Set high byte to 0
+        LDX #39                         ; Add 39 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -2956,30 +3005,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
-        ORA #$10
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(32*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(32*4))
+
+        LDA #<(Video_MassWriteStack-1-(32*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(32*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -2988,7 +3041,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #32
@@ -3001,12 +3054,12 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadSpriteCHR3:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(48) * 4 = 192
-        LDA #203                    ; Add 11+192 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #0                      ; Set high byte to 0
-        LDX #52                     ; Add 52 to our video stack size
+        ; Video_Inc1_CHRBank_Address    ; 15 or 18 (inc1)
+        ; Video_MassWriteStack          ; N(48) * 4 = 192
+        LDA #207                        ; Add 15+192 to cost
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #0                          ; Set high byte to 0
+        LDX #53                         ; Add 53 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
@@ -3023,30 +3076,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
-        ORA #$10
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(48*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(48*4))
+
+        LDA #<(Video_MassWriteStack-1-(48*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(48*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -3055,7 +3112,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #48
@@ -3068,15 +3125,14 @@ SetTile:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadSpriteCHR4:
         @allocateVideoBuffer:
-        ; Video_Inc1_Address        11 or 14 (inc1)
-        ; Video_MassWriteStack      N(64) * 4 = 256
-        LDA #11                     ; Add 11 to cost
-        ADC VideoIncrementCost      ; Potentially add 3 to cost
-        LDY #1                      ; Add 256 to cost
-        LDX #70                     ; Add 70 to our video stack size
+        ; Video_Inc1_CHRBank_Address ; 15 or 18 (inc1)
+        ; Video_MassWriteStack          ; N(64) * 4 = 256
+        LDA #15                         ; Add 15 to cost
+        ADC VideoIncrementCost          ; Potentially add 3 to cost
+        LDY #1                          ; Add 256 to cost
+        LDX #71                         ; Add 71 to our video stack size
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
-
 
         LDA #TextBank(LUT_TILE_CHR)
         CLC
@@ -3090,30 +3146,34 @@ SetTile:
 
         LDY #0
         LDX VideoCursor
-        LDA #<(Video_Inc1_Address-1)
+        LDA #<(Video_Inc1_CHRBank_Address-1)
+        CLC
+        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
         STA VideoStack+0,X
-        LDA #>(Video_Inc1_Address-1)
+        LDA #>(Video_Inc1_CHRBank_Address-1)
         STA VideoStack+1,X
 
-        LDA Var2
-        LSR A
-        LSR A
-        LSR A
-        LSR A
-        ORA #$10
+        LDA Var3
         STA VideoStack+2,X
 
         LDA Var2
-        ASL A
-        ASL A
-        ASL A
-        ASL A
+        LSR A
+        LSR A
+        LSR A
+        LSR A
         STA VideoStack+3,X
 
-        LDA #<(Video_MassWriteStack-1-(64*4))
+        LDA Var2
+        ASL A
+        ASL A
+        ASL A
+        ASL A
         STA VideoStack+4,X
-        LDA #>(Video_MassWriteStack-1-(64*4))
+
+        LDA #<(Video_MassWriteStack-1-(64*4))
         STA VideoStack+5,X
+        LDA #>(Video_MassWriteStack-1-(64*4))
+        STA VideoStack+6,X
         STX VideoCursor
 
         LDY #0
@@ -3122,7 +3182,7 @@ SetTile:
 
         LDA VideoCursor
         CLC
-        ADC #6
+        ADC #7
         TAX
         CLC
         ADC #64

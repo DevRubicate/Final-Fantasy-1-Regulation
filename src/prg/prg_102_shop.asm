@@ -652,11 +652,8 @@ EnterShopMenu:
 	STA PPU_MASK                ; enable BG and sprite rendering
 
 	FARCALL RestoreNineSliceBordersToDefault
-	FARCALL UploadFont
 
 	CALL WaitForVBlank
-
-	FARCALL UploadNineSliceBorders
 
 	LDA #0
 	STA Var0

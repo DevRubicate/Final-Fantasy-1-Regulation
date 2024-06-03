@@ -3,6 +3,7 @@
 .include "src/global-import.inc"
 
 .import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, NewGamePartyGeneration, ClearZeroPage, DoOverworld, UploadFillColor
+.import LoadResources
 
 .export GameStart
 
@@ -23,7 +24,7 @@ GameStart:
     FARCALL DisableAPU              ; Silence/disable all audio
     
     ;; Load some startup info
-    
+    FARCALL LoadResources
     FARCALL SetRandomSeed
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram
@@ -56,11 +57,9 @@ GameStart:
     
     FARCALL EnterIntroStory       ; And do the intro story!
 
-
     LDA #$0F
     STA fillColor
     FARCALL UploadFillColor
-
     FARCALL EnterTitleScreen
     
     BCS @NewGame                    ; Do a new game, if the user selected the New Game option

@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_TEMPLATE_ITEM_LIST, TEXT_SHOP_WHOSEITEMSELL, TEXT_SHOP_WHOWILLLEARNSPELL, TEXT_SHOP_YOUCANTAFFORDTHAT, TEXT_SHOP_WHOWILLTAKEIT, TEXT_TITLE_CONTINUE, TEXT_CLASS_NAME_BLACK_WIZARD, TEXT_CLASS_NAME_KNIGHT, TEXT_SHOP_TITLEBLACKMAGIC, TEXT_ITEM_DESCRIPTION
+.export TEXT_TEMPLATE_ITEM_LIST, TEXT_SHOP_WHOSEITEMSELL, TEXT_INTRO_STORY_9, TEXT_SHOP_YOUHAVETOOMANY, TEXT_SHOP_WHATDOYOUWANT, TEXT_SHOP_BUYSELLEXIT, TEXT_CLASS_NAME_RED_MAGE, TEXT_MENU_GOLD, SHOP_WEAPON_CONERIA, SHOP_WEAPON_CONERIA_SIBLING2
 
 ; address 0 - 64 (bytes 0 - 64)
 TEXT_TEMPLATE_ITEM_LIST:
@@ -10,40 +10,40 @@ TEXT_TEMPLATE_ITEM_LIST:
 
 ; address 64 - 96 (bytes 0 - 32)
 TEXT_SHOP_WHOSEITEMSELL:
-.byte $40, $4b, $52, $56, $48, $7f, $4c, $57, $48, $50, $7f, $47, $52, $5e, $5c, $52, $58, $7f, $5a, $44, $51, $57, $5e, $57, $52, $7f, $56, $48, $4f, $4f, $65, $00
+.byte $21, $2c, $33, $37, $29, $7f, $2d, $38, $29, $31, $7f, $28, $33, $7e, $3d, $33, $39, $7f, $3b, $25, $32, $38, $7e, $38, $33, $7f, $37, $29, $30, $30, $42, $00
 
 ; address 96 - 122 (bytes 0 - 26)
-TEXT_SHOP_WHOWILLLEARNSPELL:
-.byte $40, $4b, $52, $7f, $5a, $4c, $4f, $4f, $7f, $4f, $48, $44, $55, $51, $7f, $57, $4b, $48, $7f, $56, $53, $48, $4f, $4f, $65, $00
+TEXT_INTRO_STORY_9:
+.byte $0b, $2a, $38, $29, $36, $7e, $25, $7e, $30, $33, $32, $2b, $7e, $2e, $33, $39, $36, $32, $29, $3d, $7e, $2a, $33, $39, $36, $00
 
-; address 122 - 145 (bytes 0 - 23)
-TEXT_SHOP_YOUCANTAFFORDTHAT:
-.byte $42, $52, $58, $7f, $46, $44, $51, $5e, $57, $7f, $44, $49, $49, $52, $55, $47, $7f, $57, $4b, $44, $57, $60, $00
+; address 122 - 146 (bytes 0 - 24)
+TEXT_SHOP_YOUHAVETOOMANY:
+.byte $23, $33, $39, $7f, $27, $25, $32, $46, $38, $7f, $27, $25, $36, $36, $3d, $7f, $25, $32, $3d, $31, $33, $36, $29, $00
 
-; address 145 - 163 (bytes 0 - 18)
-TEXT_SHOP_WHOWILLTAKEIT:
-.byte $40, $4b, $52, $7f, $5a, $4c, $4f, $4f, $7f, $57, $44, $4e, $48, $7f, $4c, $57, $65, $00
+; address 146 - 164 (bytes 0 - 18)
+TEXT_SHOP_WHATDOYOUWANT:
+.byte $21, $2c, $25, $38, $7e, $28, $33, $7f, $3d, $33, $39, $7f, $3b, $25, $32, $38, $42, $00
 
-; address 163 - 172 (bytes 0 - 9)
-TEXT_TITLE_CONTINUE:
-.byte $2c, $38, $37, $3d, $32, $37, $3e, $2e, $00
+; address 164 - 180 (bytes 0 - 16)
+TEXT_SHOP_BUYSELLEXIT:
+.byte $0c, $39, $3d, $7f, $7f, $1d, $29, $30, $30, $7f, $7f, $0f, $3c, $2d, $38, $00
 
-; address 172 - 181 (bytes 0 - 9)
-TEXT_CLASS_NAME_BLACK_WIZARD:
-.byte $2b, $35, $2a, $2c, $34, $40, $32, $43, $00
-
-; address 181 - 188 (bytes 0 - 7)
-TEXT_CLASS_NAME_KNIGHT:
-.byte $34, $37, $32, $30, $31, $3d, $00
+; address 180 - 188 (bytes 0 - 8)
+TEXT_CLASS_NAME_RED_MAGE:
+.byte $1c, $29, $28, $17, $0b, $11, $0f, $00
 
 ; address 188 - 195 (bytes 0 - 7)
-TEXT_SHOP_TITLEBLACKMAGIC:
-.byte $2b, $36, $2a, $30, $32, $2c, $00
+TEXT_MENU_GOLD:
+.byte $8b, $85, $60, $1c, $7e, $11, $00
 
-; address 195 - 200 (bytes 0 - 5)
-TEXT_ITEM_DESCRIPTION:
-.byte $94, $83, >stringifyActiveItem, <stringifyActiveItem, $00
+; address 195 - 201 (bytes 0 - 6)
+SHOP_WEAPON_CONERIA:
+.byte $82, $81, $80, $83, $84, $00
 
-; 200 - 8192
-.res 7992
+; address 201 - 207 (bytes 0 - 6)
+SHOP_WEAPON_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00, $00, $00
+
+; 207 - 8192
+.res 7985
 
