@@ -2,48 +2,56 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_TEMPLATE_HERO_MENU, TEXT_SHOP_WELCOMEWOULDYOUSTAY, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_8, TEXT_SHOP_WHOREVIVE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_CLASS_NAME_BLACK_WIZARD, TEXT_CLASS_NAME_RED_WIZARD, TEXT_SHOP_TITLEARMOR, TEXT_ITEM_DESCRIPTION
+.export TEXT_TEMPLATE_HERO_MENU, TEXT_MENU_SELECTION, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_SHOP_RETURNLIFE, TEXT_SHOP_THANKYOUWHATELSE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_CLASS_NAME_BLACK_WIZARD, TEXT_CLASS_NAME_MASTER, TEXT_CLASS_NAME_THIEF, TEXT_HERO_1_NAME, SHOP_WHITEMAGIC_CONERIA, SHOP_WHITEMAGIC_CONERIA_SIBLING2
 
 ; address 0 - 55 (bytes 0 - 55)
 TEXT_TEMPLATE_HERO_MENU:
 .byte $91, $7f, $7f, $16, $7e, $82, $86, $8f, $80, $01, $7f, $7f, $12, $1a, $7f, $7e, $84, $90, $48, $84, $91, $7f, $7f, $7f, $17, $0b, $11, $13, $0d, $7f, $81, $92, $48, $81, $93, $48, $81, $94, $48, $81, $95, $48, $7f, $81, $96, $48, $81, $97, $48, $81, $98, $48, $81, $99, $00
 
-; address 55 - 89 (bytes 0 - 34)
-TEXT_SHOP_WELCOMEWOULDYOUSTAY:
-.byte $21, $29, $30, $27, $33, $31, $29, $7f, $7f, $1d, $38, $25, $3d, $3f, $7f, $38, $33, $7e, $37, $25, $3a, $29, $7f, $3d, $33, $39, $36, $7f, $28, $25, $38, $25, $40, $00
+; address 55 - 91 (bytes 0 - 36)
+TEXT_MENU_SELECTION:
+.byte $13, $1e, $0f, $17, $1d, $7f, $7f, $17, $0b, $11, $13, $0d, $7f, $7f, $21, $0f, $0b, $1a, $19, $18, $7f, $7f, $0b, $1c, $17, $19, $1c, $7f, $7f, $1d, $1e, $0b, $1e, $1f, $1d, $00
 
-; address 89 - 116 (bytes 0 - 27)
-TEXT_INTRO_STORY_6:
-.byte $38, $2c, $29, $2d, $36, $7e, $33, $32, $30, $3d, $7e, $2c, $33, $34, $29, $7e, $25, $7e, $34, $36, $33, $34, $2c, $29, $27, $3d, $00
+; address 91 - 119 (bytes 0 - 28)
+TEXT_EQUIP_OPTIMIZE_REMOVE:
+.byte $7e, $7e, $0f, $1b, $1f, $13, $1a, $7e, $7e, $7e, $19, $1a, $1e, $13, $17, $13, $24, $0f, $7e, $7e, $7e, $1c, $0f, $17, $19, $20, $0f, $00
 
-; address 116 - 140 (bytes 0 - 24)
-TEXT_INTRO_STORY_8:
-.byte $10, $33, $39, $36, $7e, $21, $25, $36, $36, $2d, $33, $36, $37, $7e, $3b, $2d, $30, $30, $7e, $27, $33, $31, $29, $00
+; address 119 - 144 (bytes 0 - 25)
+TEXT_SHOP_RETURNLIFE:
+.byte $21, $0b, $1c, $1c, $13, $19, $1c, $7f, $7f, $1c, $29, $38, $39, $36, $32, $7f, $38, $33, $7f, $30, $2d, $2a, $29, $43, $00
 
-; address 140 - 162 (bytes 0 - 22)
-TEXT_SHOP_WHOREVIVE:
-.byte $21, $2c, $33, $7f, $37, $2c, $25, $30, $30, $7f, $26, $29, $7f, $36, $29, $3a, $2d, $3a, $29, $28, $7f, $00
+; address 144 - 166 (bytes 0 - 22)
+TEXT_SHOP_THANKYOUWHATELSE:
+.byte $1e, $2c, $25, $32, $2f, $7f, $3d, $33, $39, $43, $7f, $21, $2c, $25, $38, $7f, $29, $30, $37, $29, $42, $00
 
-; address 162 - 178 (bytes 0 - 16)
-TEXT_TITLE_COPYRIGHT_NINTENDO:
-.byte $0d, $7e, $02, $0a, $0a, $01, $7e, $18, $13, $18, $1e, $0f, $18, $0e, $19, $00
+; address 166 - 182 (bytes 0 - 16)
+TEXT_TITLE_COPYRIGHT_SQUARE:
+.byte $0d, $7e, $02, $0a, $09, $08, $7e, $1d, $1b, $1f, $0b, $1c, $0f, $7e, $7e, $00
 
-; address 178 - 187 (bytes 0 - 9)
+; address 182 - 191 (bytes 0 - 9)
 TEXT_CLASS_NAME_BLACK_WIZARD:
 .byte $0c, $16, $0b, $0d, $15, $21, $13, $24, $00
 
-; address 187 - 194 (bytes 0 - 7)
-TEXT_CLASS_NAME_RED_WIZARD:
-.byte $1c, $0f, $0e, $21, $13, $24, $00
+; address 191 - 198 (bytes 0 - 7)
+TEXT_CLASS_NAME_MASTER:
+.byte $17, $0b, $1d, $1e, $0f, $1c, $00
 
-; address 194 - 200 (bytes 0 - 6)
-TEXT_SHOP_TITLEARMOR:
-.byte $0b, $1c, $17, $19, $1c, $00
+; address 198 - 204 (bytes 0 - 6)
+TEXT_CLASS_NAME_THIEF:
+.byte $1e, $12, $13, $0f, $10, $00
 
-; address 200 - 205 (bytes 0 - 5)
-TEXT_ITEM_DESCRIPTION:
-.byte $94, $83, >stringifyActiveItem, <stringifyActiveItem, $00
+; address 204 - 209 (bytes 0 - 5)
+TEXT_HERO_1_NAME:
+.byte $90, $80, $01, $91, $00
 
-; 205 - 8192
-.res 7987
+; address 209 - 214 (bytes 0 - 5)
+SHOP_WHITEMAGIC_CONERIA:
+.byte $60, $62, $61, $63, $00
+
+; address 214 - 219 (bytes 0 - 5)
+SHOP_WHITEMAGIC_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00, $00
+
+; 219 - 8192
+.res 7973
 

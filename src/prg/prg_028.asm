@@ -3268,6 +3268,10 @@ EnterTitleScreen:
     STA drawHeight
     LDA #2
     STA drawWidth
+
+
+    LDX #0
+    LDY #0
     FARCALL DrawSprite
 
     POS     9, 22

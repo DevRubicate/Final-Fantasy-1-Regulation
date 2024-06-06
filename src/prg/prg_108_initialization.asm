@@ -3,13 +3,13 @@
 .include "src/global-import.inc"
 
 .import UploadPalette0, FillAttributeTable, FillNametable, UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
-.import DrawNineSlice, TEXT_TITLE_CONTINUE, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, UploadSpriteCHR3, UploadSpriteCHR3, UploadPalette4, ClearSprites
+.import DrawNineSlice, TEXT_TITLE_CONTINUE, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadPalette4, ClearSprites
 .import TEXT_TITLE_NEW_GAME
 
 .import UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR4
 
 
-.export DrawTitleScreen, LoadResources
+.export DrawTitleScreen, LoadResources, LoadHeroSprites
 
 
 LoadResources:
@@ -37,7 +37,6 @@ LoadResources:
     STA spriteCHRBank6
     LDA #11
     STA spriteCHRBank7
-
 
     LDA #0
     STA Var2
@@ -265,8 +264,6 @@ LoadResources:
     STA Var3
     FARCALL UploadBackgroundCHR1
 
-
-
     LDA #<TILE_BORDER_EDGE
     STA Var0
     LDA #>TILE_BORDER_EDGE
@@ -319,6 +316,120 @@ LoadResources:
 
     RTS
 
+LoadHeroSprites:
+
+    LDA #<TILE_FIGHTER_0
+    STA Var0
+    LDA #>TILE_FIGHTER_0
+    STA Var1
+    LDA #0
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_1
+    STA Var0
+    LDA #>TILE_FIGHTER_1
+    STA Var1
+    LDA #4
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_2
+    STA Var0
+    LDA #>TILE_FIGHTER_2
+    STA Var1
+    LDA #8
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_3
+    STA Var0
+    LDA #>TILE_FIGHTER_3
+    STA Var1
+    LDA #12
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_4
+    STA Var0
+    LDA #>TILE_FIGHTER_4
+    STA Var1
+    LDA #16
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_5
+    STA Var0
+    LDA #>TILE_FIGHTER_5
+    STA Var1
+    LDA #20
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_6
+    STA Var0
+    LDA #>TILE_FIGHTER_6
+    STA Var1
+    LDA #24
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_7
+    STA Var0
+    LDA #>TILE_FIGHTER_7
+    STA Var1
+    LDA #28
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_8
+    STA Var0
+    LDA #>TILE_FIGHTER_8
+    STA Var1
+    LDA #32
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_9
+    STA Var0
+    LDA #>TILE_FIGHTER_9
+    STA Var1
+    LDA #36
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    LDA #<TILE_FIGHTER_10
+    STA Var0
+    LDA #>TILE_FIGHTER_10
+    STA Var1
+    LDA #40
+    STA Var2
+    LDA #9
+    STA Var3
+    FARCALL UploadSpriteCHR4
+
+    RTS
+
 DrawTitleScreen:
 
     LDA #0
@@ -336,21 +447,21 @@ DrawTitleScreen:
     STA Var0
     LDA #>TILE_CURSOR_0
     STA Var1
-    LDA #$0
+    LDA #0
     STA Var2
     LDA #8
     STA Var3
-    FARCALL UploadSpriteCHR3
+    FARCALL UploadSpriteCHR4
 
     LDA #<TILE_CURSOR_1
     STA Var0
     LDA #>TILE_CURSOR_1
     STA Var1
-    LDA #$3
+    LDA #4
     STA Var2
     LDA #8
     STA Var3
-    FARCALL UploadSpriteCHR3
+    FARCALL UploadSpriteCHR2
 
     LDA #$0
     STA palette0+0

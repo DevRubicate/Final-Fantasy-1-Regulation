@@ -7,6 +7,13 @@
 .export DrawSprite
 
 DrawSprite:
+
+
+    LDY #0
+    LDA (Var0),Y
+
+
+
     LDA drawVars+0
     ASL A
     ASL A
@@ -140,8 +147,6 @@ LUT_FullDrawJumpTableHi:
     LDA #(_width * _height)
     FARCALL AllocateSprites
 
-
-
     ; y position
     LDA drawY
     .repeat _height, h
@@ -183,8 +188,8 @@ LUT_FullDrawJumpTableHi:
     .repeat _height, h
         .repeat _width, w
             .if w <> 0 || h <> 0
-                ;CLC
-                ;ADC #$01
+                CLC
+                ADC #2
             .endif
             STA a:spriteRAM + (h * _width + w) * 4 + 1,X
         .endrepeat

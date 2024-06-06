@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, NewGamePartyGeneration, ClearZeroPage, DoOverworld, UploadFillColor
-.import LoadResources
+.import LoadResources, LoadHeroSprites
 
 .export GameStart
 
@@ -25,6 +25,7 @@ GameStart:
     
     ;; Load some startup info
     FARCALL LoadResources
+    FARCALL LoadHeroSprites
     FARCALL SetRandomSeed
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram

@@ -123,6 +123,10 @@ class Packer {
         return true;
     }
     allocate(thing, param = {}, banned) {
+        if(!thing.data) {
+            throw new Error(`allocate: Provided thing is invalid: ${JSON.stringify(thing)}`);
+        }
+
         const dataLength = thing.data.getLength();
 
         const sizes = [];
@@ -543,6 +547,7 @@ class Preprocessor {
         const packer = new Packer();
 
         const ITEM = [];
+        const METASPRITE = [];
 
         if(jsonData.text) {
             for(let i=0; i<jsonData.text.length; ++i) {
@@ -553,7 +558,6 @@ class Preprocessor {
         }
 
         if(jsonData.item) {
-
             const itemName = new PointerPackage();
             const itemDescription = new PointerPackage();
             const itemPrice = new BinaryPackage();
@@ -605,14 +609,11 @@ class Preprocessor {
             packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
             packer.addReferenceTable({name: 'LUT_ITEM_DESCRIPTION', data: itemDescription});
 
-
             packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
             packer.addStatic({name: 'LUT_ITEM_DATA_FIRST', data: itemDataFirst});
-
         }
 
         if(jsonData.shop) {
-            
             const shops = [];
             for(let i=0; i<jsonData.shop.length; ++i) {
                 const node = jsonData.shop[i];
@@ -647,6 +648,25 @@ class Preprocessor {
                 tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage([chr.tile[node.index]])});
             }
             packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
+        }
+
+        if(jsonData.metasprite) {
+            const metaspritePalette = new PointerPackage();
+            const metaspriteData = new PointerPackage();
+            for(let i=0; i<jsonData.metasprite.length; ++i) {
+                const metasprite = jsonData.metasprite[i];
+                //METASPRITE.push({name: metasprite.name, data: i});
+
+                packer.addConst({name: ${metasprite.name}, data: i});
+
+                // Add this metasprite's palette to the output
+                metaspritePalette.push({name: `${metasprite.name}_PALETTE`, data: this.compileMetaspritePalette(metasprite)});
+
+                // Add this metasprite's frames to the output
+                metaspriteData.push({name: `${metasprite.name}_FRAMES`, data: this.compileMetasprite(metasprite)});
+            }
+            packer.addReferenceTable({name: 'LUT_METASPRITE_PALETTE', data: metaspritePalette});
+            packer.addReferenceTable({name: 'LUT_METASPRITE_FRAMES', data: metaspriteData});
         }
 
 
@@ -764,6 +784,40 @@ class Preprocessor {
         buffer.push(0); // Terminator
 
         return {buffer: buffer};
+    }
+    compileMetasprite(input) {
+        const metaspriteFrame = new PointerPackage();
+
+        for(let i=0; i<input.frame.length; ++i) {
+            const frameInput = input.frame[i];
+            const frameBuffer = new BinaryPackage();
+            frameBuffer.push(frameInput.x);
+            frameBuffer.push(frameInput.y);
+            frameBuffer.push(frameInput.width);
+            frameBuffer.push(frameInput.height);
+            for(let j=0; j<frameInput.tile; ++j) {
+                const tile = frameInput.tile[j];
+                frameBuffer.push(tile.index);
+            }
+            metaspriteFrame.push({name: `${input.name}_FRAME_${i}`, data: frameBuffer});
+        }
+
+        return metaspriteFrame;
+    }
+    compileMetaspritePalette(input) {
+        const buffer = new BinaryPackage();
+        for(let i=0; i<input.palette.length; ++i) {
+            let colors = 0;
+            for(let j=0; j<input.palette[i].length; ++j) {
+                buffer.push(input.palette[i][j]);
+                ++colors;
+            }
+            if(colors !== 3) {
+                buffer.push(0xFF); // Palette terminator
+            }
+        }
+        buffer.push(0xFF); // Full terminator
+        return buffer;
     }
     translateCommand(commandString, buffer) {
         const segment = commandString.split(' ');

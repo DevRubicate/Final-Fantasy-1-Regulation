@@ -19,7 +19,7 @@ clean:
 	${RM} ${obj} ${out}
 
 ${out}: nes.cfg ${obj}
-	${LD65} ${LD65FLAGS} -o $@ -C $^
+	@${LD65} ${LD65FLAGS} -o $@ -C $^
 
 run_node: $(NODE_SCRIPTS)
 
@@ -27,4 +27,4 @@ $(NODE_SCRIPTS):
 	${NODE} $@
 
 build/%.o: src/%.asm | run_node
-	${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst --list-bytes 0
+	@${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst --list-bytes 0
