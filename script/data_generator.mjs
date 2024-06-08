@@ -86,8 +86,6 @@ class Packer {
     }
 
     place(plan) {
-        const siblingPackages = plan.entry.data.getSiblingPackages();
-
         const banned = [];
         outer: while(true) {
             this.structure.transaction();
@@ -99,22 +97,6 @@ class Packer {
                 return false;
             }
 
-            for(let i=0; i<siblingPackages.length; ++i) {
-                const tagalongAllocation = this.allocate(
-                    {
-                        name: `${plan.entry.name}_SIBLING${i+2}`,
-                        data: siblingPackages[i],
-                    },
-                    {page: baseAllocation.node.page},
-                    []
-                );
-                if(!tagalongAllocation) {
-                    banned.push({page: baseAllocation.anchorNode.page, address: baseAllocation.anchorNode.address});
-
-                    this.structure.rollback();
-                    continue outer;
-                }
-            }
             // success
             break;
         }
@@ -252,7 +234,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate(children[k], {page: leftNode.page}, []);
+                        const success = this.allocate({name: children[k].name, data: children[k]}, {page: leftNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -267,7 +249,6 @@ class Packer {
                     offset,
                     offset + sizes[pageCounter]
                 );
-
                 this.takeCell(
                     subData,
                     pageCounter === 0 ? `${thing.name}` : `${thing.name}_EXTENDED`,
@@ -283,7 +264,7 @@ class Packer {
 
                 const children = subData.childAllocations();
                 for(let k=0; k<children.length; ++k) {
-                    const success = this.allocate(children[k], {page: currentNode.page}, []);
+                    const success = this.allocate({name: children[k].name, data: children[k]}, {page: currentNode.page}, []);
                     if(!success) {
                         this.structure.rollback();
                         continue outer;
@@ -312,7 +293,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate(children[k], {page: rightNode.page}, []);
+                        const success = this.allocate({name: children[k].name, data: children[k]}, {page: rightNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -475,7 +456,8 @@ class Packer {
 
 class BinaryPackage {
     data;
-    constructor(data) {
+    constructor(name, data) {
+        this.name = name;
         this.data = data ?? [];
     }
     push(...input) {
@@ -501,21 +483,19 @@ class BinaryPackage {
         for(let i=0; i<this.data.length; ++i) {
             subData.push(this.data[i].slice(start, end));
         }
-        return new BinaryPackage(subData);
-    }
-    getSiblingPackages() {
-        return this.data.slice(1).map(a => new BinaryPackage([a]));
+        return new BinaryPackage(`${this.name}`, subData);
     }
     childAllocations() {
-        return [];
+        return this.data.slice(1).map((a, i) => new BinaryPackage(`${this.name}_SIBLING${i+2}`, [a]));
     }
 }
 
 class PointerPackage {
     data;
-    constructor(data, secondary) {
+    constructor(name, data, type = '<') {
+        this.name = name;
         this.data = data ?? [];
-        this.secondary = !!secondary;
+        this.type = type;
     }
     push(input) {
         this.data.push(input);
@@ -524,17 +504,21 @@ class PointerPackage {
         return this.data.length;
     }
     getOutput() {
-        return this.data.map(a => a === 0 ? '0' : `${this.secondary?'>':'<'}${a.name}`).join(', ');
+        return this.data.map(a => {
+            if(a === 0) {
+                return '0';    
+            }
+            return `${this.type}${a.name}`;
+        }).join(', ');
     }
     split(start, end) {
-        return new PointerPackage(this.data.slice(start, end), this.secondary);
-    }
-    getSiblingPackages() {
-        return [new PointerPackage(this.data.slice(), true)];
+        return new PointerPackage(this.name, this.data.slice(start, end), this.type);
     }
     childAllocations() {
-        if(!this.secondary) {
-            return this.data.filter(a => a !== 0).map(a => ({name: a.name, data: a.data}));
+        if(this.type === '<') {
+            return [new PointerPackage(`${this.name}_SIBLING2`, this.data.slice(), '>')].concat(
+                this.data.filter(a => a !== 0).map(a => a.data)
+            );
         } else {
             return [];
         }
@@ -552,16 +536,15 @@ class Preprocessor {
         if(jsonData.text) {
             for(let i=0; i<jsonData.text.length; ++i) {
                 const node = jsonData.text[i];
-                const textData = this.compileText(node.text);
-                packer.addStatic({name: `TEXT_${node.name}`, data: textData.buffer});
+                packer.addStatic({name: `TEXT_${node.name}`, data: this.compileText(`TEXT_${node.name}`, node.text)});
             }
         }
 
         if(jsonData.item) {
-            const itemName = new PointerPackage();
-            const itemDescription = new PointerPackage();
-            const itemPrice = new BinaryPackage();
-            const itemDataFirst = new BinaryPackage();
+            const itemName = new PointerPackage('LUT_ITEM_NAME');
+            const itemDescription = new PointerPackage('LUT_ITEM_DESCRIPTION');
+            const itemPrice = new BinaryPackage('LUT_ITEM_PRICE');
+            const itemDataFirst = new BinaryPackage('LUT_ITEM_DATA_FIRST');
 
             // The zero entry
             itemPrice.push(0, 0, 0);
@@ -600,11 +583,11 @@ class Preprocessor {
                 }
 
                 // Add this item's text to the output
-                const textData = this.compileText(item.text);
-                itemName.push({name: `TEXT_ITEM_NAME_${item.name}`, data: textData.buffer});
+                const textData = this.compileText(`TEXT_ITEM_NAME_${item.name}`, item.text);
+                itemName.push({name: `TEXT_ITEM_NAME_${item.name}`, data: textData});
 
-                const descriptionData = this.compileText(item.description);
-                itemDescription.push({name: `TEXT_ITEM_DESCRIPTION_${item.name}`, data: descriptionData.buffer});
+                const descriptionData = this.compileText(`TEXT_ITEM_DESCRIPTION_${item.name}`, item.description);
+                itemDescription.push({name: `TEXT_ITEM_DESCRIPTION_${item.name}`, data: descriptionData});
             }
             packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
             packer.addReferenceTable({name: 'LUT_ITEM_DESCRIPTION', data: itemDescription});
@@ -617,7 +600,7 @@ class Preprocessor {
             const shops = [];
             for(let i=0; i<jsonData.shop.length; ++i) {
                 const node = jsonData.shop[i];
-                const shopList = new BinaryPackage();
+                const shopList = new BinaryPackage(node.name);
                 for(let j=0; j<node.list.length; ++j) {
                     const item = ITEM.find(a => a.name === node.list[j]);
                     if(!item) {
@@ -637,7 +620,7 @@ class Preprocessor {
         }
 
         if(jsonData.tile) {
-            const tiles = new PointerPackage();
+            const tiles = new PointerPackage('LUT_TILE_CHR');
             for(let i=0; i<jsonData.tile.length; ++i) {
                 const node = jsonData.tile[i];
                 const chr = jsonData.chr.find(a => a.name === node.source);
@@ -645,25 +628,25 @@ class Preprocessor {
                     throw new Error(`Could not find ${node.source}`);
                 }
                 packer.addConst({name: `TILE_${node.name}`, data: i});
-                tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage([chr.tile[node.index]])});
+                tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage(`TILECHR_${node.name}`, [chr.tile[node.index]])});
             }
             packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
         }
 
         if(jsonData.metasprite) {
-            const metaspritePalette = new PointerPackage();
-            const metaspriteData = new PointerPackage();
+            const metaspritePalette = new PointerPackage('LUT_METASPRITE_PALETTE');
+            const metaspriteData = new PointerPackage('LUT_METASPRITE_FRAMES');
             for(let i=0; i<jsonData.metasprite.length; ++i) {
                 const metasprite = jsonData.metasprite[i];
                 //METASPRITE.push({name: metasprite.name, data: i});
 
-                packer.addConst({name: ${metasprite.name}, data: i});
+                packer.addConst({name: metasprite.name, data: i});
 
                 // Add this metasprite's palette to the output
-                metaspritePalette.push({name: `${metasprite.name}_PALETTE`, data: this.compileMetaspritePalette(metasprite)});
+                metaspritePalette.push({name: `${metasprite.name}_PALETTE`, data: this.compileMetaspritePalette(`${metasprite.name}_PALETTE`, metasprite)});
 
                 // Add this metasprite's frames to the output
-                metaspriteData.push({name: `${metasprite.name}_FRAMES`, data: this.compileMetasprite(metasprite)});
+                metaspriteData.push({name: `${metasprite.name}_FRAMES`, data: this.compileMetasprite(metasprite.name, metasprite)});
             }
             packer.addReferenceTable({name: 'LUT_METASPRITE_PALETTE', data: metaspritePalette});
             packer.addReferenceTable({name: 'LUT_METASPRITE_FRAMES', data: metaspriteData});
@@ -672,7 +655,7 @@ class Preprocessor {
 
         return packer.build();
     }
-    compileText(input) {
+    compileText(name, text) {
         const dict = {
             '0': 1,
             '1': 2,
@@ -755,9 +738,9 @@ class Preprocessor {
 
 
         let output = '';
-        const buffer = new BinaryPackage();
-        for(let i=0; i<input.length; ++i) {
-            const char = input[i]
+        const buffer = new BinaryPackage(name);
+        for(let i=0; i<text.length; ++i) {
+            const char = text[i]
 
             if(mode === 'FREE') {
                 if(char === '{') {
@@ -765,7 +748,7 @@ class Preprocessor {
                 } else {
                     const val = dict[char];
                     if(typeof val === 'undefined') {
-                        throw new Error(`Invalid character "${char}" in text: "${input}"`);
+                        throw new Error(`Invalid character "${char}" in text: "${text}"`);
                     }
                     buffer.push(val);
                 }
@@ -783,14 +766,14 @@ class Preprocessor {
 
         buffer.push(0); // Terminator
 
-        return {buffer: buffer};
+        return buffer;
     }
-    compileMetasprite(input) {
-        const metaspriteFrame = new PointerPackage();
+    compileMetasprite(name, input) {
+        const metaspriteFrame = new PointerPackage(`${name}_FRAMES`);
 
         for(let i=0; i<input.frame.length; ++i) {
             const frameInput = input.frame[i];
-            const frameBuffer = new BinaryPackage();
+            const frameBuffer = new BinaryPackage(`${name}_FRAME_${i}`);
             frameBuffer.push(frameInput.x);
             frameBuffer.push(frameInput.y);
             frameBuffer.push(frameInput.width);
@@ -804,8 +787,8 @@ class Preprocessor {
 
         return metaspriteFrame;
     }
-    compileMetaspritePalette(input) {
-        const buffer = new BinaryPackage();
+    compileMetaspritePalette(name, input) {
+        const buffer = new BinaryPackage(name);
         for(let i=0; i<input.palette.length; ++i) {
             let colors = 0;
             for(let j=0; j<input.palette[i].length; ++j) {

@@ -9,8 +9,17 @@
 DrawSprite:
 
 
-    LDY #0
-    LDA (Var0),Y
+
+
+;    LDA LUT_METASPRITE_FRAMES,Y
+;    STA Var0
+;    LDA LUT_METASPRITE_FRAMES_SIBLING2,Y
+;    STA Var1
+;
+;    LDY #0
+;    LDA (Var0),Y
+;    IN
+
 
 
 
