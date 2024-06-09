@@ -70,16 +70,10 @@ class Packer {
         );
     }
     addStatic(entry) {
-        this.stuff.push({
-            entry: entry,
-            priority: entry.data.getLength(),
-        })
+        this.stuff.push(entry);
     }
     addReferenceTable(entry) {
-        this.stuff.push({
-            entry: entry,
-            priority: entry.data.getLength(),
-        })
+        this.stuff.push(entry);
     }
     addConst(entry) {
         this.consts.push(entry);
@@ -91,7 +85,7 @@ class Packer {
             this.structure.transaction();
 
             let success = true;
-            const baseAllocation = this.allocate(plan.entry, {}, banned);
+            const baseAllocation = this.allocate(plan, {}, banned);
             if(!baseAllocation) {
                 this.structure.rollback();
                 return false;
@@ -105,11 +99,11 @@ class Packer {
         return true;
     }
     allocate(thing, param = {}, banned) {
-        if(!thing.data) {
+        if(!thing) {
             throw new Error(`allocate: Provided thing is invalid: ${JSON.stringify(thing)}`);
         }
 
-        const dataLength = thing.data.getLength();
+        const dataLength = thing.getLength();
 
         const sizes = [];
         for(let i=0, len=Math.ceil(dataLength / 256); i<len; ++i) {
@@ -215,7 +209,7 @@ class Packer {
                 // Allocates cells to the left of center
                 for(let j=0; j<pagesToTheLeft.length; ++j) {
                     const leftNode = pagesToTheLeft[j];
-                    const subData = thing.data.split(
+                    const subData = thing.split(
                         offset,
                         offset + sizes[pageCounter]
                     );
@@ -234,7 +228,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate({name: children[k].name, data: children[k]}, {page: leftNode.page}, []);
+                        const success = this.allocate(children[k], {page: leftNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -245,7 +239,7 @@ class Packer {
                 }
 
                 // Allocate center cell
-                const subData = thing.data.split(
+                const subData = thing.split(
                     offset,
                     offset + sizes[pageCounter]
                 );
@@ -264,7 +258,7 @@ class Packer {
 
                 const children = subData.childAllocations();
                 for(let k=0; k<children.length; ++k) {
-                    const success = this.allocate({name: children[k].name, data: children[k]}, {page: currentNode.page}, []);
+                    const success = this.allocate(children[k], {page: currentNode.page}, []);
                     if(!success) {
                         this.structure.rollback();
                         continue outer;
@@ -275,7 +269,7 @@ class Packer {
                 // Allocate cells to the right of center
                 for(let j=0; j<pagesToTheRight.length; ++j) {
                     const rightNode = pagesToTheRight[j];
-                    const subData = thing.data.split(
+                    const subData = thing.split(
                         offset,
                         offset + sizes[pageCounter]
                     )
@@ -293,7 +287,7 @@ class Packer {
                     // allocated to.
                     const children = subData.childAllocations();
                     for(let k=0; k<children.length; ++k) {
-                        const success = this.allocate({name: children[k].name, data: children[k]}, {page: rightNode.page}, []);
+                        const success = this.allocate(children[k], {page: rightNode.page}, []);
                         if(!success) {
                             this.structure.rollback();
                             continue outer;
@@ -400,7 +394,7 @@ class Packer {
         return freeNodes;
     }
     build() {
-        this.stuff.sort((a, b) => b.priority - a.priority);
+        this.stuff.sort((a, b) => b.getPriority() - a.getPriority());
 
         for(let i=0; i<this.stuff.length; ++i) {
             const thing = this.stuff[i];
@@ -469,6 +463,9 @@ class BinaryPackage {
     getLength() {
         return this.data[0].length;
     }
+    getPriority() {
+        return this.getLength();
+    }
     getOutput() {
         return this.data[0].map(a => {
             if(typeof a === 'number') {
@@ -503,6 +500,9 @@ class PointerPackage {
     getLength() {
         return this.data.length;
     }
+    getPriority() {
+        return this.getLength();
+    }
     getOutput() {
         return this.data.map(a => {
             if(a === 0) {
@@ -517,7 +517,7 @@ class PointerPackage {
     childAllocations() {
         if(this.type === '<') {
             return [new PointerPackage(`${this.name}_SIBLING2`, this.data.slice(), '>')].concat(
-                this.data.filter(a => a !== 0).map(a => a.data)
+                this.data.filter(a => a !== 0)
             );
         } else {
             return [];
@@ -537,6 +537,9 @@ class PointerStructPackage {
     getLength() {
         return this.data.length*2;
     }
+    getPriority() {
+        return this.getLength() * 2;
+    }
     getOutput() {
         return this.data.map(a => {
             if(a === 0) {
@@ -552,7 +555,7 @@ class PointerStructPackage {
         return new PointerStructPackage(this.name, this.data.slice(start>>1, end>>1));
     }
     childAllocations() {
-        return this.data.filter(a => a !== 0).map(a => a.data);
+        return this.data.filter(a => a !== 0);
     }
 }
 
@@ -569,7 +572,7 @@ class Preprocessor {
         if(jsonData.text) {
             for(let i=0; i<jsonData.text.length; ++i) {
                 const node = jsonData.text[i];
-                packer.addStatic({name: `TEXT_${node.name}`, data: this.compileText(`TEXT_${node.name}`, node.text)});
+                packer.addStatic(this.compileText(`TEXT_${node.name}`, node.text));
             }
         }
 
@@ -617,16 +620,16 @@ class Preprocessor {
 
                 // Add this item's text to the output
                 const textData = this.compileText(`TEXT_ITEM_NAME_${item.name}`, item.text);
-                itemName.push({name: `TEXT_ITEM_NAME_${item.name}`, data: textData});
+                itemName.push(textData);
 
                 const descriptionData = this.compileText(`TEXT_ITEM_DESCRIPTION_${item.name}`, item.description);
-                itemDescription.push({name: `TEXT_ITEM_DESCRIPTION_${item.name}`, data: descriptionData});
+                itemDescription.push(descriptionData);
             }
-            packer.addReferenceTable({name: 'LUT_ITEM_NAME', data: itemName});
-            packer.addReferenceTable({name: 'LUT_ITEM_DESCRIPTION', data: itemDescription});
+            packer.addReferenceTable(itemName);
+            packer.addReferenceTable(itemDescription);
 
-            packer.addStatic({name: 'LUT_ITEM_PRICE', data: itemPrice});
-            packer.addStatic({name: 'LUT_ITEM_DATA_FIRST', data: itemDataFirst});
+            packer.addStatic(itemPrice);
+            packer.addStatic(itemDataFirst);
         }
 
         if(jsonData.shop) {
@@ -647,7 +650,7 @@ class Preprocessor {
                 // Terminator
                 shopList.push(0, 0);
 
-                const shop = packer.addStatic({name: node.name, data: shopList});
+                const shop = packer.addStatic(shopList);
                 shops.push(shop);
             }
         }
@@ -662,9 +665,9 @@ class Preprocessor {
                 }
                 packer.addConst({name: node.name, data: i});
 
-                tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage(`TILECHR_${node.name}`, [chr.tile[node.index]])});
+                tiles.push(new BinaryPackage(`TILECHR_${node.name}`, [chr.tile[node.index]]));
             }
-            packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
+            packer.addReferenceTable(tiles);
         }
 
         if(jsonData.metasprite) {
@@ -676,17 +679,17 @@ class Preprocessor {
                 packer.addConst({name: metasprite.name, data: i});
 
                 // Add this metasprite's palette to the output
-                metaspritePalette.push({name: `${metasprite.name}_PALETTE`, data: this.compileMetaspritePalette(`${metasprite.name}_PALETTE`, metasprite)});
+                metaspritePalette.push(this.compileMetaspritePalette(`${metasprite.name}_PALETTE`, metasprite));
 
                 // Add this metasprite's chr to the output
-                metaspriteCHR.push({name: `${metasprite.name}_CHR`, data: this.compileMetaspriteCHR(`${metasprite.name}_CHR`, metasprite)});
+                metaspriteCHR.push(this.compileMetaspriteCHR(`${metasprite.name}_CHR`, metasprite));
 
                 // Add this metasprite's frames to the output
-                metaspriteData.push({name: `${metasprite.name}_FRAMES`, data: this.compileMetasprite(metasprite.name, metasprite)});
+                metaspriteData.push(this.compileMetasprite(`${metasprite.name}_FRAMES`, metasprite));
             }
-            packer.addReferenceTable({name: 'LUT_METASPRITE_PALETTE', data: metaspritePalette});
-            packer.addReferenceTable({name: 'LUT_METASPRITE_CHR', data: metaspriteCHR});
-            packer.addReferenceTable({name: 'LUT_METASPRITE_FRAMES', data: metaspriteData});
+            packer.addReferenceTable(metaspritePalette);
+            packer.addReferenceTable(metaspriteCHR);
+            packer.addReferenceTable(metaspriteData);
         }
 
 
@@ -843,7 +846,7 @@ class Preprocessor {
 
         for(let i=0; i<input.frame.length; ++i) {
             const frameInput = input.frame[i];
-            const frameBuffer = new BinaryPackage(`${name}_FRAME_${i}`);
+            const frameBuffer = new BinaryPackage(`${input.name}_FRAME_${i}`);
             frameBuffer.push(frameInput.x);
             frameBuffer.push(frameInput.y);
             frameBuffer.push(frameInput.height - 1);
@@ -852,7 +855,7 @@ class Preprocessor {
                 const tile = frameInput.tile[j];
                 frameBuffer.push(tile.index);
             }
-            metaspriteFrame.push({name: `${input.name}_FRAME_${i}`, data: frameBuffer});
+            metaspriteFrame.push(frameBuffer);
         }
 
         return metaspriteFrame;
