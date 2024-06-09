@@ -525,13 +525,46 @@ class PointerPackage {
     }
 }
 
+class PointerStructPackage {
+    data;
+    constructor(name, data) {
+        this.name = name;
+        this.data = data ?? [];
+    }
+    push(input) {
+        this.data.push(input);
+    }
+    getLength() {
+        return this.data.length*2;
+    }
+    getOutput() {
+        return this.data.map(a => {
+            if(a === 0) {
+                return '0, 0';    
+            }
+            return `<${a.name}, >${a.name}`;
+        }).join(', ');
+    }
+    split(start, end) {
+        if(start>>1<<1 !== start || end>>1<<1 !== end) {
+            throw new Error(`PointerStructPackage: Uneven split`);
+        }
+        return new PointerStructPackage(this.name, this.data.slice(start>>1, end>>1));
+    }
+    childAllocations() {
+        return this.data.filter(a => a !== 0).map(a => a.data);
+    }
+}
+
 class Preprocessor {
+    constants = new Map();
     constructor() {}
     processJson(jsonData) {
         const packer = new Packer();
 
         const ITEM = [];
         const METASPRITE = [];
+        const TILE = [];
 
         if(jsonData.text) {
             for(let i=0; i<jsonData.text.length; ++i) {
@@ -627,7 +660,8 @@ class Preprocessor {
                 if(!chr) {
                     throw new Error(`Could not find ${node.source}`);
                 }
-                packer.addConst({name: `TILE_${node.name}`, data: i});
+                packer.addConst({name: node.name, data: i});
+
                 tiles.push({name: `TILECHR_${node.name}`, data: new BinaryPackage(`TILECHR_${node.name}`, [chr.tile[node.index]])});
             }
             packer.addReferenceTable({name: 'LUT_TILE_CHR', data: tiles});
@@ -635,25 +669,37 @@ class Preprocessor {
 
         if(jsonData.metasprite) {
             const metaspritePalette = new PointerPackage('LUT_METASPRITE_PALETTE');
+            const metaspriteCHR = new PointerPackage('LUT_METASPRITE_CHR');
             const metaspriteData = new PointerPackage('LUT_METASPRITE_FRAMES');
             for(let i=0; i<jsonData.metasprite.length; ++i) {
                 const metasprite = jsonData.metasprite[i];
-                //METASPRITE.push({name: metasprite.name, data: i});
-
                 packer.addConst({name: metasprite.name, data: i});
 
                 // Add this metasprite's palette to the output
                 metaspritePalette.push({name: `${metasprite.name}_PALETTE`, data: this.compileMetaspritePalette(`${metasprite.name}_PALETTE`, metasprite)});
 
+                // Add this metasprite's chr to the output
+                metaspriteCHR.push({name: `${metasprite.name}_CHR`, data: this.compileMetaspriteCHR(`${metasprite.name}_CHR`, metasprite)});
+
                 // Add this metasprite's frames to the output
                 metaspriteData.push({name: `${metasprite.name}_FRAMES`, data: this.compileMetasprite(metasprite.name, metasprite)});
             }
             packer.addReferenceTable({name: 'LUT_METASPRITE_PALETTE', data: metaspritePalette});
+            packer.addReferenceTable({name: 'LUT_METASPRITE_CHR', data: metaspriteCHR});
             packer.addReferenceTable({name: 'LUT_METASPRITE_FRAMES', data: metaspriteData});
         }
 
 
         return packer.build();
+    }
+    addConstant(name, value) {
+        this.constants.set(name, value);
+    }
+    getConstant(name) {
+        if(!this.constants.has(name)) {
+            throw new Error(`getConstant: Undefined constant ${name}`);
+        }
+        return this.constants.get(name);
     }
     compileText(name, text) {
         const dict = {
@@ -768,25 +814,6 @@ class Preprocessor {
 
         return buffer;
     }
-    compileMetasprite(name, input) {
-        const metaspriteFrame = new PointerPackage(`${name}_FRAMES`);
-
-        for(let i=0; i<input.frame.length; ++i) {
-            const frameInput = input.frame[i];
-            const frameBuffer = new BinaryPackage(`${name}_FRAME_${i}`);
-            frameBuffer.push(frameInput.x);
-            frameBuffer.push(frameInput.y);
-            frameBuffer.push(frameInput.width);
-            frameBuffer.push(frameInput.height);
-            for(let j=0; j<frameInput.tile; ++j) {
-                const tile = frameInput.tile[j];
-                frameBuffer.push(tile.index);
-            }
-            metaspriteFrame.push({name: `${input.name}_FRAME_${i}`, data: frameBuffer});
-        }
-
-        return metaspriteFrame;
-    }
     compileMetaspritePalette(name, input) {
         const buffer = new BinaryPackage(name);
         for(let i=0; i<input.palette.length; ++i) {
@@ -801,6 +828,34 @@ class Preprocessor {
         }
         buffer.push(0xFF); // Full terminator
         return buffer;
+    }
+    compileMetaspriteCHR(name, input) {
+        const buffer = new BinaryPackage(name);
+        for(let i=0; i<input.chr.length; ++i) {
+            const chr = input.chr[i];
+            buffer.push(chr.name);
+            buffer.push(chr.size);
+        }
+        return buffer;
+    }
+    compileMetasprite(name, input) {
+        const metaspriteFrame = new PointerStructPackage(`${name}_FRAMES`);
+
+        for(let i=0; i<input.frame.length; ++i) {
+            const frameInput = input.frame[i];
+            const frameBuffer = new BinaryPackage(`${name}_FRAME_${i}`);
+            frameBuffer.push(frameInput.x);
+            frameBuffer.push(frameInput.y);
+            frameBuffer.push(frameInput.height - 1);
+            frameBuffer.push(frameInput.width - 1);
+            for(let j=0; j<frameInput.tile.length; ++j) {
+                const tile = frameInput.tile[j];
+                frameBuffer.push(tile.index);
+            }
+            metaspriteFrame.push({name: `${input.name}_FRAME_${i}`, data: frameBuffer});
+        }
+
+        return metaspriteFrame;
     }
     translateCommand(commandString, buffer) {
         const segment = commandString.split(' ');

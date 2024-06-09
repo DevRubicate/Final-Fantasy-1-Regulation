@@ -1,22 +1,22 @@
 {
     "tile": [
         {
-            "name": "ICON_PART_0",
+            "name": "TILE_ICON_PART_0",
             "source": "data/chr/icon.background.png.chr",
             "index": 0
         },
         {
-            "name": "ICON_PART_1",
+            "name": "TILE_ICON_PART_1",
             "source": "data/chr/icon.background.png.chr",
             "index": 1
         },
         {
-            "name": "ICON_PART_2",
+            "name": "TILE_ICON_PART_2",
             "source": "data/chr/icon.background.png.chr",
             "index": 2
         },
         {
-            "name": "ICON_PART_3",
+            "name": "TILE_ICON_PART_3",
             "source": "data/chr/icon.background.png.chr",
             "index": 3
         }

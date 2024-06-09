@@ -1,57 +1,57 @@
 {
     "tile": [
         {
-            "name": "FIGHTER_0",
+            "name": "TILE_FIGHTER_0",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 0
         },
         {
-            "name": "FIGHTER_1",
+            "name": "TILE_FIGHTER_1",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 1
         },
         {
-            "name": "FIGHTER_2",
+            "name": "TILE_FIGHTER_2",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 2
         },
         {
-            "name": "FIGHTER_3",
+            "name": "TILE_FIGHTER_3",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 3
         },
         {
-            "name": "FIGHTER_4",
+            "name": "TILE_FIGHTER_4",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 4
         },
         {
-            "name": "FIGHTER_5",
+            "name": "TILE_FIGHTER_5",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 5
         },
         {
-            "name": "FIGHTER_6",
+            "name": "TILE_FIGHTER_6",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 6
         },
         {
-            "name": "FIGHTER_7",
+            "name": "TILE_FIGHTER_7",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 7
         },
         {
-            "name": "FIGHTER_8",
+            "name": "TILE_FIGHTER_8",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 8
         },
         {
-            "name": "FIGHTER_9",
+            "name": "TILE_FIGHTER_9",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 9
         },
         {
-            "name": "FIGHTER_10",
+            "name": "TILE_FIGHTER_10",
             "source": "data/chr/hero/fighter.sprite.png.chr",
             "index": 10
         }

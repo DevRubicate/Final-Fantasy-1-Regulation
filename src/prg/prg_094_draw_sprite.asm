@@ -3,22 +3,31 @@
 .include "src/global-import.inc"
 
 .import AllocateSprites
+.import LUT_METASPRITE_FRAMES, LUT_METASPRITE_FRAMES_SIBLING2
 
 .export DrawSprite
 
 DrawSprite:
 
+    LDA #TextBank(LUT_METASPRITE_FRAMES)
+    STA MMC5_PRG_BANK2
+    LDA LUT_METASPRITE_FRAMES,Y
+    STA Var0
+    LDA LUT_METASPRITE_FRAMES_SIBLING2,Y
+    STA Var1
 
+    TYA
+    ASL A
+    TAY
+    LDA (Var0),Y
+    TAX
+    INY
+    LDA (Var0),Y
 
+    STA Var1
+    TXA
+    STA Var0
 
-;    LDA LUT_METASPRITE_FRAMES,Y
-;    STA Var0
-;    LDA LUT_METASPRITE_FRAMES_SIBLING2,Y
-;    STA Var1
-;
-;    LDY #0
-;    LDA (Var0),Y
-;    IN
 
 
 
@@ -26,17 +35,21 @@ DrawSprite:
     LDA drawVars+0
     ASL A
     ASL A
-    ORA drawHeight
+    LDY #2
+    ORA (Var0),Y
     ASL A
     ASL A
-    ORA drawWidth
+    INY
+    ORA (Var0),Y
     TAX
 
+
+
     LDA LUT_FullDrawJumpTableLo,X
-    STA Var0
+    STA Var2
     LDA LUT_FullDrawJumpTableHi,X
-    STA Var1
-    JMP (Var0)
+    STA Var3
+    JMP (Var2)
 
 LUT_FullDrawJumpTableLo:
     .lobytes FullDraw_1x1
@@ -193,13 +206,19 @@ LUT_FullDrawJumpTableHi:
         .endrepeat
     .endrepeat
 
-    LDA drawVars+1
+
+    CLC
     .repeat _height, h
         .repeat _width, w
-            .if w <> 0 || h <> 0
-                CLC
-                ADC #2
-            .endif
+            ; OPTIMALIZATION: By making each byte be an addition/subtraction to the previous byte, we can
+            ; remove the need to re-add drawVars+1 each time. Obviously the ASL A can be eliminated too
+            ; by making the data format account for it. Lastly if we move onto strictly using ADC we can
+            ; eliminate the CLC by making the data format account for carry. That way we can reduce the loop
+            ; to nothing but an INY -> ADC(),Y -> STA
+            INY
+            LDA (Var0),Y
+            ASL A
+            ADC drawVars+1
             STA a:spriteRAM + (h * _width + w) * 4 + 1,X
         .endrepeat
     .endrepeat

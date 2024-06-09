@@ -1,7 +1,7 @@
 {
     "metasprite": [
         {
-            "name": "METASPRITE_CURSOR",
+            "name": "METASPRITE_FIGHTER",
             "palette": [
                 [
                     29,
@@ -21,25 +21,27 @@
             ],
             "frame": [
                 {
-                    "width": 3,
-                    "height": 1,
+                    "width": 2,
+                    "height": 2,
                     "x": 0,
                     "y": 0,
                     "tile": [
                         {"index": 0, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
                         {"index": 1, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
-                        {"index": 2, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
+                        {"index": 2, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
+                        {"index": 3, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
                     ]
                 },
                 {
-                    "width": 3,
-                    "height": 1,
+                    "width": 2,
+                    "height": 2,
                     "x": 0,
                     "y": 0,
                     "tile": [
                         {"index": 4, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
                         {"index": 5, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
-                        {"index": 6, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
+                        {"index": 6, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
+                        {"index": 7, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
                     ]
                 }
             ]

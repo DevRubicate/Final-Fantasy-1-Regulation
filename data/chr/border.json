@@ -1,22 +1,22 @@
 {
     "tile": [
         {
-            "name": "BORDER_EDGE",
+            "name": "TILE_BORDER_EDGE",
             "source": "data/chr/border.background.png.chr",
             "index": 0
         },
         {
-            "name": "BORDER_CORNER",
+            "name": "TILE_BORDER_CORNER",
             "source": "data/chr/border.background.png.chr",
             "index": 1
         },
         {
-            "name": "BORDER_CONJUNCTION",
+            "name": "TILE_BORDER_CONJUNCTION",
             "source": "data/chr/border.background.png.chr",
             "index": 2
         },
         {
-            "name": "BORDER_SPLIT",
+            "name": "TILE_BORDER_SPLIT",
             "source": "data/chr/border.background.png.chr",
             "index": 3
         }

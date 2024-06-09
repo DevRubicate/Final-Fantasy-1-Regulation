@@ -3264,11 +3264,6 @@ EnterTitleScreen:
     STA drawVars+0
     LDA #1
     STA drawVars+1
-    LDA #0
-    STA drawHeight
-    LDA #2
-    STA drawWidth
-
 
     LDX #0
     LDY #0
