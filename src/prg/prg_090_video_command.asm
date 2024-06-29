@@ -11,18 +11,17 @@
 .import Video_Inc1_Set_FillNametable0to119, Video_Set_FillNametable120to239, Video_Set_FillNametable240to359, Video_Set_FillNametable360to479, Video_Set_FillNametable480to599, Video_Set_FillNametable600to719, Video_Set_FillNametable720to839, Video_Set_FillNametable840to959
 .import Video_Inc1_Set_FillAttributeTable
 .import Video_Inc1_CHRBank_Address, Video_Inc1_CHRBank_Address_Set
-
-
 .import TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
-.import LUT_ITEM_NAME, LUT_ITEM_NAME_SIBLING2
+.import LUT_ITEM_NAME_LO, LUT_ITEM_NAME_HI
 .import LUT_ITEM_PRICE, LUT_ITEM_PRICE_SIBLING2, LUT_ITEM_PRICE_SIBLING3
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
-.import LUT_ITEM_DESCRIPTION, LUT_ITEM_DESCRIPTION_SIBLING2
-.import LUT_TILE_CHR, LUT_TILE_CHR_SIBLING2
+.import LUT_ITEM_DESCRIPTION_LO, LUT_ITEM_DESCRIPTION_HI
+.import LUT_TILE_CHR_LO, LUT_TILE_CHR_HI
 
 .export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable 
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
 .export UploadCHRSolids,UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
+.export UploadMetaSprite
 
 lut_NTRowStartLo:
   .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
@@ -750,12 +749,12 @@ FetchCharacterItemName:
     TAX
 
     ; TODO: 16 bit item ids
-    LDA #TextBank(LUT_ITEM_NAME)              ; Switch to the bank
+    LDA #TextBank(LUT_ITEM_NAME_LO)              ; Switch to the bank
     STA Var2
     STA MMC5_PRG_BANK2
-    LDA LUT_ITEM_NAME, X
+    LDA LUT_ITEM_NAME_LO, X
     STA Var0
-    LDA LUT_ITEM_NAME_SIBLING2, X
+    LDA LUT_ITEM_NAME_HI, X
     STA Var1
     LDY #0
     JUMP FetchCharacter
@@ -769,12 +768,12 @@ FetchCharacterItemDescription:
     TAX
 
     ; TODO: 16 bit item ids
-    LDA #TextBank(LUT_ITEM_DESCRIPTION_SIBLING2)              ; Switch to the bank
+    LDA #TextBank(LUT_ITEM_DESCRIPTION_LO)              ; Switch to the bank
     STA Var2
     STA MMC5_PRG_BANK2
-    LDA LUT_ITEM_DESCRIPTION, X
+    LDA LUT_ITEM_DESCRIPTION_LO, X
     STA Var0
-    LDA LUT_ITEM_DESCRIPTION_SIBLING2, X
+    LDA LUT_ITEM_DESCRIPTION_HI, X
     STA Var1
     LDY #0
     JUMP FetchCharacter
@@ -1398,57 +1397,57 @@ FetchValueItemDataThird:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; SetTile
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-SetTile:
-    PHA
-    LDA VideoCursor
-    BPL @noWait
-    CALL WaitForVBlank
-    @noWait:
+    SetTile:
+        PHA
+        LDA VideoCursor
+        BPL @noWait
+        CALL WaitForVBlank
+        @noWait:
 
-    LDX drawX         ; get dest_x in X
-    LDY drawY         ; and dest_y in Y
-    CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
-    BCS @NTB           ;  if it is, to NTB, otherwise, NTA
+        LDX drawX         ; get dest_x in X
+        LDY drawY         ; and dest_y in Y
+        CPX #$20           ;  the look at the X coord to see if it's on NTB ($2400).  This is true when X>=$20
+        BCS @NTB           ;  if it is, to NTB, otherwise, NTA
 
-    @NTA:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    PHA
-    TXA                      ; put column/X coord in A
-    ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
-    PHA
-    JUMP @Push
+        @NTA:
+        LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+        PHA
+        TXA                      ; put column/X coord in A
+        ORA lut_NTRowStartLo, Y  ; OR with low byte of row addr
+        PHA
+        JUMP @Push
 
-    @NTB:
-    LDA lut_NTRowStartHi, Y  ; get high byte of row addr
-    ORA #$04                 ; OR with $04 ($2400 instead of PPU_CTRL)
-    PHA                ; write as high byte of PPU address
-    TXA                      ; put column in A
-    AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
-    ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
-    PHA                ;  for our low byte of PPU address
+        @NTB:
+        LDA lut_NTRowStartHi, Y  ; get high byte of row addr
+        ORA #$04                 ; OR with $04 ($2400 instead of PPU_CTRL)
+        PHA                ; write as high byte of PPU address
+        TXA                      ; put column in A
+        AND #$1F                 ; mask out the low 5 bits (X>=$20 here, so we want to clip those higher bits)
+        ORA lut_NTRowStartLo, Y  ; and OR with low byte of row addr
+        PHA                ;  for our low byte of PPU address
 
-    @Push:
-    LDX VideoCursor
-    LDA #<(Video_Address_Set_Write-1)
-    STA VideoStack+0,X
-    LDA #>(Video_Address_Set_Write-1)
-    STA VideoStack+1,X
-    PLA
-    STA VideoStack+3,X
-    PLA
-    STA VideoStack+2,X
-    PLA
-    STA VideoStack+4,X
-    
-    TXA
-    CLC
-    ADC #5
-    STA VideoCursor
+        @Push:
+        LDX VideoCursor
+        LDA #<(Video_Address_Set_Write-1)
+        STA VideoStack+0,X
+        LDA #>(Video_Address_Set_Write-1)
+        STA VideoStack+1,X
+        PLA
+        STA VideoStack+3,X
+        PLA
+        STA VideoStack+2,X
+        PLA
+        STA VideoStack+4,X
+        
+        TXA
+        CLC
+        ADC #5
+        STA VideoCursor
 
-    LDA #$80
-    STA VideoStack+5,X
-    STA VideoStack+6,X
-    RTS
+        LDA #$80
+        STA VideoStack+5,X
+        STA VideoStack+6,X
+        RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; DrawNineSlice
@@ -2640,14 +2639,14 @@ SetTile:
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -2710,14 +2709,14 @@ SetTile:
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -2781,14 +2780,14 @@ SetTile:
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -2852,14 +2851,14 @@ SetTile:
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -2909,6 +2908,81 @@ SetTile:
         RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadMetaSprite
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadMetaSprite:
+
+
+
+        @Loop:
+
+        ; switch to the bank that contains the metasprite data
+        LDA Var6
+        STA MMC5_PRG_BANK2
+
+        LDY #0
+
+        ; Load the number of sub-tiles we will extract from this tile entry
+        LDA (Var4),Y
+        STA Var9
+        TAX
+        LDA @JumpTableUploadSpriteCHRLo, X
+        STA Var7
+        LDA @JumpTableUploadSpriteCHRHi, X
+        STA Var8
+
+        ; Load the low byte of the 16 bit tile index
+        INY
+        LDA (Var4),Y
+        STA Var0
+
+        ; Load the high byte of the 16 bit tile index
+        INY
+        LDA (Var4),Y
+        STA Var1
+
+        ; Call the the UploadSpriteCHR* extraction routine
+        CALL @CallUploadSpriteCHR
+
+        ; switch to the bank that contains the metasprite data
+        LDA Var6
+        STA MMC5_PRG_BANK2
+
+        ; Check if the next entry is the terminator
+        LDY #3
+        LDA (Var4),Y
+        BMI @RTS        ; If we hit the terminator, then return
+
+        ; We did not hit the terminator, so we prep the next CHR to be loaded by the metasprite. Advance
+        ; our cursor to the next entry in this metasprite's CHR requirements.
+        LDA Var4
+        CLC
+        ADC #3
+        STA Var4        ; Advance cursor by 3
+        BCC :+
+            INC Var5    ; Increment high byte if there was a carry
+        :
+
+        ; Also increment the cursor for where we will place the CHR in the pattern table
+        LDA Var9
+        SEC
+        ADC Var2    ; Add CHR size + 1 (since CHR size counts 0 to 3)
+        STA Var2
+
+        JUMP @Loop
+        @RTS:
+        RTS
+
+    @CallUploadSpriteCHR:
+        JMP (Var7)
+
+    @JumpTableUploadSpriteCHRLo:
+        .byte <UploadSpriteCHR1, <UploadSpriteCHR2, <UploadSpriteCHR3, <UploadSpriteCHR4
+
+    @JumpTableUploadSpriteCHRHi:
+        .byte >UploadSpriteCHR1, >UploadSpriteCHR2, >UploadSpriteCHR3, >UploadSpriteCHR4
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadSpriteCHR1
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadSpriteCHR1:
@@ -2922,14 +2996,14 @@ SetTile:
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -2993,14 +3067,14 @@ SetTile:
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -3064,14 +3138,14 @@ SetTile:
         BCS @allocateVideoBuffer
 
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0
@@ -3134,14 +3208,14 @@ SetTile:
         CALL VideoApplySizeAndCost
         BCS @allocateVideoBuffer
 
-        LDA #TextBank(LUT_TILE_CHR)
+        LDA #TextBank(LUT_TILE_CHR_LO)
         CLC
         ADC Var1
         STA MMC5_PRG_BANK2
         LDX Var0
-        LDA LUT_TILE_CHR,X
+        LDA LUT_TILE_CHR_LO,X
         STA donut_stream_ptr
-        LDA LUT_TILE_CHR_SIBLING2,X
+        LDA LUT_TILE_CHR_HI,X
         STA donut_stream_ptr+1
 
         LDY #0

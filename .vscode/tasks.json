@@ -1,0 +1,26 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ca65",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "type": "shell",
+            "command": "make || true",
+            "problemMatcher": [
+                "$ca65",
+                "$ld65"
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "clear": true,
+                "revealProblems": "onProblem",
+                "close": true
+            }
+        }
+    ]
+}

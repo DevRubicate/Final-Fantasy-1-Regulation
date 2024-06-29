@@ -6,8 +6,9 @@
 .import DrawNineSlice, TEXT_TITLE_CONTINUE, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadPalette4, ClearSprites
 .import TEXT_TITLE_NEW_GAME
 
-.import UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR4
-
+.import UploadMetaSprite, UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR4
+.import METASPRITE_CURSOR_CHR
+.import METASPRITE_BLACK_BELT_CHR, METASPRITE_BLACK_MAGE_CHR, METASPRITE_FIGHTER_CHR, METASPRITE_RED_MAGE_CHR, METASPRITE_THIEF_CHR, METASPRITE_WHITE_MAGE_CHR
 
 .export DrawTitleScreen, LoadResources, LoadHeroSprites
 
@@ -318,115 +319,78 @@ LoadResources:
 
 LoadHeroSprites:
 
-    LDA #<TILE_FIGHTER_0
-    STA Var0
-    LDA #>TILE_FIGHTER_0
-    STA Var1
+
+    LDA #<METASPRITE_BLACK_BELT_CHR
+    STA Var4
+    LDA #>METASPRITE_BLACK_BELT_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_BLACK_BELT_CHR) 
+    STA Var6
+    LDA #9
+    STA Var3
     LDA #0
     STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_FIGHTER_1
-    STA Var0
-    LDA #>TILE_FIGHTER_1
-    STA Var1
-    LDA #4
+    LDA #<METASPRITE_BLACK_MAGE_CHR
+    STA Var4
+    LDA #>METASPRITE_BLACK_MAGE_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_BLACK_MAGE_CHR) 
+    STA Var6
+    LDA #10
+    STA Var3
+    LDA #0
     STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_FIGHTER_2
-    STA Var0
-    LDA #>TILE_FIGHTER_2
-    STA Var1
-    LDA #8
+    LDA #<METASPRITE_FIGHTER_CHR
+    STA Var4
+    LDA #>METASPRITE_FIGHTER_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_FIGHTER_CHR) 
+    STA Var6
+    LDA #11
+    STA Var3
+    LDA #0
     STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_FIGHTER_3
-    STA Var0
-    LDA #>TILE_FIGHTER_3
-    STA Var1
+    LDA #<METASPRITE_RED_MAGE_CHR
+    STA Var4
+    LDA #>METASPRITE_RED_MAGE_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_RED_MAGE_CHR) 
+    STA Var6
     LDA #12
-    STA Var2
-    LDA #9
     STA Var3
-    FARCALL UploadSpriteCHR4
+    LDA #0
+    STA Var2
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_FIGHTER_4
-    STA Var0
-    LDA #>TILE_FIGHTER_4
-    STA Var1
-    LDA #16
-    STA Var2
-    LDA #9
+    LDA #<METASPRITE_THIEF_CHR
+    STA Var4
+    LDA #>METASPRITE_THIEF_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_THIEF_CHR) 
+    STA Var6
+    LDA #13
     STA Var3
-    FARCALL UploadSpriteCHR4
+    LDA #0
+    STA Var2
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_FIGHTER_5
-    STA Var0
-    LDA #>TILE_FIGHTER_5
-    STA Var1
-    LDA #20
-    STA Var2
-    LDA #9
+    LDA #<METASPRITE_WHITE_MAGE_CHR
+    STA Var4
+    LDA #>METASPRITE_WHITE_MAGE_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_WHITE_MAGE_CHR) 
+    STA Var6
+    LDA #14
     STA Var3
-    FARCALL UploadSpriteCHR4
-
-    LDA #<TILE_FIGHTER_6
-    STA Var0
-    LDA #>TILE_FIGHTER_6
-    STA Var1
-    LDA #24
+    LDA #0
     STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
-
-    LDA #<TILE_FIGHTER_7
-    STA Var0
-    LDA #>TILE_FIGHTER_7
-    STA Var1
-    LDA #28
-    STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
-
-    LDA #<TILE_FIGHTER_8
-    STA Var0
-    LDA #>TILE_FIGHTER_8
-    STA Var1
-    LDA #32
-    STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
-
-    LDA #<TILE_FIGHTER_9
-    STA Var0
-    LDA #>TILE_FIGHTER_9
-    STA Var1
-    LDA #36
-    STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
-
-    LDA #<TILE_FIGHTER_10
-    STA Var0
-    LDA #>TILE_FIGHTER_10
-    STA Var1
-    LDA #40
-    STA Var2
-    LDA #9
-    STA Var3
-    FARCALL UploadSpriteCHR4
+    FARCALL UploadMetaSprite
 
     RTS
 
@@ -443,25 +407,21 @@ DrawTitleScreen:
 
     FARCALL RestoreNineSliceBordersToDefault
 
-    LDA #<TILE_CURSOR_0
-    STA Var0
-    LDA #>TILE_CURSOR_0
-    STA Var1
+    LDA #<METASPRITE_CURSOR_CHR
+    STA Var4
+    LDA #>METASPRITE_CURSOR_CHR
+    STA Var5
+    LDA #TextBank(METASPRITE_CURSOR_CHR) 
+    STA Var6
+    LDA #8
+    STA Var3
     LDA #0
     STA Var2
-    LDA #8
-    STA Var3
-    FARCALL UploadSpriteCHR4
+    FARCALL UploadMetaSprite
 
-    LDA #<TILE_CURSOR_1
-    STA Var0
-    LDA #>TILE_CURSOR_1
-    STA Var1
-    LDA #4
-    STA Var2
-    LDA #8
-    STA Var3
-    FARCALL UploadSpriteCHR2
+
+
+
 
     LDA #$0
     STA palette0+0

@@ -2,64 +2,76 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_TEMPLATE_SPELL_LIST, TEXT_SHOP_WHOSEITEMSELL, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_8, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_SELECT_NAME, TEXT_TITLE_NEW_GAME, TEXT_SHOP_WELCOME, TEXT_SHOP_TITLECLINIC, TEXT_ITEM_DESCRIPTION, LUT_METASPRITE_CHR, LUT_METASPRITE_CHR_SIBLING2, METASPRITE_CURSOR_CHR, METASPRITE_FIGHTER_CHR
+.export TEXT_TEMPLATE_ITEM_LIST, TEXT_MENU_SELECTION, TEXT_INTRO_STORY_6, TEXT_SHOP_YOUCANTCARRYANYMORE, TEXT_INTRO_STORY_11, TEXT_SHOP_BUYSELLEXIT, TEXT_CLASS_NAME_FIGHTER, TEXT_SHOP_YESNO, LUT_METASPRITE_PALETTE_LO, LUT_METASPRITE_PALETTE_HI, METASPRITE_CURSOR_PALETTE, METASPRITE_BLACK_BELT_PALETTE, METASPRITE_BLACK_MAGE_PALETTE, METASPRITE_FIGHTER_PALETTE, METASPRITE_RED_MAGE_PALETTE, METASPRITE_THIEF_PALETTE, METASPRITE_WHITE_MAGE_PALETTE
 
 ; address 0 - 64 (bytes 0 - 64)
-TEXT_TEMPLATE_SPELL_LIST:
+TEXT_TEMPLATE_ITEM_LIST:
 .byte $93, $83, $03, $00, $7f, $7f, $8d, $a2, $83, $03, $00, $7f, $7f, $93, $83, $03, $01, $7f, $7f, $8d, $a2, $83, $03, $01, $7f, $7f, $93, $83, $03, $02, $7f, $7f, $8d, $a2, $83, $03, $02, $7f, $7f, $93, $83, $03, $03, $7f, $7f, $8d, $a2, $83, $03, $03, $7f, $7f, $93, $83, $03, $04, $7f, $7f, $8d, $a2, $83, $03, $04, $00
 
-; address 64 - 96 (bytes 0 - 32)
-TEXT_SHOP_WHOSEITEMSELL:
-.byte $21, $2c, $33, $37, $29, $7f, $2d, $38, $29, $31, $7f, $28, $33, $7e, $3d, $33, $39, $7f, $3b, $25, $32, $38, $7e, $38, $33, $7f, $37, $29, $30, $30, $42, $00
+; address 64 - 100 (bytes 0 - 36)
+TEXT_MENU_SELECTION:
+.byte $13, $1e, $0f, $17, $1d, $7f, $7f, $17, $0b, $11, $13, $0d, $7f, $7f, $21, $0f, $0b, $1a, $19, $18, $7f, $7f, $0b, $1c, $17, $19, $1c, $7f, $7f, $1d, $1e, $0b, $1e, $1f, $1d, $00
 
-; address 96 - 123 (bytes 0 - 27)
+; address 100 - 127 (bytes 0 - 27)
 TEXT_INTRO_STORY_6:
 .byte $38, $2c, $29, $2d, $36, $7e, $33, $32, $30, $3d, $7e, $2c, $33, $34, $29, $7e, $25, $7e, $34, $36, $33, $34, $2c, $29, $27, $3d, $00
 
-; address 123 - 147 (bytes 0 - 24)
-TEXT_INTRO_STORY_8:
-.byte $10, $33, $39, $36, $7e, $21, $25, $36, $36, $2d, $33, $36, $37, $7e, $3b, $2d, $30, $30, $7e, $27, $33, $31, $29, $00
+; address 127 - 151 (bytes 0 - 24)
+TEXT_SHOP_YOUCANTCARRYANYMORE:
+.byte $23, $33, $39, $7f, $27, $25, $32, $46, $38, $7f, $27, $25, $36, $36, $3d, $7f, $25, $32, $3d, $31, $33, $36, $29, $00
 
-; address 147 - 168 (bytes 0 - 21)
-TEXT_TITLE_RESPOND_RATE:
-.byte $1c, $0f, $1d, $1a, $19, $18, $0e, $7e, $1c, $0b, $1e, $0f, $7e, $81, $86, $83, $5c, $10, $80, $01, $00
+; address 151 - 171 (bytes 0 - 20)
+TEXT_INTRO_STORY_11:
+.byte $29, $25, $27, $2c, $7e, $2c, $33, $30, $28, $2d, $32, $2b, $7e, $25, $32, $7e, $19, $1c, $0c, $00
 
-; address 168 - 181 (bytes 0 - 13)
-TEXT_TITLE_SELECT_NAME:
-.byte $1d, $0f, $16, $0f, $0d, $1e, $7e, $7e, $18, $0b, $17, $0f, $00
+; address 171 - 187 (bytes 0 - 16)
+TEXT_SHOP_BUYSELLEXIT:
+.byte $0c, $39, $3d, $7f, $7f, $1d, $29, $30, $30, $7f, $7f, $0f, $3c, $2d, $38, $00
 
-; address 181 - 190 (bytes 0 - 9)
-TEXT_TITLE_NEW_GAME:
-.byte $18, $0f, $21, $7e, $11, $0b, $17, $0f, $00
+; address 187 - 195 (bytes 0 - 8)
+TEXT_CLASS_NAME_FIGHTER:
+.byte $10, $13, $11, $12, $1e, $0f, $1c, $00
 
-; address 190 - 198 (bytes 0 - 8)
-TEXT_SHOP_WELCOME:
-.byte $21, $29, $30, $27, $33, $31, $29, $00
+; address 195 - 203 (bytes 0 - 8)
+TEXT_SHOP_YESNO:
+.byte $23, $29, $37, $7f, $7f, $18, $33, $00
 
-; address 198 - 205 (bytes 0 - 7)
-TEXT_SHOP_TITLECLINIC:
-.byte $0d, $16, $13, $18, $13, $0d, $00
+; address 203 - 210 (bytes 0 - 7)
+LUT_METASPRITE_PALETTE_LO:
+.byte <METASPRITE_CURSOR_PALETTE, <METASPRITE_BLACK_BELT_PALETTE, <METASPRITE_BLACK_MAGE_PALETTE, <METASPRITE_FIGHTER_PALETTE, <METASPRITE_RED_MAGE_PALETTE, <METASPRITE_THIEF_PALETTE, <METASPRITE_WHITE_MAGE_PALETTE
 
-; address 205 - 210 (bytes 0 - 5)
-TEXT_ITEM_DESCRIPTION:
-.byte $94, $83, >stringifyActiveItem, <stringifyActiveItem, $00
+; address 210 - 217 (bytes 0 - 7)
+LUT_METASPRITE_PALETTE_HI:
+.byte >METASPRITE_CURSOR_PALETTE, >METASPRITE_BLACK_BELT_PALETTE, >METASPRITE_BLACK_MAGE_PALETTE, >METASPRITE_FIGHTER_PALETTE, >METASPRITE_RED_MAGE_PALETTE, >METASPRITE_THIEF_PALETTE, >METASPRITE_WHITE_MAGE_PALETTE
 
-; address 210 - 212 (bytes 0 - 2)
-LUT_METASPRITE_CHR:
-.byte <METASPRITE_CURSOR_CHR, <METASPRITE_FIGHTER_CHR
+; address 217 - 221 (bytes 0 - 4)
+METASPRITE_CURSOR_PALETTE:
+.byte $1d, $10, $1e, $ff
 
-; address 212 - 214 (bytes 0 - 2)
-LUT_METASPRITE_CHR_SIBLING2:
-.byte >METASPRITE_CURSOR_CHR, >METASPRITE_FIGHTER_CHR
+; address 221 - 225 (bytes 0 - 4)
+METASPRITE_BLACK_BELT_PALETTE:
+.byte $1d, $10, $1e, $ff
 
-; address 214 - 218 (bytes 0 - 4)
-METASPRITE_CURSOR_CHR:
-.byte TILE_CURSOR_0, $04, TILE_CURSOR_1, $02
+; address 225 - 229 (bytes 0 - 4)
+METASPRITE_BLACK_MAGE_PALETTE:
+.byte $1d, $10, $1e, $ff
 
-; address 218 - 222 (bytes 0 - 4)
-METASPRITE_FIGHTER_CHR:
-.byte TILE_CURSOR_0, $04, TILE_CURSOR_1, $02
+; address 229 - 233 (bytes 0 - 4)
+METASPRITE_FIGHTER_PALETTE:
+.byte $1d, $10, $1e, $ff
 
-; 222 - 8192
-.res 7970
+; address 233 - 237 (bytes 0 - 4)
+METASPRITE_RED_MAGE_PALETTE:
+.byte $1d, $10, $1e, $ff
+
+; address 237 - 241 (bytes 0 - 4)
+METASPRITE_THIEF_PALETTE:
+.byte $1d, $10, $1e, $ff
+
+; address 241 - 245 (bytes 0 - 4)
+METASPRITE_WHITE_MAGE_PALETTE:
+.byte $1d, $10, $1e, $ff
+
+; 245 - 8192
+.res 7947
 

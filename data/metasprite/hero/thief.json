@@ -1,7 +1,7 @@
 {
     "metasprite": [
         {
-            "name": "METASPRITE_FIGHTER",
+            "name": "METASPRITE_THIEF",
             "palette": [
                 [
                     29,
@@ -11,12 +11,48 @@
             ],
             "chr": [
                 {
-                    "name": "TILE_CURSOR_0",
+                    "name": "TILE_THIEF_0",
                     "size": 4
                 },
                 {
-                    "name": "TILE_CURSOR_1",
-                    "size": 2
+                    "name": "TILE_THIEF_1",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_2",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_3",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_4",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_5",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_6",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_7",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_8",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_9",
+                    "size": 4
+                },
+                {
+                    "name": "TILE_THIEF_10",
+                    "size": 4
                 }
             ],
             "frame": [

@@ -215,7 +215,7 @@ class Packer {
                     );
                     this.takeCell(
                         subData,
-                        pageCounter === 0 ? `${thing.name}` : `${thing.name}_PART${pageCounter + 1}`,
+                        pageCounter === 0 ? `${thing.getName()}` : `${thing.getName()}_PART${pageCounter + 1}`,
                         `address ${leftNode.address} - ${leftNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                         leftNode,
                         currentAddress,
@@ -245,7 +245,7 @@ class Packer {
                 );
                 this.takeCell(
                     subData,
-                    pageCounter === 0 ? `${thing.name}` : `${thing.name}_EXTENDED`,
+                    pageCounter === 0 ? `${thing.getName()}` : `${thing.getName()}_EXTENDED`,
                     `address ${currentNode.address} - ${currentNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                     currentNode,
                     currentAddress,
@@ -275,7 +275,7 @@ class Packer {
                     )
                     this.takeCell(
                         subData,
-                        `${thing.name}_EXTENDED`,
+                        `${thing.getName()}_EXTENDED`,
                         `address ${rightNode.address} - ${rightNode.address + sizes[pageCounter]} (bytes ${offset} - ${offset + sizes[pageCounter]})`,
                         rightNode,
                         currentAddress,
@@ -400,7 +400,7 @@ class Packer {
             const thing = this.stuff[i];
             const success = this.place(thing);
             if(!success) {
-                throw new Error(`Could not allocate ${thing.entry.name}`);
+                throw new Error(`Could not allocate ${thing.getName()}`);
             }
         }
 
@@ -449,6 +449,7 @@ class Packer {
 }
 
 class BinaryPackage {
+    name;
     data;
     constructor(name, data) {
         this.name = name;
@@ -459,6 +460,9 @@ class BinaryPackage {
             this.data[i] = this.data[i] ?? [];
             this.data[i].push(input[i]);
         }
+    }
+    getName() {
+        return this.name;
     }
     getLength() {
         return this.data[0].length;
@@ -480,7 +484,7 @@ class BinaryPackage {
         for(let i=0; i<this.data.length; ++i) {
             subData.push(this.data[i].slice(start, end));
         }
-        return new BinaryPackage(`${this.name}`, subData);
+        return new BinaryPackage(this.getName(), subData);
     }
     childAllocations() {
         return this.data.slice(1).map((a, i) => new BinaryPackage(`${this.name}_SIBLING${i+2}`, [a]));
@@ -488,6 +492,7 @@ class BinaryPackage {
 }
 
 class PointerPackage {
+    name;
     data;
     constructor(name, data, type = '<') {
         this.name = name;
@@ -496,6 +501,9 @@ class PointerPackage {
     }
     push(input) {
         this.data.push(input);
+    }
+    getName() {
+        return `${this.name}_${this.type === '<' ? 'LO' : 'HI'}`;
     }
     getLength() {
         return this.data.length;
@@ -508,7 +516,7 @@ class PointerPackage {
             if(a === 0) {
                 return '0';    
             }
-            return `${this.type}${a.name}`;
+            return `${this.type}${a.getName()}`;
         }).join(', ');
     }
     split(start, end) {
@@ -516,7 +524,7 @@ class PointerPackage {
     }
     childAllocations() {
         if(this.type === '<') {
-            return [new PointerPackage(`${this.name}_SIBLING2`, this.data.slice(), '>')].concat(
+            return [new PointerPackage(this.name, this.data.slice(), '>')].concat(
                 this.data.filter(a => a !== 0)
             );
         } else {
@@ -526,6 +534,7 @@ class PointerPackage {
 }
 
 class PointerStructPackage {
+    name;
     data;
     constructor(name, data) {
         this.name = name;
@@ -533,6 +542,9 @@ class PointerStructPackage {
     }
     push(input) {
         this.data.push(input);
+    }
+    getName() {
+        return this.name;
     }
     getLength() {
         return this.data.length*2;
@@ -545,14 +557,14 @@ class PointerStructPackage {
             if(a === 0) {
                 return '0, 0';    
             }
-            return `<${a.name}, >${a.name}`;
+            return `<${a.getName()}, >${a.getName()}`;
         }).join(', ');
     }
     split(start, end) {
         if(start>>1<<1 !== start || end>>1<<1 !== end) {
             throw new Error(`PointerStructPackage: Uneven split`);
         }
-        return new PointerStructPackage(this.name, this.data.slice(start>>1, end>>1));
+        return new PointerStructPackage(this.getName(), this.data.slice(start>>1, end>>1));
     }
     childAllocations() {
         return this.data.filter(a => a !== 0);
@@ -691,7 +703,6 @@ class Preprocessor {
             packer.addReferenceTable(metaspriteCHR);
             packer.addReferenceTable(metaspriteData);
         }
-
 
         return packer.build();
     }
@@ -836,9 +847,11 @@ class Preprocessor {
         const buffer = new BinaryPackage(name);
         for(let i=0; i<input.chr.length; ++i) {
             const chr = input.chr[i];
-            buffer.push(chr.name);
-            buffer.push(chr.size);
+            buffer.push(chr.size - 1);
+            buffer.push(`<${chr.name}`);
+            buffer.push(`>${chr.name}`);
         }
+        buffer.push(0xFF);
         return buffer;
     }
     compileMetasprite(name, input) {

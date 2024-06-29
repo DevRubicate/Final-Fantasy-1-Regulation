@@ -1,0 +1,59 @@
+{
+    "tile": [
+        {
+            "name": "TILE_WHITE_MAGE_0",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 0
+        },
+        {
+            "name": "TILE_WHITE_MAGE_1",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 1
+        },
+        {
+            "name": "TILE_WHITE_MAGE_2",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 2
+        },
+        {
+            "name": "TILE_WHITE_MAGE_3",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 3
+        },
+        {
+            "name": "TILE_WHITE_MAGE_4",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 4
+        },
+        {
+            "name": "TILE_WHITE_MAGE_5",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 5
+        },
+        {
+            "name": "TILE_WHITE_MAGE_6",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 6
+        },
+        {
+            "name": "TILE_WHITE_MAGE_7",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 7
+        },
+        {
+            "name": "TILE_WHITE_MAGE_8",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 8
+        },
+        {
+            "name": "TILE_WHITE_MAGE_9",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 9
+        },
+        {
+            "name": "TILE_WHITE_MAGE_10",
+            "source": "data/chr/hero/white_mage.sprite.png.chr",
+            "index": 10
+        }
+    ]
+}

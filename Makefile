@@ -16,7 +16,7 @@ NODE_SCRIPTS ::= $(wildcard script/*.mjs)
 all: ${out}
 
 clean:
-	${RM} ${obj} ${out}
+	@${RM} ${obj} ${out}
 
 ${out}: nes.cfg ${obj}
 	@${LD65} ${LD65FLAGS} -o $@ -C $^

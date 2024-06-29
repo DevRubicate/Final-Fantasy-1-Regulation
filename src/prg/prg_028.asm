@@ -3266,7 +3266,7 @@ EnterTitleScreen:
     STA drawVars+1
 
     LDX #0
-    LDY #0
+    LDY #1
     FARCALL DrawSprite
 
     POS     9, 22
