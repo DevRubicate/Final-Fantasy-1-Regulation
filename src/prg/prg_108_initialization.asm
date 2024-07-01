@@ -3,15 +3,16 @@
 .include "src/global-import.inc"
 
 .import UploadPalette0, FillAttributeTable, FillNametable, UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault
-.import DrawNineSlice, TEXT_TITLE_CONTINUE, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadPalette4, ClearSprites
-.import TEXT_TITLE_NEW_GAME
+.import DrawSprite, DrawNineSlice, TEXT_TITLE_CONTINUE, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadPalette4, ClearSprites
+.import TEXT_TITLE_NEW_GAME, TEXT_TITLE_START
 
 .import UploadMetaSprite, UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR4
 .import METASPRITE_CURSOR_CHR
 .import METASPRITE_BLACK_BELT_CHR, METASPRITE_BLACK_MAGE_CHR, METASPRITE_FIGHTER_CHR, METASPRITE_RED_MAGE_CHR, METASPRITE_THIEF_CHR, METASPRITE_WHITE_MAGE_CHR
+.import WaitForVBlank, MusicPlay, Stringify
 
 .export DrawTitleScreen, LoadResources, LoadHeroSprites
-
+.export PartyGenerationScreen, PartyGenerationDrawBackground, PartyGenerationDrawSprites
 
 LoadResources:
     LDA #0
@@ -326,7 +327,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_BLACK_BELT_CHR) 
     STA Var6
-    LDA #9
+    LDA #8
     STA Var3
     LDA #0
     STA Var2
@@ -338,7 +339,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_BLACK_MAGE_CHR) 
     STA Var6
-    LDA #10
+    LDA #9
     STA Var3
     LDA #0
     STA Var2
@@ -350,7 +351,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_FIGHTER_CHR) 
     STA Var6
-    LDA #11
+    LDA #10
     STA Var3
     LDA #0
     STA Var2
@@ -362,7 +363,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_RED_MAGE_CHR) 
     STA Var6
-    LDA #12
+    LDA #11
     STA Var3
     LDA #0
     STA Var2
@@ -374,7 +375,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_THIEF_CHR) 
     STA Var6
-    LDA #13
+    LDA #12
     STA Var3
     LDA #0
     STA Var2
@@ -386,7 +387,7 @@ LoadHeroSprites:
     STA Var5
     LDA #TextBank(METASPRITE_WHITE_MAGE_CHR) 
     STA Var6
-    LDA #14
+    LDA #13
     STA Var3
     LDA #0
     STA Var2
@@ -413,15 +414,11 @@ DrawTitleScreen:
     STA Var5
     LDA #TextBank(METASPRITE_CURSOR_CHR) 
     STA Var6
-    LDA #8
+    LDA #4 ; CHR bank 4
     STA Var3
-    LDA #0
+    LDA #0 ; CHR offset 0
     STA Var2
     FARCALL UploadMetaSprite
-
-
-
-
 
     LDA #$0
     STA palette0+0
@@ -483,5 +480,130 @@ DrawTitleScreen:
 
     POS         8, 26
     TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
+
+    RTS
+
+PartyGenerationScreen:
+    LDA #1
+    STA Var0
+    FARCALL FillNametable
+    CALL PartyGenerationDrawBackground
+    @loop:
+
+        CALL PartyGenerationDrawSprites
+
+
+        FARCALL MusicPlay
+        CALL WaitForVBlank
+
+    JUMP @loop
+    RTS
+
+PartyGenerationDrawBackground:
+
+    FARCALL RestoreNineSliceBordersToDefault
+
+    ; Hero 1
+    LDA #1
+    STA drawX
+    LDA #2
+    STA drawY
+    LDA #20
+    STA drawWidth
+    LDA #5
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    ; Hero 2
+    LDA #1
+    STA drawX
+    LDA #9
+    STA drawY
+    LDA #20
+    STA drawWidth
+    LDA #5
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    ; Hero 3
+    LDA #1
+    STA drawX
+    LDA #16
+    STA drawY
+    LDA #20
+    STA drawWidth
+    LDA #5
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    ; Hero 4
+    LDA #1
+    STA drawX
+    LDA #23
+    STA drawY
+    LDA #20
+    STA drawWidth
+    LDA #5
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    ; Menu
+    LDA #23
+    STA drawX
+    LDA #1
+    STA drawY
+    LDA #8
+    STA drawWidth
+    LDA #3
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+
+    ; Set the generic "print item name" string to be our active one
+    LDA #23
+    STA drawX
+    LDA #1
+    STA drawY
+    LDA #<TEXT_TITLE_START
+    STA Var0
+    LDA #>TEXT_TITLE_START
+    STA Var1
+    LDA #TextBank(TEXT_TITLE_START)
+    STA Var2
+
+    ; Write the string
+    FARCALL Stringify
+
+
+    LDA #23
+    STA drawX
+    LDA #5
+    STA drawY
+    LDA #8
+    STA drawWidth
+    LDA #3
+    STA drawHeight
+    FARCALL DrawNineSlice
+
+    RTS
+
+PartyGenerationDrawSprites:
+
+    LDA #20
+    STA drawX
+    LDA #20
+    STA drawY
+
+    ; hFlip and vFlip
+    LDA #0
+    STA drawVars+0
+
+    ; CHR offset
+    LDA #0
+    STA drawVars+1
+
+    LDX #0
+    LDY #METASPRITE_BLACK_BELT
+    FARCALL DrawSprite
 
     RTS

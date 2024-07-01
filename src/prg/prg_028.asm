@@ -8,7 +8,7 @@
 .import DrawEquipMenuStrings, DrawItemBox, FadeInBatSprPalettes, FadeOutBatSprPalettes, EraseBox, ReadjustEquipStats
 .import SortEquipmentList, UnadjustEquipStats, LoadShopCHRPal, DrawSimple2x3Sprite, lutClassBatSprPalette, LoadNewGameCHRPal
 .import DrawOBSprite, WaitForVBlank, DrawBox, LoadMenuCHRPal, LoadPrice, DrawEquipMenuCursSecondary, DrawEquipMenuCurs
-.import PtyGen_DrawChars, Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
+.import Draw2x2Sprite, IsEquipLegal, DrawCursor, CoordToNTAddr
 .import WhitespaceWriter, DrawNineSlice, DrawRectangle
 .import Stringify, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadFillColor
 .import DrawGameMenu, FillNametable, ColorRectangle, DrawSprite
@@ -22,7 +22,7 @@
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
 .import UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4
-.import DrawTitleScreen
+.import DrawTitleScreen, PartyGenerationDrawSprites, PartyGenerationSetup, PartyGenerationDrawBackground
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import TEXT_INTRO_STORY_1, TEXT_INTRO_STORY_2, TEXT_INTRO_STORY_3, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_5, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_8, TEXT_INTRO_STORY_9, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_11
@@ -2510,25 +2510,25 @@ PtyGen_DrawScreen:
 DoPartyGen_OnCharacter:
     
     ; Then enter the main logic loop
-  @MainLoop:
-      CALL PtyGen_Frame              ; Do a frame and update joypad input
-      LDA joy_a
-      BNE DoNameInput               ; if A was pressed, do name input
-      LDA joy_b
-      BEQ :+
+    @MainLoop:
+        CALL PtyGen_Frame              ; Do a frame and update joypad input
+        LDA joy_a
+        BNE DoNameInput               ; if A was pressed, do name input
+        LDA joy_b
+        BEQ :+
         ; if B pressed -- just SEC and exit
         SEC
         RTS
+        ; Code reaches here if A/B were not pressed
+    : 
+    LDA joy
+    AND #$0F
+    CMP joy_prevdir
+    BEQ @MainLoop             ; if there was no change in directional input, loop to another frame
       
-      ; Code reaches here if A/B were not pressed
-    : LDA joy
-      AND #$0F
-      CMP joy_prevdir
-      BEQ @MainLoop             ; if there was no change in directional input, loop to another frame
-      
-      STA joy_prevdir           ; otherwise, record new directional input as prevdir
-      CMP #$00                  ; if directional input released (rather than pressed)
-      BEQ @MainLoop             ;   loop to another frame.
+    STA joy_prevdir           ; otherwise, record new directional input as prevdir
+    CMP #$00                  ; if directional input released (rather than pressed)
+    BEQ @MainLoop             ;   loop to another frame.
     
      ; Otherwise, if any direction was pressed:
     LDX char_index
@@ -2760,9 +2760,7 @@ DoNameInput:
 
 PtyGen_Frame:
     FARCALL ClearSprites
-    FARCALL PtyGen_DrawChars
-    CALL PtyGen_DrawCursor
-
+    FARCALL PartyGenerationDrawSprites
     CALL WaitForVBlank    ; VBlank and DMA
 
     LDA #BANK_THIS         ; then keep playing music
@@ -2828,46 +2826,6 @@ PtyGen_Joy:
     JUMP PlaySFX_MenuMove ; .. otherwise, play the Move sound effect
   @Exit:
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawBoxes  [$9E90 :: 0x39EA0]
-;;
-;;    Draws the 4 boxes for the Party Generation screen
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawBoxes:
-    LDA #0
-    STA tmp+15       ; reset loop counter to zero
-
-  @Loop:
-      CALL @Box       ; then loop 4 times, each time, drawing the next
-      LDA tmp+15     ; character's box
-      CLC
-      ADC #$10       ; incrementing by $10 each time (indexes ptygen buffer)
-      STA tmp+15
-      CMP #$40
-      BCC @Loop
-    RTS
-
- @Box:
-    LDX tmp+15           ; get ptygen index in X
-
-    LDA ptygen_box_x, X  ; get X,Y coords from ptygen buffer
-    STA box_x
-    LDA ptygen_box_y, X
-    STA box_y
-
-    LDA #10              ; fixed width/height of 10
-    STA box_wd
-    STA box_ht
-
-    LDA #0
-    STA menustall        ; disable menustalling (PPU is off)
-    FARJUMP DrawBox          ;  draw the box, and exit
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -3262,12 +3220,16 @@ EnterTitleScreen:
     STA drawY
     LDA #0
     STA drawVars+0
-    LDA #1
+    LDA #0
     STA drawVars+1
-
     LDX #0
-    LDY #1
+    LDY #METASPRITE_CURSOR
     FARCALL DrawSprite
+
+
+
+
+
 
     POS     9, 22
     TEXT    TEXT_TITLE_RESPOND_RATE

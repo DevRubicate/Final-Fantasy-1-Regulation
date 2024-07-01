@@ -2,7 +2,6 @@ import { promises as fs }           from 'fs';
 import path                         from 'path';
 import { execFile }                 from 'child_process';
 
-
 class Structure {
     pages = [];
     backupPages = null;
@@ -570,6 +569,7 @@ class PointerStructPackage {
         return this.data.filter(a => a !== 0);
     }
 }
+
 
 class Preprocessor {
     constants = new Map();
@@ -1342,6 +1342,7 @@ class Main {
         }
     }
 }
+
 
 
 // Execute main function

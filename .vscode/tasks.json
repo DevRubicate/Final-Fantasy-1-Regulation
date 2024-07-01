@@ -10,13 +10,13 @@
                 "isDefault": true
             },
             "type": "shell",
-            "command": "make || true",
+            "command": "make",
             "problemMatcher": [
                 "$ca65",
                 "$ld65"
             ],
             "presentation": {
-                "reveal": "silent",
+                "reveal": "never",
                 "clear": true,
                 "revealProblems": "onProblem",
                 "close": true

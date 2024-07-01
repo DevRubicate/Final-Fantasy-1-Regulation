@@ -17,9 +17,14 @@
         {"name": "TITLE_SELECT_NAME",               "text": "SELECT  NAME"},
         {"name": "TITLE_CONTINUE",                  "text": "CONTINUE"},
         {"name": "TITLE_NEW_GAME",                  "text": "NEW GAME"},
+
         {"name": "TITLE_RESPOND_RATE",              "text": "RESPOND RATE {DIGIT1}{ADD}{READ8 23568}{BYTE 1}"},
         {"name": "TITLE_COPYRIGHT_SQUARE",          "text": "C 1987 SQUARE  "},
         {"name": "TITLE_COPYRIGHT_NINTENDO",        "text": "C 1990 NINTENDO"},
+
+        {"name": "TITLE_START",                     "text": "START"},
+        {"name": "TITLE_EXIT",                      "text": "EXIT"},
+
         {"name": "CLASS_NAME_FIGHTER",              "text": "FIGHTER"},
         {"name": "CLASS_NAME_THIEF",                "text": "THIEF"},
         {"name": "CLASS_NAME_BLACK_BELT",           "text": "Bl.BELT"},

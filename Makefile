@@ -3,6 +3,7 @@
 src ::= $(wildcard src/*.asm src/prg/*.asm src/data/*.asm)
 obj ::= $(patsubst src/%.asm,build/%.o,${src})
 out ::= build/final_fantasy_1_regulation.nes
+data ::= $(wildcard src/data/*.asm)
 
 CA65 ?= ca65
 LD65 ?= ld65
@@ -11,14 +12,14 @@ CA65FLAGS ::= -I. -g --feature force_range
 LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg -m build/final_fantasy_1_regulation.map
 NODE_SCRIPTS ::= $(wildcard script/*.mjs)
 
-.PHONY: all clean run_node
+.PHONY: all clean run_node $(NODE_SCRIPTS)
 
 all: ${out}
 
 clean:
-	@${RM} ${obj} ${out}
+	@${RM} ${obj} ${out} ${data}
 
-${out}: nes.cfg ${obj}
+${out}: nes.cfg ${obj} | run_node
 	@${LD65} ${LD65FLAGS} -o $@ -C $^
 
 run_node: $(NODE_SCRIPTS)

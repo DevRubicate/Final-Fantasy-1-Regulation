@@ -2,6 +2,8 @@
 
 .include "src/global-import.inc"
 
+.import DrawSprite, ClearSprites
+
 .export DrawOBSprite, PtyGen_DrawChars, IsEquipLegal
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

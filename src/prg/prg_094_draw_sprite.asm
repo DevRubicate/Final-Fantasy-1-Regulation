@@ -9,6 +9,15 @@
 
 DrawSprite:
 
+    ; This rotates all bits of drawVars+1 one step to the left, so that 76543210 becomes 65432107
+    ; We do this because it's the 0th bit that decides whether to use spriteCHRBank0 to spriteCHRBank3
+    ; or spriteCHRBank4 to spriteCHRBank7 in MMC5 8x16 sprite mode.
+    LDA drawVars+1
+    ROL A
+    LDA drawVars+1
+    ROL A
+
+    ; Load the metasprite pointer from LUT_METASPRITE_FRAMES and save it in Var0+Var1
     LDA #TextBank(LUT_METASPRITE_FRAMES_LO)
     STA MMC5_PRG_BANK2
     LDA LUT_METASPRITE_FRAMES_LO,Y
@@ -16,23 +25,35 @@ DrawSprite:
     LDA LUT_METASPRITE_FRAMES_HI,Y
     STA Var1
 
-    TYA
+    ; Var0+Var1 now points to the metasprite's frame data definitions, for example
+    ; METASPRITE_BLACK_BELT_FRAMES_FRAMES. These definitions are a series of pointers
+    ; saved low byte first, then high byte, where each pointer refers to one frame.
+    ; X currently holds what frame we want to draw, so we double it to get to the
+    ; correct frame pointer.
+    TXA
     ASL A
     TAY
+
+    ; Load the frame pointer from Var0+Var1 and save it in Var0+Var1
     LDA (Var0),Y
     TAX
     INY
     LDA (Var0),Y
-
     STA Var1
     TXA
     STA Var0
 
+    ; Var0+Var1 now points to the frame's data, for example METASPRITE_BLACK_BELT_FRAME_0.
+    ; The format for this data is x, y, height, width, frameIndex...(width*height)
 
 
 
 
-    LDA drawVars+0
+
+    ; We will nowp use a jump table to jump to the correct subroutine for drawing the sprite.
+    ; This is done by composing a byte in the format 00ffhhww and then using that as an index
+    ; into the jump table.
+    LDA drawVars+0 ; hFlip and vFlip byte
     ASL A
     ASL A
     LDY #2
@@ -43,8 +64,7 @@ DrawSprite:
     ORA (Var0),Y
     TAX
 
-
-
+    ; Load the jump table pointer from LUT_FullDrawJumpTable and save it in Var2+Var3
     LDA LUT_FullDrawJumpTableLo,X
     STA Var2
     LDA LUT_FullDrawJumpTableHi,X
@@ -174,7 +194,7 @@ LUT_FullDrawJumpTableHi:
     .repeat _height, h
         .if h <> 0; && h .mod _width = 0
             CLC
-            ADC #8
+            ADC #16
         .endif
         .repeat _width, w
             .if _vFlip = 1
@@ -208,6 +228,7 @@ LUT_FullDrawJumpTableHi:
 
 
     CLC
+
     .repeat _height, h
         .repeat _width, w
             ; OPTIMALIZATION: By making each byte be an addition/subtraction to the previous byte, we can
