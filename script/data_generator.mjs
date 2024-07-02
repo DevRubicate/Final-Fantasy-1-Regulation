@@ -1343,10 +1343,12 @@ class Main {
     }
 }
 
-
+console.log('Starting...');
 
 // Execute main function
 await Main.main();
+
+console.log('Done!');
 
 process.exit(0);
 
