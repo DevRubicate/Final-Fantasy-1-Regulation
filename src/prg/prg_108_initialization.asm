@@ -9,7 +9,8 @@
 .import UploadMetaSprite, UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR4
 .import METASPRITE_CURSOR_CHR
 .import METASPRITE_BLACK_BELT_CHR, METASPRITE_BLACK_MAGE_CHR, METASPRITE_FIGHTER_CHR, METASPRITE_RED_MAGE_CHR, METASPRITE_THIEF_CHR, METASPRITE_WHITE_MAGE_CHR
-.import WaitForVBlank, MusicPlay, Stringify
+.import WaitForVBlank, MusicPlay, Stringify, UpdateJoy
+.import DrawCursorSprite
 
 .export DrawTitleScreen, LoadResources, LoadHeroSprites
 .export PartyGenerationScreen, PartyGenerationDrawBackground, PartyGenerationDrawSprites
@@ -484,13 +485,22 @@ DrawTitleScreen:
     RTS
 
 PartyGenerationScreen:
+
+
+
     LDA #1
     STA Var0
     FARCALL FillNametable
     CALL PartyGenerationDrawBackground
     @loop:
 
-        CALL PartyGenerationDrawSprites
+
+
+
+        ;CALL PartyGenerationDrawSprites
+
+        CALL StartGridMenu
+
 
 
         FARCALL MusicPlay
@@ -499,12 +509,19 @@ PartyGenerationScreen:
     JUMP @loop
     RTS
 
+
+
+
+
+
+
+
 PartyGenerationDrawBackground:
 
     FARCALL RestoreNineSliceBordersToDefault
 
     ; Hero 1
-    LDA #1
+    LDA #10
     STA drawX
     LDA #2
     STA drawY
@@ -515,7 +532,7 @@ PartyGenerationDrawBackground:
     FARCALL DrawNineSlice
 
     ; Hero 2
-    LDA #1
+    LDA #10
     STA drawX
     LDA #9
     STA drawY
@@ -526,7 +543,7 @@ PartyGenerationDrawBackground:
     FARCALL DrawNineSlice
 
     ; Hero 3
-    LDA #1
+    LDA #10
     STA drawX
     LDA #16
     STA drawY
@@ -537,7 +554,7 @@ PartyGenerationDrawBackground:
     FARCALL DrawNineSlice
 
     ; Hero 4
-    LDA #1
+    LDA #10
     STA drawX
     LDA #23
     STA drawY
@@ -548,7 +565,7 @@ PartyGenerationDrawBackground:
     FARCALL DrawNineSlice
 
     ; Menu
-    LDA #23
+    LDA #1
     STA drawX
     LDA #1
     STA drawY
@@ -559,10 +576,9 @@ PartyGenerationDrawBackground:
     FARCALL DrawNineSlice
 
 
-    ; Set the generic "print item name" string to be our active one
-    LDA #23
+    LDA #2
     STA drawX
-    LDA #1
+    LDA #2
     STA drawY
     LDA #<TEXT_TITLE_START
     STA Var0
@@ -573,17 +589,6 @@ PartyGenerationDrawBackground:
 
     ; Write the string
     FARCALL Stringify
-
-
-    LDA #23
-    STA drawX
-    LDA #5
-    STA drawY
-    LDA #8
-    STA drawWidth
-    LDA #3
-    STA drawHeight
-    FARCALL DrawNineSlice
 
     RTS
 
@@ -605,5 +610,128 @@ PartyGenerationDrawSprites:
     LDX #0
     LDY #METASPRITE_BLACK_BELT
     FARCALL DrawSprite
+
+    RTS
+
+
+
+
+StartGridMenu:
+
+    FARCALL UpdateJoy
+    LDA joypadState
+    EOR joypadStateIgnore
+    AND joypadState
+
+
+    ; If the right button is pressed
+    CMP #$1
+    BNE :++
+        LDA gridMenuXLength
+        CMP gridMenuXCursor
+        BCC :+
+            LDA #GRID_MENU_RIGHT
+            STA gridMenuOutcome
+            RTS
+        :
+        ; Carry is clear
+        ADC #1
+        STA gridMenuXCursor
+        LDA #GRID_MENU_NOTHING
+        STA gridMenuOutcome
+        RTS
+    :
+
+    ; If the left button is pressed
+    CMP #$2
+    BNE :++
+        LDA gridMenuXLength
+        CMP gridMenuXCursor
+        BCS :+
+            LDA #GRID_MENU_LEFT
+            STA gridMenuOutcome
+            RTS
+        :
+        ; Carry is set
+        SBC #1
+        STA gridMenuXCursor
+        LDA #GRID_MENU_NOTHING
+        STA gridMenuOutcome
+        RTS
+    :
+    
+    ; If the down button is pressed
+    CMP #$4
+    BNE :++
+        LDA gridMenuYLength
+        CMP gridMenuYCursor
+        BCC :+
+            LDA #GRID_MENU_DOWN
+            STA gridMenuOutcome
+            RTS
+        :
+        ; Carry is clear
+        ADC #1
+        STA gridMenuYCursor
+        LDA #GRID_MENU_NOTHING
+        STA gridMenuOutcome
+        RTS
+    :
+
+    ; If the up button is pressed
+    CMP #$8
+    BNE :++
+        LDA gridMenuYLength
+        CMP gridMenuYCursor
+        BCS :+
+            LDA #GRID_MENU_UP
+            STA gridMenuOutcome
+            RTS
+        :
+        ; Carry is set
+        SBC #1
+        STA gridMenuYCursor
+        LDA #GRID_MENU_NOTHING
+        STA gridMenuOutcome
+        RTS
+    :
+
+    ; If the B button is pressed
+    CMP #$40
+    BNE :+
+        LDA #GRID_MENU_B
+        STA gridMenuOutcome
+        RTS
+    :
+
+    ; If the A button is pressed
+    CMP #$80
+    BNE :+
+        LDA #GRID_MENU_A
+        STA gridMenuOutcome
+        RTS
+    :
+
+    ; x position
+    LDA gridMenuXCursor
+    STA MMC5_MULTI_1
+    LDA gridMenuItemWidth
+    STA MMC5_MULTI_2
+    LDA gridMenuXPosition
+    CLC
+    ADC MMC5_MULTI_1
+    STA spr_x
+
+    ; y position
+    LDA gridMenuYCursor
+    STA MMC5_MULTI_1
+    LDA gridMenuItemHeight
+    STA MMC5_MULTI_2
+    LDA gridMenuYPosition
+    CLC
+    ADC MMC5_MULTI_1
+    STA spr_y
+
+    FARCALL DrawCursorSprite
 
     RTS

@@ -28,4 +28,5 @@ $(NODE_SCRIPTS):
 	${NODE} $@
 
 build/%.o: src/%.asm | run_node
+	@mkdir -p $(@D)
 	@${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst --list-bytes 0

@@ -16,6 +16,17 @@ UP                = $08
 BTN_START         = $10
 
 ;;;;;;;;;;;;;;;;;;
+;; Grid Menu outcomes
+
+GRID_MENU_NOTHING   = $0
+GRID_MENU_RIGHT     = $1
+GRID_MENU_LEFT      = $2
+GRID_MENU_DOWN      = $3
+GRID_MENU_UP        = $4
+GRID_MENU_A         = $5
+GRID_MENU_B         = $6
+
+;;;;;;;;;;;;;;;;;;
 ;;  music channels
 
 CHAN_START        = $B0

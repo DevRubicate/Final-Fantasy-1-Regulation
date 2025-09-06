@@ -1060,14 +1060,31 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             interactiveMenuXCoordinate,     1
     RES             interactiveMenuYCoordinate,     1
     RES             interactiveMenuCursor,          1
+
     RES             interactiveMenuLength,          1
-    RES             interactiveMenuSize,            1
     RES             interactiveMenuMode,            1
     RES             interactiveMenuCursorSelected,  1
     RES             interactiveMenuListOffset,      1
     RES             interactiveMenuLoop,            1
     RES             interactiveMenuOutcome,         1
     RES             interactiveMenuActiveHero,      1
+
+
+
+
+
+    RES             gridMenuXPosition,              1
+    RES             gridMenuYPosition,              1
+    RES             gridMenuItemWidth,              1
+    RES             gridMenuItemHeight,             1
+    RES             gridMenuXCursor,                1
+    RES             gridMenuYCursor,                1
+    RES             gridMenuXLength,                1
+    RES             gridMenuYLength,                1
+    RES             gridMenuOutcome,                1
+
+
+
 
     RES             donut_output_buffer,            64
 
