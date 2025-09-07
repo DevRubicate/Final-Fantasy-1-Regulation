@@ -3219,9 +3219,9 @@ EnterTitleScreen:
     LDA lut_TitleCursor_Y, X
     STA drawY
     LDA #0
-    STA drawVars+0
+    STA drawFlip
     LDA #0
-    STA drawVars+1
+    STA drawCHR
     LDX #0
     LDY #METASPRITE_CURSOR
     FARCALL DrawSprite
@@ -7183,29 +7183,61 @@ MenuWaitForBtn:
 ;;  on the main menu
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 DrawMainMenuCharSprites:
-    LDA #$88           ; Draw char 0's OB Sprite at $88,$18
-    STA spr_x
-    LDA #$18
-    STA spr_y
-    LDA #$00
-    FARCALL DrawOBSprite
 
-    LDA #$D8           ; Draw char 1's OB sprite at $D8,$18
-    STA spr_x
-    LDA #$40
-    FARCALL DrawOBSprite
+    ; Hero 1
+    LDA #136
+    STA drawX
+    LDA #24
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #%10000000
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_BLACK_BELT
+    FARCALL DrawSprite
 
-    LDA #$88           ; Draw char 3's OB sprite at $D8,$88
-    STA spr_y
-    LDA #$C0
-    FARCALL DrawOBSprite
+    ; Hero 2
+    LDA #212
+    STA drawX
+    LDA #24
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #%10000000
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_BLACK_BELT
+    FARCALL DrawSprite
+    
+    ; Hero 3
+    LDA #136
+    STA drawX
+    LDA #136
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #%10000000
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_BLACK_BELT
+    FARCALL DrawSprite
 
-    LDA #$88           ; and lastly, char 2's OB sprite at $88,$88
-    STA spr_x
-    LDA #$80
-    FARJUMP DrawOBSprite   ; then exit
+    ; Hero 4
+    LDA #212
+    STA drawX
+    LDA #136
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #%10000000
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_BLACK_BELT
+    FARCALL DrawSprite
+
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -7543,12 +7575,18 @@ DrawMainMenuSubCursor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawMainMenuCursor:
+    LDA #1
+    STA drawX
     LDY cursor                    ; get current cursor selection
     LDA lut_MainMenuCursor_Y, Y   ;  use cursor as an index to get the desired Y coord
-    STA spr_y                     ;  write the Y coord
-    LDA #8                      ; X coord for main menu cursor is always 8
-    STA spr_x
-    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #0
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_CURSOR
+    FARCALL DrawSprite
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

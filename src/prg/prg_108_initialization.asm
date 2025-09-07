@@ -493,19 +493,10 @@ PartyGenerationScreen:
     FARCALL FillNametable
     CALL PartyGenerationDrawBackground
     @loop:
-
-
-
-
-        ;CALL PartyGenerationDrawSprites
-
-        CALL StartGridMenu
-
-
-
+        CALL PartyGenerationDrawSprites
+        ;CALL StartGridMenu
         FARCALL MusicPlay
         CALL WaitForVBlank
-
     JUMP @loop
     RTS
 
@@ -594,18 +585,18 @@ PartyGenerationDrawBackground:
 
 PartyGenerationDrawSprites:
 
-    LDA #20
+    LDA #90
     STA drawX
     LDA #20
     STA drawY
 
     ; hFlip and vFlip
     LDA #0
-    STA drawVars+0
+    STA drawFlip
 
     ; CHR offset
-    LDA #0
-    STA drawVars+1
+    LDA #%10000000
+    STA drawCHR
 
     LDX #0
     LDY #METASPRITE_BLACK_BELT
@@ -617,6 +608,8 @@ PartyGenerationDrawSprites:
 
 
 StartGridMenu:
+
+    FARCALL DrawCursorSprite
 
     FARCALL UpdateJoy
     LDA joypadState
@@ -732,6 +725,6 @@ StartGridMenu:
     ADC MMC5_MULTI_1
     STA spr_y
 
-    FARCALL DrawCursorSprite
+
 
     RTS

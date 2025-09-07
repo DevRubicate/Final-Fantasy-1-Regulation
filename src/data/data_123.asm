@@ -62,7 +62,7 @@ METASPRITE_BLACK_BELT_FRAMES_FRAMES:
 
 ; address 235 - 243 (bytes 0 - 8)
 METASPRITE_BLACK_BELT_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
+.byte $00, $00, $01, $01, $00, $01, $06, $07
 
 ; address 243 - 251 (bytes 0 - 8)
 METASPRITE_BLACK_BELT_FRAME_1:

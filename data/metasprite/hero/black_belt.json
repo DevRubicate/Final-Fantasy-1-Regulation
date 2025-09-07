@@ -64,8 +64,8 @@
                     "tile": [
                         {"index": 0, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
                         {"index": 1, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
-                        {"index": 2, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
-                        {"index": 3, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
+                        {"index": 6, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false},
+                        {"index": 7, "palette": 0, "hFlip": false, "vFlip": true, "x": 0, "y": 0, "disabled": false}
                     ]
                 },
                 {

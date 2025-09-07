@@ -1011,11 +1011,30 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterWhitespaceWidth,    1
     RES             stringwriterLineWidth,          1
     RES             drawValue,                      1
+    ; drawX and drawY are used to determine the position to draw the sprite
     RES             drawX,                          1
     RES             drawY,                          1
+    ; drawWidth and drawHeight are used to determine how many sprites to draw W * H
     RES             drawWidth,                      1
     RES             drawHeight,                     1
-    RES             drawVars,                       16
+    ; drawVars is used to store the values to draw the sprite
+    RES             drawVars,                       0
+    RES             drawFlip,                       1
+    RES             drawCHR,                        1
+    RES             drawVars3,                      1
+    RES             drawVars4,                      1
+    RES             drawVars5,                      1
+    RES             drawVars6,                      1
+    RES             drawVars7,                      1
+    RES             drawVars8,                      1
+    RES             drawVars9,                      1
+    RES             drawVars10,                     1
+    RES             drawVars11,                     1
+    RES             drawVars12,                     1
+    RES             drawVars13,                     1
+    RES             drawVars14,                     1
+    RES             drawVars15,                     1
+    RES             drawVars16,                     1
     RES             stringifyCursor,                1
     RES             stringifyLength,                1
     RES             stringifyActiveItem,            2

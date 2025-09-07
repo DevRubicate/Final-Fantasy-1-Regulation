@@ -9,13 +9,14 @@
 
 DrawSprite:
 
-    ; This rotates all bits of drawVars+1 one step to the left, so that 76543210 becomes 65432107
+    ; This rotates all bits of drawCHR one step to the left, so that 76543210 becomes 65432107
     ; We do this because it's the 0th bit that decides whether to use spriteCHRBank0 to spriteCHRBank3
     ; or spriteCHRBank4 to spriteCHRBank7 in MMC5 8x16 sprite mode.
-    LDA drawVars+1
+    LDA drawCHR
     ROL A
-    LDA drawVars+1
+    LDA drawCHR
     ROL A
+    STA drawCHR
 
     ; Load the metasprite pointer from LUT_METASPRITE_FRAMES and save it in Var0+Var1
     LDA #TextBank(LUT_METASPRITE_FRAMES_LO)
@@ -50,10 +51,10 @@ DrawSprite:
 
 
 
-    ; We will nowp use a jump table to jump to the correct subroutine for drawing the sprite.
+    ; We will now use a jump table to jump to the correct subroutine for drawing the sprite.
     ; This is done by composing a byte in the format 00ffhhww and then using that as an index
     ; into the jump table.
-    LDA drawVars+0 ; hFlip and vFlip byte
+    LDA drawFlip ; hFlip and vFlip byte
     ASL A
     ASL A
     LDY #2
@@ -232,14 +233,14 @@ LUT_FullDrawJumpTableHi:
     .repeat _height, h
         .repeat _width, w
             ; OPTIMALIZATION: By making each byte be an addition/subtraction to the previous byte, we can
-            ; remove the need to re-add drawVars+1 each time. Obviously the ASL A can be eliminated too
+            ; remove the need to re-add drawCHR each time. Obviously the ASL A can be eliminated too
             ; by making the data format account for it. Lastly if we move onto strictly using ADC we can
             ; eliminate the CLC by making the data format account for carry. That way we can reduce the loop
             ; to nothing but an INY -> ADC(),Y -> STA
             INY
             LDA (Var0),Y
             ASL A
-            ADC drawVars+1
+            ADC drawCHR
             STA a:spriteRAM + (h * _width + w) * 4 + 1,X
         .endrepeat
     .endrepeat
