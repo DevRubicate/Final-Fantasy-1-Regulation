@@ -14,671 +14,671 @@ LUT_ITEM_NAME_HI:
 
 ; address 336 - 343 (bytes 0 - 7)
 TEXT_ITEM_NAME_CLOTH:
-.byte $7d, $0d, $30, $33, $38, $2c, $00
+.byte $58, $11, $34, $37, $3c, $30, $00
 
 ; address 343 - 357 (bytes 0 - 14)
 TEXT_ITEM_NAME_WOODEN_ARMOR:
-.byte $7a, $21, $33, $33, $28, $29, $32, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $25, $37, $37, $2c, $2d, $36, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 357 - 370 (bytes 0 - 13)
 TEXT_ITEM_NAME_CHAIN_ARMOR:
-.byte $7a, $0d, $2c, $25, $2d, $32, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $11, $30, $29, $31, $36, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 370 - 382 (bytes 0 - 12)
 TEXT_ITEM_NAME_IRON_ARMOR:
-.byte $7a, $13, $36, $33, $32, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $17, $3a, $37, $36, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 382 - 395 (bytes 0 - 13)
 TEXT_ITEM_NAME_STEEL_ARMOR:
-.byte $7a, $1d, $38, $29, $29, $30, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $21, $3c, $2d, $2d, $34, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 395 - 409 (bytes 0 - 14)
 TEXT_ITEM_NAME_SILVER_ARMOR:
-.byte $7a, $1d, $2d, $30, $3a, $29, $36, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $21, $31, $34, $3e, $2d, $3a, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 409 - 422 (bytes 0 - 13)
 TEXT_ITEM_NAME_FLAME_ARMOR:
-.byte $7a, $10, $30, $25, $31, $29, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $14, $34, $29, $35, $2d, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 422 - 433 (bytes 0 - 11)
 TEXT_ITEM_NAME_ICE_ARMOR:
-.byte $7a, $13, $27, $29, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $17, $2b, $2d, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 433 - 445 (bytes 0 - 12)
 TEXT_ITEM_NAME_OPAL_ARMOR:
-.byte $7a, $19, $34, $25, $30, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $1d, $38, $29, $34, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 445 - 459 (bytes 0 - 14)
 TEXT_ITEM_NAME_DRAGON_ARMOR:
-.byte $7a, $0e, $36, $25, $2b, $33, $32, $7e, $0b, $36, $31, $33, $36, $00
+.byte $53, $12, $3a, $29, $2f, $37, $36, $02, $0f, $3a, $35, $37, $3a, $00
 
 ; address 459 - 476 (bytes 0 - 17)
 TEXT_ITEM_NAME_COPPER_BRACELET:
-.byte $7e, $0d, $33, $34, $34, $29, $36, $7e, $0c, $36, $25, $27, $29, $30, $29, $38, $00
+.byte $57, $11, $37, $38, $38, $2d, $3a, $02, $10, $3a, $29, $2b, $2d, $34, $2d, $3c, $00
 
 ; address 476 - 493 (bytes 0 - 17)
 TEXT_ITEM_NAME_SILVER_BRACELET:
-.byte $7e, $1d, $2d, $30, $3a, $29, $36, $7e, $0c, $36, $25, $27, $29, $30, $29, $38, $00
+.byte $57, $21, $31, $34, $3e, $2d, $3a, $02, $10, $3a, $29, $2b, $2d, $34, $2d, $3c, $00
 
 ; address 493 - 508 (bytes 0 - 15)
 TEXT_ITEM_NAME_GOLD_BRACELET:
-.byte $7e, $11, $33, $30, $28, $7e, $0c, $36, $25, $27, $29, $30, $29, $38, $00
+.byte $57, $15, $37, $34, $2c, $02, $10, $3a, $29, $2b, $2d, $34, $2d, $3c, $00
 
 ; address 508 - 523 (bytes 0 - 15)
 TEXT_ITEM_NAME_OPAL_BRACELET:
-.byte $7e, $19, $34, $25, $30, $7e, $0c, $36, $25, $27, $29, $30, $29, $38, $00
+.byte $57, $1d, $38, $29, $34, $02, $10, $3a, $29, $2b, $2d, $34, $2d, $3c, $00
 
 ; address 523 - 536 (bytes 0 - 13)
 TEXT_ITEM_NAME_WHITE_CLOTH:
-.byte $7d, $21, $2c, $2d, $38, $29, $7e, $0d, $30, $33, $38, $2c, $00
+.byte $58, $25, $30, $31, $3c, $2d, $02, $11, $34, $37, $3c, $30, $00
 
 ; address 536 - 549 (bytes 0 - 13)
 TEXT_ITEM_NAME_BLACK_CLOTH:
-.byte $7d, $0c, $30, $25, $27, $2f, $7e, $0d, $30, $33, $38, $2c, $00
+.byte $58, $10, $34, $29, $2b, $33, $02, $11, $34, $37, $3c, $30, $00
 
 ; address 549 - 564 (bytes 0 - 15)
 TEXT_ITEM_NAME_WOODEN_SHIELD:
-.byte $7b, $21, $33, $33, $28, $29, $32, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $25, $37, $37, $2c, $2d, $36, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 564 - 577 (bytes 0 - 13)
 TEXT_ITEM_NAME_IRON_SHIELD:
-.byte $7b, $13, $36, $33, $32, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $17, $3a, $37, $36, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 577 - 592 (bytes 0 - 15)
 TEXT_ITEM_NAME_SILVER_SHIELD:
-.byte $7b, $1d, $2d, $30, $3a, $29, $36, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $21, $31, $34, $3e, $2d, $3a, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 592 - 606 (bytes 0 - 14)
 TEXT_ITEM_NAME_FLAME_SHIELD:
-.byte $7b, $10, $30, $25, $31, $29, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $14, $34, $29, $35, $2d, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 606 - 618 (bytes 0 - 12)
 TEXT_ITEM_NAME_ICE_SHIELD:
-.byte $7b, $13, $27, $29, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $17, $2b, $2d, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 618 - 631 (bytes 0 - 13)
 TEXT_ITEM_NAME_OPAL_SHIELD:
-.byte $7b, $19, $34, $25, $30, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $1d, $38, $29, $34, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 631 - 645 (bytes 0 - 14)
 TEXT_ITEM_NAME_AEGIS_SHIELD:
-.byte $7b, $0b, $29, $2b, $2d, $37, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $0f, $2d, $2f, $31, $3b, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 645 - 661 (bytes 0 - 16)
 TEXT_ITEM_NAME_BUCKLER:
-.byte $7b, $0c, $39, $27, $2f, $30, $29, $36, $7e, $1d, $2c, $2d, $29, $30, $28, $00
+.byte $54, $10, $3d, $2b, $33, $34, $2d, $3a, $02, $21, $30, $31, $2d, $34, $2c, $00
 
 ; address 661 - 669 (bytes 0 - 8)
 TEXT_ITEM_NAME_PROCAPE:
-.byte $1a, $36, $33, $27, $25, $34, $29, $00
+.byte $1e, $3a, $37, $2b, $29, $38, $2d, $00
 
 ; address 669 - 673 (bytes 0 - 4)
 TEXT_ITEM_NAME_CAP:
-.byte $0d, $25, $34, $00
+.byte $11, $29, $38, $00
 
 ; address 673 - 688 (bytes 0 - 15)
 TEXT_ITEM_NAME_WOODEN_HELMET:
-.byte $7c, $21, $33, $33, $28, $29, $32, $7e, $12, $29, $30, $31, $29, $38, $00
+.byte $55, $25, $37, $37, $2c, $2d, $36, $02, $16, $2d, $34, $35, $2d, $3c, $00
 
 ; address 688 - 701 (bytes 0 - 13)
 TEXT_ITEM_NAME_IRON_HELMET:
-.byte $7c, $13, $36, $33, $32, $7e, $12, $29, $30, $31, $29, $38, $00
+.byte $55, $17, $3a, $37, $36, $02, $16, $2d, $34, $35, $2d, $3c, $00
 
 ; address 701 - 716 (bytes 0 - 15)
 TEXT_ITEM_NAME_SILVER_HELMET:
-.byte $7c, $1d, $2d, $30, $3a, $29, $36, $7e, $12, $29, $30, $31, $29, $38, $00
+.byte $55, $21, $31, $34, $3e, $2d, $3a, $02, $16, $2d, $34, $35, $2d, $3c, $00
 
 ; address 716 - 729 (bytes 0 - 13)
 TEXT_ITEM_NAME_OPAL_HELMET:
-.byte $7c, $19, $34, $25, $30, $7e, $12, $29, $30, $31, $29, $38, $00
+.byte $55, $1d, $38, $29, $34, $02, $16, $2d, $34, $35, $2d, $3c, $00
 
 ; address 729 - 742 (bytes 0 - 13)
 TEXT_ITEM_NAME_HEAL_HELMET:
-.byte $7c, $12, $29, $25, $30, $7e, $12, $29, $30, $31, $29, $38, $00
+.byte $55, $16, $2d, $29, $34, $02, $16, $2d, $34, $35, $2d, $3c, $00
 
 ; address 742 - 749 (bytes 0 - 7)
 TEXT_ITEM_NAME_RIBBON:
-.byte $1c, $2d, $26, $26, $33, $32, $00
+.byte $20, $31, $2a, $2a, $37, $36, $00
 
 ; address 749 - 756 (bytes 0 - 7)
 TEXT_ITEM_NAME_GLOVES:
-.byte $11, $30, $33, $3a, $29, $37, $00
+.byte $15, $34, $37, $3e, $2d, $3b, $00
 
 ; address 756 - 773 (bytes 0 - 17)
 TEXT_ITEM_NAME_COPPER_GAUNTLET:
-.byte $7d, $0d, $33, $34, $34, $29, $36, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $11, $37, $38, $38, $2d, $3a, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 773 - 788 (bytes 0 - 15)
 TEXT_ITEM_NAME_IRON_GAUNTLET:
-.byte $7d, $13, $36, $33, $32, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $17, $3a, $37, $36, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 788 - 805 (bytes 0 - 17)
 TEXT_ITEM_NAME_SILVER_GAUNTLET:
-.byte $7d, $1d, $2d, $30, $3a, $29, $36, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $21, $31, $34, $3e, $2d, $3a, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 805 - 820 (bytes 0 - 15)
 TEXT_ITEM_NAME_ZEUS_GAUNTLET:
-.byte $7d, $24, $29, $39, $37, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $28, $2d, $3d, $3b, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 820 - 836 (bytes 0 - 16)
 TEXT_ITEM_NAME_POWER_GAUNTLET:
-.byte $7d, $1a, $33, $3b, $29, $36, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $1e, $37, $3f, $2d, $3a, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 836 - 851 (bytes 0 - 15)
 TEXT_ITEM_NAME_OPAL_GAUNTLET:
-.byte $7d, $19, $34, $25, $30, $7e, $11, $25, $39, $32, $38, $30, $29, $38, $00
+.byte $56, $1d, $38, $29, $34, $02, $15, $29, $3d, $36, $3c, $34, $2d, $3c, $00
 
 ; address 851 - 859 (bytes 0 - 8)
 TEXT_ITEM_NAME_PRORING:
-.byte $1a, $36, $33, $36, $2d, $32, $2b, $00
+.byte $1e, $3a, $37, $3a, $31, $36, $2f, $00
 
 ; address 859 - 864 (bytes 0 - 5)
 TEXT_ITEM_NAME_TENT:
-.byte $1e, $0f, $18, $1e, $00
+.byte $22, $13, $1c, $22, $00
 
 ; address 864 - 870 (bytes 0 - 6)
 TEXT_ITEM_NAME_CABIN:
-.byte $0d, $0b, $0c, $13, $18, $00
+.byte $11, $0f, $10, $17, $1c, $00
 
 ; address 870 - 876 (bytes 0 - 6)
 TEXT_ITEM_NAME_HOUSE:
-.byte $12, $19, $1f, $1d, $0f, $00
+.byte $16, $1d, $23, $21, $13, $00
 
 ; address 876 - 881 (bytes 0 - 5)
 TEXT_ITEM_NAME_HEAL_POTION:
-.byte $12, $0f, $0b, $16, $00
+.byte $16, $13, $0f, $1a, $00
 
 ; address 881 - 886 (bytes 0 - 5)
 TEXT_ITEM_NAME_PURE_POTION:
-.byte $1a, $1f, $1c, $0f, $00
+.byte $1e, $23, $20, $13, $00
 
 ; address 886 - 891 (bytes 0 - 5)
 TEXT_ITEM_NAME_SOFT_POTION:
-.byte $1d, $19, $10, $1e, $00
+.byte $21, $1d, $14, $22, $00
 
 ; address 891 - 896 (bytes 0 - 5)
 TEXT_ITEM_NAME_LUTE:
-.byte $16, $1f, $1e, $0f, $00
+.byte $1a, $23, $22, $13, $00
 
 ; address 896 - 902 (bytes 0 - 6)
 TEXT_ITEM_NAME_CROWN:
-.byte $0d, $1c, $19, $21, $18, $00
+.byte $11, $20, $1d, $25, $1c, $00
 
 ; address 902 - 910 (bytes 0 - 8)
 TEXT_ITEM_NAME_CRYSTAL:
-.byte $0d, $1c, $23, $1d, $1e, $0b, $16, $00
+.byte $11, $20, $27, $21, $22, $0f, $1a, $00
 
 ; address 910 - 915 (bytes 0 - 5)
 TEXT_ITEM_NAME_HERB:
-.byte $12, $0f, $1c, $0c, $00
+.byte $16, $13, $20, $10, $00
 
 ; address 915 - 919 (bytes 0 - 4)
 TEXT_ITEM_NAME_KEY:
-.byte $15, $0f, $23, $00
+.byte $19, $13, $27, $00
 
 ; address 919 - 923 (bytes 0 - 4)
 TEXT_ITEM_NAME_TNT:
-.byte $1e, $18, $1e, $00
+.byte $22, $1c, $22, $00
 
 ; address 923 - 931 (bytes 0 - 8)
 TEXT_ITEM_NAME_ADAMANT:
-.byte $0b, $0e, $0b, $17, $0b, $18, $1e, $00
+.byte $0f, $12, $0f, $1b, $0f, $1c, $22, $00
 
 ; address 931 - 936 (bytes 0 - 5)
 TEXT_ITEM_NAME_SLAB:
-.byte $1d, $16, $0b, $0c, $00
+.byte $21, $1a, $0f, $10, $00
 
 ; address 936 - 941 (bytes 0 - 5)
 TEXT_ITEM_NAME_RUBY:
-.byte $1c, $1f, $0c, $23, $00
+.byte $20, $23, $10, $27, $00
 
 ; address 941 - 945 (bytes 0 - 4)
 TEXT_ITEM_NAME_ROD:
-.byte $1c, $19, $0e, $00
+.byte $20, $1d, $12, $00
 
 ; address 945 - 953 (bytes 0 - 8)
 TEXT_ITEM_NAME_FLOATER:
-.byte $10, $16, $19, $0b, $1e, $0f, $1c, $00
+.byte $14, $1a, $1d, $0f, $22, $13, $20, $00
 
 ; address 953 - 959 (bytes 0 - 6)
 TEXT_ITEM_NAME_CHIME:
-.byte $0d, $12, $13, $17, $0f, $00
+.byte $11, $16, $17, $1b, $13, $00
 
 ; address 959 - 964 (bytes 0 - 5)
 TEXT_ITEM_NAME_TAIL:
-.byte $1e, $0b, $13, $16, $00
+.byte $22, $0f, $17, $1a, $00
 
 ; address 964 - 969 (bytes 0 - 5)
 TEXT_ITEM_NAME_CUBE:
-.byte $0d, $1f, $0c, $0f, $00
+.byte $11, $23, $10, $13, $00
 
 ; address 969 - 976 (bytes 0 - 7)
 TEXT_ITEM_NAME_BOTTLE:
-.byte $0c, $19, $1e, $1e, $16, $0f, $00
+.byte $10, $1d, $22, $22, $1a, $13, $00
 
 ; address 976 - 983 (bytes 0 - 7)
 TEXT_ITEM_NAME_OXYALE:
-.byte $19, $22, $23, $0b, $16, $0f, $00
+.byte $1d, $26, $27, $0f, $1a, $13, $00
 
 ; address 983 - 989 (bytes 0 - 6)
 TEXT_ITEM_NAME_CANOE:
-.byte $0d, $0b, $18, $19, $0f, $00
+.byte $11, $0f, $1c, $1d, $13, $00
 
 ; address 989 - 993 (bytes 0 - 4)
 TEXT_ITEM_NAME_SPELLBOOK_LIT:
-.byte $16, $13, $1e, $00
+.byte $1a, $17, $22, $00
 
 ; address 993 - 998 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FIRE:
-.byte $10, $13, $1c, $0f, $00
+.byte $14, $17, $20, $13, $00
 
 ; address 998 - 1003 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LOCK:
-.byte $16, $19, $0d, $15, $00
+.byte $1a, $1d, $11, $19, $00
 
 ; address 1003 - 1008 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SLEP:
-.byte $1d, $16, $0f, $1a, $00
+.byte $21, $1a, $13, $1e, $00
 
 ; address 1008 - 1013 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_DARK:
-.byte $0e, $0b, $1c, $15, $00
+.byte $12, $0f, $20, $19, $00
 
 ; address 1013 - 1017 (bytes 0 - 4)
 TEXT_ITEM_NAME_SPELLBOOK_ICE:
-.byte $13, $0d, $0f, $00
+.byte $17, $11, $13, $00
 
 ; address 1017 - 1022 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SLOW:
-.byte $1d, $16, $19, $21, $00
+.byte $21, $1a, $1d, $25, $00
 
 ; address 1022 - 1027 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_TMPR:
-.byte $1e, $17, $1a, $1c, $00
+.byte $22, $1b, $1e, $20, $00
 
 ; address 1027 - 1032 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HOLD:
-.byte $12, $19, $16, $0e, $00
+.byte $16, $1d, $1a, $12, $00
 
 ; address 1032 - 1037 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LIT2:
-.byte $16, $13, $1e, $03, $00
+.byte $1a, $17, $22, $07, $00
 
 ; address 1037 - 1042 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FIR2:
-.byte $10, $13, $1c, $03, $00
+.byte $14, $17, $20, $07, $00
 
 ; address 1042 - 1047 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LOK2:
-.byte $16, $19, $15, $03, $00
+.byte $1a, $1d, $19, $07, $00
 
 ; address 1047 - 1052 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FAST:
-.byte $10, $0b, $1d, $1e, $00
+.byte $14, $0f, $21, $22, $00
 
 ; address 1052 - 1057 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_ICE2:
-.byte $13, $0d, $0f, $03, $00
+.byte $17, $11, $13, $07, $00
 
 ; address 1057 - 1062 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_CONF:
-.byte $0d, $19, $18, $10, $00
+.byte $11, $1d, $1c, $14, $00
 
 ; address 1062 - 1067 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SLP2:
-.byte $1d, $16, $1a, $03, $00
+.byte $21, $1a, $1e, $07, $00
 
 ; address 1067 - 1072 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FIR3:
-.byte $10, $13, $1c, $04, $00
+.byte $14, $17, $20, $08, $00
 
 ; address 1072 - 1077 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_BANE:
-.byte $0c, $0b, $18, $0f, $00
+.byte $10, $0f, $1c, $13, $00
 
 ; address 1077 - 1082 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SLO2:
-.byte $1d, $16, $19, $03, $00
+.byte $21, $1a, $1d, $07, $00
 
 ; address 1082 - 1087 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_WARP:
-.byte $21, $0b, $1c, $1a, $00
+.byte $25, $0f, $20, $1e, $00
 
 ; address 1087 - 1092 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LIT3:
-.byte $16, $13, $1e, $04, $00
+.byte $1a, $17, $22, $08, $00
 
 ; address 1092 - 1097 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_QAKE:
-.byte $1b, $0b, $15, $0f, $00
+.byte $1f, $0f, $19, $13, $00
 
 ; address 1097 - 1101 (bytes 0 - 4)
 TEXT_ITEM_NAME_SPELLBOOK_RUB:
-.byte $1c, $1f, $0c, $00
+.byte $20, $23, $10, $00
 
 ; address 1101 - 1106 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_STUN:
-.byte $1d, $1e, $1f, $18, $00
+.byte $21, $22, $23, $1c, $00
 
 ; address 1106 - 1111 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_BLND:
-.byte $0c, $16, $18, $0e, $00
+.byte $10, $1a, $1c, $12, $00
 
 ; address 1111 - 1116 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_BRAK:
-.byte $0c, $1c, $0b, $15, $00
+.byte $10, $20, $0f, $19, $00
 
 ; address 1116 - 1121 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_ICE3:
-.byte $13, $0d, $0f, $04, $00
+.byte $17, $11, $13, $08, $00
 
 ; address 1121 - 1126 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SABR:
-.byte $1d, $0b, $0c, $1c, $00
+.byte $21, $0f, $10, $20, $00
 
 ; address 1126 - 1131 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_NUKE:
-.byte $18, $1f, $15, $0f, $00
+.byte $1c, $23, $19, $13, $00
 
 ; address 1131 - 1136 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_STOP:
-.byte $1d, $1e, $19, $1a, $00
+.byte $21, $22, $1d, $1e, $00
 
 ; address 1136 - 1141 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_XXXX:
-.byte $22, $22, $22, $22, $00
+.byte $26, $26, $26, $26, $00
 
 ; address 1141 - 1146 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_ZAP:
-.byte $24, $0b, $1a, $43, $00
+.byte $28, $0f, $1e, $47, $00
 
 ; address 1146 - 1151 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_CURE:
-.byte $0d, $1f, $1c, $0f, $00
+.byte $11, $23, $20, $13, $00
 
 ; address 1151 - 1155 (bytes 0 - 4)
 TEXT_ITEM_NAME_SPELLBOOK_FOG:
-.byte $10, $19, $11, $00
+.byte $14, $1d, $15, $00
 
 ; address 1155 - 1160 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HARM:
-.byte $12, $0b, $1c, $17, $00
+.byte $16, $0f, $20, $1b, $00
 
 ; address 1160 - 1165 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_RUSE:
-.byte $1c, $1f, $1d, $0f, $00
+.byte $20, $23, $21, $13, $00
 
 ; address 1165 - 1170 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_ALIT:
-.byte $0b, $16, $13, $1e, $00
+.byte $0f, $1a, $17, $22, $00
 
 ; address 1170 - 1175 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_INVS:
-.byte $13, $18, $20, $1d, $00
+.byte $17, $1c, $24, $21, $00
 
 ; address 1175 - 1180 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LAMP:
-.byte $16, $0b, $17, $1a, $00
+.byte $1a, $0f, $1b, $1e, $00
 
 ; address 1180 - 1185 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_MUTE:
-.byte $17, $1f, $1e, $0f, $00
+.byte $1b, $23, $22, $13, $00
 
 ; address 1185 - 1190 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_AFIR:
-.byte $0b, $10, $13, $1c, $00
+.byte $0f, $14, $17, $20, $00
 
 ; address 1190 - 1195 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_CUR2:
-.byte $0d, $1f, $1c, $03, $00
+.byte $11, $23, $20, $07, $00
 
 ; address 1195 - 1200 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HEAL:
-.byte $12, $0f, $0b, $16, $00
+.byte $16, $13, $0f, $1a, $00
 
 ; address 1200 - 1205 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HRM2:
-.byte $12, $1c, $17, $03, $00
+.byte $16, $20, $1b, $07, $00
 
 ; address 1205 - 1210 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_AICE:
-.byte $0b, $13, $0d, $0f, $00
+.byte $0f, $17, $11, $13, $00
 
 ; address 1210 - 1215 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_AMUT:
-.byte $0b, $17, $1f, $1e, $00
+.byte $0f, $1b, $23, $22, $00
 
 ; address 1215 - 1220 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FEAR:
-.byte $10, $0f, $0b, $1c, $00
+.byte $14, $13, $0f, $20, $00
 
 ; address 1220 - 1225 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_PURE:
-.byte $1a, $1f, $1c, $0f, $00
+.byte $1e, $23, $20, $13, $00
 
 ; address 1225 - 1230 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_CUR3:
-.byte $0d, $1f, $1c, $04, $00
+.byte $11, $23, $20, $08, $00
 
 ; address 1230 - 1235 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HEL2:
-.byte $12, $0f, $16, $03, $00
+.byte $16, $13, $1a, $07, $00
 
 ; address 1235 - 1240 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HRM3:
-.byte $12, $1c, $17, $04, $00
+.byte $16, $20, $1b, $08, $00
 
 ; address 1240 - 1245 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LIFE:
-.byte $16, $13, $10, $0f, $00
+.byte $1a, $17, $14, $13, $00
 
 ; address 1245 - 1250 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_EXIT:
-.byte $0f, $22, $13, $1e, $00
+.byte $13, $26, $17, $22, $00
 
 ; address 1250 - 1255 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FOG2:
-.byte $10, $19, $11, $03, $00
+.byte $14, $1d, $15, $07, $00
 
 ; address 1255 - 1260 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_INV2:
-.byte $13, $18, $20, $03, $00
+.byte $17, $1c, $24, $07, $00
 
 ; address 1260 - 1265 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_SOFT:
-.byte $1d, $19, $10, $1e, $00
+.byte $21, $1d, $14, $22, $00
 
 ; address 1265 - 1270 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_ARUB:
-.byte $0b, $1c, $1f, $0c, $00
+.byte $0f, $20, $23, $10, $00
 
 ; address 1270 - 1275 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_CUR4:
-.byte $0d, $1f, $1c, $05, $00
+.byte $11, $23, $20, $09, $00
 
 ; address 1275 - 1280 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HEL3:
-.byte $12, $0f, $16, $04, $00
+.byte $16, $13, $1a, $08, $00
 
 ; address 1280 - 1285 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_HRM4:
-.byte $12, $1c, $17, $05, $00
+.byte $16, $20, $1b, $09, $00
 
 ; address 1285 - 1290 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_FADE:
-.byte $10, $0b, $0e, $0f, $00
+.byte $14, $0f, $12, $13, $00
 
 ; address 1290 - 1295 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_LIF2:
-.byte $16, $13, $10, $03, $00
+.byte $1a, $17, $14, $07, $00
 
 ; address 1295 - 1300 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_WALL:
-.byte $21, $0b, $16, $16, $00
+.byte $25, $0f, $1a, $1a, $00
 
 ; address 1300 - 1305 (bytes 0 - 5)
 TEXT_ITEM_NAME_SPELLBOOK_XFER:
-.byte $22, $10, $0f, $1c, $00
+.byte $26, $14, $13, $20, $00
 
 ; address 1305 - 1313 (bytes 0 - 8)
 TEXT_ITEM_NAME_WOODEN_NUNCHUCK:
-.byte $21, $33, $33, $28, $29, $32, $79, $00
+.byte $25, $37, $37, $2c, $2d, $36, $52, $00
 
 ; address 1313 - 1321 (bytes 0 - 8)
 TEXT_ITEM_NAME_SMALL_KNIFE:
-.byte $1d, $31, $25, $30, $30, $7e, $76, $00
+.byte $21, $35, $29, $34, $34, $02, $4f, $00
 
 ; address 1321 - 1329 (bytes 0 - 8)
 TEXT_ITEM_NAME_WOODEN_STAFF:
-.byte $21, $33, $33, $28, $29, $32, $78, $00
+.byte $25, $37, $37, $2c, $2d, $36, $51, $00
 
 ; address 1329 - 1336 (bytes 0 - 7)
 TEXT_ITEM_NAME_RAPIER:
-.byte $1c, $25, $34, $2d, $29, $36, $00
+.byte $20, $29, $38, $31, $2d, $3a, $00
 
 ; address 1336 - 1344 (bytes 0 - 8)
 TEXT_ITEM_NAME_IRON_HAMMER:
-.byte $13, $36, $33, $32, $7e, $7e, $75, $00
+.byte $17, $3a, $37, $36, $02, $02, $4e, $00
 
 ; address 1344 - 1350 (bytes 0 - 6)
 TEXT_ITEM_NAME_SHORT_SWORD:
-.byte $1d, $2c, $33, $36, $38, $00
+.byte $21, $30, $37, $3a, $3c, $00
 
 ; address 1350 - 1355 (bytes 0 - 5)
 TEXT_ITEM_NAME_HAND_AXE:
-.byte $12, $25, $32, $28, $00
+.byte $16, $29, $36, $2c, $00
 
 ; address 1355 - 1363 (bytes 0 - 8)
 TEXT_ITEM_NAME_SCIMTAR:
-.byte $1d, $27, $2d, $31, $38, $25, $36, $00
+.byte $21, $2b, $31, $35, $3c, $29, $3a, $00
 
 ; address 1363 - 1368 (bytes 0 - 5)
 TEXT_ITEM_NAME_IRON_NUNCHUCK:
-.byte $13, $36, $33, $32, $00
+.byte $17, $3a, $37, $36, $00
 
 ; address 1368 - 1374 (bytes 0 - 6)
 TEXT_ITEM_NAME_LARGE_KNIFE:
-.byte $16, $25, $36, $2b, $29, $00
+.byte $1a, $29, $3a, $2f, $2d, $00
 
 ; address 1374 - 1379 (bytes 0 - 5)
 TEXT_ITEM_NAME_IRON_STAFF:
-.byte $13, $36, $33, $32, $00
+.byte $17, $3a, $37, $36, $00
 
 ; address 1379 - 1385 (bytes 0 - 6)
 TEXT_ITEM_NAME_SABRE:
-.byte $1d, $25, $26, $36, $29, $00
+.byte $21, $29, $2a, $3a, $2d, $00
 
 ; address 1385 - 1390 (bytes 0 - 5)
 TEXT_ITEM_NAME_LONG_SWORD:
-.byte $16, $33, $32, $2b, $00
+.byte $1a, $37, $36, $2f, $00
 
 ; address 1390 - 1396 (bytes 0 - 6)
 TEXT_ITEM_NAME_GREAT_AXE:
-.byte $11, $36, $29, $25, $38, $00
+.byte $15, $3a, $2d, $29, $3c, $00
 
 ; address 1396 - 1404 (bytes 0 - 8)
 TEXT_ITEM_NAME_FALCHON:
-.byte $10, $25, $30, $27, $2c, $33, $32, $00
+.byte $14, $29, $34, $2b, $30, $37, $36, $00
 
 ; address 1404 - 1411 (bytes 0 - 7)
 TEXT_ITEM_NAME_SILVER_KNIFE:
-.byte $1d, $2d, $30, $3a, $29, $36, $00
+.byte $21, $31, $34, $3e, $2d, $3a, $00
 
 ; address 1411 - 1418 (bytes 0 - 7)
 TEXT_ITEM_NAME_SILVER_SWORD:
-.byte $1d, $2d, $30, $3a, $29, $36, $00
+.byte $21, $31, $34, $3e, $2d, $3a, $00
 
 ; address 1418 - 1425 (bytes 0 - 7)
 TEXT_ITEM_NAME_SILVER_HAMMER:
-.byte $1d, $2d, $30, $3a, $29, $36, $00
+.byte $21, $31, $34, $3e, $2d, $3a, $00
 
 ; address 1425 - 1432 (bytes 0 - 7)
 TEXT_ITEM_NAME_SILVER_AXE:
-.byte $1d, $2d, $30, $3a, $29, $36, $00
+.byte $21, $31, $34, $3e, $2d, $3a, $00
 
 ; address 1432 - 1438 (bytes 0 - 6)
 TEXT_ITEM_NAME_FLAME_SWORD:
-.byte $10, $30, $25, $31, $29, $00
+.byte $14, $34, $29, $35, $2d, $00
 
 ; address 1438 - 1442 (bytes 0 - 4)
 TEXT_ITEM_NAME_ICE_SWORD:
-.byte $13, $27, $29, $00
+.byte $17, $2b, $2d, $00
 
 ; address 1442 - 1449 (bytes 0 - 7)
 TEXT_ITEM_NAME_DRAGON_SWORD:
-.byte $0e, $36, $25, $2b, $33, $32, $00
+.byte $12, $3a, $29, $2f, $37, $36, $00
 
 ; address 1449 - 1455 (bytes 0 - 6)
 TEXT_ITEM_NAME_GIANT_SWORD:
-.byte $11, $2d, $25, $32, $38, $00
+.byte $15, $31, $29, $36, $3c, $00
 
 ; address 1455 - 1459 (bytes 0 - 4)
 TEXT_ITEM_NAME_SUN_SWORD:
-.byte $1d, $39, $32, $00
+.byte $21, $3d, $36, $00
 
 ; address 1459 - 1465 (bytes 0 - 6)
 TEXT_ITEM_NAME_CORAL_SWORD:
-.byte $0d, $33, $36, $25, $30, $00
+.byte $11, $37, $3a, $29, $34, $00
 
 ; address 1465 - 1470 (bytes 0 - 5)
 TEXT_ITEM_NAME_WERE_SWORD:
-.byte $21, $29, $36, $29, $00
+.byte $25, $2d, $3a, $2d, $00
 
 ; address 1470 - 1475 (bytes 0 - 5)
 TEXT_ITEM_NAME_RUNE_SWORD:
-.byte $1c, $39, $32, $29, $00
+.byte $20, $3d, $36, $2d, $00
 
 ; address 1475 - 1481 (bytes 0 - 6)
 TEXT_ITEM_NAME_POWER_STAFF:
-.byte $1a, $33, $3b, $29, $36, $00
+.byte $1e, $37, $3f, $2d, $3a, $00
 
 ; address 1481 - 1487 (bytes 0 - 6)
 TEXT_ITEM_NAME_LIGHT_AXE:
-.byte $16, $2d, $2b, $2c, $38, $00
+.byte $1a, $31, $2f, $30, $3c, $00
 
 ; address 1487 - 1492 (bytes 0 - 5)
 TEXT_ITEM_NAME_HEAL_STAFF:
-.byte $12, $29, $25, $30, $00
+.byte $16, $2d, $29, $34, $00
 
 ; address 1492 - 1497 (bytes 0 - 5)
 TEXT_ITEM_NAME_MAGE_STAFF:
-.byte $17, $25, $2b, $29, $00
+.byte $1b, $29, $2f, $2d, $00
 
 ; address 1497 - 1505 (bytes 0 - 8)
 TEXT_ITEM_NAME_DEFENSE:
-.byte $0e, $29, $2a, $29, $32, $37, $29, $00
+.byte $12, $2d, $2e, $2d, $36, $3b, $2d, $00
 
 ; address 1505 - 1512 (bytes 0 - 7)
 TEXT_ITEM_NAME_WIZARD_STAFF:
-.byte $21, $2d, $3e, $25, $36, $28, $00
+.byte $25, $31, $42, $29, $3a, $2c, $00
 
 ; address 1512 - 1519 (bytes 0 - 7)
 TEXT_ITEM_NAME_VORPAL:
-.byte $20, $33, $36, $34, $25, $30, $00
+.byte $24, $37, $3a, $38, $29, $34, $00
 
 ; address 1519 - 1527 (bytes 0 - 8)
 TEXT_ITEM_NAME_CATCLAW:
-.byte $0d, $25, $38, $27, $30, $25, $3b, $00
+.byte $11, $29, $3c, $2b, $34, $29, $3f, $00
 
 ; address 1527 - 1532 (bytes 0 - 5)
 TEXT_ITEM_NAME_THOR_HAMMER:
-.byte $1e, $2c, $33, $36, $00
+.byte $22, $30, $37, $3a, $00
 
 ; address 1532 - 1537 (bytes 0 - 5)
 TEXT_ITEM_NAME_BANE_SWORD:
-.byte $0c, $25, $32, $29, $00
+.byte $10, $29, $36, $2d, $00
 
 ; address 1537 - 1544 (bytes 0 - 7)
 TEXT_ITEM_NAME_KATANA:
-.byte $15, $25, $38, $25, $32, $25, $00
+.byte $19, $29, $3c, $29, $36, $29, $00
 
 ; address 1544 - 1552 (bytes 0 - 8)
 TEXT_ITEM_NAME_XCALBER:
-.byte $22, $27, $25, $30, $26, $29, $36, $00
+.byte $26, $2b, $29, $34, $2a, $2d, $3a, $00
 
 ; address 1552 - 1560 (bytes 0 - 8)
 TEXT_ITEM_NAME_MASMUNE:
-.byte $17, $25, $37, $31, $39, $32, $29, $00
+.byte $1b, $29, $3b, $35, $3d, $36, $2d, $00
 
 ; 1560 - 8192
 .res 6632

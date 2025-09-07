@@ -4,6 +4,8 @@
 
 .export DrawCursorSprite, DrawBlinkingCursorSprite, ClearSprites, AllocateSprites
 
+.import DrawSprite
+
 
 
 
@@ -29,54 +31,18 @@ AllocateSprites:
 
 
 DrawCursorSprite:
-    LDA #4
-    CALL AllocateSprites
 
-    LDA spr_y
-    STA spriteRAM+0,X
     LDA spr_x
-    STA spriteRAM+3,X
-    LDA #$F0
-    STA spriteRAM+1,X
-    LDA #%00000010
-    STA spriteRAM+2,X
-
-
+    STA drawX
     LDA spr_y
-    STA spriteRAM+0+4,X
-    LDA spr_x
-    CLC
-    ADC #8
-    STA spriteRAM+3+4,X
-    LDA #$F1
-    STA spriteRAM+1+4,X
-    LDA #%00000010
-    STA spriteRAM+2+4,X
-
-    LDA spr_y
-    CLC
-    ADC #8
-    STA spriteRAM+0+8,X
-    LDA spr_x
-    STA spriteRAM+3+8,X
-    LDA #$F2
-    STA spriteRAM+1+8,X
-    LDA #%00000010
-    STA spriteRAM+2+8,X
-
-
-    LDA spr_y
-    CLC
-    ADC #8
-    STA spriteRAM+0+12,X
-    LDA spr_x
-    CLC
-    ADC #8
-    STA spriteRAM+3+12,X
-    LDA #$F3
-    STA spriteRAM+1+12,X
-    LDA #%00000010
-    STA spriteRAM+2+12,X
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #0
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_CURSOR
+    FARCALL DrawSprite
 
     RTS
 
@@ -87,52 +53,17 @@ DrawBlinkingCursorSprite:
     AND #%00000010
     BEQ @RTS
 
-    LDA #4
-    CALL AllocateSprites
-
-    LDA spr_y
-    STA spriteRAM+0,X
     LDA spr_x
-    STA spriteRAM+3,X
-    LDA #$F0
-    STA spriteRAM+1,X
-    LDA #%00000010
-    STA spriteRAM+2,X
-
+    STA drawX
     LDA spr_y
-    STA spriteRAM+0+4,X
-    LDA spr_x
-    CLC
-    ADC #8
-    STA spriteRAM+3+4,X
-    LDA #$F1
-    STA spriteRAM+1+4,X
-    LDA #%00000010
-    STA spriteRAM+2+4,X
-
-    LDA spr_y
-    CLC
-    ADC #8
-    STA spriteRAM+0+8,X
-    LDA spr_x
-    STA spriteRAM+3+8,X
-    LDA #$F2
-    STA spriteRAM+1+8,X
-    LDA #%00000010
-    STA spriteRAM+2+8,X
-
-    LDA spr_y
-    CLC
-    ADC #8
-    STA spriteRAM+0+12,X
-    LDA spr_x
-    CLC
-    ADC #8
-    STA spriteRAM+3+12,X
-    LDA #$F3
-    STA spriteRAM+1+12,X
-    LDA #%00000010
-    STA spriteRAM+2+12,X
+    STA drawY
+    LDA #0
+    STA drawFlip
+    LDA #0
+    STA drawCHR
+    LDX #0
+    LDY #METASPRITE_CURSOR
+    FARCALL DrawSprite
 
     @RTS:
     RTS

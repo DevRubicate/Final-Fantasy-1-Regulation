@@ -717,79 +717,79 @@ class Preprocessor {
     }
     compileText(name, text) {
         const dict = {
-            '0': 1,
-            '1': 2,
-            '2': 3,
-            '3': 4,
-            '4': 5,
-            '5': 6,
-            '6': 7,
-            '7': 8,
-            '8': 9,
-            '9': 10,
-            'A': 11,
-            'B': 12,
-            'C': 13,
-            'D': 14,
-            'E': 15,
-            'F': 16,
-            'G': 17,
-            'H': 18,
-            'I': 19,
-            'J': 20,
-            'K': 21,
-            'L': 22,
-            'M': 23,
-            'N': 24,
-            'O': 25,
-            'P': 26,
-            'Q': 27,
-            'R': 28,
-            'S': 29,
-            'T': 30,
-            'U': 31,
-            'V': 32,
-            'W': 33,
-            'X': 34,
-            'Y': 35,
-            'Z': 36,
-            'a': 37,
-            'b': 38,
-            'c': 39,
-            'd': 40,
-            'e': 41,
-            'f': 42,
-            'g': 43,
-            'h': 44,
-            'i': 45,
-            'j': 46,
-            'k': 47,
-            'l': 48,
-            'm': 49,
-            'n': 50,
-            'o': 51,
-            'p': 52,
-            'q': 53,
-            'r': 54,
-            's': 55,
-            't': 56,
-            'u': 57,
-            'v': 58,
-            'w': 59,
-            'x': 60,
-            'y': 61,
-            'z': 62,
-            ',': 63,
-            '.': 64,
-            '-': 65,
-            '?': 66,
-            '!': 67,
-            '%': 68,
-            '"': 69,
-            '\'':70,
-            ':': 71,
-            '/': 72,
-            ' ': 126,
+            ' ': 2,
+            '0': 5,
+            '1': 6,
+            '2': 7,
+            '3': 8,
+            '4': 9,
+            '5': 10,
+            '6': 11,
+            '7': 12,
+            '8': 13,
+            '9': 14,
+            'A': 15,
+            'B': 16,
+            'C': 17,
+            'D': 18,
+            'E': 19,
+            'F': 20,
+            'G': 21,
+            'H': 22,
+            'I': 23,
+            'J': 24,
+            'K': 25,
+            'L': 26,
+            'M': 27,
+            'N': 28,
+            'O': 29,
+            'P': 30,
+            'Q': 31,
+            'R': 32,
+            'S': 33,
+            'T': 34,
+            'U': 35,
+            'V': 36,
+            'W': 37,
+            'X': 38,
+            'Y': 39,
+            'Z': 40,
+            'a': 41,
+            'b': 42,
+            'c': 43,
+            'd': 44,
+            'e': 45,
+            'f': 46,
+            'g': 47,
+            'h': 48,
+            'i': 49,
+            'j': 50,
+            'k': 51,
+            'l': 52,
+            'm': 53,
+            'n': 54,
+            'o': 55,
+            'p': 56,
+            'q': 57,
+            'r': 58,
+            's': 59,
+            't': 60,
+            'u': 61,
+            'v': 62,
+            'w': 63,
+            'x': 64,
+            'y': 65,
+            'z': 66,
+            ',': 67,
+            '.': 68,
+            '-': 69,
+            '?': 70,
+            '!': 71,
+            '%': 72,
+            '"': 73,
+            '\'':74,
+            ':': 75,
+            '/': 76,
             '\n': 127,
         };
 
@@ -877,55 +877,55 @@ class Preprocessor {
         const segment = commandString.split(' ');
         switch(segment[0]) {
             case 'SWORD': {
-                buffer.push(116);
+                buffer.push(77);
                 break;
             }
             case 'HAMMER': {
-                buffer.push(117);
+                buffer.push(78);
                 break;
             }
             case 'KNIFE': {
-                buffer.push(118);
+                buffer.push(79);
                 break;
             }
             case 'AXE': {
-                buffer.push(119);
+                buffer.push(80);
                 break;
             }
             case 'STAFF': {
-                buffer.push(120);
+                buffer.push(81);
                 break;
             }
             case 'NUNCHUCK': {
-                buffer.push(121);
+                buffer.push(82);
                 break;
             }
             case 'ARMOR': {
-                buffer.push(122);
+                buffer.push(83);
                 break;
             }
             case 'SHIELD': {
-                buffer.push(123);
+                buffer.push(84);
                 break;
             }
             case 'HELMET': {
-                buffer.push(124);
+                buffer.push(85);
                 break;
             }
             case 'GAUNTLET': {
-                buffer.push(125);
+                buffer.push(86);
                 break;
             }
             case 'BRACELET': {
-                buffer.push(126);
+                buffer.push(87);
                 break;
             }
             case 'CLOTH': {
-                buffer.push(125); //127
+                buffer.push(88);
                 break;
             }
             case 'POTION': {
-                buffer.push(125); //129
+                buffer.push(89);
                 break;
             }
             case 'BYTE':

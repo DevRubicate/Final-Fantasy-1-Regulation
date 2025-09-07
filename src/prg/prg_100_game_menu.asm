@@ -128,8 +128,8 @@ EnterItemsMenu:
     FARCALL FillNametable                ; clear the nametable
 
     ; Todo: Make sure these PPU affecting subroutines respects the new rules
-;    CALL UploadNineSliceBorders
-;    CALL RestoreNineSliceBordersToDefault
+    ;CALL UploadNineSliceBorders
+    CALL RestoreNineSliceBordersToDefault
 
 
     LDA #1
@@ -183,11 +183,11 @@ EnterItemsMenu:
     POS         1, 0
     NINESLICE   31, 3
 
-    LDA #$F6
+    LDA #$68
     STA drawVars+1
-    LDA #$F0
+    LDA #$6A
     STA drawVars+2
-    LDA #$F4
+    LDA #$66
     STA drawVars+3
 
 
@@ -199,11 +199,11 @@ EnterItemsMenu:
     NINESLICE   31, 5
 
 
-    LDA #$F6
+    LDA #$68
     STA drawVars+7
-    LDA #$F0
+    LDA #$6A
     STA drawVars+8
-    LDA #$F4
+    LDA #$66
     STA drawVars+9
 
     POS         1, 10
@@ -211,13 +211,13 @@ EnterItemsMenu:
 
 
 
-    LDA #$F3
+    LDA #$65
     STA drawVars+1
 
-    LDA #$EF
+    LDA #$69
     STA drawVars+4
 
-    LDA #$F5
+    LDA #$67
     STA drawVars+7
 
     POS         16, 10
@@ -913,7 +913,7 @@ DrawHeroInventory:
 
 
     ; Set the position of this item
-    LDA #$FF
+    LDA #1
     STA drawValue
     LDA #2
     STA drawX
@@ -957,11 +957,11 @@ DrawHeroInventory:
     STA drawY
 
     ; Load this item's status byte
-    LDX #$FF
+    LDX #1
     LDA (Var22),Y
     AND #%00000001  ; Look at the equip bit
     BEQ :+ ; Skip drawing the E if the item is not equipped
-        LDX #$8E
+        LDX #18
     :
     TXA
     FARCALL SetTile
@@ -1322,7 +1322,7 @@ DumpItemFromHeroToInventory:
     RTS
 
 DrawItemDescription:
-    LDA #$FF
+    LDA #1
     STA drawValue
     LDA #2
     STA drawX

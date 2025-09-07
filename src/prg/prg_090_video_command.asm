@@ -144,11 +144,9 @@ Stringify:
         BEQ @Terminate
         CMP #127
         BEQ @Newline
-        CMP #126
-        BEQ @Whitespace
         ; Add CHR offset so this becomes a valid character
-        CLC
-        ADC #3
+        SEC
+        SBC #1
         @Push:
         CALL VideoPushData        ; Push this byte
         LDA drawX           ; Increment the dest address by 1
@@ -157,11 +155,6 @@ Stringify:
         AND #$3F                        ; Mask it with $3F so it wraps around both NTs appropriately
         STA drawX
         JUMP @Loop
-
-        @Whitespace:
-        LDA #1
-        JUMP @Push
-
 
         @Newline:
         CALL PadWhitespace
@@ -357,7 +350,7 @@ PadWhitespace:
     TAY
 
     @loop:
-    LDA #$C1
+    LDA #1
     CALL VideoPushData
     DEY
     BNE @loop
@@ -475,7 +468,7 @@ FetchCharacterDigit1:
     CALL IncrementStringifyAdvance
     CALL FetchValue
     CLC
-    ADC #1
+    ADC #5
     LDY stringifyCursor
     RTS
 FetchCharacterDigit2L:

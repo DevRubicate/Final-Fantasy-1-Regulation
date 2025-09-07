@@ -14,7 +14,7 @@
 ;SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-char_offset = 0 ;32
+char_offset = 4 ;32
 
 yxa_to_8_digits:
     cpy #152
