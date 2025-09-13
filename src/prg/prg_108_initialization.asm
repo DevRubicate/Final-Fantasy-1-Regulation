@@ -13,7 +13,6 @@
 .import DrawCursorSprite
 
 .export DrawTitleScreen, LoadResources, LoadHeroSprites
-.export PartyGenerationScreen, PartyGenerationDrawBackground, PartyGenerationDrawSprites
 
 LoadResources:
     LDA #0
@@ -483,129 +482,6 @@ DrawTitleScreen:
     TEXT        TEXT_TITLE_COPYRIGHT_NINTENDO
 
     RTS
-
-PartyGenerationScreen:
-
-
-
-    LDA #1
-    STA Var0
-    FARCALL FillNametable
-    CALL PartyGenerationDrawBackground
-    @loop:
-        CALL PartyGenerationDrawSprites
-        ;CALL StartGridMenu
-        FARCALL MusicPlay
-        CALL WaitForVBlank
-    JUMP @loop
-    RTS
-
-
-
-
-
-
-
-
-PartyGenerationDrawBackground:
-
-    FARCALL RestoreNineSliceBordersToDefault
-
-    ; Hero 1
-    LDA #10
-    STA drawX
-    LDA #2
-    STA drawY
-    LDA #20
-    STA drawWidth
-    LDA #5
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    ; Hero 2
-    LDA #10
-    STA drawX
-    LDA #9
-    STA drawY
-    LDA #20
-    STA drawWidth
-    LDA #5
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    ; Hero 3
-    LDA #10
-    STA drawX
-    LDA #16
-    STA drawY
-    LDA #20
-    STA drawWidth
-    LDA #5
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    ; Hero 4
-    LDA #10
-    STA drawX
-    LDA #23
-    STA drawY
-    LDA #20
-    STA drawWidth
-    LDA #5
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-    ; Menu
-    LDA #1
-    STA drawX
-    LDA #1
-    STA drawY
-    LDA #8
-    STA drawWidth
-    LDA #3
-    STA drawHeight
-    FARCALL DrawNineSlice
-
-
-    LDA #2
-    STA drawX
-    LDA #2
-    STA drawY
-    LDA #<TEXT_TITLE_START
-    STA Var0
-    LDA #>TEXT_TITLE_START
-    STA Var1
-    LDA #TextBank(TEXT_TITLE_START)
-    STA Var2
-
-    ; Write the string
-    FARCALL Stringify
-
-    RTS
-
-PartyGenerationDrawSprites:
-
-    LDA #90
-    STA drawX
-    LDA #20
-    STA drawY
-
-    ; hFlip and vFlip
-    LDA #0
-    STA drawFlip
-
-    ; CHR offset
-    LDA #%10000000
-    STA drawCHR
-
-    LDX #0
-    LDY #METASPRITE_BLACK_BELT
-    FARCALL DrawSprite
-
-    RTS
-
-
-
 
 StartGridMenu:
 

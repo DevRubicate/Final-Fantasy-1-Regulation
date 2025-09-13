@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, PartyGenerationScreen, ClearZeroPage, DoOverworld, UploadFillColor
+.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, ClearZeroPage, DoOverworld, UploadFillColor
 .import LoadResources, LoadHeroSprites
 
 .export GameStart
@@ -84,8 +84,6 @@ GameStart:
     
     
   @NewGame:
-    FARCALL PartyGenerationScreen
-    ;FARCALL NewGamePartyGeneration      ; create a new party
     CALL NewGame_LoadStartingStats   ;   and set their starting stats
 
     ; New Game and Continue meet here -- actually start up the game

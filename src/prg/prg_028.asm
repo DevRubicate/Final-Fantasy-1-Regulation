@@ -22,14 +22,14 @@
 .import DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterItemsMenu
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
 .import UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4
-.import DrawTitleScreen, PartyGenerationDrawSprites, PartyGenerationSetup, PartyGenerationDrawBackground
+.import DrawTitleScreen, PartyGenerationSetup
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import TEXT_INTRO_STORY_1, TEXT_INTRO_STORY_2, TEXT_INTRO_STORY_3, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_5, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_8, TEXT_INTRO_STORY_9, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_11
 
 
 .export PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
-.export TalkToObject, EnterLineupMenu, NewGamePartyGeneration
+.export TalkToObject, EnterLineupMenu
 .export EnterMainMenu, EnterShop, EnterTitleScreen, EnterIntroStory
 
 
@@ -2355,119 +2355,6 @@ LineupMenu_Finalize:
 
     RTS                      ; then exit!
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  NewGamePartyGeneration  [$9C54 :: 0x39C64]
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NewGamePartyGeneration:
-    LDX #$3F                ; Initialize the ptygen buffer!
-    : 
-    LDA lut_PtyGenBuf, X  ;  all $40 bytes!  ($10 bytes per character)
-    STA ptygen, X
-    DEX
-    BPL :-
-      
-    LDA #0
-    STA partyGenerationClass
-    LDA #1
-    STA partyGenerationClass+1
-    LDA #2
-    STA partyGenerationClass+2
-    LDA #3
-    STA partyGenerationClass+3
-
-    LDA #$00        ; This null-terminates the draw buffer for when the character's
-    STA format_buf+7         ;   name is drawn on the name input screen.  Why this is done here
-                    ;   and not with the actual drawing makes no sense to me.
-    
-
-
-  @Char_0:
-    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
-                        ; To Character generation for each of the 4 characters
-    LDA #0
-    STA slotIndex
-    LDA #$00                    ;   branching back to the previous char if the user
-    STA char_index              ;   cancelled by pressing B
-    CALL DoPartyGen_OnCharacter
-    BCS @Char_0
-  @Char_1:
-    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
-    LDA #1
-    STA slotIndex
-    LDA #$10
-    STA char_index
-    CALL DoPartyGen_OnCharacter
-    BCS @Char_0
-  @Char_2:
-    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
-    LDA #2
-    STA slotIndex
-    LDA #$20
-    STA char_index
-    CALL DoPartyGen_OnCharacter
-    BCS @Char_1
-  @Char_3:
-    CALL PtyGen_DrawScreen           ; Draw the Party generation screen    
-    LDA #3
-    STA slotIndex
-    LDA #$30
-    STA char_index
-    CALL DoPartyGen_OnCharacter
-    BCS @Char_2
-    
-    ; Once all 4 characters have been generated and named...
-    CALL PtyGen_DrawScreen       ; Draw the screen one more time
-    
-    CALL MenuWaitForBtn_SFX      ; Wait for the user to press A (or B) again, to
-    LDA joy                     ;  confirm their party decisions.
-    AND #$40
-    BNE @Char_3                 ; If they pressed B, jump back to Char 3 generation
-    
-    ;;  Otherwise, they've pressed A!  Party confirmed!
-    LDA #$00
-    STA PPU_MASK                   ; shut the PPU off
-    
-    LDX #$00                    ; Move class and name selection
-    CALL @RecordClassAndName     ;  out of the ptygen buffer and into the actual character stats
-    LDX #$10
-    CALL @RecordClassAndName
-    LDX #$20
-    CALL @RecordClassAndName
-    LDX #$30
-    NOJUMP @RecordClassAndName
-    
-  @RecordClassAndName:
-    TXA                     ; X is the ptygen source index  ($10 bytes per character)
-    ASL A
-    ASL A
-    TAY                     ; Y is the ch_stats dest index  ($40 bytes per character)
-    
-    LDA ptygen_class, X     ; copy class
-    STA ch_class, Y
-    
-    ;LDA ptygen_name+0, X    ; and name
-    ;STA ch_name    +0, Y
-    ;LDA ptygen_name+1, X
-    ;STA ch_name    +1, Y
-    ;LDA ptygen_name+2, X
-    ;STA ch_name    +2, Y
-    ;LDA ptygen_name+3, X
-    ;STA ch_name    +3, Y
-    
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawScreen  [$9CF8 :: 0x39D08]
-;;
-;;    Prepares and draws the Party Generation screen
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawScreen:
     LDA #0
     STA joy_a             ;  clear various joypad catchers
     STA joy_b
@@ -2480,7 +2367,7 @@ PtyGen_DrawScreen:
     LDA #0
     STA slotIndex
     LDA #0             ; start loop counter at zero
-    @MainLoop:
+    @MainLoop2:
     PHA                ; push loop counter to back it up
     CALL @DrawOne       ; draw one character's strings
     INC slotIndex
@@ -2488,30 +2375,15 @@ PtyGen_DrawScreen:
     CLC                ; and increase it to point to next character's data
     ADC #$10           ;  ($10 bytes per char in 'ptygen')
     CMP #$40
-    BCC @MainLoop      ;  loop until all 4 chars drawn
+    BCC @MainLoop2      ;  loop until all 4 chars drawn
     RTS
     @DrawOne:
     JUMP PtyGen_DrawOneText
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DoPartyGen_OnCharacter  [$9D15 :: 0x39D25]
-;;
-;;    Does character selection and name input for one character.
-;;
-;;  input:      ptygen = should be filled appropriately
-;;          char_index = $00, 10, 20, 30 to indicate which character's name we're setting
-;;
-;;  output:    C is cleared if the user confirmed/named their character
-;;             C is set if the user pressed B to cancel/go back
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoPartyGen_OnCharacter:
     
     ; Then enter the main logic loop
     @MainLoop:
-        CALL PtyGen_Frame              ; Do a frame and update joypad input
+        ;CALL PtyGen_Frame              ; Do a frame and update joypad input
         LDA joy_a
         BNE DoNameInput               ; if A was pressed, do name input
         LDA joy_b
@@ -2748,26 +2620,6 @@ DoNameInput:
     CLC                 ; CLC to indicate name was successfully input
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_Frame  [$9E33 :: 0x39E43]
-;;
-;;    Does the typical frame stuff for the Party Gen screen
-;;  Note the scroll is not reset here, since there is a little bit of drawing
-;;  done AFTER this (which is dangerous -- what if the music routine runs long!)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_Frame:
-    FARCALL ClearSprites
-    FARCALL PartyGenerationDrawSprites
-    CALL WaitForVBlank    ; VBlank and DMA
-
-    LDA #BANK_THIS         ; then keep playing music
-    STA cur_bank
-    FARCALL MusicPlay
-
-    JUMP PtyGen_Joy         ; and update joy data!
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
