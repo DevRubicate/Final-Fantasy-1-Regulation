@@ -7,7 +7,6 @@
 .import DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
 .import LoadBridgeSceneGFX, EnterBridgeScene, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
-.import LoadOverworldResources
 
 .export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
 
@@ -32,7 +31,6 @@ LUT_Tilesets:
 
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
-    FARCALL LoadOverworldResources
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
 

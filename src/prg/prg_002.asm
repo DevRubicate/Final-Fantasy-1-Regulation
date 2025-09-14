@@ -8083,14 +8083,14 @@ MinimapDecompress:
     LDA tmp+2
 
   @RunLoop:
-    STA mm_mapbuf, X
+    ;STA mm_mapbuf, X
     INX
     DEY
     BNE @RunLoop
     LDY #0
 
   @SingleTile:
-    STA mm_mapbuf, X
+    ;STA mm_mapbuf, X
     INX
     INC tmp
     BNE @Loop
@@ -8145,14 +8145,14 @@ MinimapDecompress:
     LDA tmp+2
 
   @RunLoop:
-    STA mm_mapbuf2, X
+    ;STA mm_mapbuf2, X
     INX
     DEY
     BNE @RunLoop
     LDY #0
 
   @SingleTile:
-    STA mm_mapbuf2, X
+    ;STA mm_mapbuf2, X
     INX
     INC tmp
     BNE @Loop

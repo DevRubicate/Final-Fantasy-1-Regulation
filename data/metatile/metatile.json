@@ -4,16 +4,10 @@
             "name": "METATILE_GRASS",
             "frame": [
                 [
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_1",
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_1"
-                ],
-                [
-                    "TILE_CURSOR_1",
-                    "TILE_CURSOR_1",
-                    "TILE_CURSOR_1",
-                    "TILE_CURSOR_1"
+                    "MAP_TILE_GRASS_0",
+                    "MAP_TILE_GRASS_1",
+                    "MAP_TILE_GRASS_2",
+                    "MAP_TILE_GRASS_3"
                 ]
             ]
         },
@@ -21,16 +15,10 @@
             "name": "METATILE_WATER",
             "frame": [
                 [
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0"
-                ],
-                [
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0",
-                    "TILE_CURSOR_0"
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1"
                 ]
             ]
         }

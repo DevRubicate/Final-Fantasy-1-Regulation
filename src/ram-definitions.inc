@@ -79,6 +79,26 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var4,                             1
     RESZP Var5,                             1
     RESZP Var6,                             1
+    RESZP Var7,                             1
+    RESZP Var8,                             1
+    RESZP Var9,                             1
+    RESZP Var10,                            1
+    RESZP Var11,                            1
+    RESZP Var12,                            1
+    RESZP Var13,                            1
+    RESZP Var14,                            1
+    RESZP Var15,                            1
+    RESZP Var16,                            1
+    RESZP Var17,                            1
+    RESZP Var18,                            1
+    RESZP Var19,                            1
+    RESZP Var24,                            1
+    RESZP Var25,                            1
+    RESZP Var26,                            1
+    RESZP Var27,                            1
+    RESZP Var28,                            1
+    RESZP Var29,                            1
+
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
@@ -371,10 +391,8 @@ SECTION "TILESET" ; $0400 - $07B0
     RES             load_map_pal,                       48  ; $0780 (shared with draw_buf -- hence only for loading)
 
 SECTION "MINIMAP" ; $0500 - $0800
-    GAP                                                 512
-    RES_PAGE        mm_drawbuf,                         256 ; 256 bytes     ; $0500  ; 256 bytes, shared, should be on page bound, but don't think it's absolutely required
-    RES             mm_mapbuf,                          256 ; 256 bytes     ; $0600  ; 256 bytes, same
-    RES             mm_mapbuf2,                         256 ; 256 bytes     ; $0700  ; 256 bytes, same
+    RES_PAGE        loaded_tiles_lo,                    256
+    RES_PAGE        loaded_tiles_hi,                    256
 
 SECTION "PUZZLE" ; $0300 - $0310
     RES             puzzle,                             16 ; $0300
@@ -945,24 +963,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             actual_bank,                    1
     RES             slotIndex,                      1
     RES             partyGenerationClass,           4
-    RES             Var7,                           1
-    RES             Var8,                           1
-    RES             Var9,                           1
-    RES             Var10,                          1
-    RES             Var11,                          1
-    RES             Var12,                          1
-    RES             Var13,                          1
-    RES             Var14,                          1
-    RES             Var15,                          1
-    RES             Var16,                          1
-    RES             Var17,                          1
-    RES             Var18,                          1
-    RES             Var19,                          1
-    RES             Var24,                          1
-    RES             Var25,                          1
-    RES             Var26,                          1
-    RES             Var27,                          1
-    RES             Var28,                          1
+
 
 
 

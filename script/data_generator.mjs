@@ -572,11 +572,12 @@ class PointerStructPackage {
 
 
 class Preprocessor {
+    packer = new Packer();
     constants = new Map();
     metatiles = new Map();
     constructor() {}
     processJson(jsonData) {
-        const packer = new Packer();
+        const packer = this.packer;
 
         const ITEM = [];
         const METASPRITE = [];
@@ -706,13 +707,10 @@ class Preprocessor {
         }
 
         if(jsonData.metatile) {
-            const metatileData = new PointerPackage('LUT_METATILE_FRAMES');
-            for(let i=0; i<jsonData.metatile.length; ++i) {
-                const metatile = jsonData.metatile[i];
-                packer.addConst({name: metatile.name, data: i});
-                metatileData.push(this.compileMetatile(`${metatile.name}_FRAMES`, metatile));
-            }
-            packer.addReferenceTable(metatileData);
+
+            // Find all of the animation variations
+            this.reorganizeMetatileAnimationVariations(jsonData.metatile);
+
         }
 
         if(jsonData.map) {
@@ -894,37 +892,86 @@ class Preprocessor {
 
         return metaspriteFrame;
     }
-    compileMetatile(name, input) {
-        const buffer = new BinaryPackage(name);
+    reorganizeMetatileAnimationVariations(input) {
+        const lutMetatileTopLeft = new BinaryPackage('LUT_METATILE_TOP_LEFT');
+        const lutMetatileTopRight = new BinaryPackage('LUT_METATILE_TOP_RIGHT');
+        const lutMetatileBottomLeft = new BinaryPackage('LUT_METATILE_BOTTOM_LEFT');
+        const lutMetatileBottomRight = new BinaryPackage('LUT_METATILE_BOTTOM_RIGHT');
+        const lutTileAnimations = new PointerPackage('LUT_TILE_ANIMATIONS');
 
-        for(let i=0; i<input.frame.length; ++i) {
-            const frameInput = input.frame[i];
+        const variants = new Map();
+        for(let i=0; i<input.length; ++i) {
+            const metatile = input[i];
+            const corners = [];
+            // Once for each corner
+            for(let j=0; j<4; ++j) {
 
-            buffer.push(`>${frameInput[0]}`); // Top left corner high byte
-            buffer.push(`<${frameInput[0]}`); // Top left corner low byte
-            buffer.push(`>${frameInput[1]}`); // Top right corner high byte
-            buffer.push(`<${frameInput[1]}`); // Top right corner low byte
-            buffer.push(`>${frameInput[2]}`); // Bottom left corner high byte
-            buffer.push(`<${frameInput[2]}`); // Bottom left corner low byte
-            buffer.push(`>${frameInput[3]}`); // Bottom right corner high byte
-            buffer.push(`<${frameInput[3]}`); // Bottom right corner low byte
+                // Create a frame progression of tiles for this corner
+                let progression = [];
+                for(let k=0; k<metatile.frame.length; ++k) {
+                    const frame = metatile.frame[k];
+                    progression.push(frame[j]);
+                }
+                const progressionName = progression.join(' ');
+
+                // Check if this frame progression of tiles already exist
+                if(variants.has(progressionName)) {
+                    const tileAnimationName = variants.get(progressionName);
+                    corners.push(tileAnimationName);
+
+                } else {
+                    const index = variants.size;
+                    const tileAnimationName = `TILE_ANIMATION_${index}`;
+                    corners.push(tileAnimationName);
+                    this.packer.addConst({name: tileAnimationName, data: index});
+                    const buffer = new BinaryPackage(`TILE_ANIMATION_DATA_${index}`);
+                    for(let k=0; k<progression.length; ++k) {
+                        buffer.push(`>${progression[k]}`); // High byte
+                        buffer.push(`<${progression[k]}`); // Low byte
+                    }
+                    buffer.push(0xFF); // Terminator
+                    lutTileAnimations.push(buffer);
+
+                    variants.set(progressionName, tileAnimationName);
+                }
+            }
+
+            // Now for the metatile itself
+            this.packer.addConst({name: metatile.name, data: i});
+            lutMetatileTopLeft.push(
+                `<${corners[0]}`,
+                `>${corners[0]}`
+            );
+            lutMetatileTopRight.push(
+                `<${corners[1]}`,
+                `>${corners[1]}`
+            );
+            lutMetatileBottomLeft.push(
+                `<${corners[2]}`,
+                `>${corners[2]}`
+            );
+            lutMetatileBottomRight.push(
+                `<${corners[3]}`,
+                `>${corners[3]}`
+            );
         }
 
-        buffer.push(255); // Terminator
-
-        return buffer;
+        this.packer.addReferenceTable(lutTileAnimations);  // This is just a test to see if the metatile animations are being loaded correctly
+        this.packer.addReferenceTable(lutMetatileTopLeft);
+        this.packer.addReferenceTable(lutMetatileTopRight);
+        this.packer.addReferenceTable(lutMetatileBottomLeft);
+        this.packer.addReferenceTable(lutMetatileBottomRight);
     }
     compileMapMetatiles(name, input) {
         const buffer = new BinaryPackage(name);
 
         for(let i=0; i<input.metatile.length; ++i) {
             const metatileName = input.metatile[i];
-            buffer.push(`<${metatileName}`);
             buffer.push(`>${metatileName}`);
+            buffer.push(`<${metatileName}`);
         }
 
         // Terminator
-        buffer.push(255);
         buffer.push(255);
 
         return buffer;

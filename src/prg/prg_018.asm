@@ -4722,8 +4722,8 @@ Minimap_DrawRows:
         STA PPU_ADDR
         STX PPU_ADDR
 
-        LDA mm_drawbuf, X    ; get graphic from drawing buffer
-        STA PPU_DATA            ; and draw it
+        ;LDA mm_drawbuf, X    ; get graphic from drawing buffer
+        ;STA PPU_DATA            ; and draw it
 
         TXA
         CLC
@@ -4801,13 +4801,13 @@ Minimap_PrepRow:
                       ; must be rotated into the same byte to be output as graphics.
 
     @RotateLoop:
-      LDX mm_mapbuf, Y            ; here we get the minimap tileset data for 4 seperate
+      ;LDX mm_mapbuf, Y            ; here we get the minimap tileset data for 4 seperate
       LDA lut_MinimapTileset, X   ; map tiles (in a 2x2 square) and OR them together to combine
-      LDX mm_mapbuf+1, Y          ; them to a single pixel.
+      ;LDX mm_mapbuf+1, Y          ; them to a single pixel.
       ORA lut_MinimapTileset, X   ;  This scales the map down from 256x256 tiles
-      LDX mm_mapbuf2, Y           ;  to 128x128 pixels
+      ;LDX mm_mapbuf2, Y           ;  to 128x128 pixels
       ORA lut_MinimapTileset, X
-      LDX mm_mapbuf2+1, Y         ; after all this, A contains the output pixel (low 2 bits)
+      ;LDX mm_mapbuf2+1, Y         ; after all this, A contains the output pixel (low 2 bits)
       ORA lut_MinimapTileset, X   ;  and bit 2 indicates whether or not a marker sprite needs to be placed here
 
       LSR A           ; shift out low bit
@@ -4830,10 +4830,10 @@ Minimap_PrepRow:
 
     LDX minimap_ptr      ; use low byte of dest pointer as index for draw buffer
 
-    LDA mm_bplo          ; copy both bitplanes to the appropriate areas of the buffer
-    STA mm_drawbuf, X
-    LDA mm_bphi
-    STA mm_drawbuf+8, X
+    ;LDA mm_bplo          ; copy both bitplanes to the appropriate areas of the buffer
+    ;STA mm_drawbuf, X
+    ;LDA mm_bphi
+    ;STA mm_drawbuf+8, X
 
     LDA minimap_ptr      ; add $10 to low byte of pointer (look at next tile graphic)
     CLC

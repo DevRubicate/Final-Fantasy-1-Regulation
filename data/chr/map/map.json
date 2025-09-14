@@ -1,22 +1,22 @@
 {
     "tile": [
         {
-            "name": "MAP_TILE_0",
+            "name": "MAP_TILE_GRASS_0",
             "source": "data/chr/map/map.background.png.chr",
             "index": 0
         },
         {
-            "name": "MAP_TILE_1",
+            "name": "MAP_TILE_GRASS_1",
             "source": "data/chr/map/map.background.png.chr",
             "index": 1
         },
         {
-            "name": "MAP_TILE_2",
+            "name": "MAP_TILE_GRASS_2",
             "source": "data/chr/map/map.background.png.chr",
             "index": 2
         },
         {
-            "name": "MAP_TILE_3",
+            "name": "MAP_TILE_GRASS_3",
             "source": "data/chr/map/map.background.png.chr",
             "index": 3
         },

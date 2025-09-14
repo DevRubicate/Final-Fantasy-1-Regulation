@@ -4,6 +4,12 @@
 
 .import Copy256
 .import LUT_MAP_METATILES_LO, LUT_MAP_METATILES_HI, LUT_METATILE_FRAMES_LO, LUT_METATILE_FRAMES_HI
+.import LUT_METATILE_TOP_LEFT, LUT_METATILE_TOP_LEFT_SIBLING2
+.import LUT_METATILE_TOP_RIGHT, LUT_METATILE_TOP_RIGHT_SIBLING2
+.import LUT_METATILE_BOTTOM_LEFT, LUT_METATILE_BOTTOM_LEFT_SIBLING2
+.import LUT_METATILE_BOTTOM_RIGHT, LUT_METATILE_BOTTOM_RIGHT_SIBLING2
+.import LUT_TILE_ANIMATIONS_LO, LUT_TILE_ANIMATIONS_HI
+.import UploadBackgroundCHR1
 
 .export LoadOWTilesetData, LoadSMTilesetData
 
@@ -781,68 +787,369 @@ LUT_SMPalettes:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+LoadOWTilesetData_Exit:
+    RTS
 LoadOWTilesetData:
     CALL LoadOWTilesetData2
 
-    ; WARNING: There is something you haven't figured out yet. What happens if LUT_MAP_METATILES_LO is on data_126.asm while
-    ; MAP_0_METATILES is on data_128.asm. Do we need a LUT_MAP_METATILES_PAGE? Or can we actually make it so that each
-    ; MAP_*_METATILES is on the same page as the current 2d depth of the LUT_MAP_METATILES_LO 2d jump table?
-    ; Or is this already solved maybe? PointerPackage maybe does the second solution?
+    LDA #255
+    LDY #0
+    :
+        STA loaded_tiles_lo, Y
+        STA loaded_tiles_hi, Y
+        INY
+        BNE :-
+
 
     ; simulated input
     LDA #0      ; Map low byte
-    STA Var0
+    STA Var10
     LDA #0      ; Map high byte
-    STA Var1
+    STA Var11
 
-    ; While LUT_MAP_METATILES is a 2d jump table, so we need to start at the correct page and then add the high byte
-    ; of the map index to offset to the correct page
+    ; LUT_MAP_METATILES is a 2d jump table, so we need to start at the initial page and then add the high byte of the
+    ; map index to offset to the correct page
     LDA #TextBank(LUT_MAP_METATILES_LO) ; Start at the first page of LUT_MAP_METATILES_LO
     CLC
-    ADC Var1                            ; Add the high byte of the map index to take us to the correct page
+    ADC Var11                           ; Add the high byte of the map index to take us to the correct page
     STA MMC5_PRG_BANK2                  ; Switch to the bank
 
     ; Now that we are in the correct page of the 2d jump table, we use the low byte of the map index as the offset
     ; into the jump table
-    LDY Var0
+    LDY Var10
     LDA LUT_MAP_METATILES_LO, Y
-    STA Var3
+    STA Var12
     LDA LUT_MAP_METATILES_HI, Y
-    STA Var4
+    STA Var13
 
-    ; Var3+Var4 now points to the metatile data for this map
-    LDY #0
-    LDA (Var3), Y
-    STA Var5
+
+    LDA #0
+    STA Var28
+
+    @LoopMapMetatiles:
+
+    ; Var12+Var13 now points to the metatile indexes for this map
+    LDY Var28
+    LDA (Var12), Y   ; Load the high byte
+    CMP #$FF
+    BEQ LoadOWTilesetData_Exit       ; If it's $FF, we're done
+    STA Var15
     INY
-    LDA (Var3), Y
-    STA Var6
+    LDA (Var12), Y   ; Load the low byte
+    STA Var14
+    STY Var28       ; Save the loop iteration
 
-    ; Var5 now contains the low index of the metatile, and Var6 the high index
-    LDA #TextBank(LUT_METATILE_FRAMES_LO)   ; Start at the first page of LUT_METATILE_FRAMES_LO
+    ; TOP LEFT
+        ; Var14 now contains the low index of the metatile, and Var15 the high index
+        LDA #TextBank(LUT_METATILE_TOP_LEFT)    ; Start at the first page of LUT_METATILE_TOP_LEFT
+        CLC
+        ADC Var15                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+
+        ; We now load out a pointer to the metatile frames
+        LDY Var14                                ; Load the low index of the metatile
+        LDA LUT_METATILE_TOP_LEFT, Y            ; Load the low byte pointer of the metatile frames
+        STA Var16
+        LDA LUT_METATILE_TOP_LEFT_SIBLING2, Y   ; Load the high byte pointer of the metatile frames
+        STA Var17
+
+        ; We now have a animation tile index, so we want to load the chr graphics for that tile to the pattern
+        ; tables. However, it's possible that the the tile already exists in the pattern table, so let's check
+        ; that first.
+
+        LDY #0
+        @TopLeftLoopCheckTiles:
+            LDA loaded_tiles_lo, Y          ; Load the low byte of the existing animation tile index
+            CMP Var16                       ; Compare it with the low byte of the new animation tile index
+            BNE @TopLeftLoopCheckTilesNext  ; If they don't match, keep looping
+            LDA loaded_tiles_hi, Y          ; Load the high byte of the existing animation tile index
+            CMP Var17                       ; Compare it with the high byte of the new animation tile index
+            BEQ @TopLeftReuseTile           ; If they match, we can reuse the existing animation tile
+            @TopLeftLoopCheckTilesNext:
+            INY                         ; Increment our loop counter
+            BNE @TopLeftLoopCheckTiles  ; And keep looping until we've checked all 256 tiles
+
+        ; If we got here it means we didn't find a matching animation tile, so we need to upload a new one.
+        ; To do this we first need to find an empty slot in loaded_tiles
+        LDY #0
+        @TopLeftLoopCheckSlots:
+            LDA loaded_tiles_hi, Y      ; Load the high byte of a slot
+            CMP #255                  ; Compare it to 255 (empty slot)
+            BEQ @TopLeftFoundSlot       ; If it's empty, we found a slot
+            INY                         ; Increment our loop counter
+            BNE @TopLeftLoopCheckSlots  ; And keep looping until we've checked all 256 slots
+            ERROR                       ; If we got here it means we ran out of slots to upload to
+        @TopLeftFoundSlot:
+
+        ; We now have a new animation tile index, so we want to store it in loaded_tiles
+        LDA Var16
+        STA loaded_tiles_lo, Y      ; Save the low byte of this new animation tile
+        LDA Var17
+        STA loaded_tiles_hi, Y      ; Save the high byte of this new animation tile
+        STY Var29                   ; Save the chr slot we ended up with
+
+        ; Since this is a new animation tile, we have to actually upload the chr data
+        LDA #TextBank(LUT_TILE_ANIMATIONS_LO)
+        CLC
+        ADC Var17                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+        
+        LDY Var16
+        LDA LUT_TILE_ANIMATIONS_LO, Y           ; Load the low byte of the tile animation index
+        STA Var18
+        LDA LUT_TILE_ANIMATIONS_HI, Y           ; Load the high byte of the tile animation index
+        STA Var19
+
+        LDY #0
+        LDA (Var18), Y
+        STA Var1
+        INY
+        LDA (Var18), Y
+        STA Var0
+        LDA Var29                       ; The chr index we will upload to
+        STA Var2
+        LDA #16
+        STA Var3
+        FARCALL UploadBackgroundCHR1
+
+        @TopLeftReuseTile:
+        ; Do something here
+
+    ; TOP RIGHT
+        ; Var14 now contains the low index of the metatile, and Var15 the high index
+        LDA #TextBank(LUT_METATILE_TOP_RIGHT)    ; Start at the first page of LUT_METATILE_TOP_RIGHT
+        CLC
+        ADC Var15                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+
+        ; We now load out a pointer to the metatile frames
+        LDY Var14                                ; Load the low index of the metatile
+        LDA LUT_METATILE_TOP_RIGHT, Y            ; Load the low byte pointer of the metatile frames
+        STA Var16
+        LDA LUT_METATILE_TOP_RIGHT_SIBLING2, Y   ; Load the high byte pointer of the metatile frames
+        STA Var17
+
+        ; We now have a animation tile index, so we want to load the chr graphics for that tile to the pattern
+        ; tables. However, it's possible that the the tile already exists in the pattern table, so let's check
+        ; that first.
+
+        LDY #0
+        @TopRightLoopCheckTiles:
+            LDA loaded_tiles_lo, Y          ; Load the low byte of the existing animation tile index
+            CMP Var16                       ; Compare it with the low byte of the new animation tile index
+            BNE @TopRightLoopCheckTilesNext  ; If they don't match, keep looping
+            LDA loaded_tiles_hi, Y          ; Load the high byte of the existing animation tile index
+            CMP Var17                       ; Compare it with the high byte of the new animation tile index
+            BEQ @TopRightReuseTile           ; If they match, we can reuse the existing animation tile
+            @TopRightLoopCheckTilesNext:
+            INY                         ; Increment our loop counter
+            BNE @TopRightLoopCheckTiles  ; And keep looping until we've checked all 256 tiles
+
+        ; If we got here it means we didn't find a matching animation tile, so we need to upload a new one.
+        ; To do this we first need to find an empty slot in loaded_tiles
+        LDY #0
+        @TopRightLoopCheckSlots:
+            LDA loaded_tiles_hi, Y      ; Load the high byte of a slot
+            CMP #255                  ; Compare it to 255 (empty slot)
+            BEQ @TopRightFoundSlot       ; If it's empty, we found a slot
+            INY                         ; Increment our loop counter
+            BNE @TopRightLoopCheckSlots  ; And keep looping until we've checked all 256 slots
+            ERROR                       ; If we got here it means we ran out of slots to upload to
+        @TopRightFoundSlot:
+
+        ; We now have a new animation tile index, so we want to store it in loaded_tiles
+        LDA Var16
+        STA loaded_tiles_lo, Y      ; Save the low byte of this new animation tile
+        LDA Var17
+        STA loaded_tiles_hi, Y      ; Save the high byte of this new animation tile
+        STY Var29                   ; Save the chr slot we ended up with
+
+        ; Since this is a new animation tile, we have to actually upload the chr data
+        LDA #TextBank(LUT_TILE_ANIMATIONS_LO)
+        CLC
+        ADC Var17                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+        
+        LDY Var16
+        LDA LUT_TILE_ANIMATIONS_LO, Y           ; Load the low byte of the tile animation index
+        STA Var18
+        LDA LUT_TILE_ANIMATIONS_HI, Y           ; Load the high byte of the tile animation index
+        STA Var19
+
+        LDY #0
+        LDA (Var18), Y
+        STA Var1
+        INY
+        LDA (Var18), Y
+        STA Var0
+        LDA Var29                       ; The chr index we will upload to
+        STA Var2
+        LDA #16
+        STA Var3
+        FARCALL UploadBackgroundCHR1
+
+        @TopRightReuseTile:
+        ; Do something here
+    ; BOTTOM LEFT
+        ; Var14 now contains the low index of the metatile, and Var15 the high index
+        LDA #TextBank(LUT_METATILE_BOTTOM_LEFT)    ; Start at the first page of LUT_METATILE_BOTTOM_LEFT
+        CLC
+        ADC Var15                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+
+        ; We now load out a pointer to the metatile frames
+        LDY Var14                                ; Load the low index of the metatile
+        LDA LUT_METATILE_BOTTOM_LEFT, Y            ; Load the low byte pointer of the metatile frames
+        STA Var16
+        LDA LUT_METATILE_BOTTOM_LEFT_SIBLING2, Y   ; Load the high byte pointer of the metatile frames
+        STA Var17
+
+        ; We now have a animation tile index, so we want to load the chr graphics for that tile to the pattern
+        ; tables. However, it's possible that the the tile already exists in the pattern table, so let's check
+        ; that first.
+
+        LDY #0
+        @BottomLeftLoopCheckTiles:
+            LDA loaded_tiles_lo, Y          ; Load the low byte of the existing animation tile index
+            CMP Var16                       ; Compare it with the low byte of the new animation tile index
+            BNE @BottomLeftLoopCheckTilesNext  ; If they don't match, keep looping
+            LDA loaded_tiles_hi, Y          ; Load the high byte of the existing animation tile index
+            CMP Var17                       ; Compare it with the high byte of the new animation tile index
+            BEQ @BottomLeftReuseTile           ; If they match, we can reuse the existing animation tile
+            @BottomLeftLoopCheckTilesNext:
+            INY                         ; Increment our loop counter
+            BNE @BottomLeftLoopCheckTiles  ; And keep looping until we've checked all 256 tiles
+
+        ; If we got here it means we didn't find a matching animation tile, so we need to upload a new one.
+        ; To do this we first need to find an empty slot in loaded_tiles
+        LDY #0
+        @BottomLeftLoopCheckSlots:
+            LDA loaded_tiles_hi, Y      ; Load the high byte of a slot
+            CMP #255                  ; Compare it to 255 (empty slot)
+            BEQ @BottomLeftFoundSlot       ; If it's empty, we found a slot
+            INY                         ; Increment our loop counter
+            BNE @BottomLeftLoopCheckSlots  ; And keep looping until we've checked all 256 slots
+            ERROR                       ; If we got here it means we ran out of slots to upload to
+        @BottomLeftFoundSlot:
+
+        ; We now have a new animation tile index, so we want to store it in loaded_tiles
+        LDA Var16
+        STA loaded_tiles_lo, Y      ; Save the low byte of this new animation tile
+        LDA Var17
+        STA loaded_tiles_hi, Y      ; Save the high byte of this new animation tile
+        STY Var29                   ; Save the chr slot we ended up with
+
+        ; Since this is a new animation tile, we have to actually upload the chr data
+        LDA #TextBank(LUT_TILE_ANIMATIONS_LO)
+        CLC
+        ADC Var17                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+        
+        LDY Var16
+        LDA LUT_TILE_ANIMATIONS_LO, Y           ; Load the low byte of the tile animation index
+        STA Var18
+        LDA LUT_TILE_ANIMATIONS_HI, Y           ; Load the high byte of the tile animation index
+        STA Var19
+
+        LDY #0
+        LDA (Var18), Y
+        STA Var1
+        INY
+        LDA (Var18), Y
+        STA Var0
+        LDA Var29                       ; The chr index we will upload to
+        STA Var2
+        LDA #16
+        STA Var3
+        FARCALL UploadBackgroundCHR1
+
+        @BottomLeftReuseTile:
+        ; Do something here
+    ; BOTTOM RIGHT
+        ; Var14 now contains the low index of the metatile, and Var15 the high index
+        LDA #TextBank(LUT_METATILE_BOTTOM_RIGHT)    ; Start at the first page of LUT_METATILE_BOTTOM_RIGHT
+        CLC
+        ADC Var15                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+
+        ; We now load out a pointer to the metatile frames
+        LDY Var14                                ; Load the low index of the metatile
+        LDA LUT_METATILE_BOTTOM_RIGHT, Y            ; Load the low byte pointer of the metatile frames
+        STA Var16
+        LDA LUT_METATILE_BOTTOM_RIGHT_SIBLING2, Y   ; Load the high byte pointer of the metatile frames
+        STA Var17
+
+        ; We now have a animation tile index, so we want to load the chr graphics for that tile to the pattern
+        ; tables. However, it's possible that the the tile already exists in the pattern table, so let's check
+        ; that first.
+
+        LDY #0
+        @BottomRightLoopCheckTiles:
+            LDA loaded_tiles_lo, Y          ; Load the low byte of the existing animation tile index
+            CMP Var16                       ; Compare it with the low byte of the new animation tile index
+            BNE @BottomRightLoopCheckTilesNext  ; If they don't match, keep looping
+            LDA loaded_tiles_hi, Y          ; Load the high byte of the existing animation tile index
+            CMP Var17                       ; Compare it with the high byte of the new animation tile index
+            BEQ @BottomRightReuseTile           ; If they match, we can reuse the existing animation tile
+            @BottomRightLoopCheckTilesNext:
+            INY                         ; Increment our loop counter
+            BNE @BottomRightLoopCheckTiles  ; And keep looping until we've checked all 256 tiles
+
+        ; If we got here it means we didn't find a matching animation tile, so we need to upload a new one.
+        ; To do this we first need to find an empty slot in loaded_tiles
+        LDY #0
+        @BottomRightLoopCheckSlots:
+            LDA loaded_tiles_hi, Y      ; Load the high byte of a slot
+            CMP #255                  ; Compare it to 255 (empty slot)
+            BEQ @BottomRightFoundSlot       ; If it's empty, we found a slot
+            INY                         ; Increment our loop counter
+            BNE @BottomRightLoopCheckSlots  ; And keep looping until we've checked all 256 slots
+            ERROR                       ; If we got here it means we ran out of slots to upload to
+        @BottomRightFoundSlot:
+
+        ; We now have a new animation tile index, so we want to store it in loaded_tiles
+        LDA Var16
+        STA loaded_tiles_lo, Y      ; Save the low byte of this new animation tile
+        LDA Var17
+        STA loaded_tiles_hi, Y      ; Save the high byte of this new animation tile
+        STY Var29                   ; Save the chr slot we ended up with
+
+        ; Since this is a new animation tile, we have to actually upload the chr data
+        LDA #TextBank(LUT_TILE_ANIMATIONS_LO)
+        CLC
+        ADC Var17                               ; Add the high index of the metatile to take us to the correct page
+        STA MMC5_PRG_BANK2                      ; Switch to the bank
+        
+        LDY Var16
+        LDA LUT_TILE_ANIMATIONS_LO, Y           ; Load the low byte of the tile animation index
+        STA Var18
+        LDA LUT_TILE_ANIMATIONS_HI, Y           ; Load the high byte of the tile animation index
+        STA Var19
+
+        LDY #0
+        LDA (Var18), Y
+        STA Var1
+        INY
+        LDA (Var18), Y
+        STA Var0
+        LDA Var29                       ; The chr index we will upload to
+        STA Var2
+        LDA #16
+        STA Var3
+        FARCALL UploadBackgroundCHR1
+
+        @BottomRightReuseTile:
+        ; Do something here
+    
+    
+    
+    @LoopMapMetatilesNext:
+    ; Restore the bank for the loop
+    LDA #TextBank(LUT_MAP_METATILES_LO) ; Start at the first page of LUT_MAP_METATILES_LO
     CLC
-    ADC Var6                                ; Add the high index of the metatile to take us to the correct page
-    STA MMC5_PRG_BANK2                      ; Switch to the bank
-
-    ; We now load out a pointer to the metatile frames
-    LDY Var5                                ; Load the low index of the metatile
-    LDA LUT_METATILE_FRAMES_LO, Y           ; Load the low byte pointer of the metatile frames
-    STA Var7
-    LDA LUT_METATILE_FRAMES_HI, Y           ; Load the high byte pointer of the metatile frames
-    STA Var8
-
-    ; We now have a pointer to the metatile frames, which has a format of 8 bytes per frame, and is terminated by $FF
-    ; Those 8 bytes makes up 4 tile indexes, representing the 4 corners of the metatile
-;    LDY #0
-;    LDA (Var7), Y
-;    STA Var9                                ; Var9 now contains the low byte of the top left tile index
-;    INY
-;    LDA (Var7), Y
-;    STA Var10                               ; Var10 now contains the high byte of the top left tile index
-;
-;    DEBUG
-
-    RTS
+    ADC Var11                           ; Add the high byte of the map index to take us to the correct page
+    STA MMC5_PRG_BANK2                  ; Switch to the bank
+    JMP @LoopMapMetatiles
 
 
 LoadOWTilesetData2:

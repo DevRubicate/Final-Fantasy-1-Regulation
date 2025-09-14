@@ -4,9 +4,6 @@
 
 .import UploadBackgroundCHR4, UploadBackgroundCHR2, UploadBackgroundCHR1, UploadCHRSolids, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3
 
-.export LoadOverworldResources
-
-LoadOverworldResources:
     LDA #16
     STA backgroundCHRBank0
     LDA #17
