@@ -573,6 +573,7 @@ class PointerStructPackage {
 
 class Preprocessor {
     constants = new Map();
+    metatiles = new Map();
     constructor() {}
     processJson(jsonData) {
         const packer = new Packer();
@@ -672,11 +673,11 @@ class Preprocessor {
             for(let i=0; i<jsonData.tile.length; ++i) {
                 const node = jsonData.tile[i];
                 const chr = jsonData.chr.find(a => a.name === node.source);
+
                 if(!chr) {
                     throw new Error(`Could not find ${node.source}`);
                 }
                 packer.addConst({name: node.name, data: i});
-
                 tiles.push(new BinaryPackage(`TILECHR_${node.name}`, [chr.tile[node.index]]));
             }
             packer.addReferenceTable(tiles);
@@ -702,6 +703,26 @@ class Preprocessor {
             packer.addReferenceTable(metaspritePalette);
             packer.addReferenceTable(metaspriteCHR);
             packer.addReferenceTable(metaspriteData);
+        }
+
+        if(jsonData.metatile) {
+            const metatileData = new PointerPackage('LUT_METATILE_FRAMES');
+            for(let i=0; i<jsonData.metatile.length; ++i) {
+                const metatile = jsonData.metatile[i];
+                packer.addConst({name: metatile.name, data: i});
+                metatileData.push(this.compileMetatile(`${metatile.name}_FRAMES`, metatile));
+            }
+            packer.addReferenceTable(metatileData);
+        }
+
+        if(jsonData.map) {
+            const mapData = new PointerPackage('LUT_MAP_METATILES');
+            for(let i=0; i<jsonData.map.length; ++i) {
+                const map = jsonData.map[i];
+                packer.addConst({name: map.name, data: i});
+                mapData.push(this.compileMapMetatiles(`${map.name}_METATILES`, map));
+            }
+            packer.addReferenceTable(mapData);
         }
 
         return packer.build();
@@ -873,6 +894,42 @@ class Preprocessor {
 
         return metaspriteFrame;
     }
+    compileMetatile(name, input) {
+        const buffer = new BinaryPackage(name);
+
+        for(let i=0; i<input.frame.length; ++i) {
+            const frameInput = input.frame[i];
+
+            buffer.push(`>${frameInput[0]}`); // Top left corner high byte
+            buffer.push(`<${frameInput[0]}`); // Top left corner low byte
+            buffer.push(`>${frameInput[1]}`); // Top right corner high byte
+            buffer.push(`<${frameInput[1]}`); // Top right corner low byte
+            buffer.push(`>${frameInput[2]}`); // Bottom left corner high byte
+            buffer.push(`<${frameInput[2]}`); // Bottom left corner low byte
+            buffer.push(`>${frameInput[3]}`); // Bottom right corner high byte
+            buffer.push(`<${frameInput[3]}`); // Bottom right corner low byte
+        }
+
+        buffer.push(255); // Terminator
+
+        return buffer;
+    }
+    compileMapMetatiles(name, input) {
+        const buffer = new BinaryPackage(name);
+
+        for(let i=0; i<input.metatile.length; ++i) {
+            const metatileName = input.metatile[i];
+            buffer.push(`<${metatileName}`);
+            buffer.push(`>${metatileName}`);
+        }
+
+        // Terminator
+        buffer.push(255);
+        buffer.push(255);
+
+        return buffer;
+    }
+
     translateCommand(commandString, buffer) {
         const segment = commandString.split(' ');
         switch(segment[0]) {
@@ -1229,7 +1286,7 @@ class Main {
             await fs.writeFile(`${dataFolder}${files[i].name}`, files[i].output, 'utf8');
         }
     }
-    // Function to read a JSON file and log its contents
+
     static async readJsonFile(filePath, output) {
         try {
             const data = await fs.readFile(filePath, 'utf8');

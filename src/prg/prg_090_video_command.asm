@@ -2831,6 +2831,11 @@ FetchValueItemDataThird:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UploadBackgroundCHR4
+;
+; Var0 = low byte tile index
+; Var1 = high byte tile index
+; Var2 = PPU offset target (0 to 60)
+; Var3 = PPU window target (0 to 15)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UploadBackgroundCHR4:
         @allocateVideoBuffer:

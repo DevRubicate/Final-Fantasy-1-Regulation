@@ -1,0 +1,25 @@
+{
+    "map": [
+        {
+            "name": "MAP_0",
+            "width": 10,
+            "height": 10,
+            "animationLength": 1,
+            "animationSpeed": 1,
+            "palette": [
+                [
+                    29,
+                    16,
+                    30
+                ]
+            ],
+            "metatile": [
+                "METATILE_GRASS",
+                "METATILE_WATER"
+            ],
+            "tilemap": [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            ]
+        }
+    ]
+}

@@ -8,13 +8,15 @@
 .import DrawCursorSprite, DrawBlinkingCursorSprite, UpdateJoy, ClearSprites, SetTile, DrawRectangle
 
 .import UploadCHRSolids, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, FillAttributeTable, FillNametable, UploadPalette0
-
+.import LoadResources
 
 
 
 .export DrawGameMenu, DrawGameMenuGoldBox, EnterItemsMenu, RestoreNineSliceBordersToDefault
 
 DrawGameMenu:
+
+    FARCALL LoadResources
 
     LDA #$0
     STA palette0+0

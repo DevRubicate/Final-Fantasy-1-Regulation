@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
-.import ScreenWipe_Open, CyclePalettes, LoadStandardMap, LoadMapObjects
+.import ScreenWipe_Open, LoadStandardMap, LoadMapObjects
 .import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 .import GetSMTargetCoords, CanTalkToMapObject, DrawMapObjectsNoUpdate, TalkToObject, TalkToSMTile, DrawDialogueBox, ShowDialogueBox, EnterMainMenu, EnterLineupMenu, UpdateJoy
 .import CanPlayerMoveSM, StartMapMove, EnterShopMenu, ClearSprites
@@ -229,8 +229,7 @@ EnterStandardMap:
 
 ReenterStandardMap:
     CALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
-    LDA #$03              ; then do palette cycling effect code 3 (standard map -- cycling in)
-    FARJUMP CyclePalettes     ;  and exit
+    RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -351,8 +350,6 @@ StandardMapLoop:
     @Shop:
         LDA #0
         STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
-        LDA #2                  ;   this is to counter the effect of shop enterances also being doors that enter rooms
-        FARCALL CyclePalettes       ; do the palette cycle effect (code 2 -- standard map, cycle out)
         FARCALL EnterShopMenu       ; enter the shop
         CALL ReenterStandardMap  ;  then reenter the map
         JUMP StandardMapLoop     ;  and continue looping
@@ -486,8 +483,6 @@ ProcessSMInput:
       STA joy_start            ; clear start button catcher
 
       FARCALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
-      LDA #$02
-      FARCALL CyclePalettes        ; cycle palettes out with code 2 (2=standard map)
       FARCALL EnterMainMenu        ; enter the main menu
       JUMP ReenterStandardMap   ; then reenter the map
 
@@ -505,8 +500,6 @@ ProcessSMInput:
     FARCALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
     LDA #0                   ;   though I don't know why you'd need to get the now tile properties...
     STA joy_select
-    LDA #$02
-    FARCALL CyclePalettes
     FARCALL EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
     JUMP ReenterStandardMap
 

@@ -2,13 +2,15 @@
 
 .include "src/global-import.inc"
 
-.import LoadOWBGCHR, LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
+.import LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
 .import MusicPlay, PrepAttributePos, ProcessOWInput, ClearSprites
 .import DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
-.import CyclePalettes, LoadBridgeSceneGFX, EnterBridgeScene, CyclePalettes, CyclePalettes, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
+.import LoadBridgeSceneGFX, EnterBridgeScene, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
+.import LoadOverworldResources
 
 .export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
+
 
 LUT_EntrTele_X:
     .byte $1e, $10, $13, $29, $01, $0b, $3d, $01, $13, $0c, $10, $16, $0c, $14, $17, $1b
@@ -30,7 +32,7 @@ LUT_Tilesets:
 
 
 LoadOWCHR:                     ; overworld map -- does not load any palettes
-    FARCALL LoadOWBGCHR
+    FARCALL LoadOverworldResources
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
 
@@ -209,14 +211,9 @@ DoOWTransitions:
     BEQ @SkipBridgeScene  ;   if not triggered... skip it
     BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
 
-    LDA #0
-    FARCALL CyclePalettes      ; cycle palettes with code=00 (overworld, cycle out)
-
     FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
     FARCALL EnterBridgeScene ; do the bridge scene.
 
-    LDA #$04
-    FARCALL CyclePalettes   ; cycle out from bridge scene with code 4 (zero scroll, cycle out)
     JUMP EnterOW_PalCyc  ; then re-enter overworld
 
     @SkipBridgeScene:
@@ -225,8 +222,6 @@ DoOWTransitions:
     BEQ @SkipShop         ; if not... skip it
 
     FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
-    LDA #$00
-    FARCALL CyclePalettes   ; cycle out the palette
     FARCALL EnterShop       ; and enter the shop!
     JUMP EnterOW_PalCyc  ; then re-enter overworld
 
@@ -244,8 +239,6 @@ DoOWTransitions:
         STA joy_start       ; clear start button catcher
         STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
         FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
-        LDA #$00
-        FARCALL CyclePalettes   ; cycle out the palette
         FARCALL EnterMainMenu   ; and enter the main menu
         JUMP EnterOW_PalCyc  ; then re-enter the overworld
 
@@ -255,7 +248,6 @@ DoOWTransitions:
 
     LDA #$00            ; otherwise... if they did press select..
     STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
-    FARCALL CyclePalettes   ; cycle out the palette
 
     LDA joy
     AND #$40            ; see if the B button is being held down

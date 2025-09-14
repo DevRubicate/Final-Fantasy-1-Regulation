@@ -4,7 +4,7 @@
 
 .import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites, AllocateSprites
 .import DoMapDrawJob, BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
-.import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, CyclePalettes, UpdateJoy, OpenTreasureChest
+.import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, UpdateJoy, OpenTreasureChest
 
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
@@ -2849,15 +2849,12 @@ ProcessOWInput:
     BNE @Exit          ; if not... exit
 
     LDA #0                  ; otherwise... they activated the minigame!
-    FARCALL CyclePalettes       ; cycle palette with code 0 (overworld, cycle out)
     FARCALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
     FARCALL EnterMiniGame    ; and do it!
     BCC :+               ; if they compelted the minigame successfully...
       CALL MinigameReward ;  ... give them their reward
 
     :   
-    LDA #$04             ; cycle palettes out from the minigame screen
-    FARCALL CyclePalettes    ; code=4 (zero scroll, cycle out)
     JUMP EnterOW_PalCyc   ; then re-enter overworld
   @Exit:
     RTS

@@ -4,10 +4,12 @@
 
 .import WaitForVBlank, SetSMScroll, SetOWScroll_PPUOn, WaitVBlank_NoSprites, LoadShopBGCHRPalettes, LoadBatSprCHRPalettes
 .import LoadOWMapRow, PrepAttributePos
+.import UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3
 
 .export LoadMapPalettes, BattleTransition, LoadShopCHRPal, StartMapMove, DrawMapAttributes, DoMapDrawJob, DrawFullMap
 .export DrawMapRowCol, PrepSMRowCol, PrepRowCol
 
+    
 LUT_MapmanPalettes:
     .byte $16, $16, $12, $17, $27, $12, $16, $16, $30, $30, $27, $12, $16, $16, $16, $16
     .byte $27, $12, $16, $16, $16, $30, $27, $13, $00, $00, $00, $00, $00, $00, $00, $00
@@ -38,21 +40,56 @@ lut_2xNTRowStartHi:    .byte  $20,$20,$20,$20,$21,$21,$21,$21,$22,$22,$22,$22,$2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LoadMapPalettes:
-    LDX #$2F                ; X is loop counter
-    @Loop:
-        LDA load_map_pal, X   ; copy colors from temp palette buffer
-        STA cur_pal, X        ; to our actual palette
-        DEX
-        BPL @Loop             ; loop until X wraps ($30 iterations)
+;    LDX #$2F                ; X is loop counter
+;    @Loop:
+;        LDA load_map_pal, X   ; copy colors from temp palette buffer
+;        STA cur_pal, X        ; to our actual palette
+;        DEX
+;        BPL @Loop             ; loop until X wraps ($30 iterations)
+;
+;    LDA ch_class            ; get lead party member's class
+;    ASL A                   ; double it, and put it in X
+;    TAX
+;
+;    LDA LUT_MapmanPalettes, X   ; use that as an index to get that class's mapman palette
+;    STA cur_pal+$12
+;    LDA LUT_MapmanPalettes+1, X
+;    STA cur_pal+$16
 
-    LDA ch_class            ; get lead party member's class
-    ASL A                   ; double it, and put it in X
-    TAX
 
-    LDA LUT_MapmanPalettes, X   ; use that as an index to get that class's mapman palette
-    STA cur_pal+$12
-    LDA LUT_MapmanPalettes+1, X
-    STA cur_pal+$16
+    LDA #$19
+    STA palette0+0
+    LDA #$0F
+    STA palette0+1
+    LDA #$0B
+    STA palette0+2
+    FARCALL UploadPalette0
+
+    LDA #$19
+    STA palette1+0
+    LDA #$0F
+    STA palette1+1
+    LDA #$0B
+    STA palette1+2
+    FARCALL UploadPalette1
+
+    ; water
+    LDA #$19
+    STA palette2+0
+    LDA #$11
+    STA palette2+1
+    LDA #$30
+    STA palette2+2
+    FARCALL UploadPalette2
+
+
+    LDA #$19
+    STA palette3+0
+    LDA #$0F
+    STA palette3+1
+    LDA #$0B
+    STA palette3+2
+    FARCALL UploadPalette3
 
     RTS                     ; then exit
 

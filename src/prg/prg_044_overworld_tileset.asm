@@ -3,6 +3,7 @@
 .include "src/global-import.inc"
 
 .import Copy256
+.import LUT_MAP_METATILES_LO, LUT_MAP_METATILES_HI, LUT_METATILE_FRAMES_LO, LUT_METATILE_FRAMES_HI
 
 .export LoadOWTilesetData, LoadSMTilesetData
 
@@ -780,8 +781,71 @@ LUT_SMPalettes:
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 LoadOWTilesetData:
+    CALL LoadOWTilesetData2
+
+    ; WARNING: There is something you haven't figured out yet. What happens if LUT_MAP_METATILES_LO is on data_126.asm while
+    ; MAP_0_METATILES is on data_128.asm. Do we need a LUT_MAP_METATILES_PAGE? Or can we actually make it so that each
+    ; MAP_*_METATILES is on the same page as the current 2d depth of the LUT_MAP_METATILES_LO 2d jump table?
+    ; Or is this already solved maybe? PointerPackage maybe does the second solution?
+
+    ; simulated input
+    LDA #0      ; Map low byte
+    STA Var0
+    LDA #0      ; Map high byte
+    STA Var1
+
+    ; While LUT_MAP_METATILES is a 2d jump table, so we need to start at the correct page and then add the high byte
+    ; of the map index to offset to the correct page
+    LDA #TextBank(LUT_MAP_METATILES_LO) ; Start at the first page of LUT_MAP_METATILES_LO
+    CLC
+    ADC Var1                            ; Add the high byte of the map index to take us to the correct page
+    STA MMC5_PRG_BANK2                  ; Switch to the bank
+
+    ; Now that we are in the correct page of the 2d jump table, we use the low byte of the map index as the offset
+    ; into the jump table
+    LDY Var0
+    LDA LUT_MAP_METATILES_LO, Y
+    STA Var3
+    LDA LUT_MAP_METATILES_HI, Y
+    STA Var4
+
+    ; Var3+Var4 now points to the metatile data for this map
+    LDY #0
+    LDA (Var3), Y
+    STA Var5
+    INY
+    LDA (Var3), Y
+    STA Var6
+
+    ; Var5 now contains the low index of the metatile, and Var6 the high index
+    LDA #TextBank(LUT_METATILE_FRAMES_LO)   ; Start at the first page of LUT_METATILE_FRAMES_LO
+    CLC
+    ADC Var6                                ; Add the high index of the metatile to take us to the correct page
+    STA MMC5_PRG_BANK2                      ; Switch to the bank
+
+    ; We now load out a pointer to the metatile frames
+    LDY Var5                                ; Load the low index of the metatile
+    LDA LUT_METATILE_FRAMES_LO, Y           ; Load the low byte pointer of the metatile frames
+    STA Var7
+    LDA LUT_METATILE_FRAMES_HI, Y           ; Load the high byte pointer of the metatile frames
+    STA Var8
+
+    ; We now have a pointer to the metatile frames, which has a format of 8 bytes per frame, and is terminated by $FF
+    ; Those 8 bytes makes up 4 tile indexes, representing the 4 corners of the metatile
+;    LDY #0
+;    LDA (Var7), Y
+;    STA Var9                                ; Var9 now contains the low byte of the top left tile index
+;    INY
+;    LDA (Var7), Y
+;    STA Var10                               ; Var10 now contains the high byte of the top left tile index
+;
+;    DEBUG
+
+    RTS
+
+
+LoadOWTilesetData2:
     LDA #<LUT_OWTileset ; set low bytes of source pointer
     STA tmp
 
@@ -813,6 +877,521 @@ LoadOWTilesetData:
 
     RTS                 ; then exit
 
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+    .byte 12, 12
+
+
+
 LUT_OWTileset:
     .byte $06, $40, $0e, $89, $0e, $89, $0e, $40, $1e, $40, $0e, $40, $0e, $40, $0b, $42
     .byte $0e, $40, $0f, $00, $0f, $00, $0f, $00, $0f, $00, $0f, $00, $0e, $8e, $2e, $00
@@ -830,38 +1409,43 @@ LUT_OWTileset:
     .byte $0e, $9c, $0e, $9d, $0e, $80, $0f, $00, $0e, $92, $0e, $88, $0e, $97, $0f, $00
     .byte $06, $40, $06, $40, $0e, $40, $0e, $40, $0e, $00, $0e, $00, $06, $00, $2e, $00
     .byte $2e, $00, $2e, $00, $2e, $00, $0f, $00, $0f, $00, $0f, $00, $0f, $00, $0f, $00
-    .byte $20, $89, $8b, $21, $26, $23, $53, $4f, $3f, $01, $7e, $8d, $01, $73, $1c, $f5
-    .byte $02, $07, $04, $37, $2d, $2c, $4d, $3b, $3b, $81, $83, $ac, $ae, $77, $59, $01
-    .byte $18, $0c, $0d, $33, $2d, $2e, $48, $3b, $42, $ac, $ae, $1c, $01, $01, $01, $1c
-    .byte $14, $0e, $1c, $0f, $1c, $1c, $59, $59, $ac, $ae, $1c, $01, $d2, $7c, $7c, $d7
-    .byte $55, $54, $62, $5c, $54, $59, $69, $b1, $b3, $96, $93, $01, $9e, $a2, $9a, $d4
-    .byte $54, $54, $60, $59, $63, $6b, $01, $ba, $bc, $be, $a2, $d1, $01, $a2, $cd, $d6
-    .byte $67, $65, $6f, $6b, $62, $e4, $df, $df, $df, $df, $df, $cf, $df, $96, $df, $7c
-    .byte $68, $63, $6b, $6b, $e9, $af, $01, $01, $01, $01, $f5, $cb, $7c, $7c, $c9, $7c
-    .byte $20, $8a, $8c, $22, $27, $24, $45, $50, $53, $7d, $01, $8e, $01, $74, $1d, $01
-    .byte $03, $08, $05, $2c, $2a, $39, $3c, $3c, $4b, $82, $84, $ad, $d9, $78, $59, $f5
-    .byte $0d, $0a, $1a, $2b, $2e, $36, $49, $3c, $43, $ad, $d9, $1d, $01, $01, $01, $1d
-    .byte $0e, $0f, $1d, $17, $1d, $1d, $59, $59, $ad, $d9, $1d, $d1, $7c, $7c, $d6, $01
-    .byte $54, $56, $5b, $62, $54, $59, $6a, $b2, $b4, $97, $94, $cf, $9f, $a3, $9b, $01
-    .byte $54, $54, $59, $5e, $64, $6c, $b9, $bb, $bd, $01, $a3, $d2, $cb, $a3, $01, $d7
-    .byte $68, $66, $6c, $70, $e3, $62, $e0, $e0, $e0, $e0, $e0, $7c, $e0, $97, $e0, $d4
-    .byte $64, $65, $6c, $6c, $de, $b0, $20, $01, $01, $01, $01, $7c, $7c, $c9, $7c, $cd
-    .byte $20, $7c, $91, $25, $2a, $2c, $46, $3d, $40, $01, $80, $8f, $aa, $75, $1e, $f5
-    .byte $06, $0c, $0d, $38, $2b, $2e, $4e, $3d, $3d, $85, $87, $da, $dc, $79, $7b, $01
-    .byte $19, $0c, $0d, $2f, $34, $31, $53, $51, $44, $da, $dc, $1e, $c5, $c6, $c6, $1e
-    .byte $10, $15, $1e, $12, $1e, $1e, $59, $59, $da, $dc, $1e, $01, $7c, $7c, $7c, $d8
-    .byte $54, $54, $5a, $59, $54, $59, $69, $b5, $b7, $98, $95, $01, $a0, $a4, $9c, $d5
-    .byte $57, $54, $62, $5f, $64, $6d, $01, $c0, $c2, $c4, $a4, $d3, $01, $a4, $ce, $7c
-    .byte $68, $64, $6d, $6d, $e5, $e7, $e1, $e1, $e1, $e1, $e1, $d0, $e1, $98, $e1, $7c
-    .byte $67, $65, $71, $6d, $a6, $a8, $20, $01, $f5, $f5, $01, $cc, $c8, $c8, $ca, $c8
-    .byte $20, $91, $92, $2a, $2b, $28, $47, $3e, $41, $7f, $01, $90, $ab, $76, $1f, $01
-    .byte $0a, $0d, $09, $29, $2c, $3a, $3e, $3e, $4c, $86, $88, $db, $dd, $7a, $59, $f5
-    .byte $0b, $0b, $1b, $30, $35, $32, $4a, $52, $53, $db, $dd, $1f, $c6, $c6, $c7, $1f
-    .byte $11, $16, $1f, $13, $1f, $1f, $59, $59, $db, $dd, $1f, $d3, $7c, $7c, $7c, $01
-    .byte $54, $54, $59, $5d, $54, $59, $6a, $b6, $b8, $99, $ea, $d0, $a1, $a5, $9d, $01
-    .byte $54, $58, $61, $62, $63, $6e, $bf, $c1, $c3, $01, $a5, $7c, $cc, $a5, $01, $d8
-    .byte $63, $65, $6e, $6e, $e6, $e8, $e2, $e2, $e2, $e2, $e2, $7c, $e2, $99, $e2, $d5
-    .byte $68, $66, $6e, $72, $a7, $a9, $20, $f5, $f5, $01, $01, $c8, $c8, $ca, $c8, $ce
+
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 4, 27, 28, 29, 30, 31, 32, 33, 34, 35
+
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 3, 27, 28, 29, 30, 31, 32, 33, 34, 35
+
+    .byte 4, 5, 6, 7, 8, 9, 27, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 3, 27, 28, 29, 30, 31, 32, 33, 34, 35
+
+    .byte 4, 5, 6, 7, 8, 9, 27, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    .byte 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    .byte 4, 5, 6, 7, 8, 9, 28, 11, 12, 13, 14, 15, 16, 17, 18, 19
+    .byte 20, 21, 22, 23, 24, 25, 3, 27, 28, 29, 30, 31, 32, 33, 34, 35
+
     .byte $ff, $00, $00, $ff, $ff, $ff, $aa, $aa, $aa, $00, $00, $00, $00, $55, $00, $00
     .byte $00, $00, $00, $ff, $ff, $ff, $aa, $aa, $aa, $00, $00, $00, $00, $55, $55, $00
     .byte $00, $00, $00, $ff, $ff, $ff, $aa, $aa, $aa, $00, $00, $00, $00, $00, $00, $00

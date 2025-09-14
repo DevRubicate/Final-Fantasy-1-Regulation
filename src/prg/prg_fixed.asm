@@ -39,7 +39,7 @@
 ; prg_1A_string
 .import DrawComplexString_New, DrawItemBox, SeekItemStringAddress, SeekItemStringPtr, SeekItemStringPtrForEquip, DrawEquipMenuStrings
 ; prg_1B_map_chr
-.import LoadOWBGCHR
+
 ; prg_1C_mapman_chr
 .import LoadPlayerMapmanCHR
 ; prg_1D_world_map_obj_chr
@@ -71,7 +71,7 @@
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
 .import BattleMenu_DrawMagicNames, DrawBattleString_Code11
 ; prg_2A_draw_util
-.import DrawBox, CyclePalettes, GetCharacterNamePtr
+.import DrawBox, GetCharacterNamePtr
 ; prg_2B_dialog_util
 .import ShowDialogueBox, EraseBox
 ; prg_2C_dialog_string
@@ -151,8 +151,6 @@ WaitScanline:
 
 EnterOW_PalCyc:
     FARCALL PrepOverworld       ; do all necessary overworld preparation
-    LDA #$01
-    FARCALL CyclePalettes       ; cycle palettes with code=01 (overworld, reverse cycle)
     NAKEDJUMP EnterOverworldLoop  ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

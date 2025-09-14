@@ -1,0 +1,164 @@
+{
+    "tile": [
+        {
+            "name": "MAP_TILE_0",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 0
+        },
+        {
+            "name": "MAP_TILE_1",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 1
+        },
+        {
+            "name": "MAP_TILE_2",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 2
+        },
+        {
+            "name": "MAP_TILE_3",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 3
+        },
+        {
+            "name": "MAP_TILE_4",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 4
+        },
+        {
+            "name": "MAP_TILE_5",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 5
+        },
+        {
+            "name": "MAP_TILE_6",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 6
+        },
+        {
+            "name": "MAP_TILE_7",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 7
+        },
+        {
+            "name": "MAP_TILE_8",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 8
+        },
+        {
+            "name": "MAP_TILE_9",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 9
+        },
+        {
+            "name": "MAP_TILE_10",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 10
+        },
+        {
+            "name": "MAP_TILE_11",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 11
+        },
+        {
+            "name": "MAP_TILE_12",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 12
+        },
+        {
+            "name": "MAP_TILE_13",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 13
+        },
+        {
+            "name": "MAP_TILE_14",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 14
+        },
+        {
+            "name": "MAP_TILE_15",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 15
+        },
+        {
+            "name": "MAP_TILE_16",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 16
+        },
+        {
+            "name": "MAP_TILE_17",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 17
+        },
+        {
+            "name": "MAP_TILE_18",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 18
+        },
+        {
+            "name": "MAP_TILE_19",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 19
+        },
+        {
+            "name": "MAP_TILE_20",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 20
+        },
+        {
+            "name": "MAP_TILE_21",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 21
+        },
+        {
+            "name": "MAP_TILE_22",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 22
+        },
+        {
+            "name": "MAP_TILE_23",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 23
+        },
+        {
+            "name": "MAP_TILE_24",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 24
+        },
+        {
+            "name": "MAP_TILE_25",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 25
+        },
+        {
+            "name": "MAP_TILE_26",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 26
+        },
+        {
+            "name": "MAP_TILE_27",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 27
+        },
+        {
+            "name": "MAP_TILE_28",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 28
+        },
+        {
+            "name": "MAP_TILE_29",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 29
+        },
+        {
+            "name": "MAP_TILE_30",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 30
+        },
+        {
+            "name": "MAP_TILE_31",
+            "source": "data/chr/map/map.background.png.chr",
+            "index": 31
+        }
+    ]
+}

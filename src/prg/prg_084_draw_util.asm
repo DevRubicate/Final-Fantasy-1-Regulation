@@ -5,7 +5,7 @@
 .import MenuCondStall, CoordToNTAddr
 .import WaitVBlank_NoSprites, WaitForVBlank, MusicPlay, SetOWScroll_PPUOn, SetSMScroll
 
-.export DrawBox, CyclePalettes, GetCharacterNamePtr
+.export DrawBox, GetCharacterNamePtr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -186,80 +186,6 @@ DrawBoxRow_Top:
     ADC #0              ; Add 0 to catch the carry
     STA ppu_dest+1
 
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Cycle Palettes   [$D946 :: 0x3D956]
-;;
-;;    Does that fugly palette cycling that acts as a transition into certain
-;;  areas.  Like when you enter the main menu, or enter a shop, etc.
-;;
-;;    The cycling is very simple.  +1 is added to each non-black color until it reaches
-;;  $xD (at which point it is replaced with $0F black).  Once all colors reach $0F, the
-;;  cycling is complete.
-;;
-;;    This process can also be done in reverse.  When in reverse, all colors that were
-;;  originally non-black start at $xC (where 'x' is their original brightness).  And -1 is done
-;;  until they reach their original color.
-;;
-;;    Note that since the reversed process starts the colors at $xC -- this means that the
-;;  reverse cycling will take EXTREMELY long if the palette contains any $xD, $xE, or $xF color
-;;  other than $0F.... because the palette will have to cycle through *256* colors to reach
-;;  the target color.  This is not a problem in the original game because it doesn't use any
-;;  of those colors (they're mostly black, except for some $xD colors -- and $0D is notorious
-;;  for screwing up the display on some television sets -- so they should all be avoided anyway).
-;;  This could be a problem in some hacks, though... if they changed a palette to use one of
-;;  those colors.
-;;
-;;  IN:  A = desired mode
-;;
-;;    Each of the 3 low bits in the desired mode indicates something:
-;;
-;;  bit 0 ($01) = set if cycling is to be done in reverse.  Clear if to be done normally
-;;  bit 1 ($02) = set if in standard map.  Clear if not (overworld, or menu, or whatever)
-;;  bit 2 ($04) = set if scroll is to be held at zero (for menus or whatever)
-;;
-;;    This value is dumped into 'palcyc_mode' and referred throughout this routine and
-;;  supporting routines.  It determines which palette to use, what scroll to reset to,
-;;  etc.
-;;
-;;    This routine will not exit until the cycling is complete.  Also, once it completes,
-;;  it swaps in the menu bank, and turns off the PPU (unless it was reverse -- in which case
-;;  the PPU stays on).
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CyclePalettes:
-    STA palcyc_mode             ; record the mode
-    FARCALL WaitVBlank_NoSprites   ; wait for VBlank, and kill all sprites
-    CALL PalCyc_SetScroll       ; set the scroll
-    CALL PalCyc_GetInitialPal   ; load up the initial palette
-    LDA #$01                    ; A will be a make-shift frame counter
-    @Loop:
-        PHA                         ; push the frame counter to back it up
-        AND #$03                    ; mask low bits, and only take a step through the cycle
-        BNE @NoStep                 ;   if zero (once every 4 frames)
-            CALL PalCyc_Step        ; if a 4th frame, take a step through the cycle
-            CPY #0                  ; check to see if Y is zero (cycling is complete)
-            BEQ @Done               ; if cycling is complete, break out of this loop
-        @NoStep:
-        CALL WaitForVBlank          ; wait for VBlank
-        CALL PalCyc_DrawPalette     ; draw the new palette
-        CALL PalCyc_SetScroll       ; set the scroll
-        FARCALL MusicPlay           ; and update music  (all the typical frame work)
-        PLA                         ; pull the frame counter
-        CLC
-        ADC #1                      ; and add 1 to it
-        JUMP @Loop                  ; and keep looping until cycling is complete
-    @Done:
-    PLA                         ; pull the frame counter just so it doesn't corrupt the stack (we're done with it)
-    LDA palcyc_mode             ; get mode
-    LSR A                       ; check 'reverse' bit
-    BCS :+                      ; if NOT doing reverse....
-        LDA #0                  ; ... then turn PPU off
-        STA PPU_MASK
-    :   
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

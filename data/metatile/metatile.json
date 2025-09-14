@@ -1,0 +1,38 @@
+{
+    "metatile": [
+        {
+            "name": "METATILE_GRASS",
+            "frame": [
+                [
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_1"
+                ],
+                [
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1",
+                    "TILE_CURSOR_1"
+                ]
+            ]
+        },
+        {
+            "name": "METATILE_WATER",
+            "frame": [
+                [
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0"
+                ],
+                [
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0",
+                    "TILE_CURSOR_0"
+                ]
+            ]
+        }
+    ]
+}
