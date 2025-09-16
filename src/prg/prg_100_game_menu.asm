@@ -129,8 +129,6 @@ EnterItemsMenu:
     STA Var0
     FARCALL FillNametable                ; clear the nametable
 
-    ; Todo: Make sure these PPU affecting subroutines respects the new rules
-    ;CALL UploadNineSliceBorders
     CALL RestoreNineSliceBordersToDefault
 
 

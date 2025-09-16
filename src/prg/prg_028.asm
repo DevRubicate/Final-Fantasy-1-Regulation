@@ -23,6 +23,7 @@
 .import UploadFont, UploadNineSliceBorders, RestoreNineSliceBordersToDefault, FillAttributeTable
 .import UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4, UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4
 .import DrawTitleScreen, PartyGenerationSetup
+.import EnterNewBattle
 
 .import TEXT_TITLE_CONTINUE, TEXT_TITLE_NEW_GAME, TEXT_TITLE_RESPOND_RATE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_ALPHABET, TEXT_TITLE_SELECT_NAME, TEXT_HERO_0_NAME, TEXT_HERO_1_NAME, TEXT_HERO_2_NAME, TEXT_HERO_3_NAME, TEXT_CLASS_NAME_FIGHTER, TEXT_CLASS_NAME_THIEF, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_MAGE, TEXT_CLASS_NAME_WHITE_MAGE, TEXT_CLASS_NAME_BLACK_MAGE
 .import TEXT_INTRO_STORY_1, TEXT_INTRO_STORY_2, TEXT_INTRO_STORY_3, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_5, TEXT_INTRO_STORY_6, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_8, TEXT_INTRO_STORY_9, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_11
@@ -5459,32 +5460,7 @@ MainMenuLoop:
   @NotItem:
     CMP #$01
     BNE @NotMagic               ; if cursor = 1... they selected 'magic'
-
-
-    @MagicLoop:
-      CALL MainMenuSubTarget     ; select a sub target
-      BCS @EscapeSubTarget      ; if B pressed, they want to escape sub target menu.
-
-      LDA cursor                ; otherwise (A pressed), get the selected character
-      ROR A
-      ROR A
-      ROR A
-      AND #$C0                  ; and shift it to a useable character index
-      TAX                       ; and put in X
-
-      LDA ch_ailments, X        ; get this character's OB ailments
-      CMP #$01
-      BEQ @CantUseMagic         ; if dead.. can't use their magic
-      CMP #$02
-      BNE @CanUseMagic          ; otherwise.. if they're not stone, you can
-
-    @CantUseMagic:              ;if dead or stone...
-      FARCALL PlaySFX_Error         ;  play error sound effect
-      JUMP @MagicLoop            ;  and continue magic loop until valid option selected
-
-    @CanUseMagic:
-      CALL EnterMagicMenu        ; if target is valid.. enter magic menu
-      JUMP ResumeMainMenu        ; then resume (redraw) main menu and continue
+    FARCALL EnterNewBattle      ; enter item menu
 
   @NotMagic:
     CMP #$02

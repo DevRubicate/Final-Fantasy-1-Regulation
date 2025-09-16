@@ -1,0 +1,130 @@
+# Graphics Compression System Specifications
+
+## Overview
+A sophisticated graphics compression system that converts entire 256x128 images into dense drawing commands for NES runtime unpacking.
+
+## Key Differences from Current System
+- Current system: Operates on 16x16 tiles using donut-nes.exe
+- New system: Processes full 256x128 images into drawing commands
+- Goal: Massive size reduction compared to raw bitmap data
+- Runtime: NES game receives bytes and unpacks drawing commands
+
+## Input Format
+- Source: Variable-sized images containing RPG monsters, cutscene images, etc.
+- Dimensions must be multiples of 16 pixels (e.g., 16x16, 32x48, 128x64, 256x128)
+- Maximum size: 256x128 pixels
+- Smaller images automatically padded with transparent pixels to 256x128
+- Large collection of images processed collectively
+- Cross-referencing system: images can reference others with modifications
+- Format: PNG files with .massive.png extension
+
+## Color Constraints (NES 2-bit Graphics)
+- Maximum 3 opaque colors + transparency per 16x16 tile
+- Colors automatically sorted by brightness (R+G+B sum)
+- Tie-breaker priority: Red > Green > Blue
+- Mapping: Brightest=11(3), Next=10(2), Darkest=01(1), Transparent=00(0)
+- Error thrown if more than 3 opaque colors found in any tile
+
+## Transparency Handling
+- If image has transparent pixels: black (0,0,0) treated as regular color
+- If no transparent pixels exist: black (0,0,0) automatically converted to transparent
+- This allows easy use of images without alpha channels
+
+## Output Format Structure
+### Header + Body Format
+- **Header**: Defines command encoding and mapping
+- **Body**: Sequence of commands followed by their parameters
+
+### Command Encoding (Variable Bit Width)
+- Header specifies bit width per command: 1, 2, 3, or 4 bits
+- Header defines command mapping (e.g., command $0 = FILL)
+- Example: FILL command followed by color parameter
+
+## Animation Frame System
+- Up to 16 frames per animation sequence
+- Naming convention to identify frame relationships
+- Sequential extraction with header inheritance
+
+### Frame Header Inheritance
+- Each frame has its own header
+- Frame headers inherit from previous frame as default
+- Terminator-only header = use previous frame's header wholesale
+- Partial header = modify specific commands, keep rest from previous frame
+- Full flexibility for incremental changes between frames
+
+## Cross-Reference System
+- Images can reference other images with modifications
+- Format: "like [base_image] but with these changes: <commands>"
+- Enables efficient storage of variations
+
+## Compression Strategy
+[TO BE FILLED - command types and algorithms]
+
+## Runtime Requirements
+- NES-side interpreter for drawing commands
+- Variable bit-width command decoder
+- Frame sequence support
+- [ADDITIONAL RUNTIME SPECS TO BE DEFINED]
+
+## Implementation Notes
+- Node.js script (similar to data_generator.mjs)
+- Much larger scope and complexity than current tile system
+- Collective processing of image library
+- [ADDITIONAL SPECS TO BE ADDED]
+
+## Colors
+#626262=$00
+#001C95=$01
+#1904AC=$02
+#42009D=$03
+#61006B=$04
+#6E0025=$05
+#650500=$06
+#491E00=$07
+#223700=$08
+#004900=$09
+#004F00=$0A
+#004816=$0B
+#00355E=$0C
+#000000=$0F
+#ABABAB=$10
+#0C4EDB=$11
+#3D2EFF=$12
+#7115F3=$13
+#9B0BB9=$14
+#B01262=$15
+#A92704=$16
+#894600=$17
+#576600=$18
+#237F00=$19
+#008900=$1A
+#008332=$1B
+#006D90=$1C
+#FFFFFF=$20
+#57A5FF=$21
+#8287FF=$22
+#B46DFF=$23
+#DF60FF=$24
+#F863C6=$25
+#F8746D=$26
+#DE9020=$27
+#B3AE00=$28
+#81C800=$29
+#56D522=$2A
+#3DD36F=$2B
+#3EC1C8=$2C
+#4E4E4E=$2D
+#FFFFFF=$30
+#BEE0FF=$31
+#CDD4FF=$32
+#E0CAFF=$33
+#F1C4FF=$34
+#FCC4EF=$35
+#FDCACE=$36
+#F5D4AF=$37
+#E6DF9C=$38
+#D3E99A=$39
+#C2EFA8=$3A
+#B7EFC4=$3B
+#B6EAE5=$3C
+#B8B8B8=$3D

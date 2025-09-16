@@ -1,6 +1,7 @@
 import { promises as fs }           from 'fs';
 import path                         from 'path';
 import { execFile }                 from 'child_process';
+import { MassiveCompressor }        from './massive_compress.mjs';
 
 class Structure {
     pages = [];
@@ -723,6 +724,17 @@ class Preprocessor {
             packer.addReferenceTable(mapData);
         }
 
+        if(jsonData.massive) {
+            for(let i=0; i<jsonData.massive.length; ++i) {
+                const massive = jsonData.massive[i];
+                packer.addConst({name: massive.name, data: i});
+
+                // Create a BinaryPackage with the compressed data
+                const massiveData = new BinaryPackage(massive.name, [massive.data]);
+                packer.addStatic(massiveData);
+            }
+        }
+
         return packer.build();
     }
     addConstant(name, value) {
@@ -1361,8 +1373,11 @@ class Main {
                 const test = await Main.runPNGTOCHR([`--image=${filePath}`, `--output=${filePath}.chr`, `-H 16`]);
             } else if(filePath.includes('.background.png')) {
                 const test = await Main.runPNGTOCHR([`--image=${filePath}`, `--output=${filePath}.chr`]);
+            } else if(filePath.includes('.massive.png')) {
+                await Main.readMassivePNGFile(filePath, output);
+                return; // Early return since massive files are handled differently
             } else {
-                throw new Error(`Invalid "${filePath}", lacking .sprite.png or .background.png naming`);
+                throw new Error(`Invalid "${filePath}", lacking .sprite.png, .background.png, or .massive.png naming`);
             }
 
             
@@ -1397,6 +1412,28 @@ class Main {
             output.chr.push({name: `${filePath.split(path.sep).join('/')}.chr`, tile: tileEntries});
         } catch (err) {
             console.error(`Error reading file ${filePath}: ${err}`);
+        }
+    }
+
+    static async readMassivePNGFile(filePath, output) {
+        try {
+            const compressor = new MassiveCompressor();
+            const compressedData = await compressor.processImage(filePath);
+
+            // Create a name from the file path for the output data
+            const baseName = path.basename(filePath, '.massive.png').toUpperCase();
+            const massiveName = `MASSIVE_${baseName}`;
+
+            output.massive = output.massive ?? [];
+            output.massive.push({
+                name: massiveName,
+                data: compressedData,
+                originalPath: filePath
+            });
+
+            console.log(`Processed massive PNG: ${filePath} -> ${massiveName} (${compressedData.length} bytes)`);
+        } catch (err) {
+            console.error(`Error reading massive PNG file ${filePath}: ${err}`);
         }
     }
 
