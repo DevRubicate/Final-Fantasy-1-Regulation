@@ -1,15 +1,3 @@
-;;
-;;  macro for LDAing an immediate value, then always branching
-;;
-.macro LDABRA v, lbl
-        LDA #v
-    .if v = 0
-        BEQ lbl
-    .else
-        BNE lbl
-    .endif
-.endmacro
-
 .define TextBank(_address) (.bank(_address) | %10000000)
 
 ;;

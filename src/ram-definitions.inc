@@ -92,12 +92,6 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var17,                            1
     RESZP Var18,                            1
     RESZP Var19,                            1
-    RESZP Var24,                            1
-    RESZP Var25,                            1
-    RESZP Var26,                            1
-    RESZP Var27,                            1
-    RESZP Var28,                            1
-    RESZP Var29,                            1
 
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
     GAP                                     5
@@ -260,6 +254,63 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var21,                            1
     RESZP Var22,                            1
     RESZP Var23,                            1
+    RESZP Var24,                            1
+    RESZP Var25,                            1
+    RESZP Var26,                            1
+    RESZP Var27,                            1
+    RESZP Var28,                            1
+    RESZP Var29,                            1
+    RESZP Var30,                            1
+    RESZP Var31,                            1
+    RESZP Var32,                            1
+    RESZP Var33,                            1
+    RESZP Var34,                            1
+    RESZP Var35,                            1
+    RESZP Var36,                            1
+    RESZP Var37,                            1
+    RESZP Var38,                            1
+    RESZP Var39,                            1
+    RESZP Var40,                            1
+    RESZP Var41,                            1
+    RESZP Var42,                            1
+    RESZP Var43,                            1
+    RESZP Var44,                            1
+    RESZP Var45,                            1
+    RESZP Var46,                            1
+    RESZP Var47,                            1
+    RESZP Var48,                            1
+    RESZP Var49,                            1
+    RESZP Var50,                            1
+    RESZP Var51,                            1
+    RESZP Var52,                            1
+    RESZP Var53,                            1
+    RESZP Var54,                            1
+    RESZP Var55,                            1
+    RESZP Var56,                            1
+    RESZP Var57,                            1
+    RESZP Var58,                            1
+    RESZP Var59,                            1
+    RESZP Var60,                            1
+    RESZP Var61,                            1
+    RESZP Var62,                            1
+    RESZP Var63,                            1
+    RESZP Var64,                            1
+    RESZP Var65,                            1
+    RESZP Var66,                            1
+    RESZP Var67,                            1
+    RESZP Var68,                            1
+    RESZP Var69,                            1
+    RESZP Var70,                            1
+    RESZP Var71,                            1
+    RESZP Var72,                            1
+    RESZP Var73,                            1
+    RESZP Var74,                            1
+    RESZP Var75,                            1
+    RESZP Var76,                            1
+    RESZP Var77,                            1
+    RESZP Var78,                            1
+    RESZP Var79,                            1
+    RESZP Var80,                            1
 
 
 
@@ -343,13 +394,15 @@ SECTION "OAM"
 SECTION "BSS" ; $0300 - $0800
     RES             item_box,                           0 ; 32 bytes        ; $0300 $20? bytes -- shares space with str_buf
     RES             str_buf,                            0 ; 57 bytes        ; $0300 $39 bytes at least -- buffer must not cross page
-    GAP                                                 10
     RES             shop_charindex,                     1 ; 1 bytes         ; $030A
     RES             shop_spell,                         1 ; 1 bytes         ; $030B
     RES             shop_curitem,                       1 ; 1 bytes         ; $030C
     GAP                                                 1 ; 1 bytes         ; $030D
     RES             shop_curprice,                      2 ; 2 bytes         ; $030E
-    GAP                                                 176
+    RES             decompressCommandBitWidth,          1
+    RES             decompressCommandRoutinesLo,        16
+    RES             decompressCommandRoutinesHi,        16
+    GAP                                                 152
     RES             cur_pal,                            32  ; 32 bytes      ; $03C0  ; 32 bytes
     RES             inroom_pal,                         16  ; 16 bytes      ; $03E0  ; cur_pal+$20 ; 16 bytes
     RES             tmp_pal,                            16  ; 16 bytes      ; $03F0  ; 16 bytes
@@ -1120,3 +1173,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             spriteCHRBank5,                 1
     RES             spriteCHRBank6,                 1
     RES             spriteCHRBank7,                 1
+
+SECTION "DECOMPRESS" ; $6000 - $7FFF
+    RES imageBuffer,   8192

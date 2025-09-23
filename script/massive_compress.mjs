@@ -39,9 +39,126 @@ class MassiveCompressor {
         // Command type definitions - these are the values stored in the header
         // to identify what each command does. The actual command indices used
         // in the bit stream are determined by the order these appear in the header.
-        this.COMMAND_PLOT_PIXEL = 0x00;      // Plot a single pixel
-        this.COMMAND_REPEAT_PIXEL = 0x01;    // Plot a pixel and repeat it N times
-        this.COMMAND_PLOT_TWO_PIXELS = 0x02; // Plot two consecutive pixels
+        this.COMMAND_REPEAT_BITS = 0x00;     // Repeat a single bit 2-9 times (1 bit value + 3 bit count)
+        this.COMMAND_PLOT_BITS = 0x01;       // Plot a 4-bit pattern (4 bit pattern)
+        this.COMMAND_REPEAT_COMMAND = 0x02;  // Repeat the following command 2-9 times (3 bit count)
+
+        // Compression profiles - each profile defines a specific strategy optimized for different image types
+        this.COMPRESSION_PROFILES = this.defineCompressionProfiles();
+    }
+
+    /**
+     * Define compression profiles for different types of image data
+     * Each profile specifies a command bit width and the commands to use
+     */
+    defineCompressionProfiles() {
+        return [
+            {
+                name: "FUNDAMENTAL_BITS",
+                description: "Two fundamental bit-based commands with perfect symmetry",
+                commandBitWidth: 1,
+                commands: [
+                    this.COMMAND_REPEAT_BITS,   // Index 0: Repeat bits (5 bits total: 1 cmd + 1 value + 3 count)
+                    this.COMMAND_PLOT_BITS      // Index 1: Plot bits (5 bits total: 1 cmd + 4 pattern)
+                ]
+            },
+            {
+                name: "ENHANCED_REPEAT",
+                description: "Three commands including REPEAT_COMMAND for multiplicative efficiency",
+                commandBitWidth: 2,
+                commands: [
+                    this.COMMAND_REPEAT_BITS,   // Index 0: Repeat bits (6 bits total: 2 cmd + 1 value + 3 count)
+                    this.COMMAND_PLOT_BITS,     // Index 1: Plot bits (6 bits total: 2 cmd + 4 pattern)
+                    this.COMMAND_REPEAT_COMMAND // Index 2: Repeat command (5 bits total: 2 cmd + 3 count)
+                ]
+            }
+        ];
+    }
+
+    /**
+     * Try all compression profiles and return the one with the best compression ratio
+     * @param {Array} chrTileData - Array of CHR tiles to compress
+     * @param {Object} clipInfo - Clipping information for header
+     * @returns {Object} - Best compression result with profileName, header, pixelData
+     */
+    findBestCompressionProfile(chrTileData, clipInfo) {
+        console.log(`   🏁 Testing ${this.COMPRESSION_PROFILES.length} compression profiles...`);
+
+        const results = [];
+
+        for (const profile of this.COMPRESSION_PROFILES) {
+            try {
+                // Generate command header for this profile
+                const commandHeader = this.generateCommandHeaderForProfile(profile, clipInfo);
+
+                // Create command-to-index mapping for this profile
+                const commandToIndex = new Map();
+                for (let i = 0; i < profile.commands.length; i++) {
+                    commandToIndex.set(profile.commands[i], i);
+                }
+
+                // Compress using this profile
+                const pixelData = this.compressCHRData(chrTileData, profile.commandBitWidth, commandToIndex);
+
+                // Calculate total size (header + pixel data)
+                const totalSize = commandHeader.length + pixelData.length;
+
+                results.push({
+                    profileName: profile.name,
+                    description: profile.description,
+                    header: commandHeader,
+                    pixelData: pixelData,
+                    totalSize: totalSize
+                });
+
+                console.log(`   📊 ${profile.name}: ${totalSize} bytes (${commandHeader.length} header + ${pixelData.length} pixel)`);
+
+            } catch (error) {
+                console.warn(`   ⚠️  Profile ${profile.name} failed: ${error.message}`);
+            }
+        }
+
+        if (results.length === 0) {
+            throw new Error("All compression profiles failed");
+        }
+
+        // Find the profile with the smallest total size
+        results.sort((a, b) => a.totalSize - b.totalSize);
+        return results[0];
+    }
+
+    /**
+     * Generate command header for a specific profile
+     * @param {Object} profile - Compression profile
+     * @param {Object} clipInfo - Clipping information
+     * @returns {number[]} - Command header bytes
+     */
+    generateCommandHeaderForProfile(profile, clipInfo) {
+        const header = [];
+
+        // First byte: 00xxyyyy format
+        // xx = command bit width (0-3 representing 1-4 bits)
+        // yyyy = number of commands in header (0-15)
+        const bitWidthEncoded = profile.commandBitWidth - 1; // 1→0, 2→1, 3→2, 4→3
+        const numCommands = profile.commands.length;
+        const firstByte = (bitWidthEncoded << 4) | numCommands; // 00xxyyyy
+        header.push(firstByte);
+
+        // Second byte: [leftClip][rightClip] (4 bits each)
+        const clipByte1 = (clipInfo.leftClip << 4) | clipInfo.rightClip;
+        header.push(clipByte1);
+
+        // Third byte: [topClip][bottomClip] (4 bits each)
+        const clipByte2 = (clipInfo.topClip << 4) | clipInfo.bottomClip;
+        header.push(clipByte2);
+
+        // Add each command from the profile in reverse order
+        // (ASM reads commands backwards and stores them in forward slots)
+        for (let i = profile.commands.length - 1; i >= 0; i--) {
+            header.push(profile.commands[i]);
+        }
+
+        return header;
     }
 
     /**
@@ -181,6 +298,12 @@ class MassiveCompressor {
         // backgrounds should be transparent.
         const processedImageData = this.processTransparency(paddingInfo.imageData, originalHasTransparency);
 
+        // STEP 1.5: SPRITE BOUNDS DETECTION
+        // =================================
+        // Auto-detect the actual sprite content area to minimize compression of empty space.
+        // This calculates clipping values that eliminate transparent padding around the sprite.
+        const clipInfo = this.detectSpriteBounds(processedImageData);
+
         // STEP 2: TILE EXTRACTION (16x16 for palette analysis)
         // ====================================================
         // First extract 16x16 tiles for palette analysis. This gives us 16×8 = 128 tiles.
@@ -201,35 +324,25 @@ class MassiveCompressor {
         // STEP 4: CHR TILE EXTRACTION (8x8 for pattern table)
         // ===================================================
         // Extract 8x8 CHR tiles in reading order and convert to planar format.
-        // This gives us 32×16 = 512 CHR tiles that will be stored in the pattern table.
+        // Only process the clipped region to eliminate transparent padding areas.
         // Each CHR tile is converted to proper NES planar format with interleaved bit planes.
-        const chrTileData = this.extract8x8Tiles(processedImageData, paletteSystem);
+        const chrTileData = this.extract8x8Tiles(processedImageData, paletteSystem, clipInfo);
 
-        // STEP 5: COMMAND GENERATION
-        // ==========================
-        // Create the command header that defines what operations are available in the
-        // compressed data stream. This header-driven approach allows the decoder to
-        // be flexible and extensible without hardcoded command knowledge.
-        // New commands can be added just by updating the header format.
-        const commandHeader = this.generateCommandHeader();
-        const commandBitWidth = 2; // Currently using 2-bit commands (supports up to 4 command types)
+        // STEP 5: PROFILE-BASED COMPRESSION
+        // ==================================
+        // Try multiple compression profiles and choose the one that produces the smallest output.
+        // Each profile defines a specific command set and bit width optimized for different
+        // types of image data (detailed art, solid backgrounds, etc.).
+        const bestCompressionResult = this.findBestCompressionProfile(chrTileData, clipInfo);
 
-        // Build a lookup table that maps command types to their indices in the bit stream.
-        // This is the bridge between conceptual commands (PLOT_PIXEL, REPEAT_PIXEL, etc.)
-        // and their actual encoding indices (0, 1, 2, etc.) based on header order.
-        // This indirection allows commands to be reordered in the header without changing
-        // the compression logic.
-        const commandToIndex = new Map();
-        commandToIndex.set(this.COMMAND_REPEAT_PIXEL, 0);    // Index 0 = repeat pixel command
-        commandToIndex.set(this.COMMAND_PLOT_PIXEL, 1);      // Index 1 = single pixel command
-        commandToIndex.set(this.COMMAND_PLOT_TWO_PIXELS, 2); // Index 2 = double pixel command
+        const commandHeader = bestCompressionResult.header;
+        const pixelData = bestCompressionResult.pixelData;
 
-        // STEP 6: PIXEL DATA COMPRESSION
-        // ===============================
-        // Convert the CHR tile data back to linear pixel values and compress using
-        // the original command system. This preserves all the original compression
-        // logic while working with the CHR planar data format internally.
-        const pixelData = this.compressCHRData(chrTileData, commandBitWidth, commandToIndex);
+        console.log(`   🏆 Selected profile: ${bestCompressionResult.profileName} (${bestCompressionResult.pixelData.length} bytes)`);
+
+        // STEP 6: DATA ASSEMBLY PREPARATION
+        // =================================
+        // The compression system has selected the optimal command set for this image.
 
         // Pack the palette assignments into a compact format. Each 16x16 mega-tile gets assigned
         // to one of the 4 available palettes, encoded as 2-bit values (4 assignments per byte).
@@ -249,7 +362,47 @@ class MassiveCompressor {
         console.log(`Compressed ${filePath} to ${compressedData.length} bytes (${commandHeader.length} header + ${paletteAssignments.length} assignment + ${paletteData.length} palette + ${pixelData.length} pixel bytes)`);
         console.log(`Used ${paletteSystem.palettes.length} palettes for ${megaTileData.length} mega-tiles, generated ${chrTileData.length} CHR tiles`);
 
+        // Write human-readable debug output
+        await this.writeDebugOutput(filePath, bestCompressionResult);
+
         return compressedData;
+    }
+
+    /**
+     * Write human-readable debug output showing the compression commands
+     * @param {string} originalFilePath - Path to original .massive.png file
+     * @param {Object} compressionResult - Result from findBestCompressionProfile
+     */
+    async writeDebugOutput(originalFilePath, compressionResult) {
+        try {
+            // Generate output file path
+            const debugPath = originalFilePath.replace('.massive.png', '.massive.txt');
+
+            // Build debug content
+            const lines = [];
+            lines.push(`// Massive Compression Debug Output`);
+            lines.push(`// Original: ${originalFilePath}`);
+            lines.push(`// Profile: ${compressionResult.profileName}`);
+            lines.push(`// Total size: ${compressionResult.totalSize} bytes`);
+            lines.push(`// Commands: ${this.lastDebugCommands ? this.lastDebugCommands.length : 0}`);
+            lines.push('');
+
+            if (this.lastDebugCommands) {
+                this.lastDebugCommands.forEach((command) => {
+                    lines.push(command);
+                });
+            } else {
+                lines.push('// No debug commands available');
+            }
+
+            // Write to file
+            const { promises: fs } = await import('fs');
+            await fs.writeFile(debugPath, lines.join('\n'), 'utf8');
+
+            console.log(`   📄 Debug output written to: ${debugPath}`);
+        } catch (error) {
+            console.warn(`   ⚠️  Failed to write debug output: ${error.message}`);
+        }
     }
 
     /**
@@ -413,6 +566,77 @@ class MassiveCompressor {
     }
 
     /**
+     * Auto-detect sprite bounding box and calculate clipping values
+     * @param {Object} imageData - Image data with width, height, data
+     * @returns {Object} - Clip values and bounding box info
+     */
+    detectSpriteBounds(imageData) {
+        const { width, height, data } = imageData;
+
+        let minX = width, maxX = -1;
+        let minY = height, maxY = -1;
+
+        // Find bounding box of non-transparent pixels
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const pixelIndex = (y * width + x) * 4;
+                const alpha = data[pixelIndex + 3];
+
+                // If pixel is not transparent
+                if (alpha > 0) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+
+        // If no non-transparent pixels found, no clipping needed
+        if (maxX === -1) {
+            return {
+                leftClip: 0, rightClip: 0, topClip: 0, bottomClip: 0,
+                boundingBox: { x: 0, y: 0, width: width, height: height }
+            };
+        }
+
+        // Calculate clipping in 8-pixel increments (tile boundaries)
+        // We want to clip to the nearest 8-pixel boundary that includes all content
+        const contentLeft = Math.floor(minX / 8) * 8;
+        const contentRight = Math.ceil((maxX + 1) / 8) * 8;
+        const contentTop = Math.floor(minY / 8) * 8;
+        const contentBottom = Math.ceil((maxY + 1) / 8) * 8;
+
+        // Calculate clip amounts (in 8-pixel units)
+        const leftClip = contentLeft / 8;
+        const rightClip = (width - contentRight) / 8;
+        const topClip = contentTop / 8;
+        const bottomClip = (height - contentBottom) / 8;
+
+        // Ensure clip values fit in 4 bits (0-15)
+        const safeLeftClip = Math.min(15, Math.max(0, leftClip));
+        const safeRightClip = Math.min(15, Math.max(0, rightClip));
+        const safeTopClip = Math.min(15, Math.max(0, topClip));
+        const safeBottomClip = Math.min(15, Math.max(0, bottomClip));
+
+        console.log(`   🎯 Detected sprite bounds: ${minX},${minY} to ${maxX},${maxY}`);
+        console.log(`   ✂️  Clipping: L${safeLeftClip} R${safeRightClip} T${safeTopClip} B${safeBottomClip} (8px units)`);
+
+        return {
+            leftClip: safeLeftClip,
+            rightClip: safeRightClip,
+            topClip: safeTopClip,
+            bottomClip: safeBottomClip,
+            boundingBox: {
+                x: safeLeftClip * 8,
+                y: safeTopClip * 8,
+                width: width - (safeLeftClip + safeRightClip) * 8,
+                height: height - (safeTopClip + safeBottomClip) * 8
+            }
+        };
+    }
+
+    /**
      * Extract 16x16 tiles from the image (for palette analysis)
      * @param {PNG} pngData - Parsed PNG data
      * @param {Object} padOffsets - Padding offsets for coordinate adjustment
@@ -464,16 +688,27 @@ class MassiveCompressor {
      * Extract 8x8 tiles from the image in reading order for CHR pattern table
      * @param {Object} imageData - Image data with width, height, data
      * @param {Object} paletteSystem - Contains palettes and assignments for color conversion
+     * @param {Object} clipInfo - Clipping information to limit processing area
      * @returns {Array} - Array of 8x8 CHR tiles with planar data
      */
-    extract8x8Tiles(imageData, paletteSystem) {
+    extract8x8Tiles(imageData, paletteSystem, clipInfo) {
         const chrTiles = [];
-        const tilesWide = 32; // 256 / 8
-        const tilesHigh = 16; // 128 / 8
 
-        // Extract tiles in reading order (left-to-right, top-to-bottom)
-        for (let tileY = 0; tileY < tilesHigh; tileY++) {
-            for (let tileX = 0; tileX < tilesWide; tileX++) {
+        // Calculate clipped dimensions
+        const fullTilesWide = 32; // 256 / 8
+        const fullTilesHigh = 16; // 128 / 8
+
+        const clippedTilesWide = fullTilesWide - clipInfo.leftClip - clipInfo.rightClip;
+        const clippedTilesHigh = fullTilesHigh - clipInfo.topClip - clipInfo.bottomClip;
+
+        console.log(`   📐 Clipped tile area: ${clippedTilesWide}×${clippedTilesHigh} tiles (was ${fullTilesWide}×${fullTilesHigh})`);
+
+        // Extract tiles in reading order (left-to-right, top-to-bottom) but only within clipped area
+        for (let clippedTileY = 0; clippedTileY < clippedTilesHigh; clippedTileY++) {
+            for (let clippedTileX = 0; clippedTileX < clippedTilesWide; clippedTileX++) {
+                // Convert clipped coordinates to full image coordinates
+                const tileX = clippedTileX + clipInfo.leftClip;
+                const tileY = clippedTileY + clipInfo.topClip;
                 // Extract 8x8 pixels for this CHR tile
                 const tilePixels = [];
 
@@ -507,9 +742,11 @@ class MassiveCompressor {
                 const planarData = this.convertToPlanarFormat(pixelValues);
 
                 chrTiles.push({
-                    index: tileY * tilesWide + tileX,
-                    x: tileX,
-                    y: tileY,
+                    index: clippedTileY * clippedTilesWide + clippedTileX, // Sequential index within clipped area
+                    clippedX: clippedTileX, // Position within clipped area
+                    clippedY: clippedTileY,
+                    fullX: tileX, // Original position in full image
+                    fullY: tileY,
                     megaTileIndex: megaTileIndex,
                     pixels: tilePixels,
                     pixelValues: pixelValues,
@@ -825,8 +1062,7 @@ class MassiveCompressor {
     }
 
     /**
-     * Compress linear pixel values using the original command system
-     * (This is the core of your original compression logic, restored)
+     * Compress linear pixel values using the new bit-based command system
      *
      * @param {Array} pixelValues - Array of 2-bit pixel values (0-3)
      * @param {number} commandBitWidth - Number of bits per command
@@ -834,30 +1070,367 @@ class MassiveCompressor {
      * @returns {number[]} - Compressed data bytes
      */
     compressPixelValues(pixelValues, commandBitWidth, commandToIndex) {
+        // Convert pixel values to bit stream
+        const bits = [];
+        for (const pixelValue of pixelValues) {
+            bits.push((pixelValue >> 1) & 1); // Bit 1
+            bits.push(pixelValue & 1);         // Bit 0
+        }
+
+        console.log(`   🔄 Converting ${pixelValues.length} pixels to ${bits.length} bits for compression`);
+
+        // Compress the bit stream using the new commands
+        return this.compressBitStream(bits, commandBitWidth, commandToIndex);
+    }
+
+    /**
+     * Compress a bit stream using REPEAT_BITS and PLOT_BITS commands
+     *
+     * @param {Array} bits - Array of bits (0 or 1)
+     * @param {number} commandBitWidth - Number of bits per command
+     * @param {Map} commandToIndex - Maps command types to bit stream indices
+     * @returns {number[]} - Compressed data bytes
+     */
+    compressBitStream(bits, commandBitWidth, commandToIndex) {
         const allCommandBits = [];
-        let previousPixelValue = null;
+        const debugCommands = []; // For human-readable output
 
-        let pixelIndex = 0;
-        while (pixelIndex < pixelValues.length) {
-            const pixelValue = pixelValues[pixelIndex];
+        let bitIndex = 0;
+        while (bitIndex < bits.length) {
+            const remainingBits = bits.length - bitIndex;
 
-            // Check if we can use command 1 (repeat pixel) for consecutive identical pixels
-            let repeatCount = 0;
-            let nextIndex = pixelIndex + 1;
+            // Try all available commands and evaluate their efficiency
+            const commandOptions = [];
 
-            // Count how many consecutive pixels (including current) have the same value
-            while (nextIndex < pixelValues.length && repeatCount < 15) {
-                const nextPixelValue = pixelValues[nextIndex];
-
-                if (nextPixelValue === pixelValue) {
-                    repeatCount++;
-                    nextIndex++;
-                } else {
-                    break;
+            // Try REPEAT_BITS if available
+            if (commandToIndex.has(this.COMMAND_REPEAT_BITS)) {
+                const result = this.tryRepeatBits(bitIndex, remainingBits, bits, commandBitWidth);
+                if (result.viable) {
+                    commandOptions.push({
+                        ...result,
+                        commandType: this.COMMAND_REPEAT_BITS,
+                        ratio: result.bitsUsed / result.imageBitsProduced
+                    });
                 }
             }
 
-            // If we found repeats, use repeat command with embedded pixel data
+            // Try PLOT_BITS if available
+            if (commandToIndex.has(this.COMMAND_PLOT_BITS)) {
+                const result = this.tryPlotBits(bitIndex, remainingBits, bits, commandBitWidth);
+                if (result.viable) {
+                    commandOptions.push({
+                        ...result,
+                        commandType: this.COMMAND_PLOT_BITS,
+                        ratio: result.bitsUsed / result.imageBitsProduced
+                    });
+                }
+            }
+
+            // Try REPEAT_COMMAND if available
+            if (commandToIndex.has(this.COMMAND_REPEAT_COMMAND)) {
+                const result = this.tryRepeatCommand(bitIndex, remainingBits, bits, commandBitWidth, commandToIndex);
+                if (result.viable) {
+                    commandOptions.push({
+                        ...result,
+                        commandType: this.COMMAND_REPEAT_COMMAND,
+                        ratio: result.efficiency // Already calculated in tryRepeatCommand
+                    });
+                }
+            }
+
+            // Apply selection logic: lowest ratio → highest advance → first in header
+            if (commandOptions.length === 0) {
+                // Provide detailed failure information for debugging
+                let failureDetails = [];
+                if (commandToIndex.has(this.COMMAND_REPEAT_BITS)) {
+                    const repeatResult = this.tryRepeatBits(bitIndex, remainingBits, bits, commandBitWidth);
+                    failureDetails.push(`REPEAT_BITS: ${repeatResult.debugInfo}`);
+                }
+                if (commandToIndex.has(this.COMMAND_PLOT_BITS)) {
+                    const plotResult = this.tryPlotBits(bitIndex, remainingBits, bits, commandBitWidth);
+                    failureDetails.push(`PLOT_BITS: ${plotResult.debugInfo}`);
+                }
+                if (commandToIndex.has(this.COMMAND_REPEAT_COMMAND)) {
+                    const repeatCommandResult = this.tryRepeatCommand(bitIndex, remainingBits, bits, commandBitWidth, commandToIndex);
+                    failureDetails.push(`REPEAT_COMMAND: ${repeatCommandResult.debugInfo}`);
+                }
+
+                throw new Error(`No viable commands at bit position ${bitIndex}, ${remainingBits} bits remaining. Failures: ${failureDetails.join('; ')}`);
+            }
+
+            // Sort by: ratio (ascending), then imageBitsProduced (descending), then command order
+            commandOptions.sort((a, b) => {
+                if (a.ratio !== b.ratio) return a.ratio - b.ratio;
+                if (a.imageBitsProduced !== b.imageBitsProduced) return b.imageBitsProduced - a.imageBitsProduced;
+                // Command order based on header sequence (REPEAT_BITS=0x00, PLOT_BITS=0x01)
+                return a.commandType - b.commandType;
+            });
+
+            const selectedCommand = commandOptions[0];
+
+            // Execute the selected command
+            const commandId = commandToIndex.get(selectedCommand.commandType);
+            this.addCommandToBitQueue(allCommandBits, commandId, commandBitWidth);
+
+            if (selectedCommand.commandType === this.COMMAND_REPEAT_BITS) {
+                // Encode REPEAT_BITS command
+                allCommandBits.push(selectedCommand.commandData.bitValue);
+                const count = selectedCommand.commandData.runLength - 2; // Convert 2-9 to 0-7
+                for (let bit = 2; bit >= 0; bit--) {
+                    allCommandBits.push((count >> bit) & 1);
+                }
+            } else if (selectedCommand.commandType === this.COMMAND_PLOT_BITS) {
+                // Encode PLOT_BITS command
+                for (let i = 0; i < 4; i++) {
+                    allCommandBits.push(parseInt(selectedCommand.commandData.pattern[i]));
+                }
+            } else if (selectedCommand.commandType === this.COMMAND_REPEAT_COMMAND) {
+
+                // Encode REPEAT_COMMAND command
+                const count = selectedCommand.commandData.repeatCount - 2; // Convert 2-9 to 0-7
+                for (let bit = 2; bit >= 0; bit--) {
+                    allCommandBits.push((count >> bit) & 1);
+                }
+
+                // Now encode the following command
+                const followingCommandId = commandToIndex.get(selectedCommand.commandData.followingCommand);
+                this.addCommandToBitQueue(allCommandBits, followingCommandId, commandBitWidth);
+
+                // Encode the following command's data
+                if (selectedCommand.commandData.followingCommand === this.COMMAND_REPEAT_BITS) {
+                    allCommandBits.push(selectedCommand.commandData.followingCommandData.bitValue);
+                    const followingCount = selectedCommand.commandData.followingCommandData.runLength - 2;
+                    for (let bit = 2; bit >= 0; bit--) {
+                        allCommandBits.push((followingCount >> bit) & 1);
+                    }
+                } else if (selectedCommand.commandData.followingCommand === this.COMMAND_PLOT_BITS) {
+                    for (let i = 0; i < 4; i++) {
+                        allCommandBits.push(parseInt(selectedCommand.commandData.followingCommandData.pattern[i]));
+                    }
+                }
+            }
+
+            // Add to debug output
+            const endBit = bitIndex + selectedCommand.imageBitsProduced - 1;
+            debugCommands.push(`[${String(bitIndex).padStart(5, '0')}-${String(endBit).padStart(5, '0')}] ${selectedCommand.debugInfo}`);
+
+
+            bitIndex += selectedCommand.imageBitsProduced;
+        }
+
+        // Pack bits into bytes
+        const packedBytes = this.packBitsToBytes(allCommandBits);
+
+        // Store debug commands for later output
+        this.lastDebugCommands = debugCommands;
+
+        return packedBytes;
+    }
+
+    /**
+     * Try to use REPEAT_BITS command at current position
+     * @param {number} bitPosition - Current position in bit stream
+     * @param {number} remainingBits - Number of bits remaining from this position
+     * @param {number[]} bits - Full bit array
+     * @param {number} commandBitWidth - Width of command ID in bits
+     * @returns {Object} - {viable, bitsUsed, imageBitsProduced, debugInfo, commandData}
+     */
+    tryRepeatBits(bitPosition, remainingBits, bits, commandBitWidth) {
+        // Check if we have enough bits for the command structure
+        const minBitsNeeded = commandBitWidth + 1 + 3; // command + bit_value + 3-bit count
+        if (remainingBits < minBitsNeeded) {
+            return { viable: false, bitsUsed: 0, imageBitsProduced: 0, debugInfo: 'Insufficient bits for command structure' };
+        }
+
+        // Find run of identical bits starting at current position
+        const currentBit = bits[bitPosition];
+        let runLength = 1;
+        while (bitPosition + runLength < bits.length &&
+               bits[bitPosition + runLength] === currentBit &&
+               runLength < 9) { // Max run length is 9 (111 + 2)
+            runLength++;
+        }
+
+        // Need at least 2 identical bits to be viable
+        if (runLength < 2) {
+            return { viable: false, bitsUsed: 0, imageBitsProduced: 0, debugInfo: 'Run too short (< 2 bits)' };
+        }
+
+        // Check if we can encode this run length within remaining bits
+        const imageBitsConsumed = Math.min(runLength, remainingBits);
+        if (imageBitsConsumed < 2) {
+            return { viable: false, bitsUsed: 0, imageBitsProduced: 0, debugInfo: 'Not enough remaining bits for viable run' };
+        }
+
+        // Calculate actual command cost
+        const bitsUsed = commandBitWidth + 1 + 3; // command + bit_value + count
+
+        return {
+            viable: true,
+            bitsUsed: bitsUsed,
+            imageBitsProduced: imageBitsConsumed,
+            debugInfo: `REPEAT_BITS ${currentBit}, ${imageBitsConsumed}`,
+            commandData: {
+                bitValue: currentBit,
+                runLength: imageBitsConsumed
+            }
+        };
+    }
+
+    /**
+     * Try to use PLOT_BITS command at current position
+     * @param {number} bitPosition - Current position in bit stream
+     * @param {number} remainingBits - Number of bits remaining from this position
+     * @param {number[]} bits - Full bit array
+     * @param {number} commandBitWidth - Width of command ID in bits
+     * @returns {Object} - {viable, bitsUsed, imageBitsProduced, debugInfo, commandData}
+     */
+    tryPlotBits(bitPosition, remainingBits, bits, commandBitWidth) {
+        // PLOT_BITS can handle any remaining bits (1-4), padding with zeros
+        if (remainingBits < 1) {
+            return {
+                viable: false,
+                bitsUsed: 0,
+                imageBitsProduced: 0,
+                debugInfo: `No image bits remaining`
+            };
+        }
+
+        // Collect up to 4 bits for the pattern, padding with zeros
+        const bitsToProcess = Math.min(4, remainingBits);
+        let pattern = '';
+        for (let i = 0; i < 4; i++) {
+            if (i < bitsToProcess) {
+                pattern += bits[bitPosition + i];
+            } else {
+                pattern += '0'; // Pad with zeros
+            }
+        }
+
+        const bitsUsed = commandBitWidth + 4; // command + 4-bit pattern
+
+        return {
+            viable: true,
+            bitsUsed: bitsUsed,
+            imageBitsProduced: bitsToProcess, // Only count actual bits processed
+            debugInfo: `PLOT_BITS ${pattern}`,
+            commandData: {
+                pattern: pattern,
+                actualBits: bitsToProcess
+            }
+        };
+    }
+
+    /**
+     * Try to use REPEAT_COMMAND at current position with lookahead evaluation
+     * @param {number} bitPosition - Current position in bit stream
+     * @param {number} remainingBits - Number of bits remaining from this position
+     * @param {number[]} bits - Full bit array
+     * @param {number} commandBitWidth - Width of command ID in bits
+     * @param {Map} commandToIndex - Maps command types to bit stream indices
+     * @returns {Object} - {viable, bitsUsed, imageBitsProduced, debugInfo, commandData}
+     */
+    tryRepeatCommand(bitPosition, remainingBits, bits, commandBitWidth, commandToIndex) {
+        // REPEAT_COMMAND structure: [command_bits][3_bit_repeat_count]
+        const repeatCommandBits = commandBitWidth + 3;
+
+        if (remainingBits < repeatCommandBits) {
+            return {
+                viable: false,
+                bitsUsed: 0,
+                imageBitsProduced: 0,
+                debugInfo: 'Insufficient bits for REPEAT_COMMAND structure'
+            };
+        }
+
+        const bestOptions = [];
+
+        // Try repeating each available command (except REPEAT_COMMAND itself)
+        for (const [commandType, commandIndex] of commandToIndex) {
+            if (commandType === this.COMMAND_REPEAT_COMMAND) continue; // No self-repetition
+
+            // PATTERN DISCOVERY PHASE: Find actual maximum viable repeat count
+            let maxViableRepeats = 1;
+            let currentPos = bitPosition;
+            const bitsAfterRepeat = remainingBits - repeatCommandBits;
+
+            // Get the first pattern to match against
+            let firstPatternResult;
+            if (commandType === this.COMMAND_REPEAT_BITS) {
+                firstPatternResult = this.tryRepeatBits(bitPosition, bitsAfterRepeat, bits, commandBitWidth);
+            } else if (commandType === this.COMMAND_PLOT_BITS) {
+                firstPatternResult = this.tryPlotBits(bitPosition, bitsAfterRepeat, bits, commandBitWidth);
+            }
+
+            if (!firstPatternResult || !firstPatternResult.viable) continue; // Skip this command type
+
+            // Test how many times this EXACT pattern can be applied consecutively
+            while (maxViableRepeats < 9) { // Cap at maximum repeat count
+                let testResult;
+
+                if (commandType === this.COMMAND_REPEAT_BITS) {
+                    testResult = this.tryRepeatBits(currentPos, bits.length - currentPos, bits, commandBitWidth);
+                } else if (commandType === this.COMMAND_PLOT_BITS) {
+                    testResult = this.tryPlotBits(currentPos, bits.length - currentPos, bits, commandBitWidth);
+                }
+
+                if (!testResult || !testResult.viable) break;
+
+                // Check if this pattern matches the first pattern
+                let patternsMatch = false;
+                if (commandType === this.COMMAND_REPEAT_BITS) {
+                    patternsMatch = (testResult.commandData.bitValue === firstPatternResult.commandData.bitValue &&
+                                    testResult.commandData.runLength === firstPatternResult.commandData.runLength);
+                } else if (commandType === this.COMMAND_PLOT_BITS) {
+                    patternsMatch = (testResult.commandData.pattern === firstPatternResult.commandData.pattern);
+                }
+
+                if (!patternsMatch) break;
+
+                maxViableRepeats++;
+                currentPos += testResult.imageBitsProduced;
+            }
+
+            // EFFICIENCY EVALUATION PHASE: Only try realistic repeat counts (temporarily fixed to 2 for debugging)
+            const maxRepeatCount = Math.min(maxViableRepeats, 9);
+            for (let repeatCount = 2; repeatCount <= Math.min(maxRepeatCount, 3); repeatCount++) { // Limit to small repeat counts
+                // Use the already calculated first pattern result
+                const totalBitsUsed = repeatCommandBits + firstPatternResult.bitsUsed;
+                const totalImageBitsProduced = firstPatternResult.imageBitsProduced * repeatCount;
+                const efficiency = totalBitsUsed / totalImageBitsProduced;
+
+                bestOptions.push({
+                    viable: true,
+                    bitsUsed: totalBitsUsed,
+                    imageBitsProduced: totalImageBitsProduced,
+                    efficiency: efficiency,
+                    debugInfo: `REPEAT_COMMAND ${repeatCount}x ${firstPatternResult.debugInfo}`,
+                    commandData: {
+                        repeatCount: repeatCount,
+                        followingCommand: commandType,
+                        followingCommandData: firstPatternResult.commandData
+                    }
+                });
+            }
+        }
+
+        // Return the most efficient option
+        if (bestOptions.length > 0) {
+            return bestOptions.reduce((best, current) =>
+                current.efficiency < best.efficiency ? current : best
+            );
+        } else {
+            return {
+                viable: false,
+                bitsUsed: 0,
+                imageBitsProduced: 0,
+                debugInfo: 'No viable commands to repeat'
+            };
+        }
+    }
+
+    /**
+     * Convert tiles to command-based pixel data
             if (repeatCount > 0) {
                 // Use repeat pixel command
                 const commandId = commandToIndex.get(this.COMMAND_REPEAT_PIXEL);
@@ -885,31 +1458,60 @@ class MassiveCompressor {
                 }
 
                 if (useDoublePixel && pixelIndex + 1 < pixelValues.length) {
-                    // Use plot two pixels command
-                    const commandId = commandToIndex.get(this.COMMAND_PLOT_TWO_PIXELS);
-                    this.addCommandToBitQueue(allCommandBits, commandId, commandBitWidth);
+                    // Use plot two pixels command (if available in this profile)
+                    const twoPixelCommandId = commandToIndex.get(this.COMMAND_PLOT_TWO_PIXELS);
+                    if (twoPixelCommandId !== undefined) {
+                        this.addCommandToBitQueue(allCommandBits, twoPixelCommandId, commandBitWidth);
 
-                    // Add first pixel data bits (2 bits)
-                    allCommandBits.push((pixelValue >> 1) & 1); // Bit 1
-                    allCommandBits.push(pixelValue & 1);         // Bit 0
+                        // Add first pixel data bits (2 bits)
+                        allCommandBits.push((pixelValue >> 1) & 1); // Bit 1
+                        allCommandBits.push(pixelValue & 1);         // Bit 0
 
-                    // Add second pixel data bits (2 bits)
-                    allCommandBits.push((secondPixelValue >> 1) & 1); // Bit 1
-                    allCommandBits.push(secondPixelValue & 1);         // Bit 0
+                        // Add second pixel data bits (2 bits)
+                        allCommandBits.push((secondPixelValue >> 1) & 1); // Bit 1
+                        allCommandBits.push(secondPixelValue & 1);         // Bit 0
 
-                    pixelIndex += 2;
-                    previousPixelValue = secondPixelValue;
-                } else {
-                    // Use plot single pixel command
-                    const commandId = commandToIndex.get(this.COMMAND_PLOT_PIXEL);
-                    this.addCommandToBitQueue(allCommandBits, commandId, commandBitWidth);
+                        pixelIndex += 2;
+                        previousPixelValue = secondPixelValue;
+                    } else {
+                        // PLOT_TWO_PIXELS not available - fall through to single pixel handling
+                        useDoublePixel = false;
+                    }
+                }
 
-                    // Add pixel data bits (2 bits)
-                    allCommandBits.push((pixelValue >> 1) & 1); // Bit 1
-                    allCommandBits.push(pixelValue & 1);         // Bit 0
+                if (!useDoublePixel) {
+                    // Use plot single pixel command (if available in this profile)
+                    const plotPixelCommandId = commandToIndex.get(this.COMMAND_PLOT_PIXEL);
+                    if (plotPixelCommandId !== undefined) {
+                        this.addCommandToBitQueue(allCommandBits, plotPixelCommandId, commandBitWidth);
 
-                    pixelIndex++;
-                    previousPixelValue = pixelValue;
+                        // Add pixel data bits (2 bits)
+                        allCommandBits.push((pixelValue >> 1) & 1); // Bit 1
+                        allCommandBits.push(pixelValue & 1);         // Bit 0
+
+                        pixelIndex++;
+                        previousPixelValue = pixelValue;
+                    } else {
+                        // PLOT_PIXEL not available in this profile - force it to be a repeat with count 0
+                        const repeatCommandId = commandToIndex.get(this.COMMAND_REPEAT_PIXEL);
+                        if (repeatCommandId !== undefined) {
+                            this.addCommandToBitQueue(allCommandBits, repeatCommandId, commandBitWidth);
+
+                            // Add pixel data bits (2 bits)
+                            allCommandBits.push((pixelValue >> 1) & 1); // Bit 1
+                            allCommandBits.push(pixelValue & 1);         // Bit 0
+
+                            // Add 4-bit repeat count of 0 (just this pixel, no repeats)
+                            for (let bit = 3; bit >= 0; bit--) {
+                                allCommandBits.push(0);
+                            }
+
+                            pixelIndex++;
+                            previousPixelValue = pixelValue;
+                        } else {
+                            throw new Error("No available commands to encode single pixel");
+                        }
+                    }
                 }
             }
         }

@@ -2,132 +2,76 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_TEMPLATE_HERO_MENU, TEXT_SHOP_HOLDRESET, TEXT_INTRO_STORY_4, TEXT_INTRO_STORY_2, TEXT_SHOP_THANKYOUWHATELSE, TEXT_TITLE_COPYRIGHT_SQUARE, TEXT_TITLE_CONTINUE, TEXT_CLASS_NAME_BLACK_BELT, TEXT_CLASS_NAME_RED_WIZARD, LUT_METASPRITE_FRAMES_LO, LUT_METASPRITE_FRAMES_HI, METASPRITE_CURSOR_FRAMES_FRAMES, METASPRITE_CURSOR_FRAME_0, METASPRITE_BLACK_BELT_FRAMES_FRAMES, METASPRITE_BLACK_BELT_FRAME_0, METASPRITE_BLACK_BELT_FRAME_1, METASPRITE_BLACK_MAGE_FRAMES_FRAMES, METASPRITE_BLACK_MAGE_FRAME_0, METASPRITE_BLACK_MAGE_FRAME_1, METASPRITE_FIGHTER_FRAMES_FRAMES, METASPRITE_FIGHTER_FRAME_0, METASPRITE_FIGHTER_FRAME_1, METASPRITE_RED_MAGE_FRAMES_FRAMES, METASPRITE_RED_MAGE_FRAME_0, METASPRITE_RED_MAGE_FRAME_1, METASPRITE_THIEF_FRAMES_FRAMES, METASPRITE_THIEF_FRAME_0, METASPRITE_THIEF_FRAME_1, METASPRITE_WHITE_MAGE_FRAMES_FRAMES, METASPRITE_WHITE_MAGE_FRAME_0, METASPRITE_WHITE_MAGE_FRAME_1
+.export TEXT_SHOP_YOUCANTLEARNTHAT, TEXT_SHOP_YOUHAVENOTHING, TEXT_INTRO_STORY_7, TEXT_INTRO_STORY_9, TEXT_SHOP_YOUHAVETOOMANY, TEXT_SHOP_WHOWILLTAKEIT, TEXT_TITLE_NEW_GAME, TEXT_CLASS_NAME_RED_MAGE, TEXT_MENU_GOLD, TEXT_TITLE_START, TEXT_TITLE_EXIT, TEXT_HERO_3_NAME, SHOP_WHITEMAGIC_CONERIA, SHOP_WHITEMAGIC_CONERIA_SIBLING2, LUT_METATILE_BOTTOM_RIGHT, LUT_METATILE_BOTTOM_RIGHT_SIBLING2
 
-; address 0 - 55 (bytes 0 - 55)
-TEXT_TEMPLATE_HERO_MENU:
-.byte $91, $7f, $7f, $1a, $02, $82, $86, $8f, $80, $01, $7f, $7f, $16, $1e, $7f, $02, $84, $90, $4c, $84, $91, $7f, $7f, $7f, $1b, $0f, $15, $17, $11, $7f, $81, $92, $4c, $81, $93, $4c, $81, $94, $4c, $81, $95, $4c, $7f, $81, $96, $4c, $81, $97, $4c, $81, $98, $4c, $81, $99, $00
+; address 0 - 256 (bytes 2304 - 2560)
+MASSIVE_CRAB_IMAGE_EXTENDED:
+.byte $b4, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $1e, $c3, $b0, $ec, $3b, $0e, $c3, $b0, $ed, $07, $ff, $ff, $ff, $fb, $43, $e7, $0f, $9c, $4e, $51, $39, $44, $e5, $13, $94, $4e, $51, $38, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $c2, $70, $5c, $27, $09, $c5, $72, $1c, $67, $15, $cf, $0d, $0e, $38, $43, $82, $d4, $27, $05, $c7, $71, $dc, $57, $3e, $1a, $e3, $07, $8c, $1c, $2e, $0b, $84, $9c, $17, $09, $c1, $70, $dc, $17, $0d, $c2, $70, $5c, $f7, $05, $c3, $71, $5c, $77, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $3e, $50, $f9, $c3, $e5, $13, $94, $4e, $51, $39, $44, $e5, $13, $94, $4f, $ff, $ff, $ff, $ee, $3b, $0e, $c3, $b0, $ec, $3b, $0e, $c3, $ac, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $3e, $b0, $7a, $c2, $e9, $0b, $a4, $2e
 
-; address 55 - 93 (bytes 0 - 38)
-TEXT_SHOP_HOLDRESET:
-.byte $16, $37, $34, $2c, $7f, $20, $13, $21, $13, $22, $7f, $3f, $30, $31, $34, $2d, $7f, $41, $37, $3d, $7f, $3c, $3d, $3a, $36, $7f, $1e, $1d, $25, $13, $20, $7f, $37, $2e, $2e, $47, $47, $00
+; address 256 - 299 (bytes 0 - 43)
+TEXT_SHOP_YOUCANTLEARNTHAT:
+.byte $21, $37, $3a, $3a, $41, $43, $7f, $27, $37, $3d, $7f, $2b, $29, $36, $4a, $3c, $7f, $34, $2d, $29, $3a, $36, $7f, $3c, $30, $29, $3c, $44, $7f, $21, $37, $35, $2d, $37, $36, $2d, $7f, $2d, $34, $3b, $2d, $46, $00
 
-; address 93 - 121 (bytes 0 - 28)
-TEXT_INTRO_STORY_4:
-.byte $29, $36, $2c, $02, $3c, $30, $2d, $02, $2d, $29, $3a, $3c, $30, $02, $2a, $2d, $2f, $31, $36, $3b, $02, $3c, $37, $02, $3a, $37, $3c, $00
+; address 299 - 342 (bytes 0 - 43)
+TEXT_SHOP_YOUHAVENOTHING:
+.byte $27, $37, $3d, $7f, $30, $29, $3e, $2d, $7f, $36, $37, $3c, $30, $31, $36, $2f, $7f, $3c, $37, $02, $3b, $2d, $34, $34, $7f, $7f, $0f, $36, $41, $45, $7f, $3c, $30, $31, $36, $2f, $7f, $2d, $34, $3b, $2d, $46, $00
 
-; address 121 - 146 (bytes 0 - 25)
-TEXT_INTRO_STORY_2:
-.byte $2c, $29, $3a, $33, $36, $2d, $3b, $3b, $02, $02, $22, $30, $2d, $02, $3f, $31, $36, $2c, $02, $3b, $3c, $37, $38, $3b, $00
+; address 342 - 372 (bytes 0 - 30)
+TEXT_INTRO_STORY_7:
+.byte $25, $30, $2d, $36, $02, $3c, $30, $2d, $02, $3f, $37, $3a, $34, $2c, $02, $31, $3b, $02, $31, $36, $02, $2c, $29, $3a, $33, $36, $2d, $3b, $3b, $00
 
-; address 146 - 168 (bytes 0 - 22)
-TEXT_SHOP_THANKYOUWHATELSE:
-.byte $22, $30, $29, $36, $33, $7f, $41, $37, $3d, $47, $7f, $25, $30, $29, $3c, $7f, $2d, $34, $3b, $2d, $46, $00
+; address 372 - 398 (bytes 0 - 26)
+TEXT_INTRO_STORY_9:
+.byte $0f, $2e, $3c, $2d, $3a, $02, $29, $02, $34, $37, $36, $2f, $02, $32, $37, $3d, $3a, $36, $2d, $41, $02, $2e, $37, $3d, $3a, $00
 
-; address 168 - 184 (bytes 0 - 16)
-TEXT_TITLE_COPYRIGHT_SQUARE:
-.byte $11, $02, $06, $0e, $0d, $0c, $02, $21, $1f, $23, $0f, $20, $13, $02, $02, $00
+; address 398 - 422 (bytes 0 - 24)
+TEXT_SHOP_YOUHAVETOOMANY:
+.byte $27, $37, $3d, $7f, $2b, $29, $36, $4a, $3c, $7f, $2b, $29, $3a, $3a, $41, $7f, $29, $36, $41, $35, $37, $3a, $2d, $00
 
-; address 184 - 193 (bytes 0 - 9)
-TEXT_TITLE_CONTINUE:
-.byte $11, $1d, $1c, $22, $17, $1c, $23, $13, $00
+; address 422 - 440 (bytes 0 - 18)
+TEXT_SHOP_WHOWILLTAKEIT:
+.byte $25, $30, $37, $7f, $3f, $31, $34, $34, $7f, $3c, $29, $33, $2d, $7f, $31, $3c, $46, $00
 
-; address 193 - 201 (bytes 0 - 8)
-TEXT_CLASS_NAME_BLACK_BELT:
-.byte $10, $34, $44, $10, $13, $1a, $22, $00
+; address 440 - 449 (bytes 0 - 9)
+TEXT_TITLE_NEW_GAME:
+.byte $1c, $13, $25, $02, $15, $0f, $1b, $13, $00
 
-; address 201 - 208 (bytes 0 - 7)
-TEXT_CLASS_NAME_RED_WIZARD:
-.byte $20, $13, $12, $25, $17, $28, $00
+; address 449 - 457 (bytes 0 - 8)
+TEXT_CLASS_NAME_RED_MAGE:
+.byte $20, $2d, $2c, $1b, $0f, $15, $13, $00
 
-; address 208 - 215 (bytes 0 - 7)
-LUT_METASPRITE_FRAMES_LO:
-.byte <METASPRITE_CURSOR_FRAMES_FRAMES, <METASPRITE_BLACK_BELT_FRAMES_FRAMES, <METASPRITE_BLACK_MAGE_FRAMES_FRAMES, <METASPRITE_FIGHTER_FRAMES_FRAMES, <METASPRITE_RED_MAGE_FRAMES_FRAMES, <METASPRITE_THIEF_FRAMES_FRAMES, <METASPRITE_WHITE_MAGE_FRAMES_FRAMES
+; address 457 - 464 (bytes 0 - 7)
+TEXT_MENU_GOLD:
+.byte $8b, $85, $60, $1c, $02, $15, $00
 
-; address 215 - 222 (bytes 0 - 7)
-LUT_METASPRITE_FRAMES_HI:
-.byte >METASPRITE_CURSOR_FRAMES_FRAMES, >METASPRITE_BLACK_BELT_FRAMES_FRAMES, >METASPRITE_BLACK_MAGE_FRAMES_FRAMES, >METASPRITE_FIGHTER_FRAMES_FRAMES, >METASPRITE_RED_MAGE_FRAMES_FRAMES, >METASPRITE_THIEF_FRAMES_FRAMES, >METASPRITE_WHITE_MAGE_FRAMES_FRAMES
+; address 464 - 470 (bytes 0 - 6)
+TEXT_TITLE_START:
+.byte $21, $22, $0f, $20, $22, $00
 
-; address 222 - 224 (bytes 0 - 2)
-METASPRITE_CURSOR_FRAMES_FRAMES:
-.byte <METASPRITE_CURSOR_FRAME_0, >METASPRITE_CURSOR_FRAME_0
+; address 470 - 475 (bytes 0 - 5)
+TEXT_TITLE_EXIT:
+.byte $13, $26, $17, $22, $00
 
-; address 224 - 231 (bytes 0 - 7)
-METASPRITE_CURSOR_FRAME_0:
-.byte $00, $00, $00, $02, $00, $01, $02
+; address 475 - 480 (bytes 0 - 5)
+TEXT_HERO_3_NAME:
+.byte $90, $80, $03, $91, $00
 
-; address 231 - 235 (bytes 0 - 4)
-METASPRITE_BLACK_BELT_FRAMES_FRAMES:
-.byte <METASPRITE_BLACK_BELT_FRAME_0, >METASPRITE_BLACK_BELT_FRAME_0, <METASPRITE_BLACK_BELT_FRAME_1, >METASPRITE_BLACK_BELT_FRAME_1
+; address 480 - 485 (bytes 0 - 5)
+SHOP_WHITEMAGIC_CONERIA:
+.byte $60, $62, $61, $63, $00
 
-; address 235 - 243 (bytes 0 - 8)
-METASPRITE_BLACK_BELT_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $06, $07
+; address 485 - 490 (bytes 0 - 5)
+SHOP_WHITEMAGIC_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00, $00
 
-; address 243 - 251 (bytes 0 - 8)
-METASPRITE_BLACK_BELT_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
+; address 490 - 492 (bytes 0 - 2)
+LUT_METATILE_BOTTOM_RIGHT:
+.byte <TILE_ANIMATION_3, <TILE_ANIMATION_4
 
-; address 251 - 255 (bytes 0 - 4)
-METASPRITE_BLACK_MAGE_FRAMES_FRAMES:
-.byte <METASPRITE_BLACK_MAGE_FRAME_0, >METASPRITE_BLACK_MAGE_FRAME_0, <METASPRITE_BLACK_MAGE_FRAME_1, >METASPRITE_BLACK_MAGE_FRAME_1
+; address 492 - 494 (bytes 0 - 2)
+LUT_METATILE_BOTTOM_RIGHT_SIBLING2:
+.byte >TILE_ANIMATION_3, >TILE_ANIMATION_4
 
-; address 255 - 263 (bytes 0 - 8)
-METASPRITE_BLACK_MAGE_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
-
-; address 263 - 271 (bytes 0 - 8)
-METASPRITE_BLACK_MAGE_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
-
-; address 271 - 275 (bytes 0 - 4)
-METASPRITE_FIGHTER_FRAMES_FRAMES:
-.byte <METASPRITE_FIGHTER_FRAME_0, >METASPRITE_FIGHTER_FRAME_0, <METASPRITE_FIGHTER_FRAME_1, >METASPRITE_FIGHTER_FRAME_1
-
-; address 275 - 283 (bytes 0 - 8)
-METASPRITE_FIGHTER_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
-
-; address 283 - 291 (bytes 0 - 8)
-METASPRITE_FIGHTER_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
-
-; address 291 - 295 (bytes 0 - 4)
-METASPRITE_RED_MAGE_FRAMES_FRAMES:
-.byte <METASPRITE_RED_MAGE_FRAME_0, >METASPRITE_RED_MAGE_FRAME_0, <METASPRITE_RED_MAGE_FRAME_1, >METASPRITE_RED_MAGE_FRAME_1
-
-; address 295 - 303 (bytes 0 - 8)
-METASPRITE_RED_MAGE_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
-
-; address 303 - 311 (bytes 0 - 8)
-METASPRITE_RED_MAGE_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
-
-; address 311 - 315 (bytes 0 - 4)
-METASPRITE_THIEF_FRAMES_FRAMES:
-.byte <METASPRITE_THIEF_FRAME_0, >METASPRITE_THIEF_FRAME_0, <METASPRITE_THIEF_FRAME_1, >METASPRITE_THIEF_FRAME_1
-
-; address 315 - 323 (bytes 0 - 8)
-METASPRITE_THIEF_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
-
-; address 323 - 331 (bytes 0 - 8)
-METASPRITE_THIEF_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
-
-; address 331 - 335 (bytes 0 - 4)
-METASPRITE_WHITE_MAGE_FRAMES_FRAMES:
-.byte <METASPRITE_WHITE_MAGE_FRAME_0, >METASPRITE_WHITE_MAGE_FRAME_0, <METASPRITE_WHITE_MAGE_FRAME_1, >METASPRITE_WHITE_MAGE_FRAME_1
-
-; address 335 - 343 (bytes 0 - 8)
-METASPRITE_WHITE_MAGE_FRAME_0:
-.byte $00, $00, $01, $01, $00, $01, $02, $03
-
-; address 343 - 351 (bytes 0 - 8)
-METASPRITE_WHITE_MAGE_FRAME_1:
-.byte $00, $00, $01, $01, $04, $05, $06, $07
-
-; 351 - 8192
-.res 7841
+; 494 - 8192
+.res 7698
 

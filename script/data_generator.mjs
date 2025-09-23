@@ -730,7 +730,7 @@ class Preprocessor {
                 packer.addConst({name: massive.name, data: i});
 
                 // Create a BinaryPackage with the compressed data
-                const massiveData = new BinaryPackage(massive.name, [massive.data]);
+                const massiveData = new BinaryPackage(`${massive.name}_IMAGE`, [massive.data]);
                 packer.addStatic(massiveData);
             }
         }

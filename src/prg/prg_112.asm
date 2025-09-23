@@ -19,9 +19,9 @@
     STA Var3
     FARCALL UploadCHRSolids
 
-    LDA #<MAP_TILE_0
+    LDA #<MAP_TILE_GRASS_0
     STA Var0
-    LDA #>MAP_TILE_0
+    LDA #>MAP_TILE_GRASS_0
     STA Var1
     LDA #4
     STA Var2
@@ -29,9 +29,9 @@
     STA Var3
     FARCALL UploadBackgroundCHR4
 
-    LDA #<MAP_TILE_1
+    LDA #<MAP_TILE_GRASS_1
     STA Var0
-    LDA #>MAP_TILE_1
+    LDA #>MAP_TILE_GRASS_1
     STA Var1
     LDA #8
     STA Var2
@@ -39,9 +39,9 @@
     STA Var3
     FARCALL UploadBackgroundCHR4
 
-    LDA #<MAP_TILE_2
+    LDA #<MAP_TILE_GRASS_2
     STA Var0
-    LDA #>MAP_TILE_2
+    LDA #>MAP_TILE_GRASS_2
     STA Var1
     LDA #12
     STA Var2
@@ -49,9 +49,9 @@
     STA Var3
     FARCALL UploadBackgroundCHR4
 
-    LDA #<MAP_TILE_3
+    LDA #<MAP_TILE_GRASS_3
     STA Var0
-    LDA #>MAP_TILE_3
+    LDA #>MAP_TILE_GRASS_3
     STA Var1
     LDA #16
     STA Var2

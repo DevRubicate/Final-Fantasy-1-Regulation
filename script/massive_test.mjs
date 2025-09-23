@@ -14,9 +14,9 @@ class MassiveDecoder {
         this.isInitialized = false;
 
         // Command definitions (should match compressor)
-        this.COMMAND_PLOT_PIXEL = 0x00;
-        this.COMMAND_REPEAT_PIXEL = 0x01;
-        this.COMMAND_PLOT_TWO_PIXELS = 0x02;
+        this.COMMAND_REPEAT_BITS = 0x00;
+        this.COMMAND_PLOT_BITS = 0x01;
+        this.COMMAND_REPEAT_COMMAND = 0x02;
     }
 
     /**
@@ -25,32 +25,47 @@ class MassiveDecoder {
      * @returns {number} - Header size in bytes
      */
     parseAndSetHeader(compressedBytes) {
-        if (compressedBytes.length < 3) {
+        if (compressedBytes.length < 1) {
             throw new Error('Compressed data too small for header');
         }
 
-        // Parse first byte: command bit width in bits 0-1
-        const firstByte = compressedBytes[0];
-        this.commandBitWidth = (firstByte & 0x3) + 1; // Extract bits 0-1, add 1
-        const unusedBits = firstByte >> 2; // Bits 2-7 (should be 0 for now)
-
-        // Parse command list and update global state
-        this.commands = [];
+        // Parse first byte: 00xxyyyy format
+        const headerByte = compressedBytes[0];
         let byteIndex = 1;
 
-        while (byteIndex < compressedBytes.length) {
-            const commandByte = compressedBytes[byteIndex];
-            if (commandByte === 0xFF) {
-                // Terminator found
-                byteIndex++;
-                break;
-            }
-            this.commands.push(commandByte);
-            byteIndex++;
+        // Extract bit width and number of commands
+        this.commandBitWidth = ((headerByte >> 4) & 0x3) + 1; // xx bits → 1-4 bit commands
+        const numCommands = headerByte & 0xF; // yyyy bits → 0-15 commands
+
+        // Parse clipping bytes
+        if (compressedBytes.length < 3) {
+            throw new Error('Compressed data too small for clipping header');
         }
 
-        if (byteIndex >= compressedBytes.length && compressedBytes[byteIndex - 1] !== 0xFF) {
-            throw new Error('Command header not properly terminated with 0xFF');
+        // Second byte: [leftClip][rightClip] (4 bits each)
+        const clipByte1 = compressedBytes[byteIndex++];
+        this.leftClip = (clipByte1 >> 4) & 0xF;
+        this.rightClip = clipByte1 & 0xF;
+
+        // Third byte: [topClip][bottomClip] (4 bits each)
+        const clipByte2 = compressedBytes[byteIndex++];
+        this.topClip = (clipByte2 >> 4) & 0xF;
+        this.bottomClip = clipByte2 & 0xF;
+
+        console.log(`   ✂️  Clipping: L${this.leftClip} R${this.rightClip} T${this.topClip} B${this.bottomClip} (8px units)`);
+
+        // Read exactly numCommands command definitions (in reverse order)
+        this.commands = [];
+        const commandBytes = [];
+        for (let i = 0; i < numCommands; i++) {
+            if (byteIndex >= compressedBytes.length) {
+                throw new Error(`Expected ${numCommands} commands but ran out of data`);
+            }
+            commandBytes.push(compressedBytes[byteIndex++]);
+        }
+        // Reverse the order to match ASM reading pattern
+        for (let i = numCommands - 1; i >= 0; i--) {
+            this.commands.push(commandBytes[i]);
         }
 
         this.isInitialized = true;
@@ -61,18 +76,46 @@ class MassiveDecoder {
     }
 
     /**
-     * Decode command-based pixel data using current state
-     * @param {number[]} pixelBytes - Encoded pixel data bytes
+     * Decode command-based bit data using current state, then convert to pixel values
+     * @param {number[]} pixelBytes - Encoded bit data bytes
+     * @param {number} expectedPixelCount - Expected number of pixels to prevent padding overflow
      * @returns {number[]} - Array of 2-bit pixel values
      */
-    decodePixelData(pixelBytes) {
+    decodePixelData(pixelBytes, expectedPixelCount = null) {
         if (!this.isInitialized) {
             throw new Error('Decoder not initialized - must parse header first');
         }
 
-        const bits = this.unpackBytesToBits(pixelBytes);
+        // First decode to bit stream
+        const decodedBits = this.decodeBitStream(pixelBytes);
+
+        // Then convert bit stream back to pixel values with bounds checking
         const pixelValues = [];
-        let lastPixelValue = 0; // Track last pixel for repeat command
+        for (let i = 0; i < decodedBits.length; i += 2) {
+            // Stop if we've reached the expected pixel count (prevents padding overflow)
+            if (expectedPixelCount && pixelValues.length >= expectedPixelCount) {
+                break;
+            }
+
+            if (i + 1 < decodedBits.length) {
+                const bit1 = decodedBits[i];     // High bit
+                const bit0 = decodedBits[i + 1]; // Low bit
+                const pixelValue = (bit1 << 1) | bit0;
+                pixelValues.push(pixelValue);
+            }
+        }
+
+        return pixelValues;
+    }
+
+    /**
+     * Decode bit stream using REPEAT_BITS and PLOT_BITS commands
+     * @param {number[]} pixelBytes - Encoded bit data bytes
+     * @returns {number[]} - Array of decoded bits
+     */
+    decodeBitStream(pixelBytes) {
+        const bits = this.unpackBytesToBits(pixelBytes);
+        const decodedBits = [];
 
         let bitIndex = 0;
         while (bitIndex < bits.length) {
@@ -84,62 +127,242 @@ class MassiveDecoder {
                 commandId = (commandId << 1) | bits[bitIndex++];
             }
 
+
             // Process command based on global state
-            if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_PLOT_PIXEL) {
-                // Plot single pixel - read 2 more bits
-                if (bitIndex + 2 > bits.length) break;
-
-                let pixelValue = 0;
-                pixelValue = (pixelValue << 1) | bits[bitIndex++]; // Bit 1
-                pixelValue = (pixelValue << 1) | bits[bitIndex++]; // Bit 0
-
-                pixelValues.push(pixelValue);
-                lastPixelValue = pixelValue;
-            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_REPEAT_PIXEL) {
-                // Plot pixel and repeat X times - read 2-bit pixel + 4-bit repeat count
-                if (bitIndex + 6 > bits.length) break;
-
-                // Read pixel data (2 bits)
-                let pixelValue = 0;
-                pixelValue = (pixelValue << 1) | bits[bitIndex++]; // Bit 1
-                pixelValue = (pixelValue << 1) | bits[bitIndex++]; // Bit 0
-
-                // Read repeat count (4 bits)
-                let repeatCount = 0;
-                for (let i = 0; i < 4; i++) {
-                    repeatCount = (repeatCount << 1) | bits[bitIndex++];
-                }
-
-                // Plot the pixel once, then repeat it repeatCount additional times
-                pixelValues.push(pixelValue);
-                for (let i = 0; i < repeatCount; i++) {
-                    pixelValues.push(pixelValue);
-                }
-
-                lastPixelValue = pixelValue;
-            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_PLOT_TWO_PIXELS) {
-                // Plot two pixels - read 4 more bits
+            if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_REPEAT_BITS) {
+                // REPEAT_BITS: 1 bit value + 3 bit count (2-9 repetitions)
                 if (bitIndex + 4 > bits.length) break;
 
-                // Read first pixel (2 bits)
-                let firstPixelValue = 0;
-                firstPixelValue = (firstPixelValue << 1) | bits[bitIndex++]; // Bit 1
-                firstPixelValue = (firstPixelValue << 1) | bits[bitIndex++]; // Bit 0
+                // Read bit value (1 bit)
+                const bitValue = bits[bitIndex++];
 
-                // Read second pixel (2 bits)
-                let secondPixelValue = 0;
-                secondPixelValue = (secondPixelValue << 1) | bits[bitIndex++]; // Bit 1
-                secondPixelValue = (secondPixelValue << 1) | bits[bitIndex++]; // Bit 0
+                // Read count (3 bits): 000=2, 001=3, ..., 111=9
+                let count = 0;
+                for (let i = 0; i < 3; i++) {
+                    count = (count << 1) | bits[bitIndex++];
+                }
+                const repetitions = count + 2; // Convert 0-7 to 2-9
 
-                pixelValues.push(firstPixelValue);
-                pixelValues.push(secondPixelValue);
-                lastPixelValue = secondPixelValue;
+                // Output the bit repetitions times
+                for (let i = 0; i < repetitions; i++) {
+                    decodedBits.push(bitValue);
+                }
+
+
+            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_PLOT_BITS) {
+                // PLOT_BITS: 4 bit pattern
+                if (bitIndex + 4 > bits.length) break;
+
+                // Read 4-bit pattern
+                for (let i = 0; i < 4; i++) {
+                    decodedBits.push(bits[bitIndex++]);
+                }
+
+
+            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_REPEAT_COMMAND) {
+                // REPEAT_COMMAND: 3 bit count + following command
+                if (bitIndex + 3 > bits.length) break;
+
+                // Read count (3 bits): 000=2, 001=3, ..., 111=9
+                let count = 0;
+                for (let i = 0; i < 3; i++) {
+                    count = (count << 1) | bits[bitIndex++];
+                }
+                const repetitions = count + 2; // Convert 0-7 to 2-9
+
+                // Read the following command
+                if (bitIndex + this.commandBitWidth > bits.length) break;
+                let followingCommandId = 0;
+                for (let i = 0; i < this.commandBitWidth; i++) {
+                    followingCommandId = (followingCommandId << 1) | bits[bitIndex++];
+                }
+
+                // Read the following command's data once
+                let followingCommandOutput = [];
+                if (followingCommandId < this.commands.length && this.commands[followingCommandId] === this.COMMAND_REPEAT_BITS) {
+                    // REPEAT_BITS: 1 bit value + 3 bit count
+                    if (bitIndex + 4 > bits.length) break;
+
+                    const bitValue = bits[bitIndex++];
+                    let subCount = 0;
+                    for (let i = 0; i < 3; i++) {
+                        subCount = (subCount << 1) | bits[bitIndex++];
+                    }
+                    const subRepetitions = subCount + 2;
+
+
+                    for (let i = 0; i < subRepetitions; i++) {
+                        followingCommandOutput.push(bitValue);
+                    }
+
+                } else if (followingCommandId < this.commands.length && this.commands[followingCommandId] === this.COMMAND_PLOT_BITS) {
+                    // PLOT_BITS: 4 bit pattern
+                    if (bitIndex + 4 > bits.length) break;
+
+                    for (let i = 0; i < 4; i++) {
+                        followingCommandOutput.push(bits[bitIndex++]);
+                    }
+
+                } else {
+                    throw new Error(`Unknown or unimplemented following command ID: ${followingCommandId} in REPEAT_COMMAND`);
+                }
+
+                // Execute the following command repetitions times
+                for (let rep = 0; rep < repetitions; rep++) {
+                    for (const bit of followingCommandOutput) {
+                        decodedBits.push(bit);
+                    }
+                }
+
+
             } else {
                 throw new Error(`Unknown or unimplemented command ID: ${commandId} (available commands: ${this.commands.join(', ')})`);
             }
+
         }
 
-        return pixelValues;
+
+        return decodedBits;
+    }
+
+    /**
+     * Test REPEAT_COMMAND decoder with handcrafted bit stream
+     */
+    testRepeatCommandDecoder() {
+        console.log('🧪 Testing REPEAT_COMMAND decoder with handcrafted bit stream...');
+
+        // Set up decoder state for ENHANCED_REPEAT profile
+        this.commandBitWidth = 2;
+        this.commands = [0x00, 0x01, 0x02]; // REPEAT_BITS, PLOT_BITS, REPEAT_COMMAND
+        this.isInitialized = true;
+
+        // Test the EXACT case from encoder: REPEAT_COMMAND 3x REPEAT_BITS 0, 9
+        // Expected output: 000000000000000000000000000 (27 bits)
+        // Bit stream: [10][001][00][0][111] = 10 001 00 0 111 = 100010001111
+        const testBits = [1,0,0,0,1,0,0,0,1,1,1];
+
+        console.log(`Input bits: ${testBits.join('')} (${testBits.length} bits)`);
+
+        const result = this.decodeBitStreamFromArray(testBits);
+
+        console.log(`Output bits: ${result.join('')} (${result.length} bits)`);
+        console.log(`Expected: ${'0'.repeat(27)} (27 bits)`);
+
+        const expected = new Array(27).fill(0);
+        const matches = result.length === expected.length &&
+                       result.every((bit, i) => bit === expected[i]);
+
+        console.log(`✅ Test ${matches ? 'PASSED' : 'FAILED'}`);
+        return matches;
+    }
+
+    /**
+     * Decode bit stream from array (for testing)
+     */
+    decodeBitStreamFromArray(bits) {
+        const decodedBits = [];
+        let bitIndex = 0;
+
+        while (bitIndex < bits.length) {
+            // Read command bits
+            if (bitIndex + this.commandBitWidth > bits.length) break;
+
+            let commandId = 0;
+            for (let i = 0; i < this.commandBitWidth; i++) {
+                commandId = (commandId << 1) | bits[bitIndex++];
+            }
+
+            console.log(`Read command ID: ${commandId} at bitIndex ${bitIndex - this.commandBitWidth}`);
+
+            // Process command based on global state
+            if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_REPEAT_BITS) {
+                // REPEAT_BITS: 1 bit value + 3 bit count (2-9 repetitions)
+                if (bitIndex + 4 > bits.length) break;
+
+                const bitValue = bits[bitIndex++];
+                let count = 0;
+                for (let i = 0; i < 3; i++) {
+                    count = (count << 1) | bits[bitIndex++];
+                }
+                const repetitions = count + 2;
+
+                console.log(`REPEAT_BITS: value=${bitValue}, count=${repetitions}`);
+
+                for (let i = 0; i < repetitions; i++) {
+                    decodedBits.push(bitValue);
+                }
+
+            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_PLOT_BITS) {
+                // PLOT_BITS: 4 bit pattern
+                if (bitIndex + 4 > bits.length) break;
+
+                for (let i = 0; i < 4; i++) {
+                    decodedBits.push(bits[bitIndex++]);
+                }
+
+            } else if (commandId < this.commands.length && this.commands[commandId] === this.COMMAND_REPEAT_COMMAND) {
+                // REPEAT_COMMAND: 3 bit count + following command
+                if (bitIndex + 3 > bits.length) break;
+
+                let count = 0;
+                for (let i = 0; i < 3; i++) {
+                    count = (count << 1) | bits[bitIndex++];
+                }
+                const repetitions = count + 2;
+
+                console.log(`REPEAT_COMMAND: repetitions=${repetitions}`);
+
+                // Read the following command
+                if (bitIndex + this.commandBitWidth > bits.length) break;
+                let followingCommandId = 0;
+                for (let i = 0; i < this.commandBitWidth; i++) {
+                    followingCommandId = (followingCommandId << 1) | bits[bitIndex++];
+                }
+
+                console.log(`Following command ID: ${followingCommandId}`);
+
+                // Read the following command's data once
+                let followingCommandOutput = [];
+                if (followingCommandId < this.commands.length && this.commands[followingCommandId] === this.COMMAND_REPEAT_BITS) {
+                    if (bitIndex + 4 > bits.length) break;
+
+                    const bitValue = bits[bitIndex++];
+                    let subCount = 0;
+                    for (let i = 0; i < 3; i++) {
+                        subCount = (subCount << 1) | bits[bitIndex++];
+                    }
+                    const subRepetitions = subCount + 2;
+
+                    console.log(`Following REPEAT_BITS: value=${bitValue}, count=${subRepetitions}`);
+
+                    for (let i = 0; i < subRepetitions; i++) {
+                        followingCommandOutput.push(bitValue);
+                    }
+
+                } else if (followingCommandId < this.commands.length && this.commands[followingCommandId] === this.COMMAND_PLOT_BITS) {
+                    if (bitIndex + 4 > bits.length) break;
+
+                    for (let i = 0; i < 4; i++) {
+                        followingCommandOutput.push(bits[bitIndex++]);
+                    }
+
+                } else {
+                    throw new Error(`Unknown following command ID: ${followingCommandId}`);
+                }
+
+                // Execute the following command repetitions times
+                for (let rep = 0; rep < repetitions; rep++) {
+                    for (const bit of followingCommandOutput) {
+                        decodedBits.push(bit);
+                    }
+                }
+
+            } else {
+                throw new Error(`Unknown command ID: ${commandId}`);
+            }
+        }
+
+        return decodedBits;
     }
 
     /**
@@ -292,19 +515,12 @@ class MassiveTest {
     async decompressImage(compressedBytes, originalWidth, originalHeight) {
         console.log(`   🔧 Decompressing ${compressedBytes.length} bytes to ${originalWidth}x${originalHeight} image`);
 
-        let offset = 0;
+        // Reset decoder and parse header to get correct offset
+        this.decoder.reset();
+        const headerSize = this.decoder.parseAndSetHeader(compressedBytes);
+        let offset = headerSize;
 
-        // Parse header
-        const commandBitWidth = (compressedBytes[offset] & 0x3) + 1;
-        offset++;
-
-        // Skip command definitions until 0xFF terminator
-        while (offset < compressedBytes.length && compressedBytes[offset] !== 0xFF) {
-            offset++;
-        }
-        if (offset < compressedBytes.length) offset++; // Skip 0xFF terminator
-
-        console.log(`   📋 Header parsed, ${commandBitWidth}-bit commands, CHR data starts at offset ${offset}`);
+        console.log(`   📋 Header parsed, ${this.decoder.commandBitWidth}-bit commands, ${this.decoder.commands.length} commands defined, data starts at offset ${offset}`);
 
         // Parse palette assignments (32 bytes = 128 assignments, 4 per byte)
         const paletteAssignmentSize = 32;
@@ -326,16 +542,19 @@ class MassiveTest {
         const pixelBytes = compressedBytes.slice(offset);
         console.log(`   📊 Pixel data: ${pixelBytes.length} bytes (compressed)`);
 
-        // Reset decoder and parse header
-        this.decoder.reset();
-        this.decoder.parseAndSetHeader(compressedBytes);
+        // Calculate expected pixel count from clipped area
+        const fullTilesWide = 32; // 256 / 8 (8x8 CHR tiles)
+        const fullTilesHigh = 16;  // 128 / 8
+        const clippedTilesWide = fullTilesWide - this.decoder.leftClip - this.decoder.rightClip;
+        const clippedTilesHigh = fullTilesHigh - this.decoder.topClip - this.decoder.bottomClip;
+        const expectedPixelCount = clippedTilesWide * clippedTilesHigh * 64; // 64 pixels per 8x8 tile
 
-        // Decode pixel data using the original command system
-        const pixelValues = this.decoder.decodePixelData(pixelBytes);
+        // Decode pixel data using the original command system (decoder already initialized)
+        const pixelValues = this.decoder.decodePixelData(pixelBytes, expectedPixelCount);
         console.log(`   🔢 Decoded ${pixelValues.length} pixel values`);
 
         // Convert pixel values back to image
-        return this.pixelValuesToImage(pixelValues, palettes, paletteAssignments, originalWidth, originalHeight);
+        return this.pixelValuesToImage(pixelValues, palettes, paletteAssignments, originalWidth, originalHeight, this.decoder);
     }
 
     /**
@@ -347,82 +566,90 @@ class MassiveTest {
      * @param {number} originalHeight - Original image height
      * @returns {Object} - Image data with width, height, data
      */
-    pixelValuesToImage(pixelValues, palettes, paletteAssignments, originalWidth, originalHeight) {
+    pixelValuesToImage(pixelValues, palettes, paletteAssignments, originalWidth, originalHeight, decoder) {
         console.log(`   🖼️  Converting ${pixelValues.length} pixel values to ${originalWidth}x${originalHeight} image`);
 
         // Create 256x128 image buffer
         const imageData = Buffer.alloc(256 * 128 * 4); // RGBA
         imageData.fill(0); // Initialize to transparent
 
-        const chrTilesWide = 32; // 256 / 8 (8x8 CHR tiles)
-        const chrTilesHigh = 16;  // 128 / 8
-        const expectedPixels = 256 * 128; // 32,768 pixels
+        // Calculate clipped dimensions
+        const fullTilesWide = 32; // 256 / 8 (8x8 CHR tiles)
+        const fullTilesHigh = 16;  // 128 / 8
+
+        const clippedTilesWide = fullTilesWide - decoder.leftClip - decoder.rightClip;
+        const clippedTilesHigh = fullTilesHigh - decoder.topClip - decoder.bottomClip;
+        const expectedPixels = clippedTilesWide * clippedTilesHigh * 64; // 64 pixels per 8x8 tile
 
         console.log(`   🔢 Processing ${Math.min(expectedPixels, pixelValues.length)} pixels in 8x8 tile order`);
+        console.log(`   📐 Clipped area: ${clippedTilesWide}×${clippedTilesHigh} tiles (from clipping L${decoder.leftClip} R${decoder.rightClip} T${decoder.topClip} B${decoder.bottomClip})`);
 
         let pixelIndex = 0;
 
-        // Process pixels in 8x8 tile order (matching compression input)
-        for (let tileIndex = 0; tileIndex < chrTilesWide * chrTilesHigh; tileIndex++) {
-            const tileX = tileIndex % chrTilesWide;
-            const tileY = Math.floor(tileIndex / chrTilesWide);
+        // Process pixels in 8x8 tile order within the clipped area only
+        for (let clippedTileY = 0; clippedTileY < clippedTilesHigh; clippedTileY++) {
+            for (let clippedTileX = 0; clippedTileX < clippedTilesWide; clippedTileX++) {
+                // Convert clipped coordinates to full image coordinates
+                const tileX = clippedTileX + decoder.leftClip;
+                const tileY = clippedTileY + decoder.topClip;
 
-            // Determine which 16x16 mega-tile this 8x8 tile belongs to (for palette lookup)
-            const megaTileX = Math.floor(tileX / 2);
-            const megaTileY = Math.floor(tileY / 2);
-            const megaTileIndex = megaTileY * 16 + megaTileX; // 16 mega-tiles wide
+                // Determine which 16x16 mega-tile this 8x8 tile belongs to (for palette lookup)
+                const megaTileX = Math.floor(tileX / 2);
+                const megaTileY = Math.floor(tileY / 2);
+                const megaTileIndex = megaTileY * 16 + megaTileX; // 16 mega-tiles wide
 
-            const paletteIndex = paletteAssignments[megaTileIndex];
-            const palette = palettes[paletteIndex];
+                const paletteIndex = paletteAssignments[megaTileIndex];
+                const palette = palettes[paletteIndex];
 
-            if (!palette) {
-                console.warn(`   ⚠️  Missing palette ${paletteIndex} for CHR tile ${tileIndex}, skipping`);
-                pixelIndex += 64; // Skip this tile's pixels
-                continue;
-            }
+                if (!palette) {
+                    console.warn(`   ⚠️  Missing palette ${paletteIndex} for CHR tile (${tileX},${tileY}), skipping`);
+                    pixelIndex += 64; // Skip this tile's pixels
+                    continue;
+                }
 
-            // Process 8x8 tile
-            for (let y = 0; y < 8; y++) {
-                for (let x = 0; x < 8; x++) {
-                    if (pixelIndex >= pixelValues.length) break;
+                // Process 8x8 tile
+                for (let y = 0; y < 8; y++) {
+                    for (let x = 0; x < 8; x++) {
+                        if (pixelIndex >= pixelValues.length) break;
 
-                    const pixelValue = pixelValues[pixelIndex];
-                    const globalX = tileX * 8 + x;
-                    const globalY = tileY * 8 + y;
-                    const imageIdx = (globalY * 256 + globalX) * 4;
+                        const pixelValue = pixelValues[pixelIndex];
+                        const globalX = tileX * 8 + x;
+                        const globalY = tileY * 8 + y;
+                        const imageIdx = (globalY * 256 + globalX) * 4;
 
-                    if (imageIdx >= imageData.length) {
-                        pixelIndex++;
-                        continue;
-                    }
-
-                    // Convert pixel value to RGBA
-                    if (pixelValue === 0) {
-                        // Transparent
-                        imageData[imageIdx] = 0;     // R
-                        imageData[imageIdx + 1] = 0; // G
-                        imageData[imageIdx + 2] = 0; // B
-                        imageData[imageIdx + 3] = 0; // A
-                    } else {
-                        // Get color from palette (inverted mapping: 1→darkest, 3→brightest)
-                        const palettePos = 3 - pixelValue; // 1→2, 2→1, 3→0
-                        const color = palette[palettePos];
-
-                        if (color) {
-                            imageData[imageIdx] = color.r;     // R
-                            imageData[imageIdx + 1] = color.g; // G
-                            imageData[imageIdx + 2] = color.b; // B
-                            imageData[imageIdx + 3] = 255;     // A
-                        } else {
-                            // Fallback to magenta for debugging
-                            imageData[imageIdx] = 255;     // R
-                            imageData[imageIdx + 1] = 0;   // G
-                            imageData[imageIdx + 2] = 255; // B
-                            imageData[imageIdx + 3] = 255; // A
+                        if (imageIdx >= imageData.length) {
+                            pixelIndex++;
+                            continue;
                         }
-                    }
 
-                    pixelIndex++;
+                        // Convert pixel value to RGBA
+                        if (pixelValue === 0) {
+                            // Transparent
+                            imageData[imageIdx] = 0;     // R
+                            imageData[imageIdx + 1] = 0; // G
+                            imageData[imageIdx + 2] = 0; // B
+                            imageData[imageIdx + 3] = 0; // A
+                        } else {
+                            // Get color from palette (inverted mapping: 1→darkest, 3→brightest)
+                            const palettePos = 3 - pixelValue; // 1→2, 2→1, 3→0
+                            const color = palette[palettePos];
+
+                            if (color) {
+                                imageData[imageIdx] = color.r;     // R
+                                imageData[imageIdx + 1] = color.g; // G
+                                imageData[imageIdx + 2] = color.b; // B
+                                imageData[imageIdx + 3] = 255;     // A
+                            } else {
+                                // Fallback to magenta for debugging
+                                imageData[imageIdx] = 255;     // R
+                                imageData[imageIdx + 1] = 0;   // G
+                                imageData[imageIdx + 2] = 255; // B
+                                imageData[imageIdx + 3] = 255; // A
+                            }
+                        }
+
+                        pixelIndex++;
+                    }
                 }
             }
         }
@@ -1022,6 +1249,17 @@ export { MassiveTest };
 
 // Run tests directly
 console.log('🚀 Starting massive test script...');
+
+const decoder = new MassiveDecoder();
+const testPassed = decoder.testRepeatCommandDecoder();
+
+if (!testPassed) {
+    console.log('❌ Specific test failed, stopping here.');
+    process.exit(1);
+}
+
+console.log('✅ Specific test passed, running full tests...');
+
 try {
     const tester = new MassiveTest();
     await tester.runAllTests();
