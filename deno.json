@@ -1,0 +1,13 @@
+{
+  "tasks": {
+    "compress": "deno run --allow-read --allow-write script/compress.ts",
+    "test": "deno run --allow-read --allow-write script/massive_test.ts",
+    "generate": "deno run --allow-read --allow-write --allow-run script/data_generator.ts"
+  },
+  "imports": {
+    "pngjs": "npm:pngjs@^7.0.0"
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}

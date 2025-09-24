@@ -2,76 +2,80 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_TEMPLATE_SPELL_LIST, TEXT_SHOP_WELCOMEWOULDYOUSTAY, TEXT_EQUIP_OPTIMIZE_REMOVE, TEXT_INTRO_STORY_8, TEXT_TITLE_RESPOND_RATE, TEXT_SHOP_ITEMCOSTOK, TEXT_CLASS_NAME_WHITE_WIZARD, TEXT_SHOP_WELCOME, TEXT_SHOP_TITLEBLACKMAGIC, TEXT_SHOP_TITLEARMOR, TEXT_HERO_2_NAME, TEXT_ITEM_DESCRIPTION, SHOP_ARMOR_CONERIA, SHOP_ARMOR_CONERIA_SIBLING2, LUT_METATILE_BOTTOM_LEFT, LUT_METATILE_BOTTOM_LEFT_SIBLING2
+.export TEXT_EXAMPLE_EQUIP_LIST, TEXT_SHOP_DONTFORGET, TEXT_SHOP_NOBODYDEAD, TEXT_SHOP_WHOWILLLEARNSPELL, TEXT_SHOP_YOUCANTAFFORDTHAT, TEXT_INTRO_STORY_3, TEXT_TITLE_SELECT_NAME, TEXT_CLASS_NAME_MASTER, LUT_METASPRITE_CHR_LO, LUT_METASPRITE_CHR_HI, METASPRITE_CURSOR_CHR, METASPRITE_BLACK_BELT_CHR, METASPRITE_BLACK_MAGE_CHR, METASPRITE_FIGHTER_CHR, METASPRITE_RED_MAGE_CHR, METASPRITE_THIEF_CHR, METASPRITE_WHITE_MAGE_CHR
 
 ; address 0 - 256 (bytes 1536 - 1792)
 MASSIVE_CRAB_IMAGE_EXTENDED:
-.byte $1d, $a0, $f5, $1d, $a0, $f6, $85, $d2, $17, $48, $7c, $43, $8c, $e2, $f1, $8c, $e3, $38, $ee, $2b, $0c, $71, $1c, $43, $1c, $43, $1c, $47, $21, $c8, $72, $1c, $47, $38, $7d, $21, $74, $85, $d0, $76, $1d, $87, $61, $d8, $76, $1d, $87, $61, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $ff, $dc, $7f, $ff, $ff, $f0, $e2, $18, $e2, $38, $86, $18, $e4, $38, $c1, $e4, $39, $0e, $63, $b4, $2e, $90, $ba, $06, $39, $c2, $63, $8c, $37, $1b, $8c, $57, $19, $c6, $71, $9c, $5f, $fe, $07, $61, $d8, $76, $1d, $87, $48, $3c, $67, $cf, $9f, $1b, $94, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $7e, $90, $ba, $41, $eb, $07, $ac, $1e, $41, $c2, $e3, $17, $8c, $27, $0b, $8c, $2e, $43, $88, $eb, $09, $87, $0b, $88, $70, $79, $c2, $ea, $3a, $8f, $d2, $fa, $41, $ee, $3b, $42, $e6, $38, $c1, $e2, $39, $c1, $ed, $13, $a0, $e3, $07, $98, $e3, $07, $94, $16, $18, $e4, $18, $e8, $18, $e6, $1c, $1e, $50, $f9, $8f, $ff, $47, $18, $3c, $e0, $f8, $1d, $c7, $ff, $ff, $f8, $8e, $83, $88, $e8, $3d, $8f, $fd
+.byte $0b, $f6, $0d, $5e, $93, $0e, $92, $03, $a1, $04, $e0, $21, $c0, $73, $60, $02, $90, $11, $28, $36, $e0, $25, $d1, $13, $ec, $05, $ea, $11, $75, $55, $aa, $bd, $55, $aa, $ab, $65, $5a, $b2, $d5, $5a, $aa, $ba, $75, $ad, $2d, $66, $b4, $b3, $8a, $db, $45, $56, $63, $3a, $b8, $9f, $ac, $4f, $75, $33, $ef, $4a, $f5, $9e, $12, $87, $94, $01, $70, $00, $73, $9c, $e7, $39, $cb, $d9, $e9, $3c, $f8, $9a, $ac, $59, $7a, $90, $d6, $08, $0d, $b0, $01, $e8, $00, $bd, $95, $c6, $cd, $53, $e3, $a9, $d1, $5a, $e9, $5d, $57, $4b, $b4, $69, $ad, $2d, $68, $67, $3f, $89, $9f, $a4, $cb, $fa, $3c, $fd, $14, $db, $c5, $c9, $fc, $21, $54, $1a, $7b, $51, $3e, $dc, $4b, $86, $1e, $da, $6f, $85, $8f, $1d, $2d, $42, $5f, $45, $12, $a4, $d6, $74, $bb, $3c, $55, $9e, $af, $87, $6b, $c3, $d7, $74, $aa, $da, $1d, $2d, $3a, $2d, $cf, $1b, $6d, $c4, $ae, $62, $ba, $d0, $aa, $47, $00, $21, $80, $5c, $00, $0f, $60, $10, $a0, $2e, $00, $0e, $73, $9c, $e7, $39, $ce, $3c, $cb, $62, $97, $d1, $39, $68, $ca, $ee, $25, $fb, $0b, $dd, $8b, $be, $e2, $ff, $d2, $b5, $56, $aa, $bd, $95, $6a, $cb, $55, $6a, $aa, $da, $56, $ad, $35, $76, $cc, $ad, $40, $0b, $c0, $08, $58, $17, $a8, $03, $f5, $04, $3e, $cd, $ba, $88, $5f, $70, $03, $7d, $50, $be, $f0, $7f, $b9, $1f, $c5, $fb, $e2, $bf, $1f, $de, $8f, $6d
 
-; address 256 - 320 (bytes 0 - 64)
-TEXT_TEMPLATE_SPELL_LIST:
-.byte $93, $83, $03, $00, $7f, $7f, $8d, $a2, $83, $03, $00, $7f, $7f, $93, $83, $03, $01, $7f, $7f, $8d, $a2, $83, $03, $01, $7f, $7f, $93, $83, $03, $02, $7f, $7f, $8d, $a2, $83, $03, $02, $7f, $7f, $93, $83, $03, $03, $7f, $7f, $8d, $a2, $83, $03, $03, $7f, $7f, $93, $83, $03, $04, $7f, $7f, $8d, $a2, $83, $03, $04, $00
+; address 256 - 307 (bytes 0 - 51)
+TEXT_EXAMPLE_EQUIP_LIST:
+.byte $13, $02, $17, $3a, $37, $36, $02, $21, $3f, $37, $3a, $2c, $7f, $13, $02, $17, $3a, $37, $36, $02, $16, $2d, $34, $35, $2d, $3c, $7f, $13, $02, $10, $3a, $29, $2b, $2d, $34, $2d, $3c, $7f, $02, $02, $25, $37, $37, $2c, $2d, $36, $02, $0f, $40, $2d, $00
 
-; address 320 - 354 (bytes 0 - 34)
-TEXT_SHOP_WELCOMEWOULDYOUSTAY:
-.byte $25, $2d, $34, $2b, $37, $35, $2d, $7f, $7f, $21, $3c, $29, $41, $43, $7f, $3c, $37, $02, $3b, $29, $3e, $2d, $7f, $41, $37, $3d, $3a, $7f, $2c, $29, $3c, $29, $44, $00
+; address 307 - 345 (bytes 0 - 38)
+TEXT_SHOP_DONTFORGET:
+.byte $12, $37, $36, $4a, $3c, $7f, $2e, $37, $3a, $2f, $2d, $3c, $43, $7f, $31, $2e, $02, $41, $37, $3d, $7f, $34, $2d, $29, $3e, $2d, $7f, $41, $37, $3d, $3a, $7f, $2f, $29, $35, $2d, $43, $00
 
-; address 354 - 382 (bytes 0 - 28)
-TEXT_EQUIP_OPTIMIZE_REMOVE:
-.byte $02, $02, $13, $1f, $23, $17, $1e, $02, $02, $02, $1d, $1e, $22, $17, $1b, $17, $28, $13, $02, $02, $02, $20, $13, $1b, $1d, $24, $13, $00
+; address 345 - 374 (bytes 0 - 29)
+TEXT_SHOP_NOBODYDEAD:
+.byte $27, $37, $3d, $02, $2c, $37, $7f, $36, $37, $3c, $7f, $36, $2d, $2d, $2c, $02, $35, $41, $7f, $30, $2d, $34, $38, $7f, $36, $37, $3f, $44, $00
 
-; address 382 - 406 (bytes 0 - 24)
-TEXT_INTRO_STORY_8:
-.byte $14, $37, $3d, $3a, $02, $25, $29, $3a, $3a, $31, $37, $3a, $3b, $02, $3f, $31, $34, $34, $02, $2b, $37, $35, $2d, $00
+; address 374 - 400 (bytes 0 - 26)
+TEXT_SHOP_WHOWILLLEARNSPELL:
+.byte $25, $30, $37, $7f, $3f, $31, $34, $34, $7f, $34, $2d, $29, $3a, $36, $7f, $3c, $30, $2d, $7f, $3b, $38, $2d, $34, $34, $46, $00
 
-; address 406 - 427 (bytes 0 - 21)
-TEXT_TITLE_RESPOND_RATE:
-.byte $20, $13, $21, $1e, $1d, $1c, $12, $02, $20, $0f, $22, $13, $02, $81, $86, $83, $5c, $10, $80, $01, $00
+; address 400 - 423 (bytes 0 - 23)
+TEXT_SHOP_YOUCANTAFFORDTHAT:
+.byte $27, $37, $3d, $7f, $2b, $29, $36, $4a, $3c, $7f, $29, $2e, $2e, $37, $3a, $2c, $7f, $3c, $30, $29, $3c, $44, $00
 
-; address 427 - 441 (bytes 0 - 14)
-TEXT_SHOP_ITEMCOSTOK:
-.byte $88, $84, $5c, $da, $7f, $15, $37, $34, $2c, $7f, $1d, $19, $46, $00
+; address 423 - 439 (bytes 0 - 16)
+TEXT_INTRO_STORY_3:
+.byte $3c, $30, $2d, $02, $3b, $2d, $29, $02, $31, $3b, $02, $3f, $31, $34, $2c, $00
 
-; address 441 - 450 (bytes 0 - 9)
-TEXT_CLASS_NAME_WHITE_WIZARD:
-.byte $25, $16, $17, $22, $13, $25, $17, $28, $00
+; address 439 - 452 (bytes 0 - 13)
+TEXT_TITLE_SELECT_NAME:
+.byte $21, $13, $1a, $13, $11, $22, $02, $02, $1c, $0f, $1b, $13, $00
 
-; address 450 - 458 (bytes 0 - 8)
-TEXT_SHOP_WELCOME:
-.byte $25, $2d, $34, $2b, $37, $35, $2d, $00
+; address 452 - 459 (bytes 0 - 7)
+TEXT_CLASS_NAME_MASTER:
+.byte $1b, $0f, $21, $22, $13, $20, $00
 
-; address 458 - 465 (bytes 0 - 7)
-TEXT_SHOP_TITLEBLACKMAGIC:
-.byte $10, $1b, $0f, $15, $17, $11, $00
+; address 459 - 466 (bytes 0 - 7)
+LUT_METASPRITE_CHR_LO:
+.byte <METASPRITE_CURSOR_CHR, <METASPRITE_BLACK_BELT_CHR, <METASPRITE_BLACK_MAGE_CHR, <METASPRITE_FIGHTER_CHR, <METASPRITE_RED_MAGE_CHR, <METASPRITE_THIEF_CHR, <METASPRITE_WHITE_MAGE_CHR
 
-; address 465 - 471 (bytes 0 - 6)
-TEXT_SHOP_TITLEARMOR:
-.byte $0f, $20, $1b, $1d, $20, $00
+; address 466 - 473 (bytes 0 - 7)
+LUT_METASPRITE_CHR_HI:
+.byte >METASPRITE_CURSOR_CHR, >METASPRITE_BLACK_BELT_CHR, >METASPRITE_BLACK_MAGE_CHR, >METASPRITE_FIGHTER_CHR, >METASPRITE_RED_MAGE_CHR, >METASPRITE_THIEF_CHR, >METASPRITE_WHITE_MAGE_CHR
 
-; address 471 - 476 (bytes 0 - 5)
-TEXT_HERO_2_NAME:
-.byte $90, $80, $02, $91, $00
+; address 473 - 480 (bytes 0 - 7)
+METASPRITE_CURSOR_CHR:
+.byte $03, <TILE_CURSOR_0, >TILE_CURSOR_0, $01, <TILE_CURSOR_1, >TILE_CURSOR_1, $ff
 
-; address 476 - 481 (bytes 0 - 5)
-TEXT_ITEM_DESCRIPTION:
-.byte $94, $83, >stringifyActiveItem, <stringifyActiveItem, $00
+; address 480 - 514 (bytes 0 - 34)
+METASPRITE_BLACK_BELT_CHR:
+.byte $03, <TILE_BLACK_BELT_0, >TILE_BLACK_BELT_0, $03, <TILE_BLACK_BELT_1, >TILE_BLACK_BELT_1, $03, <TILE_BLACK_BELT_2, >TILE_BLACK_BELT_2, $03, <TILE_BLACK_BELT_3, >TILE_BLACK_BELT_3, $03, <TILE_BLACK_BELT_4, >TILE_BLACK_BELT_4, $03, <TILE_BLACK_BELT_5, >TILE_BLACK_BELT_5, $03, <TILE_BLACK_BELT_6, >TILE_BLACK_BELT_6, $03, <TILE_BLACK_BELT_7, >TILE_BLACK_BELT_7, $03, <TILE_BLACK_BELT_8, >TILE_BLACK_BELT_8, $03, <TILE_BLACK_BELT_9, >TILE_BLACK_BELT_9, $03, <TILE_BLACK_BELT_10, >TILE_BLACK_BELT_10, $ff
 
-; address 481 - 485 (bytes 0 - 4)
-SHOP_ARMOR_CONERIA:
-.byte $01, $02, $03, $00
+; address 514 - 548 (bytes 0 - 34)
+METASPRITE_BLACK_MAGE_CHR:
+.byte $03, <TILE_BLACK_MAGE_0, >TILE_BLACK_MAGE_0, $03, <TILE_BLACK_MAGE_1, >TILE_BLACK_MAGE_1, $03, <TILE_BLACK_MAGE_2, >TILE_BLACK_MAGE_2, $03, <TILE_BLACK_MAGE_3, >TILE_BLACK_MAGE_3, $03, <TILE_BLACK_MAGE_4, >TILE_BLACK_MAGE_4, $03, <TILE_BLACK_MAGE_5, >TILE_BLACK_MAGE_5, $03, <TILE_BLACK_MAGE_6, >TILE_BLACK_MAGE_6, $03, <TILE_BLACK_MAGE_7, >TILE_BLACK_MAGE_7, $03, <TILE_BLACK_MAGE_8, >TILE_BLACK_MAGE_8, $03, <TILE_BLACK_MAGE_9, >TILE_BLACK_MAGE_9, $03, <TILE_BLACK_MAGE_10, >TILE_BLACK_MAGE_10, $ff
 
-; address 485 - 489 (bytes 0 - 4)
-SHOP_ARMOR_CONERIA_SIBLING2:
-.byte $00, $00, $00, $00
+; address 548 - 582 (bytes 0 - 34)
+METASPRITE_FIGHTER_CHR:
+.byte $03, <TILE_FIGHTER_0, >TILE_FIGHTER_0, $03, <TILE_FIGHTER_1, >TILE_FIGHTER_1, $03, <TILE_FIGHTER_2, >TILE_FIGHTER_2, $03, <TILE_FIGHTER_3, >TILE_FIGHTER_3, $03, <TILE_FIGHTER_4, >TILE_FIGHTER_4, $03, <TILE_FIGHTER_5, >TILE_FIGHTER_5, $03, <TILE_FIGHTER_6, >TILE_FIGHTER_6, $03, <TILE_FIGHTER_7, >TILE_FIGHTER_7, $03, <TILE_FIGHTER_8, >TILE_FIGHTER_8, $03, <TILE_FIGHTER_9, >TILE_FIGHTER_9, $03, <TILE_FIGHTER_10, >TILE_FIGHTER_10, $ff
 
-; address 489 - 491 (bytes 0 - 2)
-LUT_METATILE_BOTTOM_LEFT:
-.byte <TILE_ANIMATION_2, <TILE_ANIMATION_4
+; address 582 - 616 (bytes 0 - 34)
+METASPRITE_RED_MAGE_CHR:
+.byte $03, <TILE_RED_MAGE_0, >TILE_RED_MAGE_0, $03, <TILE_RED_MAGE_1, >TILE_RED_MAGE_1, $03, <TILE_RED_MAGE_2, >TILE_RED_MAGE_2, $03, <TILE_RED_MAGE_3, >TILE_RED_MAGE_3, $03, <TILE_RED_MAGE_4, >TILE_RED_MAGE_4, $03, <TILE_RED_MAGE_5, >TILE_RED_MAGE_5, $03, <TILE_RED_MAGE_6, >TILE_RED_MAGE_6, $03, <TILE_RED_MAGE_7, >TILE_RED_MAGE_7, $03, <TILE_RED_MAGE_8, >TILE_RED_MAGE_8, $03, <TILE_RED_MAGE_9, >TILE_RED_MAGE_9, $03, <TILE_RED_MAGE_10, >TILE_RED_MAGE_10, $ff
 
-; address 491 - 493 (bytes 0 - 2)
-LUT_METATILE_BOTTOM_LEFT_SIBLING2:
-.byte >TILE_ANIMATION_2, >TILE_ANIMATION_4
+; address 616 - 650 (bytes 0 - 34)
+METASPRITE_THIEF_CHR:
+.byte $03, <TILE_THIEF_0, >TILE_THIEF_0, $03, <TILE_THIEF_1, >TILE_THIEF_1, $03, <TILE_THIEF_2, >TILE_THIEF_2, $03, <TILE_THIEF_3, >TILE_THIEF_3, $03, <TILE_THIEF_4, >TILE_THIEF_4, $03, <TILE_THIEF_5, >TILE_THIEF_5, $03, <TILE_THIEF_6, >TILE_THIEF_6, $03, <TILE_THIEF_7, >TILE_THIEF_7, $03, <TILE_THIEF_8, >TILE_THIEF_8, $03, <TILE_THIEF_9, >TILE_THIEF_9, $03, <TILE_THIEF_10, >TILE_THIEF_10, $ff
 
-; 493 - 8192
-.res 7699
+; address 650 - 684 (bytes 0 - 34)
+METASPRITE_WHITE_MAGE_CHR:
+.byte $03, <TILE_WHITE_MAGE_0, >TILE_WHITE_MAGE_0, $03, <TILE_WHITE_MAGE_1, >TILE_WHITE_MAGE_1, $03, <TILE_WHITE_MAGE_2, >TILE_WHITE_MAGE_2, $03, <TILE_WHITE_MAGE_3, >TILE_WHITE_MAGE_3, $03, <TILE_WHITE_MAGE_4, >TILE_WHITE_MAGE_4, $03, <TILE_WHITE_MAGE_5, >TILE_WHITE_MAGE_5, $03, <TILE_WHITE_MAGE_6, >TILE_WHITE_MAGE_6, $03, <TILE_WHITE_MAGE_7, >TILE_WHITE_MAGE_7, $03, <TILE_WHITE_MAGE_8, >TILE_WHITE_MAGE_8, $03, <TILE_WHITE_MAGE_9, >TILE_WHITE_MAGE_9, $03, <TILE_WHITE_MAGE_10, >TILE_WHITE_MAGE_10, $ff
+
+; 684 - 8192
+.res 7508
 

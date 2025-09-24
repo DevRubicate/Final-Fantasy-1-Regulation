@@ -1391,9 +1391,11 @@ class MassiveCompressor {
                 currentPos += testResult.imageBitsProduced;
             }
 
-            // EFFICIENCY EVALUATION PHASE: Only try realistic repeat counts (temporarily fixed to 2 for debugging)
+            // EFFICIENCY EVALUATION PHASE: Only try repeat counts that actually exist
             const maxRepeatCount = Math.min(maxViableRepeats, 9);
-            for (let repeatCount = 2; repeatCount <= Math.min(maxRepeatCount, 3); repeatCount++) { // Limit to small repeat counts
+            // Only consider repeat counts if we found at least 2 patterns (need repetition to justify REPEAT_COMMAND)
+            if (maxRepeatCount < 2) continue; // Skip this command type if no actual repetitions found
+            for (let repeatCount = 2; repeatCount <= maxRepeatCount; repeatCount++) {
                 // Use the already calculated first pattern result
                 const totalBitsUsed = repeatCommandBits + firstPatternResult.bitsUsed;
                 const totalImageBitsProduced = firstPatternResult.imageBitsProduced * repeatCount;

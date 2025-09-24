@@ -2,76 +2,64 @@
 
 .include "src/global-import.inc"
 
-.export TEXT_ALPHABET, TEXT_INTRO_STORY_10, TEXT_INTRO_STORY_5, TEXT_SHOP_BUYEXIT, TEXT_CLASS_NAME_BLACK_MAGE, TEXT_SHOP_TITLEWHITEMAGIC, TEXT_CLASS_NAME_NINJA, TEXT_HERO_1_NAME, TEXT_ITEM_NAME, TEXT_SHOP_TITLEINN, TEXT_DASH, LUT_METATILE_TOP_LEFT, LUT_METATILE_TOP_LEFT_SIBLING2, LUT_MAP_METATILES_LO, LUT_MAP_METATILES_HI, MAP_0_METATILES
+.export TEXT_TEMPLATE_HERO_EQUIP_STATUS, TEXT_SHOP_RETURNLIFE, TEXT_SHOP_WHOREVIVE, TEXT_TITLE_COPYRIGHT_NINTENDO, TEXT_CLASS_NAME_BLACK_WIZARD, TEXT_CLASS_NAME_KNIGHT, TEXT_SHOP_TITLECLINIC, SHOP_WEAPON_CONERIA, SHOP_WEAPON_CONERIA_SIBLING2, SHOP_BLACKMAGIC_CONERIA, SHOP_BLACKMAGIC_CONERIA_SIBLING2, LUT_METATILE_TOP_RIGHT, LUT_METATILE_TOP_RIGHT_SIBLING2
 
 ; address 0 - 256 (bytes 512 - 768)
 MASSIVE_CRAB_IMAGE_EXTENDED:
-.byte $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $37, $38, $9c, $a0, $f2, $1c, $47, $40, $c7, $58, $2e, $17, $20, $e1, $f1, $8f, $ca, $17, $58, $5d, $21, $74, $89, $ca, $1b, $1c, $61, $f1, $9b, $f8, $75, $1d, $43, $1d, $03, $82, $c7, $10, $e0, $b0, $e0, $b8, $2e, $0b, $0c, $38, $3c, $87, $18, $3c, $87, $18, $5c, $47, $10, $c3, $83, $c4, $30, $c7, $20, $c3, $1c, $60, $b8, $5c, $47, $28, $3c, $43, $0c, $72, $0c, $31, $c6, $0f, $28, $2e, $17, $28, $2e, $0f, $20, $c3, $1c, $83, $0c, $72, $0c, $31, $ca, $23, $0c, $71, $0e, $0b, $1c, $43, $1c, $83, $0c, $72, $0c, $38, $2e, $0b, $1c, $83, $83, $c8, $71, $1c, $e0, $b8, $2e, $0b, $84, $e1, $38, $4c, $30, $e1, $30, $c7, $18, $2c, $31, $c6, $0b, $0c, $71, $1c, $43, $1c, $47, $38, $2c, $7f, $e8, $39, $0e, $21, $8e, $30, $58, $63, $8c, $36, $1c, $17, $05, $c1, $61, $8e, $50, $b8, $c2, $e7, $0b, $a4, $2e, $70, $f9, $c3, $e5, $13, $88, $71, $78, $c7, $e7, $0f, $94, $4e, $23, $94, $16, $3a, $41, $ea, $39, $42, $63, $8c, $37, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf, $9f, $3e, $7c, $f9, $f3, $e7, $cf
+.byte $18, $0b, $c3, $05, $e1, $70, $e9, $b8, $3b, $5c, $42, $ef, $04, $77, $81, $8b, $a4, $49, $e8, $63, $76, $3c, $5a, $6e, $9f, $00, $18, $b0, $84, $4c, $82, $24, $21, $88, $13, $e1, $86, $12, $c5, $e1, $86, $38, $70, $00, $73, $9c, $e7, $3c, $80, $0b, $80, $08, $40, $17, $80, $07, $39, $c7, $a0, $0c, $c0, $49, $d8, $9b, $68, $93, $b6, $22, $ed, $5d, $1e, $0c, $b0, $4d, $76, $84, $fb, $62, $ef, $54, $67, $7b, $4f, $76, $5d, $33, $5a, $af, $68, $07, $39, $ce, $73, $9c, $e7, $3f, $80, $07, $c0, $03, $c2, $60, $9e, $b0, $c1, $34, $96, $a2, $3f, $58, $3e, $ed, $4d, $56, $c6, $f5, $a6, $ab, $56, $ee, $a1, $2d, $a0, $dc, $91, $5a, $a2, $44, $46, $c4, $04, $20, $0f, $28, $ce, $82, $dd, $16, $a9, $95, $5a, $ea, $dd, $eb, $35, $99, $53, $be, $2e, $6c, $80, $b9, $00, $85, $41, $b1, $01, $81, $61, $e5, $b2, $11, $7b, $19, $d6, $8e, $2c, $6e, $29, $17, $08, $4b, $c4, $46, $51, $10, $e8, $c0, $9d, $65, $29, $b1, $81, $5e, $2d, $c4, $4f, $60, $33, $ac, $89, $f6, $c4, $97, $58, $9e, $ea, $65, $fe, $94, $fd, $6e, $1f, $93, $2b, $49, $c1, $a8, $a2, $70, $0a, $90, $94, $51, $a0, $94, $4c, $47, $a9, $61, $e5, $6c, $7a, $96, $85, $4f, $62, $ab, $b1, $29, $db, $12, $fd, $8a, $fa, $d2, $60, $c8, $44, $70, $21, $61, $a2, $59, $01, $78, $93, $3a, $14, $b7, $c5, $4f, $60, $37, $1d, $2b
 
-; address 256 - 402 (bytes 0 - 146)
-TEXT_ALPHABET:
-.byte $0f, $02, $10, $02, $11, $02, $12, $02, $13, $02, $14, $02, $15, $02, $16, $02, $17, $02, $18, $7f, $7f, $19, $02, $1a, $02, $1b, $02, $1c, $02, $1d, $02, $1e, $02, $1f, $02, $20, $02, $21, $02, $22, $7f, $7f, $23, $02, $24, $02, $25, $02, $26, $02, $27, $02, $28, $02, $4a, $02, $43, $02, $44, $02, $02, $7f, $7f, $05, $02, $06, $02, $07, $02, $08, $02, $09, $02, $0a, $02, $0b, $02, $0c, $02, $0d, $02, $0e, $7f, $7f, $29, $02, $2a, $02, $2b, $02, $2c, $02, $2d, $02, $2e, $02, $2f, $02, $30, $02, $31, $02, $32, $7f, $7f, $33, $02, $34, $02, $35, $02, $36, $02, $37, $02, $38, $02, $39, $02, $3a, $02, $3b, $02, $3c, $7f, $7f, $3d, $02, $3e, $02, $3f, $02, $40, $02, $41, $02, $42, $02, $45, $02, $49, $02, $47, $02, $46, $00
+; address 256 - 380 (bytes 0 - 124)
+TEXT_TEMPLATE_HERO_EQUIP_STATUS:
+.byte $91, $02, $02, $92, $02, $02, $1a, $82, $86, $8f, $80, $02, $02, $02, $16, $1e, $02, $84, $90, $4c, $84, $91, $7f, $7f, $21, $3c, $3a, $02, $02, $02, $0a, $05, $02, $02, $02, $1a, $3d, $2b, $33, $02, $02, $09, $05, $7f, $0f, $2f, $31, $02, $02, $02, $0a, $05, $02, $02, $02, $16, $31, $3c, $02, $02, $02, $06, $05, $7f, $24, $31, $3c, $02, $02, $02, $0c, $05, $02, $02, $02, $12, $2d, $2e, $02, $02, $02, $06, $0a, $7f, $17, $36, $3c, $02, $02, $02, $08, $05, $02, $02, $02, $1b, $12, $2d, $2e, $02, $02, $08, $05, $7f, $25, $31, $3b, $02, $02, $02, $07, $05, $02, $02, $02, $13, $3e, $29, $2c, $2d, $02, $09, $05, $00
 
-; address 402 - 424 (bytes 0 - 22)
-TEXT_INTRO_STORY_10:
-.byte $41, $37, $3d, $36, $2f, $02, $3f, $29, $3a, $3a, $31, $37, $3a, $3b, $02, $29, $3a, $3a, $31, $3e, $2d, $00
+; address 380 - 405 (bytes 0 - 25)
+TEXT_SHOP_RETURNLIFE:
+.byte $25, $0f, $20, $20, $17, $1d, $20, $7f, $7f, $20, $2d, $3c, $3d, $3a, $36, $7f, $3c, $37, $7f, $34, $31, $2e, $2d, $47, $00
 
-; address 424 - 440 (bytes 0 - 16)
-TEXT_INTRO_STORY_5:
-.byte $22, $30, $2d, $02, $38, $2d, $37, $38, $34, $2d, $02, $3f, $29, $31, $3c, $00
+; address 405 - 427 (bytes 0 - 22)
+TEXT_SHOP_WHOREVIVE:
+.byte $25, $30, $37, $7f, $3b, $30, $29, $34, $34, $7f, $2a, $2d, $7f, $3a, $2d, $3e, $31, $3e, $2d, $2c, $7f, $00
 
-; address 440 - 450 (bytes 0 - 10)
-TEXT_SHOP_BUYEXIT:
-.byte $10, $3d, $41, $7f, $7f, $13, $40, $31, $3c, $00
+; address 427 - 443 (bytes 0 - 16)
+TEXT_TITLE_COPYRIGHT_NINTENDO:
+.byte $11, $02, $06, $0e, $0e, $05, $02, $1c, $17, $1c, $22, $13, $1c, $12, $1d, $00
 
-; address 450 - 458 (bytes 0 - 8)
-TEXT_CLASS_NAME_BLACK_MAGE:
-.byte $10, $34, $44, $1b, $0f, $15, $13, $00
+; address 443 - 452 (bytes 0 - 9)
+TEXT_CLASS_NAME_BLACK_WIZARD:
+.byte $10, $1a, $0f, $11, $19, $25, $17, $28, $00
 
-; address 458 - 465 (bytes 0 - 7)
-TEXT_SHOP_TITLEWHITEMAGIC:
-.byte $25, $1b, $0f, $15, $17, $11, $00
+; address 452 - 459 (bytes 0 - 7)
+TEXT_CLASS_NAME_KNIGHT:
+.byte $19, $1c, $17, $15, $16, $22, $00
 
-; address 465 - 471 (bytes 0 - 6)
-TEXT_CLASS_NAME_NINJA:
-.byte $1c, $17, $1c, $18, $0f, $00
+; address 459 - 466 (bytes 0 - 7)
+TEXT_SHOP_TITLECLINIC:
+.byte $11, $1a, $17, $1c, $17, $11, $00
 
-; address 471 - 476 (bytes 0 - 5)
-TEXT_HERO_1_NAME:
-.byte $90, $80, $01, $91, $00
+; address 466 - 472 (bytes 0 - 6)
+SHOP_WEAPON_CONERIA:
+.byte $82, $81, $80, $83, $84, $00
 
-; address 476 - 481 (bytes 0 - 5)
-TEXT_ITEM_NAME:
-.byte $93, $83, >stringifyActiveItem, <stringifyActiveItem, $00
+; address 472 - 478 (bytes 0 - 6)
+SHOP_WEAPON_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00, $00, $00
 
-; address 481 - 485 (bytes 0 - 4)
-TEXT_SHOP_TITLEINN:
-.byte $17, $1c, $1c, $00
+; address 478 - 483 (bytes 0 - 5)
+SHOP_BLACKMAGIC_CONERIA:
+.byte $41, $43, $42, $40, $00
 
-; address 485 - 487 (bytes 0 - 2)
-TEXT_DASH:
-.byte $45, $00
+; address 483 - 488 (bytes 0 - 5)
+SHOP_BLACKMAGIC_CONERIA_SIBLING2:
+.byte $00, $00, $00, $00, $00
 
-; address 487 - 489 (bytes 0 - 2)
-LUT_METATILE_TOP_LEFT:
-.byte <TILE_ANIMATION_0, <TILE_ANIMATION_4
+; address 488 - 490 (bytes 0 - 2)
+LUT_METATILE_TOP_RIGHT:
+.byte <TILE_ANIMATION_1, <TILE_ANIMATION_4
 
-; address 489 - 491 (bytes 0 - 2)
-LUT_METATILE_TOP_LEFT_SIBLING2:
-.byte >TILE_ANIMATION_0, >TILE_ANIMATION_4
+; address 490 - 492 (bytes 0 - 2)
+LUT_METATILE_TOP_RIGHT_SIBLING2:
+.byte >TILE_ANIMATION_1, >TILE_ANIMATION_4
 
-; address 491 - 492 (bytes 0 - 1)
-LUT_MAP_METATILES_LO:
-.byte <MAP_0_METATILES
-
-; address 492 - 493 (bytes 0 - 1)
-LUT_MAP_METATILES_HI:
-.byte >MAP_0_METATILES
-
-; address 493 - 498 (bytes 0 - 5)
-MAP_0_METATILES:
-.byte >METATILE_GRASS, <METATILE_GRASS, >METATILE_WATER, <METATILE_WATER, $ff
-
-; 498 - 8192
-.res 7694
+; 492 - 8192
+.res 7700
 

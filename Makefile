@@ -7,29 +7,42 @@ data ::= $(wildcard src/data/*.asm)
 
 CA65 ?= ca65
 LD65 ?= ld65
-NODE ?= node
+DENO ?= deno
 CA65FLAGS ::= -I. -g --feature force_range
 LD65FLAGS ::= --dbgfile build/final_fantasy_1_regulation.dbg -m build/final_fantasy_1_regulation.map
-NODE_SCRIPTS ::= script/data_generator.mjs
 
-.PHONY: all clean run_node test $(NODE_SCRIPTS)
+.PHONY: all clean run_deno test compress compress-crab compress-crab-debug
 
 all: ${out}
 
+# Main test target (now uses Deno)
 test:
-	${NODE} script/massive_test.mjs
+	${DENO} task test
+
+# Compression targets
+compress:
+	${DENO} task compress $(FILE) $(PROFILE)
+
+compress-crab:
+	${DENO} task compress data/chr/crab.massive.png ENHANCED_REPEAT
+
+compress-crab-debug:
+	${DENO} task compress data/chr/crab.massive.png ENHANCED_REPEAT
+
+# Data generation (now uses Deno)
+generate:
+	${DENO} task generate
 
 clean:
 	@${RM} ${obj} ${out} ${data}
 
-${out}: nes.cfg ${obj} | run_node
+${out}: nes.cfg ${obj} | run_deno
 	@${LD65} ${LD65FLAGS} -o $@ -C $^
 
-run_node: $(NODE_SCRIPTS)
+# Data generation dependency (now uses Deno)
+run_deno:
+	${DENO} task generate
 
-$(NODE_SCRIPTS):
-	${NODE} $@
-
-build/%.o: src/%.asm src/ram.asm src/ram-definitions.inc src/constants.inc src/macros.inc | run_node
+build/%.o: src/%.asm src/ram.asm src/ram-definitions.inc src/constants.inc src/macros.inc | run_deno
 	@mkdir -p $(@D)
 	@${CA65} ${CA65FLAGS} $< -o $@ --listing $@.lst --list-bytes 0
