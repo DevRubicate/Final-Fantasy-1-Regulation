@@ -25,7 +25,7 @@ export class ImageProcessor {
         const buffer = await Deno.readFile(filePath);
         return new Promise((resolve, reject) => {
             const png = new PNG();
-            png.parse(buffer, (error, data) => {
+            png.parse(buffer, (error: Error | null, data: any) => {
                 if (error) {
                     reject(error);
                 } else {

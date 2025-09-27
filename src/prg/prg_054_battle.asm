@@ -15,15 +15,15 @@ EnterNewBattle:
     STA Var0
     FARCALL FillNametable                ; clear the nametable
 
-
-    LDA #<MASSIVE_CRAB_IMAGE
+    LDA #0
     STA Var0
-    LDA #>MASSIVE_CRAB_IMAGE
+    LDA #<MASSIVE_CRAB_IMAGE
     STA Var1
-    LDA #TextBank(MASSIVE_CRAB_IMAGE)
+    LDA #>MASSIVE_CRAB_IMAGE
     STA Var2
+    LDA #TextBank(MASSIVE_CRAB_IMAGE)
+    STA Var3
     FARCALL UnpackImage
-
 
 
 @Loop:

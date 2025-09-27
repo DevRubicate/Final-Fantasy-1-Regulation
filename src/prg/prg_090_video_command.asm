@@ -17,11 +17,12 @@
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 .import LUT_ITEM_DESCRIPTION_LO, LUT_ITEM_DESCRIPTION_HI
 .import LUT_TILE_CHR_LO, LUT_TILE_CHR_HI
+.import Video_WriteMassiveImagePattern_128
 
 .export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable 
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
 .export UploadCHRSolids,UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
-.export UploadMetaSprite
+.export UploadMetaSprite, UploadMassiveImage
 
 lut_NTRowStartLo:
   .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
@@ -2198,6 +2199,8 @@ FetchValueItemDataThird:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; FillAttributeTable
+;
+; Var0 = Fill value
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     FillAttributeTable:
 
@@ -2209,18 +2212,32 @@ FetchValueItemDataThird:
         LDY #0                      ; Cost high-byte is 0
         LDX #3                      ; Add 3 to our video stack size
         CALL VideoApplySizeAndCost
-        BCS @allocateVideoBuffer
 
+        ; When applying the cost of this video command, it's possible that we determined that we simply didn't have
+        ; enough time to do the video command before vblank ran out. If this was the case, then VideoApplySizeAndCost
+        ; will have delayed the runtime until a vblank has happened in order to empty the VideoStack to make room for
+        ; this new command, and then set the carry flag to indicate that it happened. So when the carry flag is set,
+        ; we simply start over, re-requesting the video stack space we need.
+        BCS @allocateVideoBuffer    ; If a flush happened, restart the allocation
 
-        LDX VideoCursor
-        LDA #<(Video_Inc1_Set_FillAttributeTable-1)
+        ; We want to add the Video_Inc1_Set_FillAttributeTable routine to our VideoStack. It needs for the PPU increment
+        ; mode to be set to 1, so at the very start of that routine there are instructions to do so. However, if we know
+        ; that the PPU will already be in increment mode 1 when this routine starts, then we could optimize a bit by
+        ; skipping those instructions.
+
+        LDX VideoCursor                             ; Load the current VideoStack cursor
+        LDA #<(Video_Inc1_Set_FillAttributeTable-1) ; Load the low address of the routine
+        ; VideoIncrementAddressOffset will have a value that allows us to perfectly skip over the two instructions that
+        ; change the PPU increment mode to 1, but only if the PPU is already in increment mode 1. Thus if we are not in
+        ; increment mode 1, we will still be running those two instructions.
         CLC
-        ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
-        STA VideoStack+0,X
+        ADC VideoIncrementAddressOffset             ; Add the offset that poetntially skips over the two instructions
+        STA VideoStack+0,X                          ; Save the low address of the routine
         LDA #>(Video_Inc1_Set_FillAttributeTable-1)
         STA VideoStack+1,X
 
-        ; Set the video increment mode to 1
+        ; Regardless of whether we were in increment mode 1 before or not, we will definitly be in increment mode 1
+        ; now, so we set the VideoIncrementAddressOffset and VideoIncrementCost to indicate increment mode to 1.
         LDA #VIDEO_INCREMENT_ADDRESS_OFFSET_1
         STA VideoIncrementAddressOffset
         LDA #VIDEO_INCREMENT_COST_1
@@ -3308,3 +3325,51 @@ FetchValueItemDataThird:
     AllocateSprite:
     
     RTS
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadMassiveImage
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadMassiveImage:
+
+        .repeat 64, i
+            :
+                ; Video_WriteMassiveImagePattern_128    ; 530 or 533 (inc1)
+                LDX #5                                  ; Add 2 to our video stack size
+                LDY #2                                  ; Add 512 to cost
+                LDA #18                                 ; Add 18 to cost
+                ADC VideoIncrementCost                  ; Potentially add 3 to cost
+                CALL VideoApplySizeAndCost
+                BCS :-
+
+            LDY #0
+            LDX VideoCursor
+            LDA #<(Video_WriteMassiveImagePattern_128-1)
+            CLC
+            ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
+            STA VideoStack+0,X
+            LDA #>(Video_WriteMassiveImagePattern_128-1)
+            STA VideoStack+1,X
+
+            LDA #(i/8)
+            STA VideoStack+2,X
+
+            ; Give the address we are writing to
+            LDA #>(128 * (i .mod 8))
+            STA VideoStack+3,X
+            LDA #<(128 * (i .mod 8))
+            STA VideoStack+4,X
+
+            LDX #127
+            :
+                LDA imageBuffer+(i*128),X
+                STA MassiveImageBuffer,X
+                DEX
+                BPL :-
+
+            LDA VideoCursor
+            CLC
+            ADC #5
+            STA VideoCursor
+        .endrepeat
+        RTS
+

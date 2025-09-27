@@ -120,7 +120,6 @@ lut_EnemyAi:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExitBattle:
-    CALL ReSortPartyByAilment        ; rearrange party to put sick/dead members in the back
     CALL BattleFadeOut               ; Fade to black
     
     LDA btl_result                  ; check battle result
@@ -3357,14 +3356,14 @@ ApplyRegenToAllEnemies:
     
     LDY #en_romptr          ; use that to get the ROM pointer, and record it
     LDA (regen_ramstats), Y
-    STA regen_romstats
+    ;STA regen_romstats
     INY
     LDA (regen_ramstats), Y
-    STA regen_romstats+1
+    ;STA regen_romstats+1
     
     ; Now that we have RAM and ROM pointers for this enemy...
     LDY #ENROMSTAT_CATEGORY     ; Get the enemy category, and see if they are
-    LDA (regen_romstats), Y               ;  regenerative
+    ;LDA (regen_romstats), Y               ;  regenerative
     AND #CATEGORY_REGEN
     BEQ @Next                   ; If not, skip them -- go to next iteration
     
@@ -3380,10 +3379,10 @@ ApplyRegenToAllEnemies:
     CALL MathBuf_Add             ; regenerative enemies recover 3 HP
     
     LDY #ENROMSTAT_HPMAX        ; put HP max in mathbuf2
-    LDA (regen_romstats), Y               ;  ... because a normal CMP would be too simple
+    ;LDA (regen_romstats), Y               ;  ... because a normal CMP would be too simple
     STA btl_mathbuf+2           ;  ...
     INY                         ;  ...
-    LDA (regen_romstats), Y
+    ;LDA (regen_romstats), Y
     STA btl_mathbuf+3
     
     LDY #$00                    ; compare HP and MaxHP buffers
@@ -3678,14 +3677,14 @@ Battle_DoPlayerTurn:
     CALL PrepCharStatPointers        ; load player's ailments
     LDY #ch_ailments - ch_stats
     LDA (btl_ob_charstat_ptr), Y
-    STA battleturn_ail
+   ; STA battleturn_ail
     
     AND #AIL_SLEEP          ; are they asleep?
     BEQ :+
       LDA battleturn_playerid         ; if yes, try to wake up
       JUMP Battle_PlayerTryWakeup
       
-  : LDA battleturn_ail
+  : ;LDA battleturn_ail
     AND #AIL_STUN           ; are they stunned?
     BEQ :+
       LDA battleturn_playerid
@@ -5403,91 +5402,7 @@ SwapCharOBStats:
       
     RTS
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  lut_AilmentWeight  [$AC92 :: 0x32CA2]
-;;
-;;    Table to add weight to characters with ailments so they will
-;;  be moved to the back of the party when the party is sorted.  This
-;;  is used to move dead/stone/poisoned chars to the back of the party
-;;  after battle.
-;;
-;;    Weight is placed in high 4 bits, since the char index is in the low
-;;  2 bits.  Higher weight = move to back of party.
 
-lut_AilmentWeight:
-  .byte $00     ; no ailment (no weight)
-  .byte $40     ; dead (highest weight)
-  .byte $20     ; stone
-  .byte $10     ; poison
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  ReSortPartyByAilment  [$AC96 :: 0x32CA6]
-;;
-;;    This moves characters around in the party order to move dead/
-;;  stone/poison enemies to the back of the party.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReSortPartyByAilment:
-    LDX #$00                    ; X is character index and loop up counter
-  @WeightLoop:
-      TXA                       ; shift left 6 to get character stat index
-      ASL A
-      ASL A
-      ASL A
-      ASL A
-      ASL A
-      ASL A
-      TAY                       ; char index in Y
-      
-      LDA ch_ailments, Y        ; get their ailments (now in OB format)
-      AND #$03
-      TAY                       ; ailments in Y
-      
-      TXA                       ; char index in A
-      CLC
-      ADC lut_AilmentWeight, Y  ; add ailment weight to character index
-      STA char_order_buf, X     ; store in char order buffer
-      
-      INX
-      CPX #$04
-      BNE @WeightLoop           ; loop 4 times (for each character)
-      
-    ; Now that ailment weights are added, we can just sort char_order_buf to
-    ;  go in ascending order, and characters will debilitating ailments will be
-    ;  moved to the back of the party.  (Or at least they would if it sorted
-    ;  properly -- see below for explanation of how this is bugged).
-
-    STX outerloopctr_alignmentsor               ; X=4 at this point, do the outer loop 4 times
-@OuterSortLoop:
-    LDA #$00                        ; inner loop counter -- loop 3 times
-    STA loopctr_alignmentsort
-    
-  @InnerLoop:
-      LDY loopctr_alignmentsort
-      LDA char_order_buf, Y         ; check weight of this slot
-      CMP char_order_buf+1, Y       ; compare to weight of next slot
-      BCC :+                        ; if the weight of this slot is greater (this slot should be after next slot)
-        LDA char_order_buf, Y         ; ... then swap these slots.
-        AND #$03                      ; This swap code is BUGGED, because it gets the index from char_order_buf, which
-        STA btl_tmpvar1                       ;  does not actually reflect the character index anymore!  The character index is
-        LDA char_order_buf+1, Y       ;  in loopctr_alignmentsort!  This actually should be swapping loopctr_alignmentsort and loopctr_alignmentsort+1... you
-        AND #$03                      ;  know... the slots we actually checked.
-        STA btl_tmpvar2                       ; Because of this, it's possible the routine will screw up the sorting.
-        CALL SwapCharsForSorting
-    
-    : INC loopctr_alignmentsort                  ; do inner loop 3 times (not 4, because we check slot+1)
-      LDA loopctr_alignmentsort
-      CMP #$03
-      BNE @InnerLoop
-      
-    DEC outerloopctr_alignmentsor               ; do outer loop 4 times, so that the last slot has time to be moved all the way
-    BNE @OuterSortLoop              ;  to the front.
-    
-    RTS
-    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  TransferByte  [$ACE1 :: 0x32CF1]
@@ -6604,8 +6519,8 @@ BtlMag_PrintMagicMessage:
 
 ApplyEnemyAilmentMask:
     LDY #en_ailments
-    AND (tmp_9a_9b), Y
-    STA (tmp_9a_9b), Y
+    ;AND (tmp_9a_9b), Y
+    ;STA (tmp_9a_9b), Y
     RTS
 
     
@@ -6624,8 +6539,8 @@ Battle_DoEnemyTurn:
     STA btl_attacker_alt
     
     CALL GetEnemyStatPtr
-    STA battleturn_enramstats                  ; put pointer to this enemy's stats in $9A,9B
-    STX battleturn_enramstats+1
+    ;STA battleturn_enramstats                  ; put pointer to this enemy's stats in $9A,9B
+    ;STX battleturn_enramstats+1
     
     LDA #$02
     STA btlmag_playerhitsfx     ; enemy->player magic plays the "cha" sound effect (ID 2)
@@ -6635,7 +6550,7 @@ Battle_DoEnemyTurn:
     STA btlmag_magicsource      ; Enemies can't use potions or items -- so their magic source is always 'magic'
     
     LDY #en_ailments
-    LDA (battleturn_enramstats), Y             ; see if they're stunned or asleep
+    ;LDA (battleturn_enramstats), Y             ; see if they're stunned or asleep
     AND #AIL_SLEEP | AIL_STUN
     BEQ @EnemyActive
     
@@ -6658,10 +6573,10 @@ Battle_DoEnemyTurn:
     
   @Asleep:                  ; If the enemy is asleep
     LDY #en_unknown12       ; This is TOTALLY *BUGGED*
-    LDA (battleturn_enramstats), Y         ; Loads a 16-bit value into the math buffer that is NEVER properly initialized.
+    ;LDA (battleturn_enramstats), Y         ; Loads a 16-bit value into the math buffer that is NEVER properly initialized.
     STA btl_mathbuf         ;   The low byte is enemy's max HP... but the high byte is never set properly
     INY
-    LDA (battleturn_enramstats), Y
+    ;LDA (battleturn_enramstats), Y
     STA btl_mathbuf+1
     
     LDA #$00
@@ -6684,7 +6599,7 @@ Battle_DoEnemyTurn:
 
   @EnemyActive:                         ; jumps here if enemy is active (not stunned or asleep)
     LDY #en_ailments
-    LDA (battleturn_enramstats), Y                     ; check the high bit to see if they're confused
+    ;LDA (battleturn_enramstats), Y                     ; check the high bit to see if they're confused
     BPL @EnemyActive_AndNotConfused     ; if clear, jump ahead to EnemyActive_AndNotConfused.  Otherwise...
     
     ; If enemy is confused:
@@ -6714,11 +6629,11 @@ Battle_DoEnemyTurn:
     ;;  its normal action:
   @EnemyActive_AndNotConfused:
     LDY #en_romptr
-    LDA (battleturn_enramstats), Y
-    STA battleturn_enromstats
+    ;LDA (battleturn_enramstats), Y
+    ;STA battleturn_enromstats
     INY
-    LDA (battleturn_enramstats), Y
-    STA battleturn_enromstats+1           ; pointer to enemy ROM data in $9C,9D  (for Enemy_DoAi)
+    ;LDA (battleturn_enramstats), Y
+   ; STA battleturn_enromstats+1           ; pointer to enemy ROM data in $9C,9D  (for Enemy_DoAi)
     
     LDA ch_level
     ASL A
@@ -6737,7 +6652,7 @@ Battle_DoEnemyTurn:
     ;   if V is less than $50, the enemy will run!
     
     LDY #en_morale
-    LDA (battleturn_enramstats), Y     ; morale
+    ;LDA (battleturn_enramstats), Y     ; morale
     SEC
     SBC btltemppointer
     BCC @RunAway        ; run if morale < 2*level_of_leader
@@ -6764,13 +6679,13 @@ Battle_DoEnemyTurn:
     LDA #AIL_DEAD
     STA btl_defender_ailments       ; Mark ourselves as dead (See Battle_DoTurn for why this is important)
     LDY #en_ailments
-    STA (battleturn_enramstats), Y                 ; Give ourselves the 'DEAD' ailment
+    ;STA (battleturn_enramstats), Y                 ; Give ourselves the 'DEAD' ailment
     
     LDA #$00
     STA battle_defenderisplayer     ; Fill output:  defender is an enemy
     
     LDY #en_exp
-    : STA (battleturn_enramstats), Y               ; erase this enemy's GP and Exp rewards
+    ;: STA (battleturn_enramstats), Y               ; erase this enemy's GP and Exp rewards
       INY
       CPY #en_exp+4
       BNE :-
@@ -6840,7 +6755,7 @@ Enemy_DoAi:
     STA battleturn_enai+1                ;   (this could be done in the below math, but whatever)
     
     LDY #ENROMSTAT_AI
-    LDA (battleturn_enromstats), Y
+    ;LDA (battleturn_enromstats), Y
     CMP #$FF                    ; get AI id from ROM (if it's read from ROM, why is it stored in RAM?)
     BNE :+
       JUMP ChooseAndAttackPlayer ; no AI -- just attack a random player
@@ -6862,7 +6777,7 @@ Enemy_DoAi:
     
   @DoMagicAttack:
     LDY #en_aimagpos
-    LDA (battleturn_enramstats), Y
+    ;LDA (battleturn_enramstats), Y
     AND #$07                        ; get current magic pos
     CALL @IncrementAiPos             ; increment magic position
     ADC #$02                        ; position+2 is the index to the spell to cast
@@ -6872,7 +6787,7 @@ Enemy_DoAi:
     BNE :+
       LDA #$00                      ; ...reset position, and start over
       LDY #en_aimagpos
-      STA (battleturn_enramstats), Y
+      ;STA (battleturn_enramstats), Y
       JUMP @DoMagicAttack            ; keep going until we find a non-empty spell slot
     
   : JUMP Enemy_DoMagicEffect         ; with the magic spell in A, do the magic attack
@@ -6883,7 +6798,7 @@ Enemy_DoAi:
     PHA                             ; backup position
     CLC
     ADC #$01                        ; +1
-    STA (battleturn_enramstats), Y                    ; and write it back
+    ;STA (battleturn_enramstats), Y                    ; and write it back
     PLA                             ; restore backup
     RTS
   
@@ -6896,7 +6811,7 @@ Enemy_DoAi:
     ; otherwise, do a special attack
   @DoSpecialAttack:
     LDY #en_aiatkpos            ; This block is the same as @DoMagicAttack -- the only difference
-    LDA (battleturn_enramstats), Y             ;   is it cycles through the 4 enemy attack slots instead of the
+    ;LDA (battleturn_enramstats), Y             ;   is it cycles through the 4 enemy attack slots instead of the
     AND #$03                    ;   8 magic slots.
     CALL @IncrementAiPos
     ADC #$0B
@@ -6906,7 +6821,7 @@ Enemy_DoAi:
     BNE :+
       LDA #$00
       LDY #en_aiatkpos
-      STA (battleturn_enramstats), Y
+      ;STA (battleturn_enramstats), Y
       JUMP @DoSpecialAttack
   : CLC
     ADC #$42                    ; add $42 to the special attack ID to indicate it's a special attack (0-3F are magic, and 40,41 are heal/pure potions)
@@ -7363,7 +7278,7 @@ Enemy_DoMagicEffect:
     CALL PrepareEnemyMagAttack               ; load attacker's stats (never used!  Pointless!)
     
     LDY #en_ailments
-    LDA (battleturn_enramstats), Y                         ; get this enemy's ailments
+    ;LDA (battleturn_enramstats), Y                         ; get this enemy's ailments
     AND #AIL_MUTE                           ; are they muted?
     BEQ :+
       CALL DrawCombatBox_Attack              ; if yes, draw their attack name

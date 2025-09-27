@@ -2168,7 +2168,7 @@ SMMove_AirOrb:
     STA orb_air           ; no BNE here because it just flows directly into altar effect
 
 SMMove_AltarEffect:
-    INC altareffect       ; set the altar effect flag
+    ;INC altareffect       ; set the altar effect flag
     CLC                   ; CLC to allow player to move
     RTS
 

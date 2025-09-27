@@ -10,7 +10,7 @@ export class MassiveCompressor extends CompressionEngine {
     }
 
     // All compression logic is now implemented in CompressionEngine
-    async processImage(filePath: string, profileName?: string): Promise<Uint8Array> {
+    override async processImage(filePath: string, profileName?: string): Promise<Uint8Array> {
         return await super.processImage(filePath, profileName);
     }
 }

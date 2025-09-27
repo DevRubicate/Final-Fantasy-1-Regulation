@@ -134,7 +134,7 @@ DoAltarEffect:
 
     LDA #0
     STA tmp+2            ; clear the phase (start with beam expanding outward from player)
-    STA altareffect      ; clear the altar effect flag
+    ;STA altareffect      ; clear the altar effect flag
 
     LDA #138
     STA tmp              ; start with a 138 scanline delay before illumination

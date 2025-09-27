@@ -72,36 +72,12 @@
 .endmacro
 
 SECTIONZP "ZEROPAGE" ; $00 - $FF
-    RESZP Var0,                             1
-    RESZP Var1,                             1
-    RESZP Var2,                             1
-    RESZP Var3,                             1
-    RESZP Var4,                             1
-    RESZP Var5,                             1
-    RESZP Var6,                             1
-    RESZP Var7,                             1
-    RESZP Var8,                             1
-    RESZP Var9,                             1
-    RESZP Var10,                            1
-    RESZP Var11,                            1
-    RESZP Var12,                            1
-    RESZP Var13,                            1
-    RESZP Var14,                            1
-    RESZP Var15,                            1
-    RESZP Var16,                            1
-    RESZP Var17,                            1
-    RESZP Var18,                            1
-    RESZP Var19,                            1
-
     RESZP story_dropinput,                  1 ; 1 bytes     ; $07
-    GAP                                     5
     RESZP inroom,                           1 ; 1 bytes     ; $0D bit 7 is the actual inroom flag.  $x1=entering room, $x2=entering locked room (different sprite vis), $x5=exiting room, $x6=exiting locked room
     RESZP doorppuaddr,                      2 ; 2 bytes     ; $0E 2 bytes, PPU address of door drawing work
     RESZP theend_selectedtile,              0 ; 1 bytes     ; $10
     RESZP tmp,                              0 ; 16 bytes    ; $10
-    GAP                                     8
     RESZP mu_scoreptr,                      2 ; 2 bytes     ; $18
-    GAP                                     1
     RESZP dlgbox_row,                       0 ; 1 bytes     ; $1B
     RESZP palcyc_mode,                      1 ; 1 bytes     ; $1B
     RESZP sprindex,                         1 ; 1 bytes     ; $26
@@ -155,9 +131,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP cur_bank,                         1 ; 1 bytes     ; $57
     RESZP ret_bank,                         1 ; 1 bytes     ; $58
     RESZP format_buf,                       0 ; 7 bytes     ; $49  ; 7 bytes (5A-60) -- must not cross page bound
-    GAP                                     3
     RESZP name_input_draw_buf,              1 ; 1 bytes     ; $5C
-    GAP                                     4
     RESZP theend_ppuaddr,                   0 ; 2 bytes     ; $61
     RESZP shutter_a,                        0 ; 1 bytes     ; $61  ; shared
     RESZP lu_cursor,                        0 ; 1 bytes     ; $61  ; shared
@@ -205,51 +179,45 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP talkobj,                          1 ; 1 bytes     ; $67  ; shared -- object you're talking to on SM
     RESZP sm_player_x,                      1 ; 1 bytes     ; $68  ; player X/Y position on standard map.  Only used for NPC collision detection
     RESZP sm_player_y,                      1 ; 1 bytes     ; $69
-    GAP                                     1
     RESZP enCHRpage,                        1 ; 1 bytes     ; $6B
-    RESZP altareffect,                      1 ; 1 bytes     ; $6C  ; flag to indicate altar effect is to occur (screen shaking, monochrome diagonal window thing)
     RESZP trampoline_low,                   1
     RESZP trampoline_high,                  1
     RESZP current_bank1,                    1
-    GAP                                     12
     RESZP dlgmusic_backup,                  1 ; 1 bytes     ; $7C  ; backup music track for restoring music after the dialogue box changes it
     RESZP dlgsfx,                           1 ; 1 bytes     ; $7D  ; flag to indicate to play a sound effect after opening dialogue box.  0=no sfx, 1=fanfare, else=treasure
     RESZP sq2_sfx,                          1 ; 1 bytes     ; $7E
     RESZP descboxopen,                      1 ; 1 bytes     ; $7F
-    RESZP lvlup_curexp,                     2 ; 2 bytes     ; $80       ; 2 byte pointer to character's current EXP
     RESZP levelup_lvlupptr,                 0 ; 2 bytes     ; $82       ; local, pointer to level up data
     RESZP lvlup_exptoadv,                   0 ; 2 bytes     ; $82       ; 2 byte pointer to EXP needed to advance
-    RESZP chaosdeath_rvalprev,              1 ; 1 bytes     ; $82      ; "previous" random value
-    RESZP chaosdeath_rval,                  1 ; 1 bytes     ; $83   ; a random value
     RESZP lvlup_chmagic,                    0 ; 2 bytes     ; $84       ; 2 byte pointer to character's magic data
     RESZP divisor,                          1 ; 1 bytes     ; $84
     RESZP remainder,                        1 ; 1 bytes     ; $85
-    RESZP lvlup_chstats,                    2 ; 2 bytes     ; $86       ; 2 byte pointer to character's OB stats
+    RESZP lvlup_chstats,                    0 ; 2 bytes     ; $86       ; 2 byte pointer to character's OB stats
     RESZP temporary_3,                      0 ; 1 bytes     ; $88
     RESZP battleturn_playerid,              0 ; 1 bytes     ; $88
     RESZP regen_ramstats,                   0 ; 2 bytes     ; $88   ; 2 bytes
-    RESZP chaosdeath_ppuaddr,               0 ; 2 bytes     ; $88   ; 2 bytes
     RESZP battlereward,                     0 ; 3 bytes     ; $88       ; 3 bytes.  Note that while this var is 3 bytes, this stop behaving properly if rewards ever exceed the 2-byte boundary, since the game assumes you will never receive more than 65535 XP/GP in any one battle.
-    GAP                                     1
-    RESZP temporary_4,                      0 ; 1 bytes     ; $89
-    RESZP battleturn_ail,                   1 ; 1 bytes     ; $89 ; local, temp ram to hold ailments
-    RESZP regen_romstats,                   0 ; 2 bytes     ; $8A   ; 2 bytes
-    RESZP outerloopctr_alignmentsor,        1 ; 1 bytes      ; $8A
-    RESZP loopctr,                          0 ; 1 bytes      ; $8B
-    RESZP loopctr_alignmentsort,            1 ; 1 bytes      ; $8B
-    GAP                                     4
-    RESZP tmp_90,                           1 ; 1 bytes      ; $90
-    GAP                                     5
-    RESZP tmp_96,                           1 ; 1 bytes      ; $96
-    RESZP tmp_97,                           1 ; 1 bytes      ; $97
-    GAP                                     2
-    RESZP tmp_9a_9b,                        0 ; 2 bytes      ; $9A
-    RESZP battleturn_enramstats,            0 ; 2 bytes      ; $9A
-    RESZP chaosdeath_outerctr,              1 ; 1 bytes      ; $9A
-    RESZP chaosdeath_innerctr,              1 ; 1 bytes      ; $9B
-    RESZP tmp_9c,                           0 ; 1 bytes      ; $9D
-    RESZP battleturn_enromstats,            1 ; 1 bytes      ; $9C
-    RESZP tmp_9d,                           1 ; 1 bytes      ; $9D
+    
+    RESZP Var0,                             1
+    RESZP Var1,                             1
+    RESZP Var2,                             1
+    RESZP Var3,                             1
+    RESZP Var4,                             1
+    RESZP Var5,                             1
+    RESZP Var6,                             1
+    RESZP Var7,                             1
+    RESZP Var8,                             1
+    RESZP Var9,                             1
+    RESZP Var10,                            1
+    RESZP Var11,                            1
+    RESZP Var12,                            1
+    RESZP Var13,                            1
+    RESZP Var14,                            1
+    RESZP Var15,                            1
+    RESZP Var16,                            1
+    RESZP Var17,                            1
+    RESZP Var18,                            1
+    RESZP Var19,                            1
     RESZP Var20,                            1
     RESZP Var21,                            1
     RESZP Var22,                            1
@@ -260,49 +228,8 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var27,                            1
     RESZP Var28,                            1
     RESZP Var29,                            1
-    RESZP Var30,                            1
-    RESZP Var31,                            1
-    RESZP Var32,                            1
-    RESZP Var33,                            1
-    RESZP Var34,                            1
-    RESZP Var35,                            1
-    RESZP Var36,                            1
-    RESZP Var37,                            1
     RESZP Var38,                            1
     RESZP Var39,                            1
-    RESZP Var40,                            1
-    RESZP Var41,                            1
-    RESZP Var42,                            1
-    RESZP Var43,                            1
-    RESZP Var44,                            1
-    RESZP Var45,                            1
-    RESZP Var46,                            1
-    RESZP Var47,                            1
-    RESZP Var48,                            1
-    RESZP Var49,                            1
-    RESZP Var50,                            1
-    RESZP Var51,                            1
-    RESZP Var52,                            1
-    RESZP Var53,                            1
-    RESZP Var54,                            1
-    RESZP Var55,                            1
-    RESZP Var56,                            1
-    RESZP Var57,                            1
-    RESZP Var58,                            1
-    RESZP Var59,                            1
-    RESZP Var60,                            1
-    RESZP Var61,                            1
-    RESZP Var62,                            1
-    RESZP Var63,                            1
-    RESZP Var64,                            1
-    RESZP Var65,                            1
-    RESZP Var66,                            1
-    RESZP Var67,                            1
-    RESZP Var68,                            1
-    RESZP Var69,                            1
-    RESZP Var70,                            1
-    RESZP Var71,                            1
-    RESZP Var72,                            1
     RESZP Var73,                            1
     RESZP Var74,                            1
     RESZP Var75,                            1
@@ -311,6 +238,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var78,                            1
     RESZP Var79,                            1
     RESZP Var80,                            1
+    RESZP MassiveImageBuffer,               126
 
 
 
@@ -363,7 +291,6 @@ SECTIONZP "BATTLEZP" ; $80 - $9F
     RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
     RESZP tmp_9b,                           0 ;              ; $9B
     RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
-    RESZP chaosdeath_screamcounter,         0 ; 1 bytes      ; $9C
     RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
     RESZP btltemppointer,                   0 ;              ; $9E ; not actually a pointer
     RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
@@ -770,7 +697,6 @@ SECTION "BATTLE" ; $6800 - 6DB0
     RES             tmp_68b9,                           1 ; $68B9
     RES             btlbox_blockdata,                   1 ; $68BA
     GAP                                                 99
-    RES             chaosdeath_tilerowtbl,              0 ; $691E  maybe 256 bytes
     RES             btl_msgbuffer,                      384 ; $691E   ; $180 bytes  ($0C rows * $20 bytes per row); this buffer contains on-screen tiles to be drawn to ppu$2240; (note only $19 bytes are actually drawn, the remaining 7 bytes are padding)
     RES             btl_msgdraw_hdr,                    1 ; $6A9E
     RES             btl_msgdraw_x,                      1 ; $6A9F

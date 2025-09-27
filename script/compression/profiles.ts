@@ -5,9 +5,8 @@ import { COMMANDS } from '../core/constants.ts';
 
 export interface CompressionProfile {
     name: string;
-    description: string;
     commandBitWidth?: number; // Optional - will be auto-calculated
-    commands: (number | number[] | null)[];
+    commands: (number | Array<number | null> | null)[];
 }
 
 export interface ExpandedCompressionProfile {
@@ -32,7 +31,7 @@ function calculateCommandBitWidth(commandCount: number): number {
 /**
  * Generate all possible combinations from arrays in commands
  */
-function generatePermutations(commands: (number | number[] | null)[]): number[][] {
+function generatePermutations(commands: (number | Array<number | null> | null)[]): number[][] {
     const permutations: number[][] = [];
 
     function generateRecursive(index: number, current: number[]): void {
@@ -51,14 +50,26 @@ function generatePermutations(commands: (number | number[] | null)[]): number[][
             const variants = [...command, null];
             for (const variant of variants) {
                 if (variant !== null) {
-                    generateRecursive(index + 1, [...current, variant]);
+                    // Check if this command is already in the current array
+                    if (current.includes(variant)) {
+                        // Skip this variant as it would create a duplicate
+                        generateRecursive(index + 1, current);
+                    } else {
+                        generateRecursive(index + 1, [...current, variant]);
+                    }
                 } else {
                     generateRecursive(index + 1, current);
                 }
             }
         } else {
             // Single command
-            generateRecursive(index + 1, [...current, command]);
+            // Check if this command is already in the current array
+            if (current.includes(command)) {
+                // Skip this command as it would create a duplicate
+                generateRecursive(index + 1, current);
+            } else {
+                generateRecursive(index + 1, [...current, command]);
+            }
         }
     }
 
@@ -79,7 +90,7 @@ export function expandProfile(profile: CompressionProfile): ExpandedCompressionP
 
         expanded.push({
             name: `${profile.name}_v${i + 1}`,
-            description: `${profile.description} (variant ${i + 1}: ${commands.length} commands, ${commandBitWidth}-bit width)`,
+            description: `${profile.name} (variant ${i + 1}: ${commands.length} commands, ${commandBitWidth}-bit width)`,
             commandBitWidth,
             commands
         });
@@ -105,29 +116,26 @@ export function expandAllProfiles(baseProfiles: CompressionProfile[]): ExpandedC
 export function defineCompressionProfiles(): CompressionProfile[] {
     return [
         {
-            name: "FUNDAMENTAL_BITS",
-            description: "Two fundamental bit-based commands with perfect symmetry",
+            name: "MINIMAL_A",
             commands: [
-                COMMANDS.REPEAT_BITS,   // Index 0: Repeat bits
-                COMMANDS.PLOT_BITS_4    // Index 1: Plot bits (4-bit)
+                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12],
+                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12]
             ]
         },
         {
-            name: "ENHANCED_REPEAT",
-            description: "Three commands including REPEAT_COMMAND",
+            name: "MINIMAL_B",
             commands: [
-                COMMANDS.REPEAT_BITS,   // Index 0: Repeat bits
-                COMMANDS.PLOT_BITS_4,   // Index 1: Plot bits (4-bit)
-                COMMANDS.REPEAT_COMMAND // Index 2: Repeat command
+                COMMANDS.REPEAT_BITS,
+                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12],
             ]
         },
         {
-            name: "ADAPTIVE_PLOT",
-            description: "Adaptive PLOT_BITS variants with optional REPEAT_COMMAND",
+            name: "STANDARD_A",
             commands: [
-                COMMANDS.REPEAT_BITS,   // Index 0: Repeat bits (always included)
-                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12], // Index 1: Choose PLOT_BITS variant
-                null                    // Index 2: REPEAT_COMMAND is optional
+                COMMANDS.REPEAT_BITS,
+                //COMMANDS.REPEAT_COMMAND,
+                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12],
+                [COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12],
             ]
         }
     ];

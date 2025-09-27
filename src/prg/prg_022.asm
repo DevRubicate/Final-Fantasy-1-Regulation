@@ -702,7 +702,7 @@ LvlUp_AwardAndUpdateExp:
     SEC                         ; loop 3 times (3 bytes of data)
   @FindDifLoop:
       LDA (lvlup_exptoadv), Y
-      SBC (lvlup_curexp), Y
+      ;SBC (lvlup_curexp), Y
       PHA
       INY
       DEX
@@ -786,11 +786,11 @@ LvlUp_GetCharExp:
     LDA lvlup_chstats                 ; self explanitory
     CLC
     ADC #ch_exp - ch_stats
-    STA lvlup_curexp
+    ;STA lvlup_curexp
     
     LDA #$00
     ADC lvlup_chstats+1
-    STA lvlup_curexp+1
+    ;STA lvlup_curexp+1
     RTS
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1322,7 +1322,7 @@ GiveHpBonusToChar:
 
 AddBattleRewardToVal:
     LDA #$03
-    STA loopctr                ; loop 3 times (adding 3 bytes)
+    ;STA loopctr                ; loop 3 times (adding 3 bytes)
     LDA #$00
     TAY                     ; A, X, Y all zero'd
     TAX                     ; Y = dest index, X = source index
@@ -1337,7 +1337,7 @@ AddBattleRewardToVal:
       INX                   ; inc indexes to do next byte
       INY
       
-      DEC loopctr          ; loop 3 times, for each byte
+      ;DEC loopctr          ; loop 3 times, for each byte
       BNE @Loop
       
     RTS
@@ -1746,9 +1746,9 @@ Battle_FlipCharSprite:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ChaosDeath_FadeNoise:
-    DEC chaosdeath_screamcounter             ; DEC noise setting
+    ;DEC chaosdeath_screamcounter             ; DEC noise setting
     
-    LDA chaosdeath_screamcounter
+    ;LDA chaosdeath_screamcounter
     STA PAPU_NCTL1           ; write it to noise volume control
     LDA #$FF
     STA PAPU_NFREQ2     ; set length counter (make noise audible)
@@ -1786,13 +1786,13 @@ ChaosDeath:
     
     ; a bunch of local vars
     LDA #$00                    ; Start the Low-pitch noise rumble
-    STA chaosdeath_screamcounter; See ChaosDeath_FadeNoise for details
+    ;STA chaosdeath_screamcounter; See ChaosDeath_FadeNoise for details
     CALL ChaosDeath_FadeNoise
 
     LDY #$00                    ; Fill chaosdeath_tilerowtbl with randomness
   @TableFillLoop:
       FARCALL BattleRNG
-      STA chaosdeath_tilerowtbl, Y
+      ;STA chaosdeath_tilerowtbl, Y
       INY
       BNE @TableFillLoop
       
@@ -1810,13 +1810,13 @@ ChaosDeath:
     ;   A frame is drawn after every row of pixels is erased.
     
     LDA #$08
-    STA chaosdeath_outerctr         ; outer loop counter.   Loop 8 times (once for each pixel row)
+    ;STA chaosdeath_outerctr         ; outer loop counter.   Loop 8 times (once for each pixel row)
   @OuterLoop:
       LDA #$00
-      STA chaosdeath_innerctr         ; inner loop counter  Loop $100 times (for $80 tiles -- they'll get erased twice each)
+      ;STA chaosdeath_innerctr         ; inner loop counter  Loop $100 times (for $80 tiles -- they'll get erased twice each)
     @InnerLoop:
     
-        LDA chaosdeath_innerctr               ; update the noise playback halfway through the inner loop
+        ;LDA chaosdeath_innerctr               ; update the noise playback halfway through the inner loop
         CMP #$80
         BNE :+
           CALL ChaosDeath_FadeNoise
@@ -1825,15 +1825,15 @@ ChaosDeath:
         LDX #$79
         CALL RandAX
         
-        STA chaosdeath_rval                   ; store the tile number for later use
+        ;STA chaosdeath_rval                   ; store the tile number for later use
         
         LDX #$10                    ; multiply the tile ID by $10 to get the PPU addr to that
         CALL MultiplyXA              ;  tile's CHR
-        STA chaosdeath_ppuaddr
-        STX chaosdeath_ppuaddr+1
+        ;STA chaosdeath_ppuaddr
+        ;STX chaosdeath_ppuaddr+1
         
-        LDY chaosdeath_rval                   ; get tile number, use it to figure out which row to erase
-        LDA chaosdeath_tilerowtbl, Y
+        ;LDY chaosdeath_rval                   ; get tile number, use it to figure out which row to erase
+        ;LDA chaosdeath_tilerowtbl, Y
         AND #$07                    ; mask off to get 0-7 (only 8 rows of tiles)
         
         TAY                             ; These two lines are entirely pointless.  They might as well be NOPs
@@ -1842,11 +1842,11 @@ ChaosDeath:
                                         ;  chaosdeath_tilerowtbl was already randomized, so this is pointless anyway.
         
         CLC                         ; Add the row number to the PPU addr
-        ADC chaosdeath_ppuaddr
-        STA chaosdeath_ppuaddr
-        LDA chaosdeath_ppuaddr+1
+        ;ADC chaosdeath_ppuaddr
+        ;STA chaosdeath_ppuaddr
+        ;LDA chaosdeath_ppuaddr+1
         ADC #$00
-        STA chaosdeath_ppuaddr+1
+        ;STA chaosdeath_ppuaddr+1
         
         CALL WaitForVBlank         ; Wait for VBlank
         
@@ -1860,26 +1860,26 @@ ChaosDeath:
         LDA #$00
         STA PPU_DATA               ; erase it
         
-        LDA chaosdeath_rvalprev           ; load *another* random value
+        ;LDA chaosdeath_rvalprev           ; load *another* random value
         AND #$03
         STA PPU_SCROLL               ; use it as X scroll to shake the screen
         
-        LDA chaosdeath_rval               ; use tile ID as random number for Y scroll
-        STA chaosdeath_rvalprev           ;  (and use it as X scroll next iteration)
+        ;LDA chaosdeath_rval               ; use tile ID as random number for Y scroll
+        ;STA chaosdeath_rvalprev           ;  (and use it as X scroll next iteration)
         AND #$03
         STA PPU_SCROLL
         
-        DEC chaosdeath_innerctr           ; loop 256 times!
+        ;DEC chaosdeath_innerctr           ; loop 256 times!
         BNE @InnerLoop
         ;- end inner loop
     
       LDX #$00                  ; Once the inner loop ends, INC each entry in the chaosdeath_tilerowtbl
-      : INC chaosdeath_tilerowtbl, X      ;  so change which rows get erased next outer iteration
+      : ;INC chaosdeath_tilerowtbl, X      ;  so change which rows get erased next outer iteration
         INX
         BNE :-
       
       CALL ChaosDeath_FadeNoise  ; update noise effect
-      DEC chaosdeath_outerctr
+      ;DEC chaosdeath_outerctr
       BNE @OuterLoop            ; outer loop 8 times
     ;- end outer loop
     
@@ -1914,10 +1914,10 @@ ChaosDeath:
     ASL A
     ASL A
     CLC
-    ADC chaosdeath_ppuaddr    ; Add to ppu addr
+    ;ADC chaosdeath_ppuaddr    ; Add to ppu addr
     PHA             ; (push low byte, since PPU_ADDR needs high byte written first)
     LDA #$00
-    ADC chaosdeath_ppuaddr+1  ; Resume addition to high byte
+    ;ADC chaosdeath_ppuaddr+1  ; Resume addition to high byte
     STA PPU_ADDR       ; write high byte
     PLA             ; then pull and write low byte
     STA PPU_ADDR

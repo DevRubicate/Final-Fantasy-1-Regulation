@@ -820,7 +820,7 @@ FormatBattleString:
     ; Iterate the string and draw each character
     @Loop2:
     LDX #$00
-    LDA (tmp_90, X)        ; get the first char
+    ;LDA (tmp_90, X)        ; get the first char
     BEQ @Done           ; stop at the null terminator
     CMP #$48
     BCS :+
@@ -907,31 +907,31 @@ DrawBattleString_Code0C:            ; print a number (indirect)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleDrawLoadSubSrcPtr:
-    STA tmp_97             ; high byte of pointer table
+    ;STA tmp_97             ; high byte of pointer table
     
     CALL DrawBattle_IncSrcPtr
-    LDA (tmp_90), Y        ; get the desired index
+    ;LDA (tmp_90), Y        ; get the desired index
     
     ASL A               ; multiply by 2 (2 bytes per pointer)
     PHP                 ; backup the carry
-    STA tmp_96             ; use as low byte
+    ;STA tmp_96             ; use as low byte
     
     TXA                 ; get X (low byte of pointer table)
     CLC
-    ADC tmp_96             ; add with low byte of index
-    STA tmp_96             ; use as final low byte
+    ;ADC tmp_96             ; add with low byte of index
+    ;STA tmp_96             ; use as final low byte
     
     LDA #$00            ; add the carry from the X addition
-    ADC tmp_97
+    ;ADC tmp_97
     PLP                 ; also add the carry from the above *2
     ADC #$00
-    STA tmp_97             ; use as final high byte
+    ;STA tmp_97             ; use as final high byte
     
     LDY #$00            ; get the pointer, store in btldraw_subsrc
-    LDA (tmp_96), Y
+    ;LDA (tmp_96), Y
     STA btldraw_subsrc
     INY
-    LDA (tmp_96), Y
+    ;LDA (tmp_96), Y
     STA btldraw_subsrc+1
     
     RTS

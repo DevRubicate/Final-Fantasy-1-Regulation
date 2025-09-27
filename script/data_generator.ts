@@ -1050,7 +1050,7 @@ class Packer {
 
         const dataLength = thing.getLength();
 
-        const sizes = [];
+        const sizes: number[] = [];
         for (let i = 0, len = Math.ceil(dataLength / 256); i < len; ++i) {
             sizes.push(
                 i < len - 1 ? 256 : dataLength % 256

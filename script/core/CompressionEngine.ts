@@ -59,9 +59,9 @@ export class CompressionEngine {
         const bitStream = this.chrTilesToBitStream(chrTiles);
 
         // STEP 5: COMPRESSION PROFILE TESTING
-        let bestProfile: ExpandedCompressionProfile;
-        let bestOutputBytes: Uint8Array;
-        let bestDebugCommands: string[];
+        let bestProfile: ExpandedCompressionProfile | undefined;
+        let bestOutputBytes: Uint8Array | undefined;
+        let bestDebugCommands: string[] | undefined;
 
         if (profileName) {
             // Use specific profile if requested
@@ -72,7 +72,7 @@ export class CompressionEngine {
 
             const compressedBits = this.compressBitStream(bitStream, selectedProfile);
             bestProfile = selectedProfile;
-            bestOutputBytes = this.bitsToBytes(compressedBits);
+            bestOutputBytes = this.bitsToBytes(compressedBits, selectedProfile, spriteBounds, paletteAnalysis);
             bestDebugCommands = [...this.lastDebugCommands];
         } else {
             // Test all profiles and find the best one
@@ -82,7 +82,7 @@ export class CompressionEngine {
             for (const profile of this.COMPRESSION_PROFILES) {
                 try {
                     const compressedBits = this.compressBitStream(bitStream, profile);
-                    const outputBytes = this.bitsToBytes(compressedBits);
+                    const outputBytes = this.bitsToBytes(compressedBits, profile, spriteBounds, paletteAnalysis);
 
                     if (outputBytes.length < bestSize) {
                         bestSize = outputBytes.length;
@@ -94,11 +94,11 @@ export class CompressionEngine {
                     const compressionRatio = ((bitStream.length / 8 - outputBytes.length) / (bitStream.length / 8) * 100).toFixed(1);
                     console.log(`   ${profile.name}: ${outputBytes.length} bytes (${compressionRatio}% compression)`);
                 } catch (error) {
-                    console.log(`   ${profile.name}: FAILED - ${error.message}`);
+                    console.log(`   ${profile.name}: FAILED - ${error instanceof Error ? error.message : String(error)}`);
                 }
             }
 
-            if (!bestProfile!) {
+            if (!bestProfile || !bestOutputBytes || !bestDebugCommands) {
                 throw new Error('No profile succeeded in compressing the data');
             }
 
@@ -131,18 +131,44 @@ export class CompressionEngine {
     }
 
     /**
-     * Convert CHR tiles to a bit stream
+     * Convert CHR tiles to a bit stream using proper NES CHR plane format
      */
     private chrTilesToBitStream(chrTiles: any[]): number[] {
-        // Create linear pixel stream from CHR tiles
-        const pixels = this.imageProcessor.createLinearPixelStream(chrTiles);
-
-        // Convert pixels to bits (2 bits per pixel)
         const bits: number[] = [];
-        for (const pixelValue of pixels) {
-            // Convert 2-bit pixel value to bit stream
-            bits.push((pixelValue >> 1) & 1); // Bit 1
-            bits.push(pixelValue & 1);        // Bit 0
+
+        // Process each tile and convert to CHR plane format
+        for (const tile of chrTiles) {
+            const pixels = tile.pixels; // Array of 64 pixel values (8x8 tile)
+
+            // Generate plane 0 (low bits) - 8 bytes, one per row
+            for (let row = 0; row < 8; row++) {
+                let planeByte = 0;
+                for (let col = 0; col < 8; col++) {
+                    const pixelIndex = row * 8 + col;
+                    const pixelValue = pixels[pixelIndex] || 0;
+                    const lowBit = pixelValue & 1; // Extract bit 0
+                    planeByte |= (lowBit << (7 - col)); // Place bit in correct position
+                }
+                // Convert byte to 8 individual bits for the bit stream
+                for (let bit = 7; bit >= 0; bit--) {
+                    bits.push((planeByte >> bit) & 1);
+                }
+            }
+
+            // Generate plane 1 (high bits) - 8 bytes, one per row
+            for (let row = 0; row < 8; row++) {
+                let planeByte = 0;
+                for (let col = 0; col < 8; col++) {
+                    const pixelIndex = row * 8 + col;
+                    const pixelValue = pixels[pixelIndex] || 0;
+                    const highBit = (pixelValue >> 1) & 1; // Extract bit 1
+                    planeByte |= (highBit << (7 - col)); // Place bit in correct position
+                }
+                // Convert byte to 8 individual bits for the bit stream
+                for (let bit = 7; bit >= 0; bit--) {
+                    bits.push((planeByte >> bit) & 1);
+                }
+            }
         }
 
         return bits;
@@ -230,7 +256,7 @@ export class CompressionEngine {
                     allCommandBits.push((count >> bit) & 1);
                 }
             } else if ([COMMANDS.PLOT_BITS_4, COMMANDS.PLOT_BITS_8, COMMANDS.PLOT_BITS_12].includes(selectedCommand.commandType)) {
-                // Handle all PLOT_BITS variants
+                // Handle all PLOT_BITS variants in original sequential order
                 for (let i = 0; i < selectedCommand.commandData.pattern.length; i++) {
                     allCommandBits.push(parseInt(selectedCommand.commandData.pattern[i]));
                 }
@@ -266,7 +292,7 @@ export class CompressionEngine {
     }
 
     /**
-     * Add command bits to the queue
+     * Add command bits to the queue in sequential order (MSB-first for multi-bit commands)
      */
     private addCommandToBitQueue(bitQueue: number[], commandId: number, commandBitWidth: number): void {
         for (let bit = commandBitWidth - 1; bit >= 0; bit--) {
@@ -277,16 +303,142 @@ export class CompressionEngine {
     /**
      * Convert bit stream to byte array
      */
-    private bitsToBytes(bits: number[]): Uint8Array {
-        const bytes = new Uint8Array(Math.ceil(bits.length / 8));
+    private bitsToBytes(bits: number[], profile: ExpandedCompressionProfile, spriteBounds: any, paletteAnalysis: any): Uint8Array {
+        // Convert compressed bits to bytes using LSB-first (right-to-left) ordering to match ASM header format
+        const pixelData = new Uint8Array(Math.ceil(bits.length / 8));
         for (let i = 0; i < bits.length; i++) {
             const byteIndex = Math.floor(i / 8);
             const bitIndex = i % 8;
             if (bits[i]) {
-                bytes[byteIndex] |= (1 << (7 - bitIndex));
+                pixelData[byteIndex] |= (1 << bitIndex);  // LSB-first: bit 0 goes to position 0
             }
         }
-        return bytes;
+
+        // Generate command header
+        const commandHeader = this.generateCommandHeader(profile, spriteBounds);
+
+        // Generate palette assignments (32 bytes - 128 tiles, 4 per byte, 2 bits each)
+        const paletteAssignments = this.packPaletteAssignments(paletteAnalysis.assignments);
+
+        // Serialize palette data (13 bytes - count + 4 palettes × 3 colors)
+        const paletteData = this.serializePalettes(paletteAnalysis.palettes);
+
+        // Combine all data: header + palette assignments + palette data + compressed pixel data
+        const totalLength = commandHeader.length + paletteAssignments.length + paletteData.length + pixelData.length;
+        const result = new Uint8Array(totalLength);
+
+        let offset = 0;
+        result.set(commandHeader, offset);
+        offset += commandHeader.length;
+        result.set(paletteAssignments, offset);
+        offset += paletteAssignments.length;
+        result.set(paletteData, offset);
+        offset += paletteData.length;
+        result.set(pixelData, offset);
+
+        return result;
+    }
+
+    /**
+     * Generate command header for profile with clipping info
+     */
+    private generateCommandHeader(profile: ExpandedCompressionProfile, spriteBounds: any): Uint8Array {
+        const header: number[] = [];
+
+        // First byte: 00xxyyyy format
+        // xx = command bit width (0-3 representing 1-4 bits)
+        // yyyy = number of commands in header (0-15)
+        const bitWidthEncoded = profile.commandBitWidth - 1; // 1→0, 2→1, 3→2, 4→3
+        const numCommands = profile.commands.length;
+        const firstByte = (bitWidthEncoded << 4) | numCommands; // 00xxyyyy
+        header.push(firstByte);
+
+        // Extract clipping info from sprite bounds
+        // NOTE: Clip values represent how many 8x8 tiles to remove from each edge
+        const fullTilesWide = 256 / 8; // 32 tiles
+        const fullTilesHigh = 128 / 8;  // 16 tiles
+        const contentLeft = spriteBounds.boundingBox.x;
+        const contentRight = spriteBounds.boundingBox.x + spriteBounds.boundingBox.width;
+        const contentTop = spriteBounds.boundingBox.y;
+        const contentBottom = spriteBounds.boundingBox.y + spriteBounds.boundingBox.height;
+
+        const clipInfo = {
+            leftClip: Math.floor(contentLeft / 8),   // How many tiles to clip from left
+            rightClip: Math.floor((256 - contentRight) / 8),  // How many tiles to clip from right
+            topClip: Math.floor(contentTop / 8),     // How many tiles to clip from top
+            bottomClip: Math.floor((128 - contentBottom) / 8)  // How many tiles to clip from bottom
+        };
+
+        // Second byte: [leftClip][rightClip] (4 bits each)
+        const clipByte1 = (clipInfo.leftClip << 4) | clipInfo.rightClip;
+        header.push(clipByte1);
+
+        // Third byte: [topClip][bottomClip] (4 bits each)
+        const clipByte2 = (clipInfo.topClip << 4) | clipInfo.bottomClip;
+        header.push(clipByte2);
+
+        // Add each command from the profile in reverse order
+        // (ASM reads commands backwards and stores them in forward slots)
+        for (let i = profile.commands.length - 1; i >= 0; i--) {
+            header.push(profile.commands[i]);
+        }
+
+        return new Uint8Array(header);
+    }
+
+    /**
+     * Pack palette assignments into bytes (4 assignments per byte, 2 bits each)
+     */
+    private packPaletteAssignments(assignments: number[]): Uint8Array {
+        const bytes: number[] = [];
+
+        for (let i = 0; i < assignments.length; i += 4) {
+            let byte = 0;
+
+            // Pack 4 tile assignments into 1 byte
+            for (let j = 0; j < 4 && (i + j) < assignments.length; j++) {
+                const assignment = assignments[i + j] & 0x3; // Ensure 2-bit value
+                byte |= (assignment << (6 - j * 2)); // Place in correct bit position
+            }
+
+            bytes.push(byte);
+        }
+
+        return new Uint8Array(bytes);
+    }
+
+    /**
+     * Serialize palettes to bytes (13 bytes total)
+     */
+    private serializePalettes(palettes: any[]): Uint8Array {
+        const bytes: number[] = [];
+
+        // Always output exactly 4 palettes for fixed size
+        // First byte: number of actual palettes used
+        bytes.push(palettes.length);
+
+        // Output 4 palettes total (pad with null palettes if needed)
+        for (let p = 0; p < 4; p++) {
+            const palette = p < palettes.length ? palettes[p] : null;
+
+            if (palette) {
+                // Store 3 NES color IDs (or 0xFF for null colors within palette)
+                for (let i = 0; i < 3; i++) {
+                    if (palette[i] && palette[i].nesId !== undefined) {
+                        bytes.push(palette[i].nesId);
+                    } else {
+                        bytes.push(0xFF); // Null color marker
+                    }
+                }
+            } else {
+                // Null palette - all colors are 0xFF
+                bytes.push(0xFF);
+                bytes.push(0xFF);
+                bytes.push(0xFF);
+            }
+        }
+
+        return new Uint8Array(bytes);
     }
 
     /**
@@ -316,8 +468,15 @@ export class CompressionEngine {
             const commandCounts = new Map<string, number>();
             if (this.lastDebugCommands && this.lastDebugCommands.length > 0) {
                 for (const command of this.lastDebugCommands) {
-                    const commandType = command.split(' ')[1]; // Extract command type (e.g., "PLOT_BITS_12", "REPEAT_BITS")
+                    const parts = command.split(' ');
+                    const commandType = parts[1]; // Extract main command type (e.g., "PLOT_BITS_12", "REPEAT_BITS", "REPEAT_COMMAND")
                     commandCounts.set(commandType, (commandCounts.get(commandType) || 0) + 1);
+
+                    // Handle nested commands in REPEAT_COMMAND (e.g., "REPEAT_COMMAND 3x PLOT_BITS_4")
+                    if (commandType === 'REPEAT_COMMAND' && parts.length >= 4) {
+                        const nestedCommand = parts[3]; // Extract nested command type (e.g., "PLOT_BITS_4")
+                        commandCounts.set(nestedCommand, (commandCounts.get(nestedCommand) || 0) + 1);
+                    }
                 }
             }
 
@@ -342,35 +501,42 @@ export class CompressionEngine {
 
             lines.push('');
 
-            // Add ASCII bit representation
+            // Add clipping information and ASCII bit representation
             if (compressionResult.bitStream && compressionResult.imageWidth && compressionResult.imageHeight && compressionResult.spriteBounds) {
-                lines.push(`// ASCII Bit Representation (${compressionResult.bitStream.length} bits total)`);
+                // Calculate clipping values
+                const contentLeft = compressionResult.spriteBounds.boundingBox.x;
+                const contentRight = compressionResult.spriteBounds.boundingBox.x + compressionResult.spriteBounds.boundingBox.width;
+                const contentTop = compressionResult.spriteBounds.boundingBox.y;
+                const contentBottom = compressionResult.spriteBounds.boundingBox.y + compressionResult.spriteBounds.boundingBox.height;
+
+                const clipInfo = {
+                    leftClip: Math.floor(contentLeft / 8),
+                    rightClip: Math.floor((256 - contentRight) / 8),
+                    topClip: Math.floor(contentTop / 8),
+                    bottomClip: Math.floor((128 - contentBottom) / 8)
+                };
+
+                lines.push(`// Clipping: Left=${clipInfo.leftClip}, Right=${clipInfo.rightClip}, Top=${clipInfo.topClip}, Bottom=${clipInfo.bottomClip} (tiles to remove from each edge)`);
+                lines.push(`// Hex Byte Representation (${compressionResult.bitStream.length} bits total)`);
                 lines.push(`// Image: ${compressionResult.imageWidth}x${compressionResult.imageHeight}, Clipped area: ${compressionResult.spriteBounds.boundingBox.width}x${compressionResult.spriteBounds.boundingBox.height}`);
-                lines.push('// 0=transparent, 1=bit set');
                 lines.push('');
 
-                // Calculate dimensions for the clipped area in bits
-                const clippedWidth = compressionResult.spriteBounds.boundingBox.width;
-                const clippedHeight = compressionResult.spriteBounds.boundingBox.height;
-                const bitsPerPixel = 2; // Each pixel becomes 2 bits
-                const totalBitsPerRow = clippedWidth * bitsPerPixel;
-
-                // Generate ASCII representation row by row
-                for (let row = 0; row < clippedHeight; row++) {
-                    const startBit = row * totalBitsPerRow;
-                    const endBit = Math.min(startBit + totalBitsPerRow, compressionResult.bitStream.length);
-
-                    let rowString = '';
-                    for (let bit = startBit; bit < endBit; bit++) {
-                        rowString += compressionResult.bitStream[bit];
+                // Convert bit stream to hex bytes
+                const hexBytes: string[] = [];
+                for (let i = 0; i < compressionResult.bitStream.length; i += 8) {
+                    let byte = 0;
+                    for (let j = 0; j < 8 && (i + j) < compressionResult.bitStream.length; j++) {
+                        if (compressionResult.bitStream[i + j]) {
+                            byte |= (1 << (7 - j));
+                        }
                     }
+                    hexBytes.push(`$${byte.toString(16).padStart(2, '0').toUpperCase()}`);
+                }
 
-                    // Add padding if needed
-                    while (rowString.length < totalBitsPerRow) {
-                        rowString += '0';
-                    }
-
-                    lines.push(rowString);
+                // Output hex bytes with spaces between them, 16 bytes per line
+                for (let i = 0; i < hexBytes.length; i += 16) {
+                    const lineBytes = hexBytes.slice(i, i + 16);
+                    lines.push(lineBytes.join(' '));
                 }
                 lines.push('');
 
@@ -441,7 +607,7 @@ export class CompressionEngine {
             await Deno.writeTextFile(debugPath, lines.join('\n'));
 
         } catch (error) {
-            console.warn(`   ⚠️  Failed to write debug output: ${error.message}`);
+            console.warn(`   ⚠️  Failed to write debug output: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

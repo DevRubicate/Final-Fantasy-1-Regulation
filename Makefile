@@ -24,10 +24,10 @@ compress:
 	${DENO} task compress $(FILE) $(PROFILE)
 
 compress-crab:
-	${DENO} task compress data/chr/crab.massive.png ENHANCED_REPEAT
+	${DENO} task compress data/chr/crab.massive.png
 
 compress-crab-debug:
-	${DENO} task compress data/chr/crab.massive.png ENHANCED_REPEAT
+	${DENO} task compress data/chr/crab.massive.png
 
 # Data generation (now uses Deno)
 generate:

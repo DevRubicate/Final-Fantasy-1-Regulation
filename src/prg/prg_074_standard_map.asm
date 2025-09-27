@@ -72,7 +72,7 @@ PrepStandardMap:
     STA joy_start
     STA joy_a
     STA joy_b
-    STA altareffect
+    ;STA altareffect
     STA tileprop
     STA tileprop+1
     STA entering_shop
@@ -332,7 +332,7 @@ StandardMapLoop:
     :   
     LDA move_speed              ; check the player's movement speed to see if they're in motion
     BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next loop iteration. This next bit is done only if the player isn't moving, or if they just completed a move this frame
-    LDA altareffect             ; do the altar effect if its flag is set
+    ;LDA altareffect             ; do the altar effect if its flag is set
     BEQ :+
         FARCALL DoAltarEffect
     :     

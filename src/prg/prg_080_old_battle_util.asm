@@ -1215,10 +1215,10 @@ ShiftLeft5:
 
 DrawBattle_Number:
     LDA (btldraw_subsrc), Y     ; get the number to print, stuff it in tmp_96,tmp_97
-    STA tmp_96
+    ;STA tmp_96
     INY
     LDA (btldraw_subsrc), Y
-    STA tmp_97
+    ;STA tmp_97
     
     LDX #<10000
     LDY #>10000
@@ -1231,10 +1231,8 @@ DrawBattle_Number:
     LDX #<100
     LDY #>100
     CALL @Divide
-    STA tmp_9c
     LDX #<10
     CALL @Divide
-    STA tmp_9d
     
     LDX #$00
   @FindFirstDigit:
