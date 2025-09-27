@@ -6,7 +6,7 @@
 .import MusicPlay, PrepAttributePos, ProcessOWInput, ClearSprites
 .import DrawOWSprites, VehicleSFX, ScreenWipe_Open
 .import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
-.import LoadBridgeSceneGFX, EnterBridgeScene, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, EnterBattle, ScreenWipe_Close, DoStandardMap
+.import LoadBridgeSceneGFX, EnterBridgeScene, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, ScreenWipe_Close, DoStandardMap
 
 .export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
 
@@ -270,7 +270,7 @@ DoOWTransitions:
         STA PAPU_EN              ; and APU
         FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
         LDA btlformation
-        FARCALL EnterBattle      ; start the battle!
+
         JUMP EnterOW_PalCyc     ; then re-enter overworld
 
     @Teleport:

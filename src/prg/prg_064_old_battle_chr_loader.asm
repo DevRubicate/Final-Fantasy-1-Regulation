@@ -503,7 +503,7 @@ LoadBattlePalette:
 
   @Loop:
       LDA LUT_BattlePalettes, X   ; get the color from the ROM
-      STA btl_palettes, Y         ; write it to our output buffer
+      ;STA btl_palettes, Y         ; write it to our output buffer
       INX             ; inc our indeces
       INY
       DEC btltmp+10   ; dec our loop counter
@@ -592,7 +592,7 @@ LoadBattleFormationInto_btl_formdata:
     LDY #0                    ; index  (seems pointless to use both X and Y here -- could've just used Y)
     @FormationLoop:
         LDA (btltmp+10), Y      ; copy a byte from the LUT in ROM
-        STA btl_formdata, Y     ;  to our formation data buffer in RAM
+        ;STA btl_formdata, Y     ;  to our formation data buffer in RAM
         INY                     ; inc index
         DEX                     ; dec loop counter
         BNE @FormationLoop      ; and loop until all $10 bytes copied

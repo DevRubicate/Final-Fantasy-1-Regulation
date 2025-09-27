@@ -700,9 +700,9 @@ Battle_ReadPPUData:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteAttributesToPPU:
-    LDA #<btltmp_attr       ; set source pointer
+    ;LDA #<btltmp_attr       ; set source pointer
     STA btltmp+4
-    LDA #>btltmp_attr
+    ;LDA #>btltmp_attr
     STA btltmp+5
     
     LDA #<$23C0             ; set dest address
@@ -713,7 +713,6 @@ WriteAttributesToPPU:
     LDA #$40                ; copy 4 tiles
     STA btltmp+8
     
-    FORCEDFARCALL Battle_WritePPUData   ; actually do the write, then exit
     RTS
 
 

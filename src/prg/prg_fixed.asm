@@ -19,7 +19,7 @@
 .import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
 .import OpenTreasureChest, AddGPToParty, LoadPrice, LoadBattleBackdropPalette
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes, SwapBtlTmpBytes
+.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
 .import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
@@ -65,8 +65,8 @@
 ; prg_27_overworld_map
 .import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
 ; prg_28_battle_util
-.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer, EnterBattle
-.import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY, BattleWaitForVBlank
+.import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
+.import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY
 .import BattleDrawMessageBuffer_Reverse, UndrawBattleBlock, DrawBattleBox, DrawRosterBox, DrawBattle_Number
 .import BattleDraw_AddBlockToBuffer, DrawCommandBox, DrawBattleBox_NextBlock, UndrawNBattleBlocks, DrawBattleString_IncDstPtr
 .import BattleMenu_DrawMagicNames, DrawBattleString_Code11
@@ -81,7 +81,6 @@
 
 .export DrawPalette
 .export WaitForVBlank
-.export FormatBattleString
 .export BattleCrossPageJump
 .export Impl_FARCALL, Impl_NAKEDJUMP, Impl_FARPPUCOPY
 .export CHRLoadToA
@@ -93,11 +92,10 @@
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export SetBattlePPUAddr, Battle_DrawMessageRow_VBlank
 .export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
-.export Battle_DrawMessageRow, DrawBattleBoxAndText, DrawBattleBox_Row
-.export DrawBattleString_DrawChar
+.export Battle_DrawMessageRow, DrawBattleBox_Row
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
-.export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawEnemyName, DrawEntityName, DrawString_SpaceRun
-.export DrawBattleMessage, DrawBattleString_Code0C, DrawBattle_IncSrcPtr, ReadFarByte, SetBattlePPUAddr
+.export DrawBattleSubString_Max8, BattleDrawLoadSubSrcPtr, DrawString_SpaceRun
+.export DrawBattle_IncSrcPtr, ReadFarByte, SetBattlePPUAddr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -522,7 +520,7 @@ SetBattlePPUAddr:
 ;;  blttmp+6 = the address of the routine to jump to
 
 BattleCrossPageJump:
-    STA battle_bank
+    ;STA battle_bank
     CALL SwapPRG
     JMP (btltmp+6)
 
@@ -553,7 +551,7 @@ SetPPUAddr_XA:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Battle_DrawMessageRow_VBlank:
-    FARCALL BattleWaitForVBlank
+
     
 Battle_DrawMessageRow:
     LDA btl_tmpvar4
@@ -586,22 +584,22 @@ Battle_DrawMessageRow:
 
 DrawBattleBox_Row:
     LDY #$00
-    LDA btltmp_boxleft      ; draw the left tile
+    ;LDA btltmp_boxleft      ; draw the left tile
     STA (btl_varI), Y
     
-    LDX btl_msgdraw_width
+    ;LDX btl_msgdraw_width
     DEX                     ; X is the width-2 (-2 to remove the left/right sides)
     DEX                     ;  this becomes the number of center tiles to draw
     INY
     
-    LDA btltmp_boxcenter
+    ;LDA btltmp_boxcenter
   @Loop:                    ; draw all the center tiles
       STA (btl_varI), Y
       INY
       DEX
       BNE @Loop
       
-    LDA btltmp_boxright     ; lastly, draw the right tile
+    ;LDA btltmp_boxright     ; lastly, draw the right tile
     STA (btl_varI), Y
     
     LDA btl_tmpvar1         ; add $20 to the dest pointer to have it point to
@@ -614,125 +612,8 @@ DrawBattleBox_Row:
     
     RTS
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleBox_FetchBlock  [$F5FB :: 0x3F60B]
-;;
-;;  Fetches a block of data to draw for the battle box
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DrawBattleBox_FetchBlock:
-    LDY #$00                          ; copy 5 bytes of data
-    : 
-    LDA (btldraw_blockptrstart), Y  ;  from the $8C pointer
-    STA btl_msgdraw_hdr, Y          ;  to the btl_msgdraw vars
-    INY
-    CPY #$05
-    BNE :-
-    NOJUMP DrawBattleBox_Exit
 
-DrawBattleBox_Exit:
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleBoxAndText  [$F608 :: 0x3F618]
-;;
-;;  Draws a box and the text contained in it.
-;;
-;;  input:  btldraw_blockptrstart points to the the block data
-;;
-;;    Block data consists of one or more 5-byte blocks.  The first block specifies the box
-;;  to draw, and the following blocks specify the text to be drawn inside it.
-;;
-;;  First box block:
-;;    byte 0 = header (0 - see below)
-;;    byte 1 = X position
-;;    byte 2 = Y position
-;;    byte 3 = width
-;;    byte 4 = height
-;;
-;;  Following text blocks:
-;;    byte 0   = header (1 - see below)
-;;    byte 1   = X position
-;;    byte 2   = Y position
-;;    byte 3,4 = pointer to source string
-;;
-;;  The header byte is tricky to explain.  Each "box" consists of 1 box block + N text blocks.
-;;  Therefore the drawing routine will draw 1 block for sure, then will draw additional blocks until
-;;  a 0 header byte is found.  This allows it to draw a variable number of text blocks for each box.
-;;
-;;  So the way it works is, 'box' blocks have a 0 header byte, and text blocks have a 1 header byte.
-;;  This means you can chain multiple boxes together, and the drawing routine will know where to stop
-;;  drawing because it will hit a 0 header.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleBoxAndText:
-    CALL DrawBattleBox_FetchBlock        ; get the first box block
-    FARCALL DrawBattleBox                   ; use it to draw the box
-    @Loop:
-        FARCALL DrawBattleBox_NextBlock       ; move to next block (text block)
-        LDY #$00
-        LDA (btldraw_blockptrstart), Y    ; if the header byte is zero
-        BEQ DrawBattleBox_Exit            ; exit
-        CALL DrawBattleBox_FetchBlock      ; otherwise, fetch the block
-        CALL DrawBattleString              ; and use it to draw text
-        JUMP @Loop                         ; keep going until null terminator is found
-    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleString  [$F9AB :: 0x3F9BB]
-;;
-;;  Formats and prints a battle string (See FormatBattleString for the format of the string)
-;;
-;;  input:  btl_msgdraw_x,y     = dest pointer to draw the string to
-;;          btl_msgdraw_srcptr  = source pointer to the string
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleString:
-    LDX btl_msgdraw_x
-    LDY btl_msgdraw_y
-    FARCALL GetBattleMessagePtr
-    STX btl_tmpvar3                 ; store target pointer in temp ram
-    STY btl_tmpvar4
-    
-    LDA btl_msgdraw_srcptr_bank
-    BEQ @noBank
-    STA current_bank1
-    STA MMC5_PRG_BANK1
-    @noBank:
-    LDX btl_msgdraw_srcptr
-    LDY btl_msgdraw_srcptr+1
-    CALL FormatBattleString  ; draw the battle string to the output buffer
-    
-    LDY #$00                ; move 'top bytes' from string output buffer to the
-    LDX #$00                ;  actual draw buffer
-  @TopLoop:
-      LDA btl_stringoutputbuf, X
-      BEQ @StartBottomLoop
-      STA (btl_tmpvar3), Y
-      INY
-      INX                   ; INX *2 because top/bottom tiles are interleaved
-      INX
-      JUMP @TopLoop          ; loop until we hit the null terminator
-    
-  @StartBottomLoop:         ; move 'bottom bytes'
-    LDY #$20
-    LDX #$00
-  @BottomLoop:
-      LDA btl_stringoutputbuf+1, X
-      BEQ @Exit
-      STA (btl_tmpvar3), Y
-      INY
-      INX
-      INX
-      JUMP @BottomLoop
-    
-  @Exit:
-    RTS
 
 lua_BattleCommandBoxInfo_txt0:  .byte $EF, $F0, $F1, $F2, $00     ; "FIGHT"
 lua_BattleCommandBoxInfo_txt1:  .byte $EB, $EC, $ED, $EE, $00     ; "MAGIC"
@@ -749,96 +630,6 @@ lut_EnemyRosterStrings:
   .byte $09, $00
   .byte $0A, $00
   .byte $0B, $00
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  FormatBattleString  [$FA59 :: 0x3FA69]
-;;
-;;  input:   XY points to the buffer containing the null terminated string to draw
-;;
-;;  output:  btl_stringoutputbuf - contains the formatted output string (INTERLEAVED - See below)
-;;
-;;    The source string can contain the following control codes:
-;;
-;;  00       = null terminator (marks end of string)
-;;  02       = print attacker's name
-;;  03       = print defender's name
-;;  04       = print character 0's name
-;;  05       = print character 1's name
-;;  06       = print character 2's name
-;;  07       = print character 3's name
-;;  08       = print enemy roster entry 0
-;;  09       = print enemy roster entry 1
-;;  0A       = print enemy roster entry 2
-;;  0B       = print enemy roster entry 3
-;;  0C xx yy = yyxx is a pointer to a number to print
-;;  0E xx    = print attack name.  For player attacks, 'xx' is the item index (which can also
-;;             be a magic name).
-;;             For enemy attacks, 'xx' is either a special enemy attack index (like "FROST", etc)
-;;             or is an item index.  Whether it is special attack or not is determined by btl_attackid
-;;  0F xx    = Draws a battle message.  xx = the ID to the battle message.  Note that this ID is
-;;             1-based, NOT zero based like you'd expect
-;;  10 xx    = print a run of spaces.  xx = the run length
-;;  11 xx yy = yyxx is a number to print
-;;
-;;  Values >= $48 are printed as normal tiles.
-;;
-;;    Other values below $48 that are not control codes will either do nothing
-;;  or will do a glitched version of one of the above codes.
-;;
-;;    Note that the output string produced by this routine is interleaved.  There are 2 bytes per
-;;  character, the first being the "top" portion of the char, and the second being the "bottom"
-;;  portion.  This was used in the Japanese ROM to more easily print some Hiragana, but in the US
-;;  version it is totally useless and the top portion is always blank space (tile $FF).
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FormatBattleString:
-    FARCALL SwapBtlTmpBytes     ; swap out btltmp bytes to back them up
-    
-    STX btldraw_src         ; store source pointer
-    STY btldraw_src+1
-    
-    LDY #$00                ; copy the actual string data to a buffer in RAM
-    @Loop:
-        LDA (btldraw_src), Y  ;   (presumably so we can swap out banks without fear
-        STA btl_stringbuf, Y  ;    of swapping out our source data)
-        INY
-        CPY #$20              ; no strings can be longer than $20 characters.
-        BNE @Loop
-      
-    LDA #<btl_stringbuf     ; Change source pointer to point to our buffered
-    STA btldraw_src         ;   string data
-    LDA #>btl_stringbuf
-    STA btldraw_src+1
-    
-    LDA #<btl_stringoutputbuf   ; Set our output pointer to point to
-    STA btldraw_dst             ;   our string output buffer
-    LDA #>btl_stringoutputbuf
-    STA btldraw_dst+1
-    
-    ; Iterate the string and draw each character
-    @Loop2:
-    LDX #$00
-    ;LDA (tmp_90, X)        ; get the first char
-    BEQ @Done           ; stop at the null terminator
-    CMP #$48
-    BCS :+
-        FARCALL DrawBattleString_ControlCode    ; if <  #$48
-        JUMP :++
-    :     
-    CALL DrawBattleString_ExpandChar    ; if >= #$48
-    :   
-    CALL DrawBattle_IncSrcPtr    ; Inc the source pointer and continue looping
-    JUMP @Loop2
-    
-    @Done:
-    LDA #$00
-    LDY #$00
-    STA (btldraw_dst), Y            ; add null terminator
-    INY
-    STA (btldraw_dst), Y
-    FARJUMP SwapBtlTmpBytes     ; swap back the original btltmp bytes, then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -859,42 +650,9 @@ DrawBattleString_ExpandChar:
     TYA
     PHA
     LDA btltemppointer         ; get the char code
-    CALL DrawBattleString_DrawChar
     PLA
     TAY
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawBattleString_DrawChar  [$FAF1 :: 0x3FB01]
-;;
-;;  Draws a single character to the output buffer
-;; btldraw_dst = pointer to the output buffer
-;;           X = top part of char
-;;           A = bottom part of char
-;;
-;;  See DrawBattleSubString for explanation of top/bottom parts
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleString_DrawChar:
-    LDY #$01
-    STA (btldraw_dst), Y        ; put bottom part is position [1]
-    DEY
-    LDA #$FF
-    STA (btldraw_dst), Y        ; and top part in position [0]
-    FARJUMP DrawBattleString_IncDstPtr
-
-
-;;  DrawBattleString_Code0C  [$FB2F :: 0x3FB3F]
-DrawBattleString_Code0C:            ; print a number (indirect)
-    CALL DrawBattle_IncSrcPtr
-    LDA (btldraw_src), Y            ; pointer to a pointer to the number to print
-    STA btldraw_subsrc
-    CALL DrawBattle_IncSrcPtr
-    LDA (btldraw_src), Y
-    STA btldraw_subsrc+1
-    FARJUMP DrawBattle_Number
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -938,24 +696,6 @@ BattleDrawLoadSubSrcPtr:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  DrawBattleMessage  [$FC26 :: 0x3FC36]
-;;
-;;  control code $0F
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleMessage:
-    LDA #BANK_BTLMESSAGES
-    CALL SwapPRG
-    LDA #>(data_BattleMessages - 2)     ; -2 because battle message is 1-based
-    LDX #<(data_BattleMessages - 2)
-    CALL BattleDrawLoadSubSrcPtr
-    LDA #$3F
-    STA btldraw_max
-    JUMP DrawBattleSubString
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;  DrawString_SpaceRun  [$FC39 :: 0x3FC49]
 ;;
 ;;  control code $10
@@ -972,75 +712,10 @@ DrawString_SpaceRun:
         STA (btldraw_dst), Y      ; print top/bottom portions as empty space
         INY
         STA (btldraw_dst), Y
-        FARCALL DrawBattleString_IncDstPtr
         DEX
         BNE @Loop
     RTS
     
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawEntityName  [$FC4F :: 0x3FC5F]
-;;
-;;  input:
-;;            A = ID of enemy slot or player whose name to draw
-;;  btldraw_dst = pointer to draw to
-;;
-;;  If A has the high bit set, the player name is drawn
-;;  Otherwise, A is the enemy slot whose name we're to draw
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawEntityName:
-    BPL @Enemy                  ; if high bit is clear, it's an enemy
-    
-    FARCALL GetCharacterNamePtr
-    
-    LDY #$00
-    @Loop: 
-        LDA (btldraw_subsrc), Y           ; draw each character in the character's name
-        CALL DrawBattleString_ExpandChar
-        INY
-        CPY #$04                          ; draw 4 characters
-        BNE @Loop
-    RTS
-    
-    @Enemy:
-    ASL A           ; mulitply A by $14  ($14 bytes per entry in btl_enemystats)
-    ASL A           ; first, multiply by 4
-    STA temp_94     ;    store it in temp
-    ASL A           ; then multiply by $10
-    ASL A
-    CLC
-    ADC temp_94     ; add with stored *4
-    TAX             ; put in X to index
-    
-    LDA btl_enemystats + en_enemyid, X   ; get this enemy's ID
-    NOJUMP DrawEnemyName
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DrawEnemyName  [$FC7A :: 0x3FC8A]
-;;
-;;  input:
-;;            A = ID of enemy whose name to draw
-;;  btldraw_dst = pointer to draw to
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawEnemyName:
-    PHA                     ; back up enemy ID
-    LDA #BANK_ENEMYNAMES
-    CALL SwapPRG           ; swap in bank with enemy names
-    PLA                     ; get enemy ID
-    ASL A                   ; *2 to use as index
-    TAX
-    
-    LDA data_EnemyNames, X      ; get source pointer from pointer table
-    STA btldraw_subsrc
-    LDA data_EnemyNames+1, X
-    STA btldraw_subsrc+1
-    
-    NOJUMP DrawBattleSubString_Max8
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1084,7 +759,7 @@ DrawBattleSubString:
         BEQ @Exit
         BNE @Loop
     @Exit:
-    LDA battle_bank                 ; swap back to battle bank
+    ;LDA battle_bank                 ; swap back to battle bank
     JUMP SwapPRG                   ;   and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

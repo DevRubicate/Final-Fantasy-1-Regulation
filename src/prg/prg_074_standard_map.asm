@@ -4,7 +4,7 @@
 
 .import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 .import ScreenWipe_Open, LoadStandardMap, LoadMapObjects
-.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, EnterBattle, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
+.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 .import GetSMTargetCoords, CanTalkToMapObject, DrawMapObjectsNoUpdate, TalkToObject, TalkToSMTile, DrawDialogueBox, ShowDialogueBox, EnterMainMenu, EnterLineupMenu, UpdateJoy
 .import CanPlayerMoveSM, StartMapMove, EnterShopMenu, ClearSprites
 
@@ -368,7 +368,7 @@ StandardMapLoop:
         STA PAPU_EN
         FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
         LDA btlformation
-        FARCALL EnterBattle       ; start the battle!
+
         BCC :+                  ;  see if this battle was the end game battle
             @VictoryLoop:
             FARCALL LoadEpilogueSceneGFX

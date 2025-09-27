@@ -21,8 +21,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 BattleRNG:
-    LDX btl_rngstate
-    INC btl_rngstate
+    ;LDX btl_rngstate
+    ;INC btl_rngstate
     LDA @Scramble_lut, X
     RTS
     
