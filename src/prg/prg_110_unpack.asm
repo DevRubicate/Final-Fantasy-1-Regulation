@@ -4,7 +4,7 @@
 
 .export UnpackImage
 
-.import UploadMassiveImage
+.import UploadMassiveImage, UploadMassiveImageNametable
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; UnpackImage
@@ -254,7 +254,11 @@ UnpackImage:
 
     ; We are finally done with decompression. Next we have to upload the data to to the PPU.
     FARCALL UploadMassiveImage
+    FARCALL UploadMassiveImageNametable
 
+
+    ;LDA #%00000001
+    ;STA MMC5_EXRAM_MODE     ; Enable extended attributes mode
 
     RTS
 

@@ -30,7 +30,7 @@ GameStart:
     
     LDX #$00                        ; Loop $100 times to fill each page of unsram
     : LDA LUT_InitGameFlags, X      ; game flags page loaded from this table
-      STA game_flags, X
+      ;STA game_flags, X
       
       LDA #0                        ; character stats are set after party generation
       STA ch_stats, X

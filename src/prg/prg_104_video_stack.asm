@@ -7,7 +7,9 @@
 .export Video_MassWriteStack, Video_MassWrite_Value_Write, Video_MassWrite_Set_Write_Address_Set_Write_Set
 .export Video_Inc1_CHRBank_Address_Set, Video_SetFillColor, Video_Inc1_UploadPalette0, Video_Inc1_UploadPalette1, Video_Inc1_UploadPalette2, Video_Inc1_UploadPalette3, Video_Inc1_UploadPalette4, Video_Inc1_UploadPalette5, Video_Inc1_UploadPalette6, Video_Inc1_UploadPalette7
 .export Video_Inc1_Set_FillNametable0to119, Video_Set_FillNametable120to239, Video_Set_FillNametable240to359, Video_Set_FillNametable360to479, Video_Set_FillNametable480to599, Video_Set_FillNametable600to719, Video_Set_FillNametable720to839, Video_Set_FillNametable840to959
-.export Video_Inc1_Set_FillAttributeTable, Video_Inc1_CHRBank_Address, Video_WriteMassiveImagePattern_128
+.export Video_Inc1_Set_FillAttributeTable, Video_Inc1_CHRBank_Address, Video_WriteMassiveImagePattern_128, Video_WriteMassiveImageNametable
+
+; We have 1684 (842) cost to spend
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Video_Terminate
@@ -694,5 +696,27 @@
         .repeat 128, i
             LDA MassiveImageBuffer + i  ; 3 cycle * 128
             STA PPU_DATA                ; 4 cycle * 128
+        .endrepeat
+        RTS                             ; 6 cycle
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Video_WriteMassiveImageNametable
+; Cost: 778 or 781
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    Video_WriteMassiveImageNametable:
+        ; Increment mode start
+        LDA #%10100000                  ; 2 cycle
+        STA PPU_CTRL                    ; 4 cycle
+        ; Non-increment mode start
+        PLA                             ; 4 cycle
+        STA PPU_ADDR                    ; 4 cycle
+        LDA #$00                        ; 2 cycle
+        STA PPU_ADDR                    ; 4 cycle
+
+        LDY #0                          ; 2 cycle
+        .repeat 256, i
+            .if i > 0
+                INY                     ; 2 cycle * 255
+            .endif
+            STY PPU_DATA                ; 4 cycle * 256
         .endrepeat
         RTS                             ; 6 cycle

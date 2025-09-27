@@ -329,7 +329,6 @@ SECTION "BSS" ; $0300 - $0800
     RES             decompressCommandBitWidth,          1
     RES             decompressCommandRoutinesLo,        16
     RES             decompressCommandRoutinesHi,        16
-    GAP                                                 152
     RES             cur_pal,                            32  ; 32 bytes      ; $03C0  ; 32 bytes
     RES             inroom_pal,                         16  ; 16 bytes      ; $03E0  ; cur_pal+$20 ; 16 bytes
     RES             tmp_pal,                            16  ; 16 bytes      ; $03F0  ; 16 bytes
@@ -342,6 +341,8 @@ SECTION "BSS" ; $0300 - $0800
     RES             draw_buf_at_hi,                     16  ; $07D0
     RES             draw_buf_at_lo,                     16  ; $07E0
     RES             draw_buf_at_msk,                    16  ; $07F0
+    GAP                                                 152
+
 
 SECTION "PARTYGEN" ; $0300 - $0340
     RES             ptygen,                             0 ; 64 bytes        ; $0300 ; $40 bytes, shared
@@ -373,10 +374,6 @@ SECTION "TILESET" ; $0400 - $07B0
 SECTION "MINIMAP" ; $0500 - $0800
     RES_PAGE        loaded_tiles_lo,                    256
     RES_PAGE        loaded_tiles_hi,                    256
-
-SECTION "PUZZLE" ; $0300 - $0310
-    RES             puzzle,                             16 ; $0300
-
 
 
 SECTION "PRG_RAM" ; $6000 - $6D00
@@ -573,6 +570,30 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             bigstr_buf,                         0 ; $6C00   ; $81 bytes?
     RES             lutmp_ch_stats,                     256 ; $6C00 ; temporary space used by the lineup menu
     RES             lutmp_ch_magic,                     1 ; $6D00
+    RES             attributeTable,                     64
+    RES             inventory,                          100
+    RES             donut_output_buffer,                64
+    RES             heroLevel,                          1*4
+    RES             heroHP,                             2*4
+    RES             heroMaxHP,                          2*4
+    RES             heroName0,                          5
+    RES             heroName1,                          5
+    RES             heroName2,                          5
+    RES             heroName3,                          5
+    RES             heroSpellCharges,                   8*4
+    RES             heroMaxSpellCharges,                8*4
+    RES             hero0Inventory,                     10
+    RES             hero1Inventory,                     10
+    RES             hero2Inventory,                     10
+    RES             hero3Inventory,                     10
+    RES             hero0InventorySize,                 1
+    RES             hero1InventorySize,                 1
+    RES             hero2InventorySize,                 1
+    RES             hero3InventorySize,                 1
+    RES             hero0InventoryStatus,               10
+    RES             hero1InventoryStatus,               10
+    RES             hero2InventoryStatus,               10
+    RES             hero3InventoryStatus,               10
 
 SECTION "BATTLE" ; $6800 - 6DB0
     GAP                                                 2048
@@ -873,46 +894,6 @@ SECTION "MAPDATA" ; $7000 - $7FFF
     GAP                                                 4096
     RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
 
-SECTION "MINIMAP2" ; $7000 - $7580
-    GAP                                                 4096
-    RES             mm_decorchr,                        768 ; $7000   ; $300 bytes -- should be on page bound, shared
-    RES_PAGE        mm_titlechr,                        640 ; $7300   ; $280 bytes -- should be on page bound, shared
-
-    ;  Buffers to hold character commands for battle.  These must be contiguious in memory
-    ;  due to the way memory is cleared.  These buffers also contain a bit of redundant data.
-    ;
-    ;  btl_charcmdbuf contains 3 bytes (padded to 4) per character:
-    ;    byte 0 = command
-    ;    byte 1 = spell effect ID  (used for DRINK/MAGIC/ITEM).  FF if no effect
-    ;    byte 2 = target.  8x are player targets 0x are enemy targets.  FF=target all enemies, FE=target all players.
-    ;
-    ;  Commands can be the following:
-    ;    00 = no command -- if surprised/asleep/stunned
-    ;    01 = no command -- if dead
-    ;    02 = no command -- if stone
-    ;    04 = attack
-    ;    08 = drink potion
-    ;    10 = use item
-    ;    20 = run   ('target' would be the actual character running)
-    ;    40 = magic
-    ;
-    ;
-    ;  btl_charcmditem contains 1 byte per character:  the ID of the item they're using.
-    ;    This is only used when the command is '10'
-    ;
-    ;  btl_charcmdconsumetype contains 1 byte per character.  It will be 01 for magic and 02 for DRINK.
-    ;       unused for other commands.
-    ;
-    ;  btl_charcmdconsumeid contains 1 byte per character.  If will be the potion index
-    ;       for drink, or the spell level for magic
-
-    ;btl_charcmdbuf          = $688F
-    ;btl_charcmditem         = btl_charcmdbuf+$10        ; $689F
-    ;btl_charcmdconsumetype  = btl_charcmditem+4         ; $68A3
-    ;btl_charcmdconsumeid    = btl_charcmdconsumetype+4  ; $68A7
-
-
-
 
 SECTION "THEEND" ; $6800 - $6F00
     GAP                                                 2048
@@ -942,10 +923,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             actual_bank,                    1
     RES             slotIndex,                      1
     RES             partyGenerationClass,           4
-
-
-
-
     RES             vBlankCounter,                  1
     RES             VideoCursor,                    1
     RES             VideoStackTally,                1
@@ -986,7 +963,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             palette5,                       3
     RES             palette6,                       3
     RES             palette7,                       3
-    RES             attributeTable,                 64
+
 
     RES             stringwriterWhitespaceWidth,    1
     RES             stringwriterLineWidth,          1
@@ -1033,28 +1010,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             stringwriterStackBank,          16
     RES             yxa2decOutput,                  9
 
-    RES             inventory,                      100
-    RES             heroLevel,                      1*4
-    RES             heroHP,                         2*4
-    RES             heroMaxHP,                      2*4
-    RES             heroName0,                      5
-    RES             heroName1,                      5
-    RES             heroName2,                      5
-    RES             heroName3,                      5
-    RES             heroSpellCharges,               8*4
-    RES             heroMaxSpellCharges,            8*4
-    RES             hero0Inventory,                 10
-    RES             hero1Inventory,                 10
-    RES             hero2Inventory,                 10
-    RES             hero3Inventory,                 10
-    RES             hero0InventorySize,             1
-    RES             hero1InventorySize,             1
-    RES             hero2InventorySize,             1
-    RES             hero3InventorySize,             1
-    RES             hero0InventoryStatus,           10
-    RES             hero1InventoryStatus,           10
-    RES             hero2InventoryStatus,           10
-    RES             hero3InventoryStatus,           10
+
 
     RES             interactiveMenuXCoordinate,     1
     RES             interactiveMenuYCoordinate,     1
@@ -1068,10 +1024,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             interactiveMenuOutcome,         1
     RES             interactiveMenuActiveHero,      1
 
-
-
-
-
     RES             gridMenuXPosition,              1
     RES             gridMenuYPosition,              1
     RES             gridMenuItemWidth,              1
@@ -1081,11 +1033,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             gridMenuXLength,                1
     RES             gridMenuYLength,                1
     RES             gridMenuOutcome,                1
-
-
-
-
-    RES             donut_output_buffer,            64
 
     RES             backgroundCHRBank0,             1
     RES             backgroundCHRBank1,             1

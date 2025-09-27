@@ -696,7 +696,7 @@ CheckGameEventFlag:
 SetGameEventFlag:
     LDA game_flags, Y   ; get the game flags
     ORA #GMFLG_EVENT    ; set the event bit
-    STA game_flags, Y   ; and write back
+    ;STA game_flags, Y   ; and write back
     RTS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -733,7 +733,7 @@ IsObjectVisible:
 HideThisMapObject:
     LDA game_flags, Y        ; get the game flags using object ID as index
     AND #~GMFLG_OBJVISIBLE   ; flip off the obj visibility flag (hide object)
-    STA game_flags, Y        ; write it back
+    ;STA game_flags, Y        ; write it back
 
     LDA #0                   ; kill the object on the map by removing it from the list of
     STA mapobj_id, X         ; map objects
@@ -761,7 +761,7 @@ ShowMapObject:
 
     LDA game_flags, Y
     ORA #GMFLG_OBJVISIBLE ; set the object visibility flag
-    STA game_flags, Y     ; and write it back
+    ;STA game_flags, Y     ; and write it back
 
     LDY #0                ; zero Y for indexing (our loop counter -- mapobj index)
   @Loop:

@@ -116,7 +116,7 @@ OpenTreasureChest:
 :   LDX tileprop+1           ; re-get the chest index
     LDA game_flags, X        ; set the game flag for this chest to mark it as opened
     ORA #GMFLG_TCOPEN        ;  note that the chest is opened even if you didn't get the item because you had
-    STA game_flags, X        ;  too many.  That is arguably BUGGED.
+    ;STA game_flags, X        ;  too many.  That is arguably BUGGED.
 
     LDA dlg_itemid               ; get the item ID again
     CMP #item_qty_start - items  ; see if it's a qty item (normal item -- not key item)
@@ -157,7 +157,7 @@ OpenTreasureChest:
     LDX tileprop+1           ; get the ID of this chest
     LDA game_flags, X        ; flip on the TCOPEN flag to mark this TC as open
     ORA #GMFLG_TCOPEN
-    STA game_flags, X
+    ;STA game_flags, X
 
     INC dlgsfx               ; set dlgsfx to 2 to play the TC jingle
     INC dlgsfx

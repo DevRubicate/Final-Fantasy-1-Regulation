@@ -4186,10 +4186,10 @@ chr_MinimapTitle:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Minimap_DrawTitleCHR:
-    LDA #<mm_titlechr
-    STA minimap_ptr
-    LDA #>mm_titlechr
-    STA minimap_ptr+1        ; load up the pointer to our pre-loaded CHR
+    ;LDA #<mm_titlechr
+    ;STA minimap_ptr
+    ;LDA #>mm_titlechr
+    ;STA minimap_ptr+1        ; load up the pointer to our pre-loaded CHR
 
     LDX #0                   ; X will be our frame counter.  We will spread this drawing
                              ;  out over 16 frames
@@ -4253,9 +4253,9 @@ Minimap_DrawTitleCHR:
 
 
 Minimap_PrepTitleCHR:
-    LDA #<mm_titlechr
+    ;LDA #<mm_titlechr
     STA tmp+2
-    LDA #>mm_titlechr
+    ;LDA #>mm_titlechr
     STA tmp+3            ; set (tmp+2) to point to our dest buffer
 
     LDX #0               ; X will be outer loop counter
@@ -4468,9 +4468,9 @@ EnterMinimap:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Minimap_DrawDecorCHR:
-    LDA #<mm_decorchr
+    ;LDA #<mm_decorchr
     STA minimap_ptr
-    LDA #>mm_decorchr
+    ;LDA #>mm_decorchr
     STA minimap_ptr+1        ; load up the pointer to our pre-loaded CHR
 
     LDX #0                   ; X will be our frame counter.  We will spread this drawing
@@ -4553,9 +4553,9 @@ Minimap_DrawDecorCHR:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
 Minimap_PrepDecorCHR:
-    LDA #<mm_decorchr
+    ;LDA #<mm_decorchr
     STA tmp+2
-    LDA #>mm_decorchr
+    ;LDA #>mm_decorchr
     STA tmp+3              ; set (tmp+2) to our dest pointer (RAM to receive interleaved graphics)
 
     LDX #0          ; X is the outer loop counter, and indicates which row/bitplane to output next

@@ -3452,7 +3452,7 @@ HideMapObject:
     STY tmp                   ; back up the object ID
     LDA game_flags, Y
     AND #~GMFLG_OBJVISIBLE ; clear the visibility flag for this object
-    STA game_flags, Y
+    ;STA game_flags, Y
 
     LDY #0                ; zero Y for loop counter / mapobject indexing
   @Loop:

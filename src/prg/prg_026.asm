@@ -200,7 +200,7 @@ MiniGame_ShufflePuzzle:
     LDY #$10
   @FindEmptyLoop:
       DEY
-      LDA puzzle, Y        ; simply step through all 16 entries in the puzzle until we find the empty slot (0)
+      ;LDA puzzle, Y        ; simply step through all 16 entries in the puzzle until we find the empty slot (0)
       BNE @FindEmptyLoop   ; and keep looping until we find it
 
     STY tmp+1            ; store empty slot index in tmp+1
@@ -235,13 +235,13 @@ MiniGame_ShufflePuzzle:
 
   @LegalMove:           ; if we get here, the move is legal!  Perform it!
     LDY tmp
-    LDA puzzle, Y       ; copy the tile from the slot we're moving...
+    ;LDA puzzle, Y       ; copy the tile from the slot we're moving...
     LDY tmp+1
-    STA puzzle, Y       ;  ... to the empty slot
+    ;STA puzzle, Y       ;  ... to the empty slot
 
     LDY tmp
     LDA #0
-    STA puzzle, Y       ; then make the slot we moved empty
+    ;STA puzzle, Y       ; then make the slot we moved empty
 
     JUMP @MainLoop       ; and continue looping
 
@@ -824,8 +824,8 @@ MiniGame_VertSlide:
 
     LDX tmp+1         ; put the empty slot in X
   @Up_SlideLoop:
-      LDA puzzle+4, X   ; get the piece from 1 row below, and move it into the empty slot
-      STA puzzle, X     ; puzzle+4+X is now the new empty slot
+      ;LDA puzzle+4, X   ; get the piece from 1 row below, and move it into the empty slot
+      ;STA puzzle, X     ; puzzle+4+X is now the new empty slot
       INX               ; increment X by 4 (1 row)
       INX
       INX
@@ -833,7 +833,7 @@ MiniGame_VertSlide:
       CPX tmp           ; and repeat until we get to the cursor's slot
       BCC @Up_SlideLoop
     LDA #0
-    STA puzzle, X       ; then replace the cursor's slot with 0 (make it the empty slot)
+    ;STA puzzle, X       ; then replace the cursor's slot with 0 (make it the empty slot)
 
     LDA #3
     STA mg_slidedir     ; set the slide direction to 3 (sliding upwards)
@@ -860,8 +860,8 @@ MiniGame_VertSlide:
 
     LDX tmp+1           ; put empty slot in X
   @Down_SlideLoop:
-      LDA puzzle-4, X     ; get the puzzle piece from 1 row above this row
-      STA puzzle, X       ;  and copy it to this row
+      ;LDA puzzle-4, X     ; get the puzzle piece from 1 row above this row
+      ;STA puzzle, X       ;  and copy it to this row
       DEX                 ; then decrement X by 4 (move 1 row up)
       DEX                 ;   this moves all the tiles in this column down 1 row
       DEX
@@ -869,7 +869,7 @@ MiniGame_VertSlide:
       CPX tmp             ; repeat until we get to the cursor's slot
       BNE @Down_SlideLoop
     LDA #0
-    STA puzzle, X         ; then replace the cursor's slot with 0 (make it the empty slot)
+    ;STA puzzle, X         ; then replace the cursor's slot with 0 (make it the empty slot)
 
     LDA #2
     STA mg_slidedir       ; set slide direction to 2 (downwards)
@@ -1010,7 +1010,7 @@ EnterMiniGame:
     LDX #$0F
   @LoadPuzzleLoop:
       LDA lut_PuzzleStart, X   ; simply copy the positions from this LUT
-      STA puzzle, X            ;  into our puzzle
+      ;STA puzzle, X            ;  into our puzzle
       DEX
       BPL @LoadPuzzleLoop      ; and loop until all $10 bytes copied
 
@@ -1060,7 +1060,7 @@ EnterMiniGame:
     STA joy
     STA cursor               ; and start the cursor (selected slot) at zero.
 
-    LDA puzzle               ; but check slot zero to make sure it's not the empty slot
+    ;LDA puzzle               ; but check slot zero to make sure it's not the empty slot
     BNE MiniGameLoop
       INC cursor             ; if it is... start the cursor on slot 1 instead
                       ; no JUMP or RTS -- code flows into MiniGameLoop
@@ -1114,7 +1114,7 @@ MiniGameLoop:
     STA tmp            ;  seems pointless.... why not just use cursor directly?
 
   @FindEmptyLoop:       ; search the puzzle for the empty slot
-    LDA puzzle, X
+    ;LDA puzzle, X
     BEQ @ExitEmptyLoop  ; once we find it, exit the loop with slot index in X
     INX
     BNE @FindEmptyLoop  ; otherwise keep looping until it's found (always branches)
@@ -1202,11 +1202,11 @@ lut_MGDirection_X:   .byte  1,  -1,  0,  0
 
 MiniGame_CheckVictory:
     LDX #1              ; X is our loop counter / index
-    LDA puzzle          ; A is the required value for success
+    ;LDA puzzle          ; A is the required value for success
   @CheckLoop:
       CLC
       ADC #1            ; increment success value by 1
-      CMP puzzle, X     ;  see if this puzzle piece is +1 the piece before it
+      ;CMP puzzle, X     ;  see if this puzzle piece is +1 the piece before it
       BNE @Fail         ; if not, puzzle isn't solved
       INX               ; otherwise move onto next piece
       CPX #$0F          ; until all but last piece checked
@@ -1317,7 +1317,7 @@ MiniGame_ProcessInput:
     STA cursor        ; and record that as our new cursor
 
     TAY
-    LDA puzzle, Y     ; check the slot to see if it's empty
+    ;LDA puzzle, Y     ; check the slot to see if it's empty
     BEQ @Move         ; if it is empty, move again in the same direction until we hit a non-empty slot
 
   @Exit:
@@ -2832,13 +2832,13 @@ MiniGame_HorzSlide:
 
     LDX tmp+1            ; start at empty slot
   @Right_SlideLoop:
-      LDA puzzle+1, X    ; move each puzzle piece right 1 slot
-      STA puzzle, X
+      ;LDA puzzle+1, X    ; move each puzzle piece right 1 slot
+      ;STA puzzle, X
       INX
       CPX tmp            ; until we get to the cursor
       BCC @Right_SlideLoop
     LDA #0
-    STA puzzle, X        ; make the cursor the empty slot
+    ;STA puzzle, X        ; make the cursor the empty slot
 
     LDA #1
     STA mg_slidedir      ; set slide direction to 1 (right)
@@ -2863,13 +2863,13 @@ MiniGame_HorzSlide:
 
     LDX tmp+1
   @Left_SlideLoop:
-      LDA puzzle-1, X     ; move all the necessary puzzle pieces left
-      STA puzzle, X
+      ;LDA puzzle-1, X     ; move all the necessary puzzle pieces left
+      ;STA puzzle, X
       DEX
       CPX tmp
       BNE @Left_SlideLoop
     LDA #0
-    STA puzzle, X         ; replace cursor's slot the empty slot
+    ;STA puzzle, X         ; replace cursor's slot the empty slot
 
     STA mg_slidedir       ; set direction to zero (left)
 
@@ -2968,7 +2968,7 @@ DrawAllPuzzlePieces:
 DrawPuzzlePiece:
     STA tmp+9        ; put slot index to draw in tmp+9 (will use later)
     TAX
-    LDA puzzle, X    ; get the puzzle piece currently at this slot
+    ;LDA puzzle, X    ; get the puzzle piece currently at this slot
     BNE @Draw        ;  if it's nonzero (slot isn't empty), draw it.  But don't draw an empty slot
 
 

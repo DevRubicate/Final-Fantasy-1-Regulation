@@ -17,12 +17,12 @@
 .import LUT_ITEM_DATA_FIRST, LUT_ITEM_DATA_FIRST_SIBLING2, LUT_ITEM_DATA_FIRST_SIBLING3
 .import LUT_ITEM_DESCRIPTION_LO, LUT_ITEM_DESCRIPTION_HI
 .import LUT_TILE_CHR_LO, LUT_TILE_CHR_HI
-.import Video_WriteMassiveImagePattern_128
+.import Video_WriteMassiveImagePattern_128, Video_WriteMassiveImageNametable
 
 .export DrawNineSlice, Stringify, SetTile, DrawRectangle, ColorRectangle, FillNametable, FillAttributeTable 
 .export UploadFillColor, UploadPalette0, UploadPalette1, UploadPalette2, UploadPalette3, UploadPalette4, UploadPalette5, UploadPalette6, UploadPalette7
 .export UploadCHRSolids,UploadBackgroundCHR1, UploadBackgroundCHR2, UploadBackgroundCHR3, UploadBackgroundCHR4, UploadSpriteCHR1, UploadSpriteCHR2, UploadSpriteCHR3, UploadSpriteCHR4
-.export UploadMetaSprite, UploadMassiveImage
+.export UploadMetaSprite, UploadMassiveImage, UploadMassiveImageNametable
 
 lut_NTRowStartLo:
   .byte $00,$20,$40,$60,$80,$A0,$C0,$E0
@@ -3334,9 +3334,10 @@ FetchValueItemDataThird:
         .repeat 64, i
             :
                 ; Video_WriteMassiveImagePattern_128    ; 530 or 533 (inc1)
-                LDX #5                                  ; Add 2 to our video stack size
+                LDX #5                                  ; Add 5 to our video stack size
                 LDY #2                                  ; Add 512 to cost
                 LDA #18                                 ; Add 18 to cost
+                CLC
                 ADC VideoIncrementCost                  ; Potentially add 3 to cost
                 CALL VideoApplySizeAndCost
                 BCS :-
@@ -3373,3 +3374,38 @@ FetchValueItemDataThird:
         .endrepeat
         RTS
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; UploadMassiveImageNametable
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UploadMassiveImageNametable:
+
+        .repeat 2, i
+            :
+                ; Video_WriteMassiveImageNametable      ; 778 or 781 (inc1)
+                LDX #3                                  ; Add 3 to our video stack size
+                LDY #3                                  ; Add 768 to cost
+                LDA #10                                 ; Add 10 to cost
+                CLC
+                ADC VideoIncrementCost                  ; Potentially add 3 to cost
+                CALL VideoApplySizeAndCost
+                BCS :-
+
+            LDY #0
+            LDX VideoCursor
+            LDA #<(Video_WriteMassiveImageNametable-1)
+            CLC
+            ADC VideoIncrementAddressOffset         ; If we are already in increment mode 1 then this skips over it
+            STA VideoStack+0,X
+            LDA #>(Video_WriteMassiveImageNametable-1)
+            STA VideoStack+1,X
+
+            ; Set the high address of the destination
+            LDA #$20 + i       ; $20 or $21 depending on the repeat
+            STA VideoStack+2,X
+
+            LDA VideoCursor
+            CLC
+            ADC #3
+            STA VideoCursor
+        .endrepeat
+        RTS
