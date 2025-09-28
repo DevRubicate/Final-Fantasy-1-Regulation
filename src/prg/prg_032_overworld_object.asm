@@ -3,15 +3,15 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites, AllocateSprites
-.import DoMapDrawJob, BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
-.import StartMapMove, EnterOW_PalCyc, EnterMiniGame, LoadBridgeSceneGFX, UpdateJoy, OpenTreasureChest
+.import BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
+.import EnterMiniGame, LoadBridgeSceneGFX, UpdateJoy, OpenTreasureChest
 
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
-.export OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
-.export UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
+.export OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
+.export UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
 .export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward, GetSMTileProperties
-.export TalkToSMTile, GetSMTilePropNow, SM_MovePlayer, HideMapObject, DrawCursor, MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
+.export TalkToSMTile, GetSMTilePropNow, HideMapObject, DrawCursor, MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,8 +51,6 @@ LUT_2x2MapObj_Down:
 OverworldMovement:
     LDA move_speed        ; check movement speed
     BEQ SetOWScroll_PPUOn ; if zero (we're not moving), just set the scroll and exit
-
-    CALL OW_MovePlayer     ; otherwise... process party movement
 
     LDA vehicle           ; check the current vehicle
     CMP #$01              ; are they on foot?
@@ -102,485 +100,6 @@ SetOWScroll:
 
     RTS                 ; then exit
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Can Move  [$C47D :: 0x3C48D]
-;;
-;;    Checks to see if the player can move in the given direction.  If they can,
-;;  it does a little additional work to prep everything for future action.
-;;
-;;  IN:      A = direction you're facing
-;;
-;;  OUT:     C = set if cannot move in this direction.  Cleared if can.
-;;       tmp+2 = X coord moved to (assuming move was successful)
-;;       tmp+3 = Y coord moved to (assuming move was successful)
-;;    tileprop = first byte of properties of tile you tried to move to
-;;
-;;
-;;    Additionally... if you can move in a direction (C cleared), the following information
-;;  is output:
-;;
-;;  tileprop+1 = bit 7 set if teleport, with low bits determining teleport ID
-;;
-;;  tileprop+1 = bit 7 clear and bit 6 set if you are to engage in a random encounter
-;;               after moving onto this tile
-;;
-;;  btlformation = if you are to engage in a random encounter, this is the battle formation
-;;                 ID to engage in.
-;;
-;;  entering_shop = nonzero if moving onto the caravan
-;;
-;;  shop_id       = set to caravan's shop ID number if entering caravan.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWCanMove:
-    LSR A         ; determine which direction we're moving
-    BCS @Right    ;   and branch accordingly
-    LSR A
-    BCS @Left
-    LSR A
-    BCS @Down
-
-  @Up:
-    LDX #7        ; for each direction, put x-coord add in X, and y-coord add in Y
-    LDY #7-1      ; these will be added to the map scroll to determine player position.
-    JUMP @Calc     ; Player is always 7 tiles from left, and 7 tiles from top of screen
-                  ; -- so base is 7.  For up, you'd add one less to Y (to move up one tile)
-  @Down:          ;  and so on for each directon.
-    LDX #7
-    LDY #7+1
-    JUMP @Calc
-
-  @Right:
-    LDX #7+1
-    LDY #7
-    JUMP @Calc
-
-  @Left:
-    LDX #7-1
-    LDY #7
-
-  @Calc:
-    TXA              ; get X add
-    CLC
-    ADC ow_scroll_x  ; add to it the OW scroll X
-    STA tmp          ; store as low byte of map pointer
-    STA tmp+2        ; and also throw in tmp+2 (uncompromised X coord)
-
-    TYA              ; get Y add
-    CLC
-    ADC ow_scroll_y  ; add to it the OW scroll Y
-    STA tmp+3        ; throw it in tmp+3 (uncompromised Y coord)
-    AND #$0F         ; then mask with F to keep it within the portion of the map that's loaded
-    ORA #>mapdata    ; and OR with high byte of mapdata pointer
-    STA tmp+1        ; and write as high byte of pointer
-
-    LDY #0                 ; zero Y for indexing
-    LDA (tmp), Y           ; get the tile at desired coords
-
-    ASL A                  ; double it and throw it in X (2 bytes per tile properties)
-    TAX
-    LDA tileset_prop, X    ; copy tile properties from tileset
-    STA tileprop
-    LDA tileset_prop+1, X
-    STA tileprop+1
-
-    LDA tileprop     ; get first byte of tile properties
-    AND vehicle      ; AND with current vehicle to find out whether or not this vehicle can move there
-    BEQ :+           ; if zero -- movement is allowed for this vehicle, jump ahead
-
-      SEC            ; otherwise SEC to indicate failure (movement forbidden for this vehicle)
-      RTS            ; and exit
-    :   
-    BIT tileprop+1   ; put bit 6 of tileprop+1 in V
-    BVS @Fighting    ; if bit 6 was set (fighting occurs on this tile), jump ahead
-
-    LDA vehicle      ; otherwise, get the vehicle
-    CMP #$01         ; check to see if we're on foot
-    BEQ @OnFoot      ; if we are, do additional checks
-
-  @Success_1:        ; otherwise (not on foot) Success!
-    CLC              ; CLC to indicate success
-    RTS              ; and exit
-
-  @OnFoot:
-    LDA tileprop         ; get tile properties
-    AND #OWTP_SPEC_MASK  ; mask out special bits
-    BEQ @Success_1       ; if nothing special, success!
-
-    CMP #OWTP_SPEC_CHIME ; is the chime necessary?
-    BEQ @NeedChime       ; if yes... check to make sure we have it
-
-    CMP #OWTP_SPEC_CARAVAN  ; is this the caravan?
-    BNE @Success_1          ; if not, success!
-
-  @Caravan:
-    LDA game_flags+OBJID_FAIRY
-    AND #$01             ; check the fairy map object to see if she's visible
-    BNE @Success_2       ; if she is (bottle has been opened already), prevent entering caravan (exit now)
-
-    LDA #$01             ; otherwise, we need to indicate the player is entering the caravan
-    STA entering_shop    ; set entering_shop to nonzero
-    LDA #70
-    STA shop_id          ; shop ID=70 ($46) = caravan's shop ID
-
-    @Success_2:
-      CLC
-      RTS
-
-  @NeedChime:
-    LDA item_chime       ; see if they have the chime in their inventory
-    BNE @Success_1       ; if they do -- success
-    SEC                  ; otherwise, failure
-    RTS
-
-  @Fighting:
-    LDA #10              ; 10 / 256 chance of getting in a random encounter normally
-    LDX vehicle          ; check the current vehicle
-    CPX #$04             ; see if it's the ship
-    BNE :+               ; if it is....
-       LDA #3            ;   ... 3 / 256 chance instead  (more infrequent battles at sea)
-    :
-    STA tmp              ; store chance of battle in tmp
-    FARCALL GetRandom    ; get a random number for battle steps
-    CMP tmp              ; compare it to our chance
-    BCC @DoEncounter     ; if the random number < our odds -- do a random encounter
-
-      LDA #0             ; otherwise, no random encounter
-      STA tileprop+1     ; clear tileprop+1 to indicate no battle yet
-      CLC                ; CLC for success
-      RTS                ; and exit
-
-  @DoEncounter:
-    LDA tileprop+1       ; find out which type of counter we're to do
-    AND #$03             ;   by checking the low 2 bytes of tileprop+1
-
-    BEQ @LandDomain      ; if 0, get battle from land domain
-
-    CMP #2
-    BEQ @SeaDomain       ; if 2, get battle from sea domain
-                         ;   else, get from river domain
-
-   ;; Note that river and land domains just add 7 to the scroll to get
-   ;;  player position... however this gets the player's position BEFORE
-   ;;  the move.  So if you get in a battle just as you cross a domain boundary,
-   ;;  the battle formation will be chosen from the domain you're leaving, rather
-   ;;  than the domain you're entering.  Some might say that's BUGGED -- especially
-   ;;  when you consider the ACTUAL player position has already been recorded to tmp+2
-   ;;  tmp+3 -- so it could just load those and not do any math.
-
-  @RiverDomain:
-    LDA ow_scroll_y      ; get OW Y scroll
-    CLC
-    ADC #7               ; add 7 to get player position
-
-    ASL A                ; rotate bit 7 ($80) into bit 0 ($01)
-    ROL A
-
-    AND #$01             ; isolate bit 1
-    ORA #$40             ; and add $40 to it  (ie:  domain $40 for upper half of map, $41 for lower half)
-    @gotoGetBattleFormation:
-    JUMP GetBattleFormation
-
-  @SeaDomain:
-    LDA #$42                ; all of the world's sea uses the same domain:  $42
-    BNE @gotoGetBattleFormation  ; always branches
-
-
-   ;; For land domains... the entire map is divided into an 8x8 grid.  Each element in this
-   ;;  grid has it's own domain -- and consists of 32x32 map tiles
-  @LandDomain:
-    LDA ow_scroll_x    ; get X scroll
-    CLC
-    ADC #$07           ; add 7 to get player X coord
-    ROL A              ; rotate left by 4
-    ROL A              ;   which ultimately is just a shorter way
-    ROL A              ;   of right-shifting by 5 (high 3 bits become the low 3 bits)
-    ROL A
-    AND #%00000111     ; mask out the low 3 bits
-    STA tmp            ; and write to tmp.  This is the column of the domain grid
-
-    LDA ow_scroll_y    ; get Y scroll
-    CLC
-    ADC #$07           ; add 7 to get player Y coord
-    LSR A              ; right shift by 2
-    LSR A
-    AND #%00111000     ; and mask out the high bits -- this is the row of the domain grid
-    ORA tmp            ; OR with column for the desired domain.
-                       ;  A is now the desired domain number
-    JUMP GetBattleFormation
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Right  [$C36C :: 0x3C37C]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-OWMove_Right:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-    FARCALL DoMapDrawJob     ; otherwise, do the job
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn on PPU, set scroll
-
-    LDA move_ctr_x         ; add movement speed
-    CLC                    ;  to our X move counter
-    ADC move_speed
-    AND #$0F               ; mask low bits to keep within a tile
-    BEQ @FullTile          ; if result is zero, we've moved a full tile
-
-    STA move_ctr_x         ; otherwise, simply write back the counter
-    RTS                    ;  and exit
-
-  @FullTile:
-    STA move_speed         ; after moving a full tile, zero movement speed
-    STA move_ctr_x         ; and move counter
-
-    LDA ow_scroll_x        ; +1 to our overworld scroll X
-    CLC
-    ADC #$01
-    STA ow_scroll_x
-
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPU_CTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    RTS                    ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Left  [$C396 :: 0x3C3A6]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Left:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-      FARCALL DoMapDrawJob     ; otherwise... do the job
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; set scroll and turn PPU on
-
-    LDA move_ctr_x         ; get the move counter.  If zero, we need to move one tile to left
-    BNE @NoTileChg         ;   otherwise we don't need to change tiles
-
-    LDA ow_scroll_x        ; subtract 1 from the OW X scroll
-    SEC
-    SBC #$01
-    STA ow_scroll_x
-
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPU_CTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    LDA move_ctr_x         ; get the move counter
-
-  @NoTileChg:
-    SEC                    ; A=move counter at this point
-    SBC move_speed         ; subtract the move speed from the counter
-    AND #$0F               ; mask it to keep it in the tile
-    BEQ @FullTile          ; if zero, we've moved a full tile
-
-    STA move_ctr_x         ; otherwise, just write the move counter back
-    RTS                    ; and exit
-
-  @FullTile:
-    STA move_speed         ; if we've moved a full tile, zero our speed
-    STA move_ctr_x         ; and our counter
-    RTS                    ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Player  [$C3C4 :: 0x3C3D4]
-;;
-;;    This moves the player's sprite in the direction they're facing
-;;  at their current movement speed.  It also draw the necessary map
-;;  drawing jobs when apppropriate.
-;;
-;;    For vertical movement... drawing jobs are performed halfway between tiles
-;;  (8 pixels in).  For Horizontal movement, they're performed immediately.  The reason
-;;  for this is because the game is using Vertical mirroring, which means changes made to the
-;;  top of the screen can be seen on the bottom.  So drawing between tiles when moving vertically
-;;  minimizes garbage appearing at the top or bottom of the screen.  No such caution is needed
-;;  (or desired) for horizontal movement, because the extra nametable on the X axis prevents
-;;  such garbage from appearing altogether.
-;;
-;;    Note that most of the routines this jumps to are jumped to with branches
-;;  so this routine must be relatively close to all those routines.
-;;
-;;    This routine will set the PPU scroll BEFORE doing additional scrolling.  Basically
-;;  meaning that the scroll you see on-screen is 1 frame behind what the game is
-;;  tracking.  This is intentional, because all sprites also have this 'delay'... because
-;;  OAM has to wait until next frame before it can be DMA'd.  So this keeps the BG
-;;  and sprites both in sync by keeping them both a frame behind (otherwise, sprites
-;;  would appear to shift over 1 pixel during scrolling).
-;;
-;;    The scroll must be set AFTER all drawing is complete.  This is why each routine
-;;  jumped to here calls SetOWScroll_PPUOn instead of this routine just calling it once.
-;;  Since each routine needs to do drawing jobs under specific conditions... those drawing
-;;  jobs must be done BEFORE the scroll is set (has to do with how NES scrolling works).
-;;  Therefore, once this routine is called, the scroll is set, so no further drawing
-;;  can be done this frame!
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OW_MovePlayer:
-    LDA facing          ; check to see which way we're facing
-    LSR A
-    BCS OWMove_Right    ; moving right
-    LSR A
-    BCS OWMove_Left     ; moving left
-    LSR A
-    BCS OWMove_Down     ; moving down
-    JUMP OWMove_Up       ; moving up
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Down  [$C3D2 :: 0x3C3E2]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Down:
-    LDA mapdraw_job     ; see if a drawing job needs to be performed
-    BEQ @NoJob          ; if not... skip ahead
-
-    CMP #$01            ; if drawing job=1 (attributes)...
-    BEQ @Job            ;   do it right away
-
-    LDA move_ctr_y      ; otherwise, only do the job if we're halfway between tiles
-    CMP #$08            ;   (8 pixels between the move)
-    BNE @NoJob          ; if not 8 pixels between the move... don't do the job
-
-  @Job:
-    FARCALL DoMapDrawJob       ; do the map drawing job, then proceed normally
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn the PPU on, and set the appropriate overworld scroll
-
-    LDA move_ctr_y         ; get the Y move counter
-    CLC
-    ADC move_speed         ; add our movement speed to it
-    AND #$0F               ; and mask it to keep it within the current tile
-    BEQ @FullTile          ; if it's now zero, we've moved 1 full tile
-
-    STA move_ctr_y         ; otherwise, simply record the new move counter
-    RTS                    ; and exit
-
-  @FullTile:               ; if we've moved a full tile
-    STA move_speed         ; zero our move speed (A=0 here) to stop moving
-    STA move_ctr_y         ; also zero our move counter
-
-    INC ow_scroll_y        ; update the overworld scroll
-
-    LDA scroll_y           ; and update our map scroll
-    CLC
-    ADC #1                 ;   by adding 1 to it
-    CMP #$0F
-    BCC :+
-      SBC #$0F             ;   and make it wrap from E->0  (nametables are only 15 tiles tall.. not 16)
-:   STA scroll_y           ; write it back
-    RTS                    ; and exit
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Overworld Move Up  [$C406 :: 0x3C416]
-;;
-;;    See OW_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OWMove_Up:
-    LDA mapdraw_job        ; see if a job needs to be done
-    BEQ @NoJob             ; if not, no job
-
-    CMP #$01
-    BEQ @Job               ; if job=1, do it right away
-
-    LDA move_ctr_y         ; otherwise, only do it when we're halfway between tiles
-    CMP #$08
-    BNE @NoJob
-
-  @Job:
-    FARCALL DoMapDrawJob
-
-  @NoJob:
-    CALL SetOWScroll_PPUOn  ; turn PPU on and set scroll
-
-    LDA move_ctr_y         ; get move counter
-    BNE @NoTileChg         ; if it's zero, we need to change tiles.  Otherwise, skip ahead
-
-    DEC ow_scroll_y        ; dec the OW scroll
-
-    LDA scroll_y           ; subtract 1 from the map scroll Y
-    SEC
-    SBC #$01
-    BCS :+
-      ADC #$0F             ; and have it wrap from 0->E
-:   STA scroll_y           ; then write it back
-
-    LDA move_ctr_y         ; get move counter again
-
-  @NoTileChg:
-    SEC                    ; here, A=move counter
-    SBC move_speed         ; subtract the movement speed from the counter
-    AND #$0F               ; mask it to keep it in a 16x16 tile 
-    BEQ @FullTile          ; if it's now zero... we've moved a full tile
-
-    STA move_ctr_y         ; otherwise, simply write back the move counter
-    RTS                    ;  and exit
-
-  @FullTile:
-    STA move_speed         ; if we moved a full tile, zero the move speed (stop player from moving)
-    STA move_ctr_y         ; and zero the move counter
-    RTS                    ; then exit
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Boat boarding / unboarding routines   [$C5CC :: 0x3C5DC]
-;;
-;;     These are a series of routines that have the player attempt to
-;;  change vehicles during a move.  They handle movements between any
-;;  combination of foot/canoe/ship.
-;;
-;;  IN:  tileprop = properties of tile we're moving onto
-;;          tmp+2 = X coord we're moving onto
-;;          tmp+3 = Y coord
-;;
-;;  OUT:   C = clear if successful (able to board/unboard/move)
-;;             set if unsuccessful.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;
-;;  UnboardBoat  [$C5CC :: 0x3C5DC]
-;;    Exits the canoe/ship and proceeds on foot
-;;
-
-UnboardBoat:
-    LDA tileprop         ; get tile properties
-    AND #$01             ; see if walking onto this tile is legal
-    BNE Board_Fail       ; if not... fail
-                 ;  otherwise, proceed to UnboardBoat_Abs
 
 ;;
 ;;  UnboardBoat_Abs  [$C5D2 :: 0x3C5E2]
@@ -1780,7 +1299,6 @@ StandardMapMovement:
         RTS
     @noSetScroll:
                           ; the rest of this is only done during movement
-      CALL SM_MovePlayer     ; Move the player in the desired direction
       CALL MapPoisonDamage   ; do poison damage
 
       LDA tileprop          ; get the properties for this tile
@@ -2855,7 +2373,6 @@ ProcessOWInput:
       CALL MinigameReward ;  ... give them their reward
 
     :   
-    JUMP EnterOW_PalCyc   ; then re-enter overworld
   @Exit:
     RTS
 
@@ -2875,7 +2392,7 @@ ProcessOWInput:
     BEQ @MoveCanoe
 
   @MoveOnFoot:         ; otherwise we're on foot
-    CALL OWCanMove      ; see if they can move in given direction
+
     BCC @StartMove     ;  if yes, start the move
 
     LDA #0
@@ -2901,10 +2418,9 @@ ProcessOWInput:
     LDA joy               ; get joy
     AND #$0F              ; isolate the direction(s) they're pressing (ie, where they're trying to move)
     STA facing            ; set that as our facing
-    FARJUMP StartMapMove      ; then start the map move!  and exit
 
   @MoveShip:           ; Here if trying to move when in the ship
-    CALL OWCanMove      ; see if they can move in desired direction
+
     BCS @Ship_NoMove   ; if they can't... jump ahead
 
         CALL IsOnCanal       ; if they can... check to see if the canal is blocking them
@@ -2932,10 +2448,10 @@ ProcessOWInput:
 
 
   @MoveCanoe:           ; if in canoe
-    CALL OWCanMove       ; see if they can move
+
     BCC @StartMove      ; if yes... move
 
-    CALL UnboardBoat     ; otherwise, see if they can unboard the canoe and proceed on foot
+
     BCC @StartMove      ; if yes, move!
 
     CALL BoardShip       ; otherwise, see if they can board the ship
@@ -3209,227 +2725,6 @@ TalkToSMTile:
       RTS
     :   
     FARJUMP OpenTreasureChest     ; otherwise, open the chest
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Move Right  [$CCBF :: 0x3CCCF]
-;;
-;;    See SM_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SMMove_Right:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-      FARCALL DoMapDrawJob     ; otherwise, do the job
-
-  @NoJob:
-    CALL SetSMScroll        ; set scroll
-
-    LDA move_ctr_x         ; add movement speed
-    CLC                    ;  to our X move counter
-    ADC move_speed
-    AND #$0F               ; mask low bits to keep within a tile
-    BEQ @FullTile          ; if result is zero, we've moved a full tile
-
-      STA move_ctr_x       ; otherwise, simply write back the counter
-      RTS                  ;  and exit
-
-  @FullTile:
-    STA move_speed         ; after moving a full tile, zero movement speed
-    STA move_ctr_x         ; and move counter
-
-    LDA sm_scroll_x        ; add 1 to SM scroll X
-    CLC
-    ADC #$01
-    AND #$3F               ; and wrap at 64 tiles
-    STA sm_scroll_x
-
-    AND #$10               ; get nametable bit of scroll ($10=use nt@$2400, $00=use nt@PPU_CTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    RTS                    ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Move Left  [$CCEB :: 0x3CCFB]
-;;
-;;    See SM_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SMMove_Left:
-    LDA mapdraw_job        ; is there a draw job to do?
-    BEQ @NoJob             ; if not... no job
-      FARCALL DoMapDrawJob     ; otherwise... do the job
-
-  @NoJob:
-    CALL SetSMScroll        ; set scroll
-
-    LDA move_ctr_x         ; get the move counter.  If zero, we need to move one tile to left
-    BNE @NoTileChg         ;   otherwise we don't need to change tiles
-
-    LDA sm_scroll_x        ; subtract 1 from the SM X scroll
-    SEC
-    SBC #$01
-    AND #$3F               ; and wrap at 64 tiles
-    STA sm_scroll_x
-
-    AND #$10               ; get the nametable bit ($10=use nt@$2400... $00=use nt@PPU_CTRL)
-    LSR NTsoft2000         ; shift out and discard old NTX scroll bit
-    CMP #$10               ; sets C if A=$10 (use nt@$2400).  clears C otherwise
-    ROL NTsoft2000         ; shift C into NTX scroll bit (indicating the proper NT to use)
-
-    LDA move_ctr_x         ; get the move counter
-
-  @NoTileChg:
-    SEC                    ; A=move counter at this point
-    SBC move_speed         ; subtract the move speed from the counter
-    AND #$0F               ; mask it to keep it in the tile
-    BEQ @FullTile          ; if zero, we've moved a full tile
-
-    STA move_ctr_x         ; otherwise, just write the move counter back
-    RTS                    ; and exit
-
-  @FullTile:
-    STA move_speed         ; if we've moved a full tile, zero our speed
-    STA move_ctr_x         ; and our counter
-    RTS                    ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Move Player  [$CD1B :: 0x3CD2B]
-;;
-;;    Performs player movement.  Identical to Overworld Move Player (OW_MovePlayer) except
-;;  it adjusts SM scroll instead of OW scroll and wraps at 64 tiles instead of 256.
-;;
-;;    See OW_MovePlayer for further details.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SM_MovePlayer:
-    LDA facing          ; check to see which way we're facing
-    LSR A
-    BCS SMMove_Right    ; moving right
-    LSR A
-    BCS SMMove_Left     ; moving left
-    LSR A
-    BCS SMMove_Down     ; moving down
-    JUMP SMMove_Up       ; moving up
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Move Down  [$CD29 :: 0x3CD39]
-;;
-;;    See SM_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SMMove_Down:
-    LDA mapdraw_job     ; see if a drawing job needs to be performed
-    BEQ @NoJob          ; if not... skip ahead
-
-    CMP #$01            ; if drawing job=1 (attributes)...
-    BEQ @Job            ;   do it right away
-
-    LDA move_ctr_y      ; otherwise, only do the job if we're halfway between tiles
-    CMP #$08            ;   (8 pixels between the move)
-    BNE @NoJob          ; if not 8 pixels between the move... don't do the job
-
-  @Job:
-    FARCALL DoMapDrawJob       ; do the map drawing job, then proceed normally
-
-  @NoJob:
-    CALL SetSMScroll        ; set SM scroll
-
-    LDA move_ctr_y         ; get the Y move counter
-    CLC
-    ADC move_speed         ; add our movement speed to it
-    AND #$0F               ; and mask it to keep it within the current tile
-    BEQ @FullTile          ; if it's now zero, we've moved 1 full tile
-
-    STA move_ctr_y         ; otherwise, simply record the new move counter
-    RTS                    ; and exit
-
-  @FullTile:               ; if we've moved a full tile
-    STA move_speed         ; zero our move speed (A=0 here) to stop moving
-    STA move_ctr_y         ; also zero our move counter
-
-    LDA sm_scroll_y        ; increment SM Y scroll
-    CLC
-    ADC #$01
-    AND #$3F               ; and wrap at 64 tiles
-    STA sm_scroll_y
-
-    LDA scroll_y           ; and update our map scroll
-    CLC
-    ADC #1                 ;   by adding 1 to it
-    CMP #$0F
-    BCC :+
-      SBC #$0F             ;   and make it wrap from E->0  (nametables are only 15 tiles tall.. not 16)
-    :   
-    STA scroll_y           ; write it back
-    RTS                    ; and exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Move Up  [$CD64 :: 0x3CD74]
-;;
-;;    See SM_MovePlayer for details
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SMMove_Up:
-    LDA mapdraw_job        ; see if a job needs to be done
-    BEQ @NoJob             ; if not, no job
-
-    CMP #$01
-    BEQ @Job               ; if job=1, do it right away
-
-    LDA move_ctr_y         ; otherwise, only do it when we're halfway between tiles
-    CMP #$08
-    BNE @NoJob
-
-  @Job:
-    FARCALL DoMapDrawJob
-
-  @NoJob:
-    CALL SetSMScroll        ; set scroll
-
-    LDA move_ctr_y         ; get move counter
-    BNE @NoTileChg         ; if it's zero, we need to change tiles.  Otherwise, skip ahead
-
-    LDA sm_scroll_y        ; decrement SM Y scroll
-    SEC
-    SBC #$01
-    AND #$3F               ; and wrap at 64 tiles
-    STA sm_scroll_y
-
-    LDA scroll_y           ; subtract 1 from the map scroll Y
-    SEC
-    SBC #$01
-    BCS :+
-      ADC #$0F             ; and have it wrap from 0->E
-    :   
-    STA scroll_y           ; then write it back
-
-    LDA move_ctr_y         ; get move counter again
-
-  @NoTileChg:
-    SEC                    ; here, A=move counter
-    SBC move_speed         ; subtract the movement speed from the counter
-    AND #$0F               ; mask it to keep it in a 16x16 tile 
-    BEQ @FullTile          ; if it's now zero... we've moved a full tile
-
-    STA move_ctr_y         ; otherwise, simply write back the move counter
-    RTS                    ;  and exit
-
-  @FullTile:
-    STA move_speed         ; if we moved a full tile, zero the move speed (stop player from moving)
-    STA move_ctr_y         ; and zero the move counter
-    RTS                    ; then exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

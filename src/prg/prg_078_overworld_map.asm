@@ -5,10 +5,10 @@
 .import LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
 .import MusicPlay, PrepAttributePos, ProcessOWInput, ClearSprites
 .import DrawOWSprites, VehicleSFX, ScreenWipe_Open
-.import LoadOWTilesetData, LoadMapPalettes, DrawFullMap, DrawMapPalette, SetOWScroll_PPUOn
-.import LoadBridgeSceneGFX, EnterBridgeScene, EnterShop, EnterMainMenu, EnterOW_PalCyc, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, ScreenWipe_Close, DoStandardMap
+.import LoadOWTilesetData, DrawMapPalette, SetOWScroll_PPUOn
+.import LoadBridgeSceneGFX, EnterBridgeScene, EnterMainMenu, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, ScreenWipe_Close
 
-.export LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData
+.export LoadOWCHR, PrepOverworld, LoadEntranceTeleportData
 
 
 LUT_EntrTele_X:
@@ -34,68 +34,6 @@ LoadOWCHR:                     ; overworld map -- does not load any palettes
     FARCALL LoadPlayerMapmanCHR
     FARJUMP LoadOWObjectCHR
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Overworld  [$C0CB :: 0x3C0DB]
-;;
-;;    Called when you enter (or exit to) the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoOverworld:
-    CALL PrepOverworld          ; do all overworld preparation
-    FARCALL ScreenWipe_Open        ; then do the screen wipe effect
-    NOJUMP EnterOverworldLoop   ; then enter the overworld loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Main Overworld Game Logic Loop  [$C0D1 :: 0x3C0E1]
-;;
-;;   This is where everything spawns from on the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EnterOverworldLoop:
-
-    FARCALL GetOWTile       ; get the current overworld tile information
-
-   ;;
-   ;; THE overworld loop
-   ;;
-
-  @Loop:  
-    CALL WaitForVBlank        ; wait for VBlank
-    FARCALL OverworldMovement      ; do any pending movement animations and whatnot
-                               ;   also does any required map drawing and updates
-                               ;   the scroll appropriately
-
-    LDA framecounter           ; increment the *two byte* frame counter
-    CLC                        ;   what does this game have against the INC instruction?
-    ADC #1
-    STA framecounter
-    LDA framecounter+1
-    ADC #0
-    STA framecounter+1
-
-    FARCALL MusicPlay   ; Keep the music playing
-
-    LDA mapdraw_job            ; check to see if drawjob number 1 is pending
-    CMP #1
-    BNE :+
-        FARCALL PrepAttributePos     ; if it is, do necessary prepwork so it can be drawn next frame
-    :
-    LDA move_speed             ; check to see if the player is currently moving
-    BNE :+                     ; if not....
-        LDA vehicle_next         ;   replace current vehicle with 'next' vehicle
-        STA vehicle
-        CALL DoOWTransitions      ; check for any transitions that need to be done
-        FARCALL ProcessOWInput       ; process overworld input
-    :
-    FARCALL ClearSprites
-    FARCALL DrawOWSprites      ; and draw all overworld sprites
-    FARCALL VehicleSFX
-
-    JUMP @Loop         ; then jump back to loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -128,8 +66,8 @@ PrepOverworld:
 
     CALL LoadOWCHR           ; load up necessary CHR
     FARCALL LoadOWTilesetData   ; the tileset
-    FARCALL LoadMapPalettes     ; palettes
-    FORCEDFARCALL DrawFullMap         ; then draw the map
+
+
 
     LDA ow_scroll_x      ; get ow scroll X
     AND #$10             ; isolate the '16' bit (nametable bit)
@@ -193,92 +131,4 @@ LoadEntranceTeleportData:
     STA cur_tileset
 
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Overworld Transitions  [$C140 :: 0x3C150]
-;;
-;;    Called to do any transitions that need to be done from the overworld.
-;;  This includes teleports, battles, entering the caravan, etc.  Anything that
-;;  takes the game off of the overworld.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoOWTransitions:
-    LDA bridgescene       ; see if the bridge scene has been triggered
-    BEQ @SkipBridgeScene  ;   if not triggered... skip it
-    BMI @SkipBridgeScene  ;   if we've already done it in the past, skip it
-
-    FARCALL LoadBridgeSceneGFX ; load CHR and NT for the bridge scene
-    FARCALL EnterBridgeScene ; do the bridge scene.
-
-    JUMP EnterOW_PalCyc  ; then re-enter overworld
-
-    @SkipBridgeScene:
-
-    LDA entering_shop     ; see if we're entering a shop (caravan)
-    BEQ @SkipShop         ; if not... skip it
-
-    FARCALL GetOWTile       ; Get overworld tile (why do this here?  doesn't make sense)
-    FARCALL EnterShop       ; and enter the shop!
-    JUMP EnterOW_PalCyc  ; then re-enter overworld
-
-    @SkipShop:
-    BIT tileprop+1      ; check properties of tile we just moved to
-    BMI @Teleport       ; if bit 7 set.. it's a teleport tile
-    BVS @Battle         ; otherwise... if bit 6 set, we are to engage in battle
-
-      ;;  If we reach here, there is nothing special that happened due to the player
-      ;;   moving.  So check for start/select button presses
-
-    LDA joy_start         ; did they press start?
-    BEQ @SkipStart        ; if not... skip it
-        LDA #0
-        STA joy_start       ; clear start button catcher
-        STA PAPU_NCTL1           ; silence noise channel (stop ship/airship sound effects)
-        FARCALL GetOWTile       ; get overworld tile (needed for some items, like the Floater)
-        FARCALL EnterMainMenu   ; and enter the main menu
-        JUMP EnterOW_PalCyc  ; then re-enter the overworld
-
-    @SkipStart:
-    LDA joy_select        ; check to see if they pressed select
-    BEQ @Exit             ; if not... nothing else to check.  Just exit
-
-    LDA #$00            ; otherwise... if they did press select..
-    STA PAPU_NCTL1           ; silence noise (stop ship/airship sound effects)
-
-    LDA joy
-    AND #$40            ; see if the B button is being held down
-    BEQ @Lineup         ;  if not... jump to the lineup menu.  Otherwise do the minimap screen
-
-    @Minimap:
-        FARCALL EnterMinimap     ; do the minimap
-        JUMP EnterOW_PalCyc   ; then re-enter overworld
-
-    @Lineup:
-        FARCALL EnterLineupMenu  ; enter the lineup menu
-        JUMP EnterOW_PalCyc   ; then re-enter overworld
-
-    @Exit:
-    RTS
-
-    @Battle:
-        FARCALL GetOWTile          ; Get overworld tile (needed for battle backdrop)
-        FARCALL BattleTransition   ; Do the flashy transition effect
-        LDA #$00
-        STA PPU_MASK              ; turn off the PPU
-        STA PAPU_EN              ; and APU
-        FARCALL LoadBattleCHRPal   ; Load all necessary CHR for battles, and some palettes
-        LDA btlformation
-
-        JUMP EnterOW_PalCyc     ; then re-enter overworld
-
-    @Teleport:
-        FARCALL GetOWTile           ; Get OW tile (so we know the battle backdrop for the map we're entering)
-        FARCALL ScreenWipe_Close    ; wipe the screen closed
-        CALL LoadEntranceTeleportData
-        LDA #0                  ; clear the inroom flag (enter maps outside of rooms)
-        STA inroom
-        NAKEDJUMP DoStandardMap
-
 

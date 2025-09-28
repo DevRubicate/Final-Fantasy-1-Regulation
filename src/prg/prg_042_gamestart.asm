@@ -2,8 +2,8 @@
 
 .include "src/global-import.inc"
 
-.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, ClearZeroPage, DoOverworld, UploadFillColor
-.import LoadResources, LoadHeroSprites
+.import DisableAPU, SetRandomSeed, EnterIntroStory, EnterTitleScreen, VerifyChecksum, ClearZeroPage, UploadFillColor
+.import LoadResources, LoadHeroSprites, EnterMainMenu
 
 .export GameStart
 
@@ -98,8 +98,10 @@ GameStart:
     LDA unsram_vehicle              ; fetch vehicle from unsram (wouldn't
     STA vehicle_next                ;   this always be 'on-foot'?)
     STA vehicle
-    
-    NAKEDJUMP DoOverworld
+
+    FARCALL EnterMainMenu
+
+    RTS
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -19,7 +19,7 @@
 .export DrawShopThisSpellFull, DrawShopAlreadyKnowSpell, DrawShopItemCostOK
 .export DrawShopNobodyDead, DrawShopWhoRevive, DrawShopReturnLife, DrawShopDeadHeroList
 .export DrawShopBuySellExit, DrawShopBuyExit, DrawShopYesNo, DrawShopHeroList
-.export DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory, EnterShopMenu
+.export DrawShopTitle, DrawShopGoldBox, DrawShopItemList, LoadShopInventory
 
 DrawShopWelcome:
 	POS         1, 4

@@ -11,7 +11,7 @@
 .import EnterEndingScene, MusicPlay, EnterMiniGame, EnterBridgeScene, __Nasir_CRC_High_Byte
 .import PrintNumber_2Digit, PrintPrice, PrintCharStat, PrintGold
 .import TalkToObject, EnterLineupMenu
-.import EnterMainMenu, EnterShop, EnterIntroStory
+.import EnterMainMenu, EnterIntroStory
 .import data_EpilogueCHR, data_EpilogueNT, data_BridgeNT
 .import EnvironmentStartupRoutine
 .import BattleRNG, GetSMTargetCoords, CanTalkToMapObject
@@ -20,8 +20,8 @@
 .import OpenTreasureChest, AddGPToParty, LoadPrice, LoadBattleBackdropPalette
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
 .import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
-.import OW_MovePlayer, OWCanMove, OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
-.import UnboardBoat, UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
+.import OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
+.import UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
 .import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 .import Video_Start, ClearVideoStack, ClearSprites
@@ -59,11 +59,11 @@
 ; prg_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; prg_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData, DoStandardMap
+.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData
 ; prg_26_map
-.import LoadMapPalettes, BattleTransition, StartMapMove, DrawMapAttributes, DoMapDrawJob, PrepSMRowCol, PrepRowCol
+.import BattleTransition
 ; prg_27_overworld_map
-.import LoadOWCHR, EnterOverworldLoop, PrepOverworld, DoOverworld, LoadEntranceTeleportData, DoOWTransitions
+.import LoadOWCHR, PrepOverworld, LoadEntranceTeleportData
 ; prg_28_battle_util
 .import BattleUpdateAudio_FixedBank, Battle_UpdatePPU_UpdateAudio_FixedBank, ClearBattleMessageBuffer
 .import DrawBattle_Division, DrawCombatBox, BattleDrawMessageBuffer, Battle_PPUOff, BattleBox_vAXY
@@ -84,7 +84,6 @@
 .export Impl_FARCALL, Impl_NAKEDJUMP, Impl_FARPPUCOPY
 .export CHRLoadToA
 .export WaitScanline, SetSMScroll
-.export EnterOW_PalCyc
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
 .export DrawMapPalette
@@ -138,17 +137,7 @@ WaitScanline:
     LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
     RTS              ; +6
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Enter Overworld -- PalCyc   [$C762 :: 0x3C772]
-;;
-;;    Enters the overworld with the palette cycling effect
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnterOW_PalCyc:
-    FARCALL PrepOverworld       ; do all necessary overworld preparation
-    NAKEDJUMP EnterOverworldLoop  ; then enter the overworld loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

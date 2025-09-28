@@ -2,14 +2,14 @@
 
 .include "src/global-import.inc"
 
-.import LoadSMTilesetData, LoadMapPalettes, DrawFullMap, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
+.import LoadSMTilesetData, WaitForVBlank, DrawMapPalette, SetSMScroll, GetSMTilePropNow, LoadPlayerMapmanCHR, LoadTilesetAndMenuCHR, LoadMapObjCHR
 .import ScreenWipe_Open, LoadStandardMap, LoadMapObjects
-.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, EnterShop, BattleTransition, LoadBattleCHRPal, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
+.import StandardMapMovement, MusicPlay, PrepAttributePos, DoAltarEffect, DrawSMSprites, BattleTransition, LoadBattleCHRPal, LoadEpilogueSceneGFX, EnterEndingScene, ScreenWipe_Close, ScreenWipe_Close, DoOverworld
 .import GetSMTargetCoords, CanTalkToMapObject, DrawMapObjectsNoUpdate, TalkToObject, TalkToSMTile, DrawDialogueBox, ShowDialogueBox, EnterMainMenu, EnterLineupMenu, UpdateJoy
-.import CanPlayerMoveSM, StartMapMove, EnterShopMenu, ClearSprites
+.import CanPlayerMoveSM, ClearSprites
 
-.export PrepStandardMap, RedrawDoor, ProcessSMInput
-.export EnterStandardMap, ReenterStandardMap, LoadStandardMapAndObjects, DoStandardMap
+.export PrepStandardMap, RedrawDoor
+.export EnterStandardMap, ReenterStandardMap
 
  ;; the LUT containing the music tracks for each tileset
 
@@ -79,8 +79,8 @@ PrepStandardMap:
 
     CALL LoadSMCHR           ; load all the necessary CHR
     FARCALL LoadSMTilesetData   ; load tileset and TSA data
-    FARCALL LoadMapPalettes     ; load palettes
-    FARCALL DrawFullMap         ; draw the map onto the screen
+
+
 
     LDA sm_scroll_x         ; get the map x scroll
     AND #$10                ; isolate the odd NT bit
@@ -213,7 +213,6 @@ RedrawDoor:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EnterStandardMap:
-    CALL LoadStandardMapAndObjects   ; decompress the map, load objects
     CALL PrepStandardMap             ; draw it, do other prepwork
     FARJUMP ScreenWipe_Open             ; do the screen wipe effect and exit once map is visible
 
@@ -231,290 +230,3 @@ ReenterStandardMap:
     CALL PrepStandardMap   ; do map preparation stuff (redraw, etc)
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LoadStandardMapAndObjects
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadStandardMapAndObjects:
-    LDA #$01
-    STA mapflags          ; set the standard map flag
-
-    LDA #%00100000
-    STA PPU_CTRL             ; disable NMIs
-    LDA #0
-    STA PPU_MASK             ; turn off PPU
-
-    FORCEDFARCALL LoadStandardMap   ; decompress the map
-    FORCEDFARCALL LoadMapObjects    ; load up the objects for this map (townspeople/bats/etc)
-
-    RTS                   ; exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LoadTeleportData
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadNormalTeleportData:
-    LDX tileprop+1          ; get the teleport ID in X for indexing teleport data
-
-    LDA LUT_NormTele_X, X   ; get the X coord to teleport to
-    SEC                     ;  subtract 7 from desired player coord
-    SBC #7                  ;  and wrap to get scroll pos
-    AND #$3F
-    STA sm_scroll_x
-
-    LDA LUT_NormTele_Y, X   ; do same with Y coord
-    SEC
-    SBC #7
-    AND #$3F
-    STA sm_scroll_y
-
-    LDA LUT_NormTele_Map, X ; get the map and record it
-    STA cur_map
-
-    TAX                     ; then throw the map in X, and use it to get
-    LDA LUT_Tilesets, X     ; the tileset for this map
-    STA cur_tileset
-    RTS
-
-LoadExitTeleportData:
-    LDX tileprop+1          ; get the teleport ID in X
-    LDA LUT_ExitTele_X, X   ;  get X coord
-    SEC                     ;  subtract 7 to get the scroll
-    SBC #7
-    STA ow_scroll_x
-
-    LDA LUT_ExitTele_Y, X   ; do same with Y coord
-    SEC
-    SBC #7
-    STA ow_scroll_y
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Do Standard Map  [$C8B3 :: 0x3C8C3]
-;;
-;;    Enters a standard map, loads all appropriate objects, CHR, palettes... everything.
-;;  Then does the standard map loop
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DoStandardMap:
-    CALL EnterStandardMap     ; load and prep map stuff
-    NOJUMP StandardMapLoop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Standard Map Loop  [$C8B6 :: 0x3C8C6]
-;;
-;;    This is THE loop for game logic when in standard maps.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StandardMapLoop:
-    CALL WaitForVBlank        ; wait for VBlank
-    FARCALL StandardMapMovement    ; then do movement stuff (involves possible screen drawing) this also sets the scroll
-    LDA framecounter
-    CLC                        ; increment the two byte frame counter
-    ADC #1                     ;  seriously... what did Nasir have against INC?
-    STA framecounter           ;  this is criminally inefficient
-    LDA framecounter+1
-    ADC #0
-    STA framecounter+1
-    FARCALL MusicPlay   ; keep music playing
-    LDA mapdraw_job            ; check the map draw job
-    CMP #1                     ;  if the next job is to draw attributes
-    BNE :+                     ;  then we need to prep them here so they're ready for
-        FARCALL PrepAttributePos     ;  drawing next frame
-    :   
-    LDA move_speed              ; check the player's movement speed to see if they're in motion
-    BNE @Continue               ;  if they are, skip over input and some other checks, and just continue to next loop iteration. This next bit is done only if the player isn't moving, or if they just completed a move this frame
-    ;LDA altareffect             ; do the altar effect if its flag is set
-    BEQ :+
-        FARCALL DoAltarEffect
-    :     
-    LDA entering_shop     ; jump ahead to shop code if entering a shop
-    BNE @Shop
-    LDA tileprop                         ; lastly, check to see if a battle or teleport is triggered
-    AND #TP_TELE_MASK | TP_BATTLEMARKER
-    BNE @TeleOrBattle
-        CALL ProcessSMInput    ; if none of those things -- process input, and continue
-        @Continue:
-        FARCALL ClearSprites
-        FARCALL DrawSMSprites       ; and draw all sprites
-        JUMP StandardMapLoop     ; then keep looping
-
-    @Shop:
-        LDA #0
-        STA inroom              ; clear the inroom flags so that we're out of rooms when we enter the shop
-        FARCALL EnterShopMenu       ; enter the shop
-        CALL ReenterStandardMap  ;  then reenter the map
-        JUMP StandardMapLoop     ;  and continue looping
-
-    ;; here if the player is to teleport, or to start a fight
-    @TeleOrBattle:
-    CMP #TP_TELE_WARP       ; see if this is a teleport or fight
-    BCS @TeleOrWarp         ;  if property flags >= TP_TELE_WARP, this is a teleport or Warp
-        ;;  Otherwise, here, this is a BATTLE
-        FARCALL GetSMTilePropNow    ; get 'now' tile properties (don't know why -- seems useless?)
-        LDA #0
-        STA tileprop            ; zero tile property byte to prevent unending battles from being triggered
-        FARCALL BattleTransition    ; do the battle transition effect
-        LDA #0                  ; then kill PPU, APU
-        STA PPU_MASK
-        STA PAPU_EN
-        FARCALL LoadBattleCHRPal    ; Load CHR and palettes for the battle
-        LDA btlformation
-
-        BCC :+                  ;  see if this battle was the end game battle
-            @VictoryLoop:
-            FARCALL LoadEpilogueSceneGFX
-            FARCALL EnterEndingScene
-            JUMP @VictoryLoop
-        :   
-        CALL ReenterStandardMap  ; if this was just a normal battle, reenter the map
-        JUMP StandardMapLoop     ; and resume the loop
-
-    @TeleOrWarp:              ; code reaches here if we're teleporting or warping
-        BNE @Teleport           ; if property flags = TP_TELE_WARP, this is a warp...
-        FARCALL ScreenWipe_Close  ; ... so just close the screen with a wipe and RTS.  This RTS  will either go to the overworld loop, or to one "layer" up in this SM loop
-        NAKEDJUMP DoOverworld         ; then jump to the overworld
-    @Teleport:
-        CMP #TP_TELE_NORM     ; lastly, see if this is a normal teleport (to standard map)
-        BNE @ExitTeleport     ;    or exit teleport (to overworld map)
-
-    @NormalTeleport:        ; normal teleport!
-        FARCALL ScreenWipe_Close    ; wipe the screen closed
-        CALL LoadNormalTeleportData
-        JUMP DoStandardMap
-
-    @ExitTeleport:
-        FARCALL ScreenWipe_Close    ; wipe the screen closed
-        CALL LoadExitTeleportData
-        NAKEDJUMP DoOverworld         ; then jump to the overworld
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Process SM input   [$C23C :: 0x3C24C]
-;;
-;;    Updates joy data and does input processing for standard maps.  Shouldn't
-;;  be called when player is in motion.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ProcessSMInput:  
-    LDA joy_a              ; see if user pressed the A button
-    BEQ @CheckStart        ; if not, skip ahead to check Start button.  Otherwise...
-
-    ;;
-    ;; A button pressed
-    ;;
-
-      LDA #0
-      STA joy_a              ; clear A button marker
-      STA dlgsfx             ;  and a few dialogue flags
-      STA dlgflg_reentermap
-
-      CALL WaitForVBlank      ; wait for VBlank and keep music playing
-      FARCALL MusicPlay ;   seems weird to do this stuff here -- game probably doesn't need to wait a frame
-
-      LDA facing               ; use the direction the player is facing
-      FARCALL GetSMTargetCoords    ;  as the direction to get SM target coords
-
-      FARCALL CanTalkToMapObject   ; see if there's a map object at those target coords
-      STX talkobj              ; store the index to that object (if any) in talkobj
-      PHP                      ; back up the C flag (whether or not there was an object to talk to)
-
-      LDA #4*4                    ; redraw all map objects starting at the 4th sprite
-      STA sprindex                ;  this will cause the object we're talking to (if any) to face the player
-      FARCALL DrawMapObjectsNoUpdate  ;  we start at the 4th sprite so the player's sprite doesn't get overwritten
-
-      PLP                ; restore C flag
-      LDX talkobj        ; and index of object to talk to
-      BCC @TalkToTile    ; examine C flag to see if there was an object to talk to.  If there was....
-
-    LDA #0
-    STA tileprop        ; clear tile properties (prevent unwanted teleport/battle)
-    FARCALL TalkToObject    ; then talk to this object.
-    JUMP @DialogueBox
-
-
-    @TalkToTile:          ; if there was no object to talk to....
-        FARCALL TalkToSMTile    ; ... talk to the SM tile instead (open TC or just get misc text)
-        LDX #0              ; clear tile properties (prevent unwanted teleport/battle)
-        STX tileprop
-
-     ;; whether we talked to an object or the SM tile, here, A contains the dialogue
-     ;; text ID we need to draw
-
-    @DialogueBox:
-    FARCALL DrawDialogueBox     ; draw the dialogue box and containing text
-    CALL WaitForVBlank       ; wait a frame
-    CALL SetSMScroll
-    LDA #$1E
-    STA PPU_MASK
-    FARCALL MusicPlay
-    FARCALL ShowDialogueBox       ; actually show the dialogue box.  This routine exits once the box closes
-    LDA dlgflg_reentermap     ; check the reenter map flag
-    BEQ :+
-        JUMP ReenterStandardMap  ; ... and reenter map if set
-    :     
-    LDA #0            ; then clear A, Start and Select button catchers
-    STA joy_a
-    STA joy_start
-    STA joy_select
-    RTS               ; and exit
-
-  ;; if A button wasn't pressed, it jumps here to check for Start
-
-    @CheckStart:
-
-    LDA joy_start      ; check to see if Start pressed
-    BEQ @CheckSelect   ; if not... jump ahead to check select.  Otherwise....
-
-    ;;
-    ;; Start button pressed
-    ;;
-
-      LDA #0
-      STA joy_start            ; clear start button catcher
-
-      FARCALL GetSMTilePropNow     ; get the properties of the tile we're standing on (for LUTE/ROD purposes)
-      FARCALL EnterMainMenu        ; enter the main menu
-      JUMP ReenterStandardMap   ; then reenter the map
-
-  ;; if neither A nor Start pressed... jumps here to check select
-
-    @CheckSelect:
-
-    LDA joy_select       ; is select pressed?
-    BEQ @CheckDirection  ; if not... jump ahead.  Otherwise...
-
- ;;
- ;; Select button pressed
- ;;
-
-    FARCALL GetSMTilePropNow     ; do all the same stuff as when start is pressed.
-    LDA #0                   ;   though I don't know why you'd need to get the now tile properties...
-    STA joy_select
-    FARCALL EnterLineupMenu      ; but since they pressed select -- enter lineup menu, not main menu
-    JUMP ReenterStandardMap
-
-  ;; A, Start, Select -- none of them pressed.  Now check directional buttons
-
-    @CheckDirection:
-
-    FARCALL UpdateJoy       ; update joy data
-    LDA joy             ; get updated data, and isolate the directional buttons
-    AND #$0F
-    BNE @Move           ; if any buttons down, move in that direction
-  @Exit:                ;  otherwise, just exit
-      RTS
-  @Move:
-      STA facing           ; record directions pressed as our new facing direction
-      FARCALL CanPlayerMoveSM  ; check to see if the player can move that way
-      BCS @Exit            ; if not... exit
-      FARJUMP StartMapMove     ; otherwise... start them moving that direction, and exit

@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import PrepRowCol, WaitForVBlank, DrawMapRowCol, SetSMScroll, MusicPlay, PrepAttributePos, DrawMapAttributes
+.import WaitForVBlank, SetSMScroll, MusicPlay, PrepAttributePos
 .import DrawDialogueString, UpdateJoy, DialogueBox_Sfx, CoordToNTAddr, WaitScanline, Dialogue_CoverSprites_VBl
 
 .export DrawDialogueBox, PrepDialogueBoxRow, ShowDialogueBox, EraseBox, DialogueBox_Frame
@@ -200,10 +200,8 @@ DrawDialogueBox:
     EOR #$10           ; toggle the NT bit so it draws "offscreen"
     STA mapdraw_ntx    ; and that is our target NT address
 
-    FARCALL PrepRowCol             ; prep map row/column graphics
     CALL PrepDialogueBoxRow     ; prep dialogue box graphics on top of that
     CALL WaitForVBlank        ; then wait for VBl
-    FARCALL DrawMapRowCol          ; and draw what we just prepped
     CALL SetSMScroll            ; then set the scroll (so the next frame is drawn correctly)
     FARCALL MusicPlay                ; and update the music
     FARCALL PrepAttributePos       ; then prep attribute position data
@@ -213,7 +211,7 @@ DrawDialogueBox:
         CALL PrepDialogueBoxAttr  ; ... then skip over dialogue box attribute prepping (dialogue box isn't visible top row)
     :   
     CALL WaitForVBlank        ; then wait for VBl again
-    FARCALL DrawMapAttributes      ; and draw the attributes for this row
+
     CALL SetSMScroll            ; then set the scroll to keep rendering looking good
     FARCALL MusicPlay   ; and keep the music playing
 

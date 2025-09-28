@@ -240,11 +240,6 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
     RESZP Var80,                            1
     RESZP MassiveImageBuffer,               126
 
-
-
-SECTIONZP "BATTLEZP" ; $80 - $9F
-
-
 SECTION "STACK"
     RES             VideoStack,                   200
 
