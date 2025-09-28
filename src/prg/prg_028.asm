@@ -1887,8 +1887,7 @@ LineupMenu_UpdateJoy:
   @ExitMenu:
     PLA                       ; drop return address (so when we return from here,
     PLA                       ;  we exit the Lineup menu completely)
-    JUMP LineupMenu_Finalize   ; then jump to lineup finalization, and exit (exiting lineup menu)
-
+    RTS
 
   LUJoy_Exit:
     RTS
@@ -2296,21 +2295,6 @@ DrawLineupMenuNames:
     FARCALL Stringify
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  LineupMenu_Finalize  [$9BBD :: 0x39BCD]
-;;
-;;    Called when the player exits the lineup menu.  This finalizes the
-;;  reordering by actually swapping around charater stats to reflect the new
-;;  slots they've been moved to.
-;;
-;;    The rearranging is accomplished by copying all character data to a secondary
-;;  buffer (lutmp_ch_***).  Then filling each slot with the desired character data
-;;  that has been selected for that slot.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LineupMenu_Finalize:
     LDX #0                    ; start X at zero
    @BackupLoop:
       LDA ch_stats, X         ; copy $100 bytes from ch_stats
@@ -2406,13 +2390,13 @@ LineupMenu_Finalize:
      ; Otherwise, if any direction was pressed:
     LDX char_index
     CLC
-    LDA ptygen_class, X       ; Add 1 to the class ID of the current character.
+    ;LDA ptygen_class, X       ; Add 1 to the class ID of the current character.
     ADC #1
     CMP #6
     BCC :+
         LDA #0                  ; wrap 5->0
     : 
-    STA ptygen_class, X
+    ;STA ptygen_class, X
 
     ; Wrap class selection around
     LDX slotIndex
@@ -2778,21 +2762,6 @@ ClassStringPtrHi:
 ClassStringPtrBank:
     .byte TextBank(TEXT_CLASS_NAME_FIGHTER), TextBank(TEXT_CLASS_NAME_THIEF), TextBank(TEXT_CLASS_NAME_BLACK_BELT), TextBank(TEXT_CLASS_NAME_RED_MAGE), TextBank(TEXT_CLASS_NAME_WHITE_MAGE), TextBank(TEXT_CLASS_NAME_BLACK_MAGE)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawCursor  [$9F26 :: 0x39F36]
-;;
-;;    Draws the cursor for the Party Generation screen
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawCursor:
-    LDX char_index          ; use the current index to get the cursor
-    LDA ptygen_curs_x, X    ;  coords from the ptygen buffer.
-    STA spr_x
-    LDA ptygen_curs_y, X
-    STA spr_y
-    FARJUMP DrawCursor               ; draw cursor as a 2x2 sprite, and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

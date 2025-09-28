@@ -6,7 +6,7 @@
 
 .export ResetRAM, SetRandomSeed, GetRandom, ClearZeroPage, DisableAPU
 .export FadeInBatSprPalettes, FadeOutBatSprPalettes, Dialogue_CoverSprites_VBl
-.export PlaySFX_Error, UpdateJoy, PrepAttributePos, Battle_ReadPPUData, WriteAttributesToPPU
+.export PlaySFX_Error, UpdateJoy, PrepAttributePos
 .export WaitVBlank_NoSprites, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 
 ResetRAM:
@@ -658,63 +658,6 @@ PrepAttributePos:
        JUMP @Loop
     @Exit: 
     RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Battle_ReadPPUData  [$F268 :: 0x3F278]
-;;
-;;    Reads a given number of bytes from PPU memory.
-;;
-;;  input:
-;;     btltmp+4,5 = pointer to write data to
-;;     btltmp+6,7 = the PPU address to read from
-;;     btltmp+8   = the number of bytes to read
-;;
-;;  This routine will swap back to the battle_bank prior to exiting
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-Battle_ReadPPUData:
-    CALL WaitForVBlank         ; Wait for VBlank
-    CALL SetBattlePPUAddr        ; Set given PPU Address to read from
-    LDA PPU_DATA                   ; Throw away buffered byte
-    LDY #$00
-    LDX btltmp+8                ; btltmp+8 is number of bytes to read
-    @Loop:
-        LDA PPU_DATA
-        STA (btltmp+4), Y           ; write to (btltmp+4)
-        INY
-        DEX
-        BNE @Loop
-      
-    RTS
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  WriteAttributesToPPU [$A702 :: 0x2E712]
-;;
-;;  Reads the data from btltmp_attr
-;;  Write to the attribute table in PPU memory
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteAttributesToPPU:
-    ;LDA #<btltmp_attr       ; set source pointer
-    STA btltmp+4
-    ;LDA #>btltmp_attr
-    STA btltmp+5
-    
-    LDA #<$23C0             ; set dest address
-    STA btltmp+6
-    LDA #>$23C0
-    STA btltmp+7
-    
-    LDA #$40                ; copy 4 tiles
-    STA btltmp+8
-    
-    RTS
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

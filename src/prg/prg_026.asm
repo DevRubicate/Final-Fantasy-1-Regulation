@@ -445,13 +445,6 @@ DrawFancyTheEndGraphic:
     ;
     LDX #$00
     LDA #$00
-    : STA theend_drawbuf       , X
-      STA theend_drawbuf + $100, X
-      STA theend_drawbuf + $200, X
-      STA theend_drawbuf + $300, X
-      STA theend_drawbuf + $400, X
-      STA theend_drawbuf + $500, X
-      STA theend_drawbuf + $600, X
       INX
       BNE :-
       

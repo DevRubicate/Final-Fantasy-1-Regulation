@@ -5,7 +5,7 @@
 .import MenuCondStall, CoordToNTAddr
 .import WaitVBlank_NoSprites, WaitForVBlank, MusicPlay, SetOWScroll_PPUOn, SetSMScroll
 
-.export DrawBox, GetCharacterNamePtr
+.export DrawBox
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -421,17 +421,7 @@ PalCyc_DrawPalette:
 
     RTS                ; and exit
 
-GetCharacterNamePtr:
-    ; otherwise, it's a player
-    AND #$03                    ; mask out the low bits to get the player ID
-    ASL A                       ; @2 for pointer table
-    TAX
-    LDA lut_CharacterNamePtr, X ; run it though a lut to get the pointer to the player's name
-    STA btldraw_subsrc
-    INX
-    LDA lut_CharacterNamePtr, X
-    STA btldraw_subsrc+1
-    RTS
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

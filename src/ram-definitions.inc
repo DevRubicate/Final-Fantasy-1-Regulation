@@ -243,59 +243,7 @@ SECTIONZP "ZEROPAGE" ; $00 - $FF
 
 
 SECTIONZP "BATTLEZP" ; $80 - $9F
-    GAP                                     $80
-    RESZP btl_varA,                         0 ; $80
-    RESZP btl_ib_charstat_ptr,              0 ; 1 bytes      ; $80
-    RESZP btlptr,                           0 ; 2 bytes      ; $80
-    GAP                                     1
-    RESZP btl_varB,                         0 ; $81
-    GAP                                     1
-    RESZP btl_varC,                         0 ; $82
-    RESZP btl_ob_charstat_ptr,              0 ; 2 bytes      ; $82
-    GAP                                     1
-    RESZP btl_varD,                         0 ; $83
-    GAP                                     1
-    RESZP btl_varE,                         0 ; $84
-    GAP                                     1
-    RESZP btl_varF,                         0 ; $85
-    GAP                                     1
-    RESZP btl_varG,                         0 ; $86
-    GAP                                     1
-    RESZP btl_varH,                         0 ; $87
-    GAP                                     1
-    RESZP btl_varI,                         0 ; $88
-    RESZP btl_jumptableptr,                 0 ; 2 bytes      ; $88
-    RESZP btl_tmpvar1,                      1 ; 1 bytes      ; $88
-    RESZP btl_varJ,                         0 ; $89
-    RESZP btl_tmpvar2,                      1 ; 1 bytes      ; $89
-    RESZP btl_varK,                         0 ; $8A
-    RESZP btl_tmpvar3,                      1 ; 1 bytes      ; $8A
-    RESZP btl_tmpvar4,                      1 ; 1 bytes      ; $8B
-    RESZP btldraw_blockptrstart,            2 ; 2 bytes      ; $8C
-    RESZP btldraw_blockptrend,              2 ; 2 bytes      ; $8E
-    RESZP btl_entityptr_ibram,              0 ;      ; $90 ; 16 bytes?
-    RESZP btldraw_src,                      0 ; 2 bytes      ; $90   ; source data
-    RESZP btlsfx_frontseat,                 0 ; 1 bytes      ; $90   ; where battle sfx data is stored in zero page
-    RESZP btltmp,                           2 ; 16 bytes     ; $90  ; 16 bytes ?
-    RESZP btl_entityptr_obrom,              0 ; 1 bytes      ; $92
-    RESZP btldraw_dst,                      2 ; 2 bytes      ; $92   ; destination pointer
-    RESZP temp_94,                          0                ; $94
-    RESZP btlsfx_framectr,                  0 ; 1 bytes      ; $94   ; The total frame counter for the entire sound effect
-    RESZP btldraw_subsrc,                   2 ; 2 bytes      ; $94   ; source pointer of substring
-    GAP                                     2
-    RESZP btlsfxsq2_len,                    0 ; 1 bytes      ; $98
-    RESZP btl_magdataptr,                   1 ; 2 bytes      ; $98
-    RESZP btlsfxnse_len,                    1 ; 1 bytes      ; $99
-    RESZP tmp_9a,                           0 ;              ; $9A
-    RESZP btltempvalue,                     0 ;              ; $9A
-    RESZP btlsfxsq2_framectr,               1 ; 1 bytes      ; $9A
-    RESZP tmp_9b,                           0 ;              ; $9B
-    RESZP btlsfxnse_framectr,               1 ; 1 bytes      ; $9B
-    RESZP btlsfxsq2_ptr,                    2 ; 2 bytes      ; $9C
-    RESZP btltemppointer,                   0 ;              ; $9E ; not actually a pointer
-    RESZP battleturn_enai,                  0 ; 0 bytes      ; $9E ; local - pointer to enemy's AI data
-    RESZP btlsfxnse_ptr,                    1 ; 2 bytes      ; $9E
-    RESZP btldraw_max,                      1 ; 1 bytes      ; $9F   ; maximum characters to draw
+
 
 SECTION "STACK"
     RES             VideoStack,                   200
@@ -324,7 +272,6 @@ SECTION "BSS" ; $0300 - $0800
     RES             shop_charindex,                     1 ; 1 bytes         ; $030A
     RES             shop_spell,                         1 ; 1 bytes         ; $030B
     RES             shop_curitem,                       1 ; 1 bytes         ; $030C
-    GAP                                                 1 ; 1 bytes         ; $030D
     RES             shop_curprice,                      2 ; 2 bytes         ; $030E
     RES             decompressCommandBitWidth,          1
     RES             decompressCommandRoutinesLo,        16
@@ -332,7 +279,6 @@ SECTION "BSS" ; $0300 - $0800
     RES             cur_pal,                            32  ; 32 bytes      ; $03C0  ; 32 bytes
     RES             inroom_pal,                         16  ; 16 bytes      ; $03E0  ; cur_pal+$20 ; 16 bytes
     RES             tmp_pal,                            16  ; 16 bytes      ; $03F0  ; 16 bytes
-    GAP                                                 896
     RES             draw_buf_ul,                        16  ; $0780
     RES             draw_buf_ur,                        16  ; $0790
     RES             draw_buf_dl,                        16  ; $07A0
@@ -341,28 +287,7 @@ SECTION "BSS" ; $0300 - $0800
     RES             draw_buf_at_hi,                     16  ; $07D0
     RES             draw_buf_at_lo,                     16  ; $07E0
     RES             draw_buf_at_msk,                    16  ; $07F0
-    GAP                                                 152
-
-
-SECTION "PARTYGEN" ; $0300 - $0340
-    RES             ptygen,                             0 ; 64 bytes        ; $0300 ; $40 bytes, shared
-    RES             ptygen_class,                       2 ; $0300
-    RES             ptygen_name,                        4 ; $0302
-    RES             ptygen_name_x,                      1 ; $0306
-    RES             ptygen_name_y,                      1 ; $0307
-    RES             ptygen_class_x,                     1 ; $0308
-    RES             ptygen_class_y,                     1 ; $0309
-    RES             ptygen_spr_x,                       1 ; $030A
-    RES             ptygen_spr_y,                       1 ; $030B
-    RES             ptygen_box_x,                       1 ; $030C
-    RES             ptygen_box_y,                       1 ; $030D
-    RES             ptygen_curs_x,                      1 ; $030E
-    RES             ptygen_curs_y,                      1 ; $030F
-    ; 16 bytes per character, 4 characters
-
-SECTION "TILESET" ; $0400 - $07B0
-    GAP                                                 256
-    RES_PAGE        tileset_data,                       0   ; $0400 - 1024 bytes -- must be on page bound
+    RES             tileset_data,                       0   ; $0400 - 1024 bytes -- must be on page bound
     RES             tileset_prop,                       256 ; $0400 - 2 bytes per tile
     RES             tsa_ul,                             128 ; $0500
     RES             tsa_ur,                             128 ; $0580
@@ -594,10 +519,7 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             hero1InventoryStatus,               10
     RES             hero2InventoryStatus,               10
     RES             hero3InventoryStatus,               10
-
-SECTION "MAPOBJ" ; $6F00 - $6F0E
-    GAP                                                 3840
-    RES_PAGE        mapobj,                             0 ; $6F00   ; $100 bytes -- page
+    RES             mapobj,                             0 ; $6F00   ; $100 bytes -- page
     RES             mapobj_id,                          1 ; $6F00  ; rearranging these is ill advised
     RES             mapobj_flgs,                        1 ; $6F01  ;  because the loader is pretty rigid
     RES             mapobj_physX,                       1 ; $6F02  ;  flags:  $80=inroom $40=don't move
@@ -613,18 +535,6 @@ SECTION "MAPOBJ" ; $6F00 - $6F0E
     RES             mapobj_face,                        1 ; $6F0C
     RES             mapobj_pl,                          1 ; $6F0D   ; bit 7 = talking to player (changes facing), other bits = being shoved by player
     RES             mapobj_tsaptr,                      1 ; $6F0E
-
-SECTION "MAPDATA" ; $7000 - $7FFF
-    GAP                                                 4096
-    RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
-
-
-SECTION "THEEND" ; $6800 - $6F00
-    GAP                                                 2048
-    RES             theend_drawbuf,                     1792 ; $6800    ; $700 bytes!
-
-
-SECTION "EXTRA" ; $5C00 - $5FFF
     RES             scrollX,                        1
     RES             scrollY,                        1
     RES             far_depth,                      1
@@ -642,20 +552,7 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             respondrate,                    1
     RES             NTsoft2000,                     1 ; same as soft2000, but used to track coarse NT scroll
     RES             soft2000,                       1
-    RES             btl_msgdraw_srcptr_bank,        1
-    RES             btlformation,                   1
-    RES             actual_bank,                    1
-    RES             slotIndex,                      1
-    RES             partyGenerationClass,           4
-    RES             vBlankCounter,                  1
-    RES             VideoCursor,                    1
-    RES             VideoStackTally,                1
-    RES             VideoIncrementAddressOffset,    1
-    RES             VideoIncrementCost,             1
-    RES             VideoCost,                      2
-    RES             StackPointerBackup,             1
-    RES             VideoRetroactiveCursor,         1
-    RES             vBlankAnticipated,              1
+
     RES             joy,                            1
     RES             joy_ignore,                     1
     RES             joy_select,                     1
@@ -687,10 +584,35 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             palette5,                       3
     RES             palette6,                       3
     RES             palette7,                       3
+    RES             btl_msgdraw_srcptr_bank,        1
+    RES             btlformation,                   1
+    RES             actual_bank,                    1
+    RES             slotIndex,                      1
+    RES             partyGenerationClass,           4
 
 
-    RES             stringwriterWhitespaceWidth,    1
-    RES             stringwriterLineWidth,          1
+    RES             interactiveMenuXCoordinate,     1
+    RES             interactiveMenuYCoordinate,     1
+    RES             interactiveMenuCursor,          1
+
+    RES             interactiveMenuLength,          1
+    RES             interactiveMenuMode,            1
+    RES             interactiveMenuCursorSelected,  1
+    RES             interactiveMenuListOffset,      1
+    RES             interactiveMenuLoop,            1
+    RES             interactiveMenuOutcome,         1
+    RES             interactiveMenuActiveHero,      1
+
+    RES             gridMenuXPosition,              1
+    RES             gridMenuYPosition,              1
+    RES             gridMenuItemWidth,              1
+    RES             gridMenuItemHeight,             1
+    RES             gridMenuXCursor,                1
+    RES             gridMenuYCursor,                1
+    RES             gridMenuXLength,                1
+    RES             gridMenuYLength,                1
+    RES             gridMenuOutcome,                1
+    
     RES             drawValue,                      1
     ; drawX and drawY are used to determine the position to draw the sprite
     RES             drawX,                          1
@@ -716,6 +638,24 @@ SECTION "EXTRA" ; $5C00 - $5FFF
     RES             drawVars14,                     1
     RES             drawVars15,                     1
     RES             drawVars16,                     1
+
+SECTION "MAPDATA" ; $7000 - $7FFF
+    GAP                                                 4096
+    RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
+
+SECTION "EXTRA" ; $5C00 - $5FFF
+
+    RES             vBlankCounter,                  1
+    RES             VideoCursor,                    1
+    RES             VideoStackTally,                1
+    RES             VideoIncrementAddressOffset,    1
+    RES             VideoIncrementCost,             1
+    RES             VideoCost,                      2
+    RES             StackPointerBackup,             1
+    RES             VideoRetroactiveCursor,         1
+    RES             vBlankAnticipated,              1
+    RES             stringwriterWhitespaceWidth,    1
+    RES             stringwriterLineWidth,          1
     RES             stringifyCursor,                1
     RES             stringifyLength,                1
     RES             stringifyActiveItem,            2
@@ -736,27 +676,6 @@ SECTION "EXTRA" ; $5C00 - $5FFF
 
 
 
-    RES             interactiveMenuXCoordinate,     1
-    RES             interactiveMenuYCoordinate,     1
-    RES             interactiveMenuCursor,          1
-
-    RES             interactiveMenuLength,          1
-    RES             interactiveMenuMode,            1
-    RES             interactiveMenuCursorSelected,  1
-    RES             interactiveMenuListOffset,      1
-    RES             interactiveMenuLoop,            1
-    RES             interactiveMenuOutcome,         1
-    RES             interactiveMenuActiveHero,      1
-
-    RES             gridMenuXPosition,              1
-    RES             gridMenuYPosition,              1
-    RES             gridMenuItemWidth,              1
-    RES             gridMenuItemHeight,             1
-    RES             gridMenuXCursor,                1
-    RES             gridMenuYCursor,                1
-    RES             gridMenuXLength,                1
-    RES             gridMenuYLength,                1
-    RES             gridMenuOutcome,                1
 
     RES             backgroundCHRBank0,             1
     RES             backgroundCHRBank1,             1

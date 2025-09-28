@@ -4,7 +4,7 @@
 
 .import DrawSprite, ClearSprites
 
-.export DrawOBSprite, PtyGen_DrawChars, IsEquipLegal
+.export DrawOBSprite, IsEquipLegal
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -207,63 +207,6 @@ DrawSimple2x3Sprite:
     ADC #6*4           ; increment it by 6 sprites (4 bytes per sprite)
     STA sprindex       ; and write it back (so next sprite drawn is drawn after this one in oam)
     RTS                ;  and exit!
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  PtyGen_DrawChars  [$9F4E :: 0x39F5E]
-;;
-;;    Draws the sprites for all 4 characters on the party gen screen.
-;;  This routine uses DrawSimple2x3Sprite to draw the sprites.
-;;  See that routine for details.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PtyGen_DrawChars:
-    LDX #0         ; Simply call @DrawOne four times, each time
-    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
-    STA spr_x
-    LDA ptygen_spr_y, X
-    STA spr_y
-    LDX #0
-    CALL @DrawOne     ;  having the index of the char to draw in X
-
-    LDX #$10
-    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
-    STA spr_x
-    LDA ptygen_spr_y, X
-    STA spr_y
-    LDX #1
-    CALL @DrawOne
-
-    LDX #$20
-    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
-    STA spr_x
-    LDA ptygen_spr_y, X
-    STA spr_y
-    LDX #2
-    CALL @DrawOne
-
-    LDX #$30
-    LDA ptygen_spr_x, X   ; load desired X,Y coords for the sprite
-    STA spr_x
-    LDA ptygen_spr_y, X
-    STA spr_y
-    LDX #3
-  @DrawOne:
-
-    LDA partyGenerationClass, X   ; get the class
-    TAX
-    LDA lutClassBatSprPalette, X   ; get the palette that class uses
-    STA tmp+1             ; write the palette to tmp+1  (used by DrawSimple2x3Sprite)
-    TXA               ; multiply the class index by $20
-    ASL A             ;  this gets the tiles in the pattern tables which have this
-    ASL A             ;  sprite's CHR ($20 tiles is 2 rows, there are 2 rows of tiles
-    ASL A             ;  per class)
-    ASL A
-    ASL A
-    STA tmp           ; store it in tmp for DrawSimple2x3Sprite
-    JUMP DrawSimple2x3Sprite
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

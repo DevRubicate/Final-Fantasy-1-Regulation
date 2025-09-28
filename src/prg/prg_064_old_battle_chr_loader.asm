@@ -4,8 +4,8 @@
 
 .import Impl_FARPPUCOPY, LUT_Battle_Backdrop_0, LUT_Battle_Backdrop_1, LoadMenuCHR, LoadBatSprCHRPalettes
 
-.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattlePalette, DrawBattleBackdropRow, LoadBattleAttributeTable
-.export LoadBattleSpritePalettes, LoadBattleFormationInto_btl_formdata
+.export LoadBattleBackdropCHR, LoadBattleFormationCHR, LoadBattleBGPalettes, LoadBattleCHRPal, LoadBattleAttributeTable
+.export LoadBattleSpritePalettes
 
 LUT_BtlBackdrops:
     .byte $00, $09, $09, $04, $04, $04, $00, $03, $00, $ff, $ff, $ff, $ff, $ff, $08, $ff
@@ -482,118 +482,3 @@ LoadBackdropPalette:
     STA cur_pal+3
     RTS
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Battle Palette  [$F471 :: 0x3F481]
-;;
-;;    Loads a single (4-color) battle palette into 'btl_palettes' with the given
-;;  offset.
-;;
-;;  IN:  A = ID of battle palette (as stored in the battle formation data)
-;;       Y = offset from which to index btl_palettes
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadBattlePalette:
-    ASL A             ; multiply the palette ID by 4 (4 colors per palette)
-    ASL A
-    TAX               ; throw in X
-    LDA #4
-    STA btltmp+10     ; set the loop down counter
-
-  @Loop:
-      LDA LUT_BattlePalettes, X   ; get the color from the ROM
-      ;STA btl_palettes, Y         ; write it to our output buffer
-      INX             ; inc our indeces
-      INY
-      DEC btltmp+10   ; dec our loop counter
-      BNE @Loop       ; and loop until it expires (4 iterations)
-
-    RTS               ; then exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Draw Battle Backdrop Row  [$F385 :: 0x3F395]
-;;
-;;    Draws one row of NT data for the battle backdrop.  Does not
-;;  do any attribute updates.
-;;
-;;  IN:  A = low byte of target PPU Addr
-;;       Y = tile additive (added to each drawn tile)
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DrawBattleBackdropRow:
-    LDX #$20
-    STX PPU_ADDR   ; write X as high byte
-    STA PPU_ADDR   ; A as low byte
-
-    STY btltmp+10        ; record tile additive for future use
-    LDY #14
-    STY btltmp+11        ; do 14 columns in the first section of the backdrop (btltmp+11 is column count)
-    CALL @Section         ; draw first section
-
-    LDA PPU_DATA            ; inc the PPU address by 2 to skip over those two bars of
-    LDA PPU_DATA            ;  the box boundaries.
-
-    LDY #6               ; do 6 columns for the second section
-    STY btltmp+11
-    NOJUMP @Section         ; draw second section and exit
-
-
-  @Section:
-    LDX #0
-   @Loop:
-      LDA @lut_BackdropLayout, X   ; get the tile to draw in this column
-      CLC
-      ADC btltmp+10                ; add to that our additive (to draw the right row)
-      STA PPU_DATA                    ; draw the tile
-      INX                          ; inc our loop counter
-      CPX btltmp+11                ; and loop until we've drawn the desired number of columns
-      BNE @Loop
-    RTS
-
-  ;; the layout of the battle backdrop -- the way the columns are arranged
-
-    @lut_BackdropLayout:
-  .byte 1,2,3,4,3,4,1,2,1,2,3,4,3,4
-
-LoadBattleFormationInto_btl_formdata:
-    LDA btlformation        ; get the formation ID
-    AND #$7F                  ; remove the 'Formation B' bit to get the raw formation ID
-    LDX #0                    ;  mulitply the formation ID by 16 (shift by 4) and rotate
-    STX btltmp+11             ;  bits into btltmp+11.  The end result is that (btltmp+10) will
-    ASL A                     ;  be formation*16
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    ASL A
-    ROL btltmp+11
-    STA btltmp+10
-
-    CLC                       ; add to that the high byte of the formation data pointer
-    LDA btltmp+11             ;  and (btltmp+10) now points to our formation data.
-    ADC #>LUT_BattleFormations
-    STA btltmp+11
-
-    LDA btltmp+10
-    CLC
-    ADC #<LUT_BattleFormations
-    STA btltmp+10
-
-    LDA btltmp+11
-    ADC #0
-    STA btltmp+11
-
-
-    LDX #$10                  ; $10 bytes of formation data (down counter)
-    LDY #0                    ; index  (seems pointless to use both X and Y here -- could've just used Y)
-    @FormationLoop:
-        LDA (btltmp+10), Y      ; copy a byte from the LUT in ROM
-        ;STA btl_formdata, Y     ;  to our formation data buffer in RAM
-        INY                     ; inc index
-        DEX                     ; dec loop counter
-        BNE @FormationLoop      ; and loop until all $10 bytes copied
-    RTS
