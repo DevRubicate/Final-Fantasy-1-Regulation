@@ -2,7 +2,7 @@
 
 .include "src/global-import.inc"
 
-.import WaitScanline, DrawMapPalette, WaitForVBlank, SetOWScroll, SetSMScroll, ClearSprites
+.import WaitScanline, DrawMapPalette, WaitForVBlank, SetOWScroll, ClearSprites
 
 .export ScreenWipe_Open, ScreenWipe_Close
 
@@ -148,8 +148,6 @@ ScreenWipeFrame_Prep:
     BCS :+
       FARJUMP SetOWScroll   ; and set scroll appropriately
     :   
-    JUMP SetSMScroll     ;  then exit
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -181,7 +179,6 @@ ScreenWipeFrame_Prep:
 ;;  - OnNMI
 ;;  - DrawMapPalette
 ;;  - SetOWScroll
-;;  - SetSMScroll
 ;;
 ;;    then you could potentially mess up the timing for this routine, causing the wipe to occur
 ;;  offcenter.  If that happens, you can tweak the first '@InitialWait' loop in this routine
@@ -200,7 +197,7 @@ ScreenWipeFrame:
       DEX                    ;  the wait.
       BNE @InitialWait       ; Ultimately, at the end of this loop, you should be about ~1156 cycles
     PAGECHECK @InitialWait   ;  into VBlank (a little under 11 scanlines until onscreen rendering starts)
-                             ; If you edit routines SetOWScroll, SetSMScroll, or DrawMapPalette and
+                             ; If you edit routines SetOWScroll, or DrawMapPalette and
                              ;  it messes with the screen wipe effect, you can modify this loop
                              ;  to attempt to realign the timing.
 

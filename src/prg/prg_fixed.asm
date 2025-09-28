@@ -19,21 +19,19 @@
 .import ResetRAM, SetRandomSeed, GetRandom, LoadBatSprCHRPalettes_NewGame
 .import OpenTreasureChest, AddGPToParty, LoadPrice, LoadBattleBackdropPalette
 .import LoadMenuBGCHRAndPalettes, LoadMenuCHR, LoadBackdropPalette, LoadShopBGCHRPalettes, LoadTilesetAndMenuCHR
-.import GameStart, LoadOWTilesetData, GetBattleFormation, LoadMenuCHRPal, LoadBatSprCHRPalettes
+.import GameStart, LoadMenuCHRPal, LoadBatSprCHRPalettes
 .import OverworldMovement, SetOWScroll, SetOWScroll_PPUOn, MapPoisonDamage, StandardMapMovement, CanPlayerMoveSM
-.import UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff, GetOWTile, LandAirship
-.import ProcessOWInput, GetSMTileProperties, GetSMTilePropNow, TalkToSMTile, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
+.import UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
+.import ProcessOWInput, PlaySFX_Error, PrepDialogueBoxRow, SeekDialogStringPtr, GetBattleMessagePtr
 .import DrawBattleString_ControlCode, SetPPUAddrToDest_Bank, CoordToNTAddr_Bank
 .import Video_Start, ClearVideoStack, ClearSprites
 
 ; prg_10_overworld_object
-.import MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
+.import MapObjectMove, LoadMapObjects, DrawMapObjectsNoUpdate
 ; prg_1E_util
 .import DisableAPU, Dialogue_CoverSprites_VBl, UpdateJoy, PrepAttributePos
 ; prg_18_screen_wipe
 .import ScreenWipe_Open, ScreenWipe_Close
-; prg_16_overworld_tileset
-.import LoadSMTilesetData
 ; prg_19_menu
 .import MenuCondStall
 ; prg_1A_string
@@ -59,7 +57,7 @@
 ; prg_24_sound_util
 .import PlayDoorSFX, DialogueBox_Sfx, VehicleSFX
 ; prg_25_standard_map
-.import PrepStandardMap, EnterStandardMap, ReenterStandardMap, LoadNormalTeleportData, LoadExitTeleportData
+.import LoadNormalTeleportData, LoadExitTeleportData
 ; prg_26_map
 .import BattleTransition
 ; prg_27_overworld_map
@@ -74,22 +72,19 @@
 .import DrawBox
 ; prg_2B_dialog_util
 .import ShowDialogueBox, EraseBox
-; prg_2C_dialog_string
-.import DrawDialogueString
-
 .import BankTest
 
 .export DrawPalette
 .export WaitForVBlank
 .export Impl_FARCALL, Impl_NAKEDJUMP, Impl_FARPPUCOPY
 .export CHRLoadToA
-.export WaitScanline, SetSMScroll
+.export WaitScanline
 .export Copy256, CHRLoad, CHRLoad_Cont
 .export CoordToNTAddr
 .export DrawMapPalette
 .export SetPPUAddr_XA, lut_EnemyRosterStrings
 .export Battle_DrawMessageRow_VBlank
-.export LoadOWMapRow, LoadStandardMap, SetPPUAddrToDest
+.export SetPPUAddrToDest
 .export Battle_DrawMessageRow
 .export lua_BattleCommandBoxInfo_txt0, lua_BattleCommandBoxInfo_txt1, lua_BattleCommandBoxInfo_txt2, lua_BattleCommandBoxInfo_txt3, lua_BattleCommandBoxInfo_txt4
 .export DrawString_SpaceRun
@@ -136,221 +131,6 @@ WaitScanline:
     LDA #0           ; +2
     LDA tmp+2        ; +3   LDA -- not STA.  It's just burning cycles, not changing tmp+2
     RTS              ; +6
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Set SM Scroll  [$CCA1 :: 0x3CCB1]
-;;
-;;     Sets the scroll for the standard maps.
-;;
-;;    Changes to SetSMScroll can impact the timing of some raster effects.
-;;  See ScreenWipeFrame for details.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetSMScroll:
-    LDA NTsoft2000      ; get the NT scroll bits
-    STA soft2000        ; and record them in both soft2000
-    STA PPU_CTRL           ; and the actual PPU_CTRL
-
-    LDA sm_scroll_x     ; get the standard map scroll position
-    ASL A
-    ASL A
-    ASL A
-    ASL A               ; *16 (tiles are 16 pixels wide)
-    ORA move_ctr_x      ; OR with move counter (effectively makes the move counter the fine scroll)
-    STA PPU_SCROLL           ; write this as our X scroll
-
-    LDA scroll_y        ; get scroll_y
-    ASL A
-    ASL A
-    ASL A
-    ASL A               ; *16 (tiles are 16 pixels tall)
-    ORA move_ctr_y      ; OR with move counter
-    STA PPU_SCROLL           ; and set as Y scroll
-
-    RTS                 ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load Standard Map   [$D126 :: 0x3D136]
-;;
-;;  Called to load the standard 64x64 tile maps (towns, dungeons, etc.. anything that isn't overworld)
-;;
-;;  TMP:  tmp to tmp+5 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadStandardMap:
-    LDA #BANK_STANDARDMAPS
-    CALL SwapPRG     ; swap to bank containing start of standard maps
-    LDA cur_map       ; get current map ID
-    ASL A             ; double it, and throw it in X (to get index for pointer table)
-    TAX
-    LDA lut_SMPtrTbl, X   ; get low byte of pointer
-    STA tmp               ; put in tmp (low byte of our source pointer)
-    LDA lut_SMPtrTbl+1, X ; get high byte of pointer
-    TAY                   ; copy to Y (temporary hold)
-    AND #$3F          ; convert pointer to useable CPU address (bank will be loaded into $8000-FFFF)
-    ORA #$80          ;   AND with #$3F and ORA with #$80 will determine where in the bank the map will start
-    STA tmp+1         ; put converted high byte to our pointer.  (tmp) is now the pointer to the start of the map
-                      ;   provided the proper bank is swapped in
-    TYA               ; restore original high byte of pointer
-    ROL A
-    ROL A                  ; right shift it by 6 (high 2 bytes become low 2 bytes).
-    ROL A                  ;    These ROLs are a shorter way to do it than LSRs.  Effectively dividing the pointer by PAPU_CTL1
-    AND #$03               ; mask out low 2 bits (gets bank number for start of this map)
-    ORA #BANK_STANDARDMAPS ; Add standard map bank (use ORA to avoid unwanted carry from above ROLs)
-    STA tmp+5              ; put bank number in temp ram for future reference
-    CALL SwapPRG          ; swap to desired bank
-    LDA #<mapdata
-    STA tmp+2
-    LDA #>mapdata     ; set destination pointer to point to mapdata (start of decompressed map data in RAM).
-    STA tmp+3         ; (tmp+2) is now the dest pointer, (tmp) is now the source pointer
-    JUMP DecompressMap ; start decompressing the map
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Map routines' Semi-local RTS   [$D156 :: 0x3D166]
-;;
-;;   It is branched/jumped to by map loading routines
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-Map_RTS:
-    RTS
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Load World Map Row  [$D157 :: 0x3D167]
-;;
-;;  Called to load a single row of an overworld map.  Since only so many can be in RAM at once
-;;    a new row needs to be loaded every time the player moves up or down on the overworld map.
-;;
-;;  IN:   mapflags  = indicates whether or not we're on the overworld map
-;;        mapdraw_y = indicates which row needs to be loaded
-;;
-;;  TMP:  tmp to tmp+7 used
-;;
-;;  NOTES:  overworld map cannot cross bank boundary.  Entire map and all its pointers must all fit on one bank
-;;     (which shouldn't be a problem).
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LoadOWMapRow:
-    LDA mapflags     ; get StandardMap flag (to test to see if we're really in the overworld or not)
-    LSR A            ; shift flag into C
-    BCS Map_RTS      ; if flag is set (in standard map), we're not in the overworld, so don't do anything -- just exit
-
-    LDA #BANK_OWMAP  ;  swap to bank contianing overworld map
-    CALL SwapPRG
-
-    LDA #>lut_OWPtrTbl ;  set (tmp+6) to the start of the pointers for the rows of the OW map.
-    STA tmp+7          ;   we will then index this pointer table to get the pointer for the start of the row
-    LDA #<lut_OWPtrTbl ;  Need to use a pointer because there are 256 rows, which means 512 bytes for indexing
-    STA tmp+6          ;    so normal indexing won't work -- have to use indirect mode
-
-    LDA mapdraw_y    ;  Load the row we need to load
-    TAX              ;  stuff it in X (temporary)
-    ASL A            ;  double it (2 bytes per pointer)
-    BCC :+           ;  if there was carry...
-      INC tmp+7      ;     inc the high byte of our temp pointer
-    :   
-    TAY              ;  put low byte in Y for indexing
-    LDA (tmp+6), Y   ;  load low byte of row pointer
-    STA tmp          ;  put it in tmp
-    INY              ;  inc our index
-    LDA (tmp+6), Y   ;  load high byte, and put it in tmp+!
-    STA tmp+1        ;  (tmp) is now our source pointer for the row
-
-    TXA              ;  get our row number (previously stuffed in X)
-    AND #$0F         ;  mask out the low 4 bits
-    ORA #>mapdata    ;  and ORA with high byte of mapdata destination
-    STA tmp+3        ;  use this as high byte of dest pointer (to receive decompressed map)
-    LDA #<mapdata    ;   the row will be decompressed to $7x00-$7xFF
-    STA tmp+2        ;   where 'x' is the low 4 bits of the row number
-                     ;  (tmp+2) is now our dest pointer for the row
-    NOJUMP DecompressMap
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  DecompressMap
-;;
-;;   Decompressed a map from the given source buffer, and puts it in the given dest buffer
-;;
-;;  IN:  (tmp)   = pointer to source buffer (containing compressed map -- it's assumed it's between $8000-BFFF)
-;;       (tmp+2) = pointer to dest buffer (to receive decompressed map.  typically $7xxx)
-;;
-;;  TMP: tmp to tmp+5 used
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DecompressMap:
-    LDY #0          ;  zero Y, our index
-    LDA (tmp), Y    ;  read a byte from source
-    BPL @SingleTile ;  if high byte clear (not a run), jump ahead to place a single tile
-    CMP #$FF        ;  otherwise check for $FF (termination code)
-    BEQ Map_RTS     ;  if == $FF, branch to exit
-
-    ; code reaches here if loaded source byte was $80-FE  (need a run of this tile)
-    AND #$7F        ;  take low 7 bits (tile to run)
-    STA tmp+4       ;  put tile in temp ram
-    INC tmp         ;  inc low byte of src pointer (need to leave Y=0)
-    BNE @TileRun    ;  if it didn't wrap, jump ahead to TileRun sublabel
-
-      INC tmp+1     ;    low byte of src pointer wrapped, so inc high byte
-      BIT tmp+1     ;    check to see if high byte went over $BF (crossed bank boundary)
-      BVC @TileRun  ;    if it didn't, proceed to TileRun
-      CALL @NextBank ;    otherwise, we need to swap in the next bank, first
-
-  @TileRun:
-    LDA (tmp), Y    ;   get next src byte (length of run)
-    TAX             ;   put length of run in X
-    LDA tmp+4       ;   get tile ID
-  @RunLoop:
-      STA (tmp+2), Y ;   write tile ID to dest buffer
-      INY            ;   INY to increment our dest index
-      BEQ @Full256   ;   if Y wrapped... this run was a full 256 tiles long (maximum).  Jump ahead
-      DEX            ;   decrement X (our run length)
-      BNE @RunLoop   ;   if it isn't zero yet, we jump back to the loop
-
-      TYA            ;   add Y to the low byte of our dest pointer
-      CLC
-      ADC tmp+2
-      STA tmp+2
-      BCC :+              ;   if adding Y caused a carry, we'll need to inc the high byte
-    @Full256:
-        INC tmp+3         ;   inc high byte of dest pointer
- :    INC tmp             ;   inc low byte of src pointer
-      BNE DecompressMap   ;   if it didn't wrap, jump back to main map loading loop
-      JUMP @IncSrcHigh     ;   otherwise (did wrap), need to increment the high byte of the source pointer
-
-  @SingleTile:
-    STA (tmp+2), Y       ;  write tile to dest buffer
-    INC tmp+2            ;  increment low byte of dest pointer
-    BNE :+               ;  if it wrapped...
-      INC tmp+3          ;     inc high byte of dest pointer
- :  INC tmp              ;  inc low byte of src pointer
-    BNE DecompressMap    ;  if no wrapping, just continue with map decompression.  Otherwise...
-
-  @IncSrcHigh:
-    INC tmp+1            ;  increment high byte of source pointer
-    BIT tmp+1            ;  check to see if we've reached end of PRG bank (BIT will set V if the value is >= $C0)
-    BVC DecompressMap    ;  if we haven't, just continue with map decompression
-    CALL @NextBank        ;  otherwise swap in the next bank
-    JUMP DecompressMap    ;  and continue decompression
-
-    ;; NextBank local subroutine
-    ;;  called via CALL when a map crosses a bank boundary (so a new bank needs to be swapped in)
-    @NextBank:
-    LDA #>$8000   ; reset high byte of source pointer to start of the bank:  $8000
-    STA tmp+1
-    LDA tmp+5     ; get original bank number
-    CLC
-    ADC #$01      ; increment it by 1
-    JUMP SwapPRG ; swap that new bank in and exit
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

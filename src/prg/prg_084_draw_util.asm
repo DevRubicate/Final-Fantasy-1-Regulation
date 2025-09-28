@@ -3,7 +3,7 @@
 .include "src/global-import.inc"
 
 .import MenuCondStall, CoordToNTAddr
-.import WaitVBlank_NoSprites, WaitForVBlank, MusicPlay, SetOWScroll_PPUOn, SetSMScroll
+.import WaitVBlank_NoSprites, WaitForVBlank, MusicPlay, SetOWScroll_PPUOn
 
 .export DrawBox
 
@@ -232,7 +232,6 @@ PalCyc_SetScroll:
     RTS                    ; exit
 
   @Do_SM:
-    CALL SetSMScroll      ; set standard map scroll
     LDA #$0A
     STA PPU_MASK            ; disable sprites
     RTS                  ; exit

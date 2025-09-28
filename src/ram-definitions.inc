@@ -282,19 +282,48 @@ SECTION "BSS" ; $0300 - $0800
     RES             draw_buf_at_hi,                     16  ; $07D0
     RES             draw_buf_at_lo,                     16  ; $07E0
     RES             draw_buf_at_msk,                    16  ; $07F0
-    RES             tileset_data,                       0   ; $0400 - 1024 bytes -- must be on page bound
-    RES             tileset_prop,                       256 ; $0400 - 2 bytes per tile
-    RES             tsa_ul,                             128 ; $0500
-    RES             tsa_ur,                             128 ; $0580
-    RES             tsa_dl,                             128 ; $0600
-    RES             tsa_dr,                             128 ; $0680
-    RES             tsa_attr,                           128 ; $0700
-    RES             load_map_pal,                       48  ; $0780 (shared with draw_buf -- hence only for loading)
 
-SECTION "MINIMAP" ; $0500 - $0800
-    RES_PAGE        loaded_tiles_lo,                    256
-    RES_PAGE        loaded_tiles_hi,                    256
+    RES             vBlankCounter,                  1
+    RES             VideoCursor,                    1
+    RES             VideoStackTally,                1
+    RES             VideoIncrementAddressOffset,    1
+    RES             VideoIncrementCost,             1
+    RES             VideoCost,                      2
+    RES             StackPointerBackup,             1
+    RES             VideoRetroactiveCursor,         1
+    RES             vBlankAnticipated,              1
+    RES             stringwriterWhitespaceWidth,    1
+    RES             stringwriterLineWidth,          1
+    RES             stringifyCursor,                1
+    RES             stringifyLength,                1
+    RES             stringifyActiveItem,            2
+    RES             stringwriterAddressReady,       1
+    RES             stringwriterNewlineOrigin,      1
+    RES             stringwriterSetHero,            1
+    RES             stringwriterTargetSize,         1
+    RES             stringwriterDigitLength,        2
+    RES             stringwriterDigitSize,          2
+    RES             stringwriterBinary,             3
+    RES             stringwriterDecimal,            6
+    RES             stringwriterStackIndex,         1
+    RES             stringwriterStackCursor,        16
+    RES             stringwriterStackLo,            16
+    RES             stringwriterStackHi,            16
+    RES             stringwriterStackBank,          16
+    RES             yxa2decOutput,                  9
 
+    RES             backgroundCHRBank0,             1
+    RES             backgroundCHRBank1,             1
+    RES             backgroundCHRBank2,             1
+    RES             backgroundCHRBank3,             1
+    RES             spriteCHRBank0,                 1
+    RES             spriteCHRBank1,                 1
+    RES             spriteCHRBank2,                 1
+    RES             spriteCHRBank3,                 1
+    RES             spriteCHRBank4,                 1
+    RES             spriteCHRBank5,                 1
+    RES             spriteCHRBank6,                 1
+    RES             spriteCHRBank7,                 1
 
 SECTION "PRG_RAM" ; $6000 - $6D00
     RES             unsram,                             0 ; $6000   ; $400 bytes
@@ -633,57 +662,6 @@ SECTION "PRG_RAM" ; $6000 - $6D00
     RES             drawVars14,                     1
     RES             drawVars15,                     1
     RES             drawVars16,                     1
-
-SECTION "MAPDATA" ; $7000 - $7FFF
-    GAP                                                 4096
-    RES_ADDRESS     mapdata,                            0, $7000 ; $7000   ; must be on $1000 byte bound (ie:  pretty much unmovable)
-
-SECTION "EXTRA" ; $5C00 - $5FFF
-
-    RES             vBlankCounter,                  1
-    RES             VideoCursor,                    1
-    RES             VideoStackTally,                1
-    RES             VideoIncrementAddressOffset,    1
-    RES             VideoIncrementCost,             1
-    RES             VideoCost,                      2
-    RES             StackPointerBackup,             1
-    RES             VideoRetroactiveCursor,         1
-    RES             vBlankAnticipated,              1
-    RES             stringwriterWhitespaceWidth,    1
-    RES             stringwriterLineWidth,          1
-    RES             stringifyCursor,                1
-    RES             stringifyLength,                1
-    RES             stringifyActiveItem,            2
-    RES             stringwriterAddressReady,       1
-    RES             stringwriterNewlineOrigin,      1
-    RES             stringwriterSetHero,            1
-    RES             stringwriterTargetSize,         1
-    RES             stringwriterDigitLength,        2
-    RES             stringwriterDigitSize,          2
-    RES             stringwriterBinary,             3
-    RES             stringwriterDecimal,            6
-    RES             stringwriterStackIndex,         1
-    RES             stringwriterStackCursor,        16
-    RES             stringwriterStackLo,            16
-    RES             stringwriterStackHi,            16
-    RES             stringwriterStackBank,          16
-    RES             yxa2decOutput,                  9
-
-
-
-
-    RES             backgroundCHRBank0,             1
-    RES             backgroundCHRBank1,             1
-    RES             backgroundCHRBank2,             1
-    RES             backgroundCHRBank3,             1
-    RES             spriteCHRBank0,                 1
-    RES             spriteCHRBank1,                 1
-    RES             spriteCHRBank2,                 1
-    RES             spriteCHRBank3,                 1
-    RES             spriteCHRBank4,                 1
-    RES             spriteCHRBank5,                 1
-    RES             spriteCHRBank6,                 1
-    RES             spriteCHRBank7,                 1
 
 SECTION "DECOMPRESS" ; $6000 - $7FFF
     RES imageBuffer,   8192

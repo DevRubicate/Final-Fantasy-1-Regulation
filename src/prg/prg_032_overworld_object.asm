@@ -3,15 +3,15 @@
 .include "src/global-import.inc"
 
 .import WaitForVBlank, MusicPlay_NoSwap, ReadFarByte, ClearSprites, AllocateSprites
-.import BattleStepRNG, MusicPlay, SetSMScroll, RedrawDoor, PlayDoorSFX, GetRandom, AddGPToParty
+.import BattleStepRNG, MusicPlay, PlayDoorSFX, GetRandom, AddGPToParty
 .import EnterMiniGame, LoadBridgeSceneGFX, UpdateJoy, OpenTreasureChest
 
 
 .export DrawMMV_OnFoot, Draw2x2Sprite, DrawMapObject, AnimateAndDrawMapObject, UpdateAndDrawMapObjects, DrawSMSprites, DrawOWSprites, DrawPlayerMapmanSprite, AirshipTransitionFrame
 .export OverworldMovement, SetOWScroll_PPUOn, MapPoisonDamage, SetOWScroll, StandardMapMovement, CanPlayerMoveSM
 .export UnboardBoat_Abs, Board_Fail, BoardCanoe, BoardShip, DockShip, IsOnBridge, IsOnCanal, FlyAirship, AnimateAirshipLanding, AnimateAirshipTakeoff
-.export GetOWTile, LandAirship, GetBattleFormation, ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject, MinigameReward, GetSMTileProperties
-.export TalkToSMTile, GetSMTilePropNow, HideMapObject, DrawCursor, MapObjectMove, AimMapObjDown, LoadMapObjects, DrawMapObjectsNoUpdate
+.export ProcessOWInput, GetSMTargetCoords, CanTalkToMapObject
+.export HideMapObject, DrawCursor, MapObjectMove, LoadMapObjects, DrawMapObjectsNoUpdate
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1289,13 +1289,10 @@ StandardMapMovement:
     LDA #$1E
     STA PPU_MASK             ; turn the PPU on
 
-    FARCALL RedrawDoor        ; redraw an opening/closing door if necessary
-
     LDA PPU_STATUS             ; reset PPU toggle (seems unnecessary, here)
 
     LDA move_speed        ; see if the player is moving
     BNE @noSetScroll       ; if not, just skip ahead and set the scroll
-        CALL SetSMScroll
         RTS
     @noSetScroll:
                           ; the rest of this is only done during movement
@@ -1499,8 +1496,6 @@ CanPlayerMoveSM:
     CALL GetSMTargetCoords      ; get target coords (coords which player is attempting to move to)
     CALL IsObjectInPath         ; see if a map object is in their path
     BCS @CantMove              ; if yes... path is blocked -- can't move
-
-    CALL GetSMTileProperties        ; otherwise, get the properties of the tile they're moving to
     LDA tileprop
     AND #TP_SPEC_MASK | TP_NOMOVE  ; mask out special and NOMOVE bits
     CMP #TP_NOMOVE                 ; if all special bits clear, and NOMOVE bit is set
@@ -1573,7 +1568,6 @@ SMMove_Battle:
       LDA cur_map             ; otherwise, begin a random encounter
       CLC                     ;  get the current map, and add 8*8 to it to get past the
       ADC #8*8                ;  overworld domains.
-      CALL GetBattleFormation  ; Get the battle formation from this map's domain
       LDA #TP_BATTLEMARKER    ; then set the battle marker bit in the tileprop byte, so that a
       STA tileprop            ;   battle is triggered.
 
@@ -2138,101 +2132,6 @@ AnimateAirshipLanding:
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Get Overworld Tile  [$C696 :: 0x3C6A6]
-;;
-;;     Get's the overworld tile and special properties of the tile the
-;;  party is currently standing on
-;;
-;;  OUT:  ow_tile
-;;        tileprop_now
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetOWTile:
-    LDA ow_scroll_x  ; get X scroll
-    CLC
-    ADC #$07         ; add 7 to get party's X coord
-    STA tmp          ; put in tmp (low byte of pointer -- also the desired column)
-
-    LDA ow_scroll_y  ; get Y scroll
-    CLC
-    ADC #$07         ; add 7 for party's Y coord
-    AND #$0F         ; mask to keep in-bounds of the portion of the map that's loaded
-    ORA #>mapdata    ; OR with high byte of mapdata to get the high byte of the pointer
-    STA tmp+1        ; write it to high byte
-
-    LDY #0           ; zero Y for indexing
-    LDA (tmp), Y     ; get the tile ID that the party is on
-    STA ow_tile      ; and record it
-
-    ASL A                ; double it (2 bytes of properties per tile)
-    TAX                  ; and put in X
-    LDA tileset_prop, X  ; get the first property byte from the tileset
-    AND #OWTP_SPEC_MASK  ; mask out the special bits
-    STA tileprop_now     ; and record it
-
-    RTS              ; then exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Land Airship  [$C6B8 :: 0x3C6C8]
-;;
-;;    Attempts to land the airship at current player coords
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LandAirship:
-    LDA #0
-    STA joy_a           ; erase A button catcher
-
-    CALL AnimateAirshipLanding  ; do the animation of the airship landing
-
-    LDA ow_scroll_x     ; get X scroll
-    CLC
-    ADC #$07            ; add 7 to get player's position
-    STA tmp             ; and write to low byte of pointer
-
-    LDA ow_scroll_y     ; get Y scroll
-    CLC
-    ADC #$07            ; add 7 for player position
-    AND #$0F            ; mask low bits to keep within portion of map we have loaded in RAM
-    ORA #>mapdata       ; or with high byte of mapdata pointer
-    STA tmp+1           ; and store as high byte of our pointer
-
-    LDY #0
-    LDA (tmp), Y        ; get the current tile we're landing on
-
-    ASL A                 ; *2, and throw in X
-    TAX
-    LDA tileset_prop, X          ; get that tile's properties
-    AND #$08                     ; see if landing the airship on this tile is legal
-    BEQ :+                       ; if not....
-      CALL AnimateAirshipTakeoff  ; .... animate to have the airship take off again
-      RTS                        ;      and exit
-
-    :   
-    LDA ow_scroll_x     ; otherwise (legal land)
-    CLC
-    ADC #$07            ; get X coord again
-    STA airship_x       ; park the airship there
-
-    LDA ow_scroll_y
-    CLC
-    ADC #$07
-    STA airship_y       ; same with Y coord
-
-    LDA #$01
-    STA vehicle_next    ; change vehicle to make the player on foot
-    STA vehicle
-
-    LDA #$44
-    STA music_track     ; start music track $44 (overworld theme)
-
-    RTS                 ; and exit
-
-GetBattleFormation:
 
     LDX #0
     STX tmp
@@ -2342,9 +2241,6 @@ ProcessOWInput:
 
         LDA vehicle      ; check the current vehicle
         CMP #$08
-        BNE @noLandAirship ; if in the airship, try to land it
-            JUMP LandAirship
-        @noLandAirship:
         CMP #$01
         BNE @noAirship   ; if on foot, try to take off in the airship
             CALL FlyAirship
@@ -2366,13 +2262,6 @@ ProcessOWInput:
     CMP #$C0
     BNE @Exit          ; if not... exit
 
-    LDA #0                  ; otherwise... they activated the minigame!
-    FARCALL LoadBridgeSceneGFX  ; load the NT and most of the CHR for the minigame
-    FARCALL EnterMiniGame    ; and do it!
-    BCC :+               ; if they compelted the minigame successfully...
-      CALL MinigameReward ;  ... give them their reward
-
-    :   
   @Exit:
     RTS
 
@@ -2573,15 +2462,6 @@ GetSMTargetCoords:
 
     RTS               ; done
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Minigame Reward [$C8A4 :: 0x3C8B4]
-;;
-;;    Called when you complete the mini game successfully
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-MinigameReward:
     LDA #100          ; just give the party 100 GP
     STA tmp
     LDA #0
@@ -2591,114 +2471,6 @@ MinigameReward:
 
     FARJUMP AddGPToParty
 
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Get SM Tile PropNow [$CB94 :: 0x3CBA4]
-;;
-;;     Get's the special properties of the tile the party is currently standing on
-;;  for standard maps.
-;;
-;;  OUT:  tileprop_now
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetSMTilePropNow:
-    LDA sm_scroll_y       ; get Y scroll
-    CLC
-    ADC #$07              ; add 7 to get player's Y position
-    AND #$3F              ; wrap around edges of map
-    TAX                   ; put the y coord in X
-
-    LSR A                 ; right shift y coord by 2 (the high byte of *64)
-    LSR A
-    ORA #>mapdata         ; OR to get the high byte of the tile entry in the map
-    STA tmp+1             ; store to source pointer
-
-    TXA                   ; restore y coord
-    ROR A                 ; rotate right by 3 and mask out the high 2 bits.
-    ROR A                 ;  same as a left-shift-by-6 (*64)
-    ROR A
-    AND #$C0
-    STA tmp               ; store as low byte of source pointer (points to start of row)
-
-    LDA sm_scroll_x       ; get X scroll
-    CLC
-    ADC #$07              ; add 7 for player's X position
-    AND #$3F              ; wrap around map boundaries
-    TAY                   ; put in Y for indexing this row of map data
-
-    LDA (tmp), Y          ; get the tile from the map
-    ASL A                 ; *2  (2 bytes of properties per tile)
-    TAX                   ; put index in X
-    LDA tileset_prop, X   ; get the first property byte
-    AND #TP_SPEC_MASK     ; isolate the 'special' bits
-    STA tileprop_now      ; and record them!
-
-    RTS                   ; exit
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  GetSMTileProperties  [$CBBE :: 0x3CBCE]
-;;
-;;    Loads 'tileprop' with the unaltered properties of the tile at
-;;  given coords.  For Standard Maps only
-;;
-;;  IN:  tmp+4 = X coord
-;;       tmp+5 = Y coord
-;;
-;;  OUT: tileprop = 2 bytes of tile properties
-;;
-;;    X remains unchanged by this routine.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetSMTileProperties:
-    LDA tmp+5          ; take the Y coord
-    LSR A              ; right shift by 2 to get the high byte of *64
-    LSR A
-    ORA #>mapdata      ; OR with high byte of map data pointer
-    STA tmp+1          ; this is high byte of pointer to tile in the map
-
-    LDA tmp+5          ; get Y coord again
-    ROR A
-    ROR A
-    ROR A
-    AND #$C0           ; *64 (low byte this time)
-    ORA tmp+4          ; OR with X coord
-    STA tmp            ; this is low byte of pointer
-
-    LDY #0                ; zero Y for indexing
-    LDA (tmp), Y          ; get the tile from the map
-    ASL A                 ;  *2 (2 bytes per tile)
-    TAY                   ; throw in Y for indexing
-
-    LDA tileset_data, Y   ; copy the two bytes of tile properties
-    STA tileprop
-    LDA tileset_data+1, Y
-    STA tileprop+1
-
-    RTS                   ;then exit!
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  TalkToSMTile [$CBE2 :: 0x3CBF2]
-;;
-;;    This routine "talks" to a given SM tile.  It is called when the user presses
-;;  the A button in a standard map and there are no map objects for them to talk to.
-;;  It either opens a chest, returns some special text associated with the tile, or
-;;  shows the notorious "Nothing Here" text.
-;;
-;;  IN:  tmp+4 = X coord of tile to talk to
-;;       tmp+5 = Y coord
-;;
-;;  OUT:     A = ID of dialogue to print to the screen
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-TalkToSMTile:
-    CALL GetSMTileProperties   ; get the properties of the tile at the given coords
 
     LDA tileprop              ; get 1st property byte
     AND #TP_SPEC_MASK         ;  see if its special bits indicate it's a treasure chest
@@ -2845,7 +2617,6 @@ MapObjectMove:
     AND #$3F
     STA tmp+5                ; then write it back
 
-    CALL CanMapObjMove        ; test to see if moving to this new pos is legal
     BCS @CantStep            ; if check failed (step illegal), can't step here, so just exit
 
     LDA tmp+5                ; otherwise step is legal
@@ -2879,7 +2650,6 @@ MapObjectMove:
     AND #$3F
     STA tmp+5
 
-    CALL CanMapObjMove
     BCS @CantStep
 
     LDA tmp+5
@@ -2919,7 +2689,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+4
 
-    CALL CanMapObjMove
+
     BCS @CantStep
 
     LDA tmp+4
@@ -2945,7 +2715,7 @@ MapObjectMove:
     AND #$3F
     STA tmp+4
 
-    CALL CanMapObjMove
+
     BCS @CantStep
 
     LDA tmp+4
@@ -2966,87 +2736,6 @@ MapObjectMove:
     STA mapobj_movectr, X   ; to set the delay until the next movement
     RTS                     ; then exit
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  CanMapObjMove  [$E630 :: 0x3E640]
-;;
-;;    Checks to see if a map object can step on a given tile.  Does not actually
-;;  perform the move, it only checks to see if the move is legal.
-;;
-;;  IN:  tmp+4 = X coord to check (where object is attempting to move to)
-;;       tmp+5 = Y coord to check
-;;           X = index of the object we're checking for
-;;
-;;  OUT:     C = clear if move legal, set if move illegal
-;;
-;;    X remains totally unchanged by this routine.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CanMapObjMove:             ; first thing to check is the map
-    LDA tmp+5              ; get target Y coord
-    LSR A
-    LSR A                  ; right shift 2 to get high byte of *64
-    ORA #>mapdata          ; OR with high byte of map buffer
-    STA tmp+1              ; record this as high byte of pointer
-    LDA tmp+5              ; reload Y coord
-    ROR A
-    ROR A
-    ROR A
-    AND #$C0               ; left shift by 6 and isolate high bits (Y * 64)
-    ORA tmp+4              ; OR with desired X coord to get low byte of pointer
-    STA tmp                ; record it
-    LDY #0                 ; zero Y for indexing
-    LDA (tmp), Y           ; get the tile on the map at the given coords
-
-    ASL A                  ; double the tile number (2 bytes of properties per tile)
-    TAY                    ; throw in Y for indexing
-    LDA tileset_data, Y    ; fetch the first byte of properties for this tile
-    AND #TP_TELE_MASK | TP_NOMOVE  ; see if this tile is a teleport tile, or a tile you can't move on
-    BEQ :+                 ; if either teleport or nomove, NPCs can't walk here, so 
-      SEC                  ;  SEC to indicate failure (can't move)
-      RTS                  ; and exit
-
-    :   
-    LDA sm_player_x        ; now check to see if they're trying to move on top of the player
-    CMP tmp+4
-    BNE :+
-    LDA sm_player_y
-    CMP tmp+5
-    BNE :+
-      SEC                  ; if they are, SEC for failure and exit
-      RTS
-
-    :   
-    LDY #0                 ; now we loop through all other objects to see if we're hitting them
-  @Loop:                   ; X is index of test object, Y is index of loop object
-    STY tmp                ; dump Y to tmp so we can compare to X
-    CPX tmp                ; compare the indeces so that the object doesn't collide with itself
-    BEQ :+
-    LDA mapobj_id, Y       ; then check the loop object to make sure it exists (ID is nonzero)
-    BEQ :+
-    LDA tmp+4              ; then check X coords of each
-    CMP mapobj_physX, Y
-    BNE :+
-    LDA tmp+5              ; and Y coords
-    CMP mapobj_physY, Y
-    BNE :+
-      SEC                  ; reaches here if loop object is colliding with test object
-      RTS                  ; SEC for failure and exit
-
-    :   
-    TYA                    ; otherwise, add $10 to our loop index to test next object
-    CLC
-    ADC #$10
-    TAY
-    CMP #$F0               ; compare to $F0 to check all 15 objects
-    BCC @Loop              ; loop until all 15 objects checked
-
-    CLC                    ; once all objects checked out, if there wasn't a collision, CLC
-    RTS                    ;  to indicate success, and exit!
-
-
-AimMapObjDown:
     LDY #<mapobj_tsaptr      ; set the object's TSA pointer so that they're facing downward
     LDA #<LUT_2x2MapObj_Down
     STA (tmp+14), Y
@@ -3209,8 +2898,6 @@ LoadSingleMapObject:
     STA (tmp+14), Y
     INY
     STA (tmp+14), Y
-
-    CALL AimMapObjDown
 
     LDA tmp+14              ; increment the dest pointer to point to the next object's space in RAM
     CLC

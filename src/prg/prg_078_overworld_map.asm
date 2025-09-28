@@ -2,10 +2,10 @@
 
 .include "src/global-import.inc"
 
-.import LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, GetOWTile, OverworldMovement
+.import LoadPlayerMapmanCHR, LoadOWObjectCHR, WaitForVBlank, OverworldMovement
 .import MusicPlay, PrepAttributePos, ProcessOWInput, ClearSprites
 .import DrawOWSprites, VehicleSFX, ScreenWipe_Open
-.import LoadOWTilesetData, DrawMapPalette, SetOWScroll_PPUOn
+.import DrawMapPalette, SetOWScroll_PPUOn
 .import LoadBridgeSceneGFX, EnterBridgeScene, EnterMainMenu, EnterMinimap, EnterLineupMenu, BattleTransition, LoadBattleCHRPal, ScreenWipe_Close
 
 .export LoadOWCHR, PrepOverworld, LoadEntranceTeleportData
@@ -65,9 +65,6 @@ PrepOverworld:
     STA mapflags        ; zeroing map flags indicates we're on the overworld map
 
     CALL LoadOWCHR           ; load up necessary CHR
-    FARCALL LoadOWTilesetData   ; the tileset
-
-
 
     LDA ow_scroll_x      ; get ow scroll X
     AND #$10             ; isolate the '16' bit (nametable bit)
